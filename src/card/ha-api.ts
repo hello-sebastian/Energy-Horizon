@@ -82,11 +82,15 @@ export function buildLtsQuery(
 }
 
 export function mapLtsResponseToSeries(
-  response: LtsStatisticsResponse,
+  response: LtsStatisticsResponse | { result?: LtsStatisticsResponse },
   entityId: string,
   period: ComparisonPeriod
 ): ComparisonSeries | undefined {
-  const points = response.results[entityId];
+  const data = (response as { result?: LtsStatisticsResponse }).result ?? response;
+  const results = (data as LtsStatisticsResponse).results;
+  if (!results || typeof results !== "object") return undefined;
+
+  const points = results[entityId];
   if (!points || points.length === 0) return undefined;
 
   const { unit, timeSeries } = normalizePoints(points);
