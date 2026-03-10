@@ -88,6 +88,20 @@ Fields (uproszczone):
   - Ustalona na podstawie `aggregation`.
 - `units?: "kWh" | string` (opcjonalnie, zależnie od API HA / konfiguracji).
 
+#### Implementation Notes (LTS mapping)
+
+- Mapowanie `aggregation` → `period` w zapytaniu `recorder/statistics_during_period`:
+  - `aggregation: "day"`   → `period: "day"`
+  - `aggregation: "week"`  → `period: "week"`
+  - `aggregation: "month"` → `period: "month"`
+- Dla energii korzystamy z następującej reguły wyboru wartości:
+  - Jeśli punkt ma `sum` → traktujemy `sum` jako wartość energii dla przedziału.
+  - W przeciwnym razie, jeśli ma `state` → traktujemy `state` jako wartość energii.
+  - Jeśli brak zarówno `sum`, jak i `state` → punkt jest ignorowany przy budowie serii.
+- Jednostka energii:
+  - `unit_of_measurement` pierwszego poprawnego punktu staje się jednostką serii (`unit`).
+  - Jeśli kolejne punkty mają inną jednostkę, seria jest oznaczana jako niepoprawna i zostaje zignorowana (błąd logowany, karta przechodzi w stan `error` lub `no-data` w zależności od sytuacji).
+
 ### Entity: `LtsStatisticPoint`
 
 Przykładowy kształt pojedynczego punktu odpowiedzi LTS (uproszczony):
@@ -144,6 +158,16 @@ Validation rules:
   - albo pomijane (dziury w serii),
   - albo wypełniane przy budowaniu serii skumulowanej (z ostatnią znaną wartością) – decyzja implementacyjna w `ha-api` / warstwie przetwarzania.
 
+#### Implementation Notes (CumulativeSeries)
+
+- Punkty wejściowe do budowy `CumulativeSeries` to lista `TimeSeriesPoint[]` posortowana rosnąco po `timestamp`.
+- Wartość skumulowana wyliczamy jako prostą sumę bieżącą:
+  - Niech `raw[i]` będzie wartością energii dla i‑tego punktu (np. z `sum` lub `state` po wstępnym przetworzeniu).
+  - Wówczas:
+    - `points[0].value = raw[0]`
+    - `points[i].value = points[i-1].value + raw[i]` dla `i > 0`
+- Ewentualne „dziury” czasowe (dni bez punktu) NIE są automatycznie wypełniane dodatkowymi punktami – brakujące dni oznaczają po prostu brak nowych danych w tym okresie. Karta może zdecydować o ewentualnym wizualnym wygładzeniu na poziomie konfiguracji Chart.js.
+
 ### Entity: `ComparisonSeries`
 
 Fields:
@@ -168,6 +192,18 @@ Fields:
 Validation rules:
 - `reference_cumulative` i pola zależne są ustawiane tylko, jeśli dane referencyjne są kompletne dla porównywanego dnia.
 
+#### Handling Incomplete Reference Data
+
+- Dzień „dziś” w bieżącym okresie jest reprezentowany przez ostatni punkt w serii `current` (`current_cumulative`).
+- Aby wyliczyć `reference_cumulative`:
+  - Szukamy punktu w serii referencyjnej o tym samym indeksie dnia w okresie (np. 10‑ty dzień miesiąca / roku) co bieżący punkt.
+- Dane referencyjne uznajemy za **niekompletne** dla porównania liczbowego, jeśli:
+  - Brak punktu referencyjnego o odpowiadającym indeksie dnia,
+  - LUB seria referencyjna zawiera mniej punktów niż bieżąca do danej daty.
+- W przypadku niekompletności:
+  - `reference_cumulative`, `difference` oraz `differencePercent` pozostają `undefined`,
+  - UI wyświetla komunikat w stylu „Dane referencyjne dla tego dnia są niepełne” zamiast liczbowego porównania.
+
 ### Entity: `ForecastStats`
 
 Fields:
@@ -181,6 +217,27 @@ Business rules:
 - `enabled == true` tylko, jeśli:
   - liczba punktów w `current` >= minimalny próg (np. 5).
   - istnieje sensowna estymacja średniego dziennego zużycia.
+
+#### Implementation Notes (ForecastStats)
+
+- Stałe używane do wyznaczania prognozy:
+  - `MIN_POINTS_FOR_FORECAST = 5` – minimalna liczba punktów w serii `current`, aby włączyć prognozę.
+  - `FULL_PERIOD_DAYS` – liczba dni w okresie:
+    - Rok: 365 lub 366 (dla roku przestępnego, wg kalendarza okresu bieżącego).
+    - Miesiąc: liczba dni w bieżącym miesiącu.
+- Algorytm prognozy (uproszczona ekstrapolacja):
+  - Niech `n` = liczba punktów w `current` (dni z danymi),
+  - `current_cumulative` – wartość skumulowana w ostatnim punkcie,
+  - `avg_per_day = current_cumulative / n`,
+  - `forecast_total = avg_per_day * FULL_PERIOD_DAYS`.
+- Wyznaczanie `confidence`:
+  - Jeśli `n < MIN_POINTS_FOR_FORECAST` → `enabled = false`, brak prognozy.
+  - Jeśli `MIN_POINTS_FOR_FORECAST ≤ n < 7` → `enabled = true`, `confidence = "low"`.
+  - Jeśli `7 ≤ n < 14` → `confidence = "medium"`.
+  - Jeśli `n ≥ 14` → `confidence = "high"`.
+- Wartość `reference_total`:
+  - Jeśli dostępna jest kompletna seria referencyjna dla całego okresu, `reference_total` = ostatni punkt `reference.total`.
+  - W przeciwnym razie `reference_total` pozostaje `undefined`, a UI jasno komunikuje brak pełnych danych historycznych.
 
 ---
 

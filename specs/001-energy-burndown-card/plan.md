@@ -22,6 +22,16 @@ Technicznie karta będzie pojedynczym web komponentem LitElement, budowanym prze
 **Constraints**: Zgodność z API Lovelace i themingiem HA; brak sztywnych kolorów (wyłącznie zmienne CSS HA z opcjonalnymi fallbackami); wszystkie zapytania do danych przez oficjalne WebSocket API i obiekt `hass.connection`; brak dodatkowego backendu; defensywne zachowanie przy brakach danych  
 **Scale/Scope**: Pojedyncza karta działająca jednocześnie w wielu instancjach na dashboardzie; każda instancja może wykonywać własne zapytanie do LTS, więc należy unikać duplikowania ciężkich obliczeń w przeglądarce i wspierać cache’owanie wyników na czas życia karty.
 
+### Locale & Formatting
+
+- Źródłem ustawień lokalizacyjnych jest obiekt `hass`:
+  - Preferowane pola: `hass.locale` (jeśli dostępne) lub `hass.language` wraz z konfiguracją jednostek z `hass.config`.
+- Formatowanie dat na osi czasu i w podsumowaniach:
+  - Wykorzystujemy `Intl.DateTimeFormat` z locale pochodzącym z `hass` (np. `new Intl.DateTimeFormat(hass.locale.language, {...})`).
+- Formatowanie liczb (wartości energii, różnice, procenty):
+  - Wykorzystujemy `Intl.NumberFormat` z tym samym locale oraz maksymalną liczbą miejsc po przecinku wynikającą z `CardConfig.precision` (domyślnie 1).
+- Celem jest spójność z resztą interfejsu HA: te same zasady formatowania dat/liczb powinny obowiązywać w karcie i w natywnych widokach HA.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
