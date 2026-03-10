@@ -71,9 +71,41 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     const query = buildLtsQuery(period, this._config.entity);
 
     try {
+      if (this._config.debug) {
+        // eslint-disable-next-line no-console
+        console.log("[Energy Burndown] API Query:", query);
+      }
+
       const response = await this.hass.connection.sendMessagePromise(
         query as unknown as Record<string, unknown>
       );
+
+      if (this._config.debug) {
+        const data =
+          (response as { result?: { results?: Record<string, unknown> } })
+            ?.result ?? response;
+        const results = (data as { results?: Record<string, unknown> }).results;
+        // eslint-disable-next-line no-console
+        console.log("[Energy Burndown] API Response (raw):", response);
+        if (results && typeof results === "object") {
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] Results keys (available statistic_ids):",
+            Object.keys(results)
+          );
+          const entityData = results[this._config.entity];
+          // eslint-disable-next-line no-console
+          console.log(
+            `[Energy Burndown] Data for entity "${this._config.entity}":`,
+            entityData
+              ? `${Array.isArray(entityData) ? entityData.length : 0} points`
+              : "not found"
+          );
+        } else {
+          // eslint-disable-next-line no-console
+          console.log("[Energy Burndown] No 'results' in response or invalid structure");
+        }
+      }
 
       const series = mapLtsResponseToSeries(
         response as any,
@@ -82,6 +114,12 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
       ) as ComparisonSeries | undefined;
 
       if (!series) {
+        if (this._config.debug) {
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] mapLtsResponseToSeries returned undefined – check entity ID and results structure above"
+          );
+        }
         this._state = { status: "no-data" };
         return;
       }

@@ -71,6 +71,7 @@ comparison_mode: year_over_year
 | `show_forecast`   | boolean  | `true`             | Show forecast of total usage for current period                            |
 | `precision`       | number   | `1`                | Decimal places for numeric values                                          |
 | `title`           | string   | -                  | Optional card title                                                        |
+| `debug`           | boolean  | `false`            | Log API query/response to browser console (F12) for troubleshooting        |
 
 ### Example configurations
 
