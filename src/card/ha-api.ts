@@ -90,7 +90,13 @@ export function mapLtsResponseToSeries(
   const results = (data as LtsStatisticsResponse).results;
   if (!results || typeof results !== "object") return undefined;
 
-  const points = results[entityId];
+  let points = results[entityId];
+  if (!points || points.length === 0) {
+    const keys = Object.keys(results);
+    if (keys.length === 1) {
+      points = results[keys[0]!];
+    }
+  }
   if (!points || points.length === 0) return undefined;
 
   const { unit, timeSeries } = normalizePoints(points);
@@ -115,7 +121,7 @@ function normalizePoints(points: LtsStatisticPoint[]): {
   const series: TimeSeriesPoint[] = [];
 
   for (const p of points) {
-    const value = p.sum ?? p.state;
+    const value = p.sum ?? p.change ?? p.state;
     if (value == null) continue;
     if (!unit && p.unit_of_measurement) {
       unit = p.unit_of_measurement;
