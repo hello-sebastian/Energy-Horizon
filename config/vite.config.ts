@@ -6,11 +6,15 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     sourcemap: true,
+    lib: {
+      entry: "src/index.ts",
+      name: "EnergyBurndownCard",
+      fileName: "energy-burndown-card",
+      formats: ["es"]
+    },
     rollupOptions: {
-      input: "index.html",
       output: {
-        entryFileNames: "energy-burndown-card.js",
-        format: "es"
+        inlineDynamicImports: true
       }
     }
   }

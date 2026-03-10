@@ -1,5 +1,4 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
 import type { HomeAssistant, LovelaceCard } from "../ha-types";
 import type { CardConfig, CardState, ComparisonSeries } from "./types";
 import {
@@ -12,15 +11,16 @@ import {
 } from "./ha-api";
 import { ChartRenderer } from "./chart-renderer";
 
-@customElement("energy-burndown-card")
-export class EnergyBurndownCard
-  extends LitElement
-  implements LovelaceCard
-{
-  @property({ attribute: false }) public hass!: HomeAssistant;
+export class EnergyBurndownCard extends LitElement implements LovelaceCard {
+  static properties = {
+    hass: { type: Object, attribute: false },
+    _config: { state: true },
+    _state: { state: true }
+  };
 
-  @state() private _config!: CardConfig;
-  @state() private _state: CardState = { status: "loading" };
+  declare hass: HomeAssistant;
+  declare _config: CardConfig;
+  _state: CardState = { status: "loading" };
 
   private _chartRenderer?: ChartRenderer;
 
@@ -318,6 +318,8 @@ export class EnergyBurndownCard
     }
   `;
 }
+
+customElements.define("energy-burndown-card", EnergyBurndownCard);
 
 declare global {
   interface HTMLElementTagNameMap {
