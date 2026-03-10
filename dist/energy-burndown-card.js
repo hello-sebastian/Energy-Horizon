@@ -593,13 +593,15 @@ function ea(n, t) {
   };
 }
 function na(n, t, e) {
-  const i = n.results[t];
-  if (!i || i.length === 0) return;
-  const { unit: s, timeSeries: r } = ia(i);
+  const s = (n.result ?? n).results;
+  if (!s || typeof s != "object") return;
+  const r = s[t];
+  if (!r || r.length === 0) return;
+  const { unit: o, timeSeries: a } = ia(r);
   return {
     current: sa(
-      r,
-      s,
+      a,
+      o,
       "Bieżący okres"
     ),
     aggregation: e.aggregation,
