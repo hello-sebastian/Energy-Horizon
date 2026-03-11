@@ -1,6 +1,6 @@
-var $o = Object.defineProperty;
-var Io = (n, t, e) => t in n ? $o(n, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : n[t] = e;
-var y = (n, t, e) => Io(n, typeof t != "symbol" ? t + "" : t, e);
+var Io = Object.defineProperty;
+var $o = (n, t, e) => t in n ? Io(n, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : n[t] = e;
+var y = (n, t, e) => $o(n, typeof t != "symbol" ? t + "" : t, e);
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -287,9 +287,9 @@ te.elementStyles = [], te.shadowRootOptions = { mode: "open" }, te[Me("elementPr
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ke = globalThis, Wi = (n) => n, bn = ke.trustedTypes, Bi = bn ? bn.createPolicy("lit-html", { createHTML: (n) => n }) : void 0, _r = "$lit$", vt = `lit$${Math.random().toFixed(9).slice(2)}$`, xr = "?" + vt, Vo = `<${xr}>`, Vt = document, $e = () => Vt.createComment(""), Ie = (n) => n === null || typeof n != "object" && typeof n != "function", yi = Array.isArray, qo = (n) => yi(n) || typeof (n == null ? void 0 : n[Symbol.iterator]) == "function", Hn = `[ 	
-\f\r]`, ue = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Yi = /-->/g, ji = />/g, $t = RegExp(`>|${Hn}(?:([^\\s"'>=/]+)(${Hn}*=${Hn}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Vi = /'/g, qi = /"/g, wr = /^(?:script|style|textarea|title)$/i, Uo = (n) => (t, ...e) => ({ _$litType$: n, strings: t, values: e }), et = Uo(1), ie = Symbol.for("lit-noChange"), V = Symbol.for("lit-nothing"), Ui = /* @__PURE__ */ new WeakMap(), Nt = Vt.createTreeWalker(Vt, 129);
+const ke = globalThis, Wi = (n) => n, bn = ke.trustedTypes, Bi = bn ? bn.createPolicy("lit-html", { createHTML: (n) => n }) : void 0, _r = "$lit$", vt = `lit$${Math.random().toFixed(9).slice(2)}$`, xr = "?" + vt, Vo = `<${xr}>`, Vt = document, Ie = () => Vt.createComment(""), $e = (n) => n === null || typeof n != "object" && typeof n != "function", yi = Array.isArray, Uo = (n) => yi(n) || typeof (n == null ? void 0 : n[Symbol.iterator]) == "function", Hn = `[ 	
+\f\r]`, ue = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Yi = /-->/g, ji = />/g, It = RegExp(`>|${Hn}(?:([^\\s"'>=/]+)(${Hn}*=${Hn}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Vi = /'/g, Ui = /"/g, wr = /^(?:script|style|textarea|title)$/i, qo = (n) => (t, ...e) => ({ _$litType$: n, strings: t, values: e }), et = qo(1), ie = Symbol.for("lit-noChange"), V = Symbol.for("lit-nothing"), qi = /* @__PURE__ */ new WeakMap(), Nt = Vt.createTreeWalker(Vt, 129);
 function vr(n, t) {
   if (!yi(n) || !n.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Bi !== void 0 ? Bi.createHTML(t) : t;
@@ -300,8 +300,8 @@ const Xo = (n, t) => {
   for (let a = 0; a < e; a++) {
     const c = n[a];
     let l, h, u = -1, d = 0;
-    for (; d < c.length && (o.lastIndex = d, h = o.exec(c), h !== null); ) d = o.lastIndex, o === ue ? h[1] === "!--" ? o = Yi : h[1] !== void 0 ? o = ji : h[2] !== void 0 ? (wr.test(h[2]) && (s = RegExp("</" + h[2], "g")), o = $t) : h[3] !== void 0 && (o = $t) : o === $t ? h[0] === ">" ? (o = s ?? ue, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, l = h[1], o = h[3] === void 0 ? $t : h[3] === '"' ? qi : Vi) : o === qi || o === Vi ? o = $t : o === Yi || o === ji ? o = ue : (o = $t, s = void 0);
-    const f = o === $t && n[a + 1].startsWith("/>") ? " " : "";
+    for (; d < c.length && (o.lastIndex = d, h = o.exec(c), h !== null); ) d = o.lastIndex, o === ue ? h[1] === "!--" ? o = Yi : h[1] !== void 0 ? o = ji : h[2] !== void 0 ? (wr.test(h[2]) && (s = RegExp("</" + h[2], "g")), o = It) : h[3] !== void 0 && (o = It) : o === It ? h[0] === ">" ? (o = s ?? ue, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, l = h[1], o = h[3] === void 0 ? It : h[3] === '"' ? Ui : Vi) : o === Ui || o === Vi ? o = It : o === Yi || o === ji ? o = ue : (o = It, s = void 0);
+    const f = o === It && n[a + 1].startsWith("/>") ? " " : "";
     r += o === ue ? c + Vo : u >= 0 ? (i.push(l), c.slice(0, u) + _r + c.slice(u) + vt + f) : c + vt + (u === -2 ? a : f);
   }
   return [vr(n, r + (n[e] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), i];
@@ -326,8 +326,8 @@ class Le {
           const u = s.textContent.split(vt), d = u.length - 1;
           if (d > 0) {
             s.textContent = bn ? bn.emptyScript : "";
-            for (let f = 0; f < d; f++) s.append(u[f], $e()), Nt.nextNode(), c.push({ type: 2, index: ++r });
-            s.append(u[d], $e());
+            for (let f = 0; f < d; f++) s.append(u[f], Ie()), Nt.nextNode(), c.push({ type: 2, index: ++r });
+            s.append(u[d], Ie());
           }
         }
       } else if (s.nodeType === 8) if (s.data === xr) c.push({ type: 2, index: r });
@@ -347,7 +347,7 @@ function se(n, t, e = n, i) {
   var o, a;
   if (t === ie) return t;
   let s = i !== void 0 ? (o = e._$Co) == null ? void 0 : o[i] : e._$Cl;
-  const r = Ie(t) ? void 0 : t._$litDirective$;
+  const r = $e(t) ? void 0 : t._$litDirective$;
   return (s == null ? void 0 : s.constructor) !== r && ((a = s == null ? void 0 : s._$AO) == null || a.call(s, !1), r === void 0 ? s = void 0 : (s = new r(n), s._$AT(n, e, i)), i !== void 0 ? (e._$Co ?? (e._$Co = []))[i] = s : e._$Cl = s), s !== void 0 && (t = se(n, s._$AS(n, t.values), s, i)), t;
 }
 class Qo {
@@ -398,7 +398,7 @@ class Be {
     return this._$AB;
   }
   _$AI(t, e = this) {
-    t = se(this, t, e), Ie(t) ? t === V || t == null || t === "" ? (this._$AH !== V && this._$AR(), this._$AH = V) : t !== this._$AH && t !== ie && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : qo(t) ? this.k(t) : this._(t);
+    t = se(this, t, e), $e(t) ? t === V || t == null || t === "" ? (this._$AH !== V && this._$AR(), this._$AH = V) : t !== this._$AH && t !== ie && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Uo(t) ? this.k(t) : this._(t);
   }
   O(t) {
     return this._$AA.parentNode.insertBefore(t, this._$AB);
@@ -407,7 +407,7 @@ class Be {
     this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
   }
   _(t) {
-    this._$AH !== V && Ie(this._$AH) ? this._$AA.nextSibling.data = t : this.T(Vt.createTextNode(t)), this._$AH = t;
+    this._$AH !== V && $e(this._$AH) ? this._$AA.nextSibling.data = t : this.T(Vt.createTextNode(t)), this._$AH = t;
   }
   $(t) {
     var r;
@@ -419,14 +419,14 @@ class Be {
     }
   }
   _$AC(t) {
-    let e = Ui.get(t.strings);
-    return e === void 0 && Ui.set(t.strings, e = new Le(t)), e;
+    let e = qi.get(t.strings);
+    return e === void 0 && qi.set(t.strings, e = new Le(t)), e;
   }
   k(t) {
     yi(this._$AH) || (this._$AH = [], this._$AR());
     const e = this._$AH;
     let i, s = 0;
-    for (const r of t) s === e.length ? e.push(i = new Be(this.O($e()), this.O($e()), this, this.options)) : i = e[s], i._$AI(r), s++;
+    for (const r of t) s === e.length ? e.push(i = new Be(this.O(Ie()), this.O(Ie()), this, this.options)) : i = e[s], i._$AI(r), s++;
     s < e.length && (this._$AR(i && i._$AB.nextSibling, s), e.length = s);
   }
   _$AR(t = this._$AA.nextSibling, e) {
@@ -454,11 +454,11 @@ class Tn {
   _$AI(t, e = this, i, s) {
     const r = this.strings;
     let o = !1;
-    if (r === void 0) t = se(this, t, e, 0), o = !Ie(t) || t !== this._$AH && t !== ie, o && (this._$AH = t);
+    if (r === void 0) t = se(this, t, e, 0), o = !$e(t) || t !== this._$AH && t !== ie, o && (this._$AH = t);
     else {
       const a = t;
       let c, l;
-      for (t = r[0], c = 0; c < r.length - 1; c++) l = se(this, a[i + c], e, c), l === ie && (l = this._$AH[c]), o || (o = !Ie(l) || l !== this._$AH[c]), l === V ? t = V : t !== V && (t += (l ?? "") + r[c + 1]), this._$AH[c] = l;
+      for (t = r[0], c = 0; c < r.length - 1; c++) l = se(this, a[i + c], e, c), l === ie && (l = this._$AH[c]), o || (o = !$e(l) || l !== this._$AH[c]), l === V ? t = V : t !== V && (t += (l ?? "") + r[c + 1]), this._$AH[c] = l;
     }
     o && !s && this.j(t);
   }
@@ -514,7 +514,7 @@ const ta = (n, t, e) => {
   let s = i._$litPart$;
   if (s === void 0) {
     const r = (e == null ? void 0 : e.renderBefore) ?? null;
-    i._$litPart$ = s = new Be(t.insertBefore($e(), r), r, void 0, e ?? {});
+    i._$litPart$ = s = new Be(t.insertBefore(Ie(), r), r, void 0, e ?? {});
   }
   return s._$AI(n), s;
 };
@@ -674,7 +674,11 @@ function ra(n) {
 function oa(n) {
   const t = n.current.points, e = t.length;
   if (e < ea)
-    return { enabled: !1, unit: n.current.unit };
+    return {
+      enabled: !1,
+      unit: n.current.unit,
+      confidence: "low"
+    };
   const s = t[e - 1].value / e, r = new Date(t[0].timestamp), c = (new Date(t[e - 1].timestamp).getTime() - r.getTime()) / (1e3 * 60 * 60 * 24);
   let l;
   if (c > 200) {
@@ -1156,7 +1160,7 @@ const Ca = /* @__PURE__ */ (() => {
 function R(n) {
   return n == null;
 }
-function q(n) {
+function U(n) {
   if (Array.isArray && Array.isArray(n))
     return !0;
   const t = Object.prototype.toString.call(n);
@@ -1181,7 +1185,7 @@ function F(n, t, e) {
 }
 function L(n, t, e, i) {
   let s, r, o;
-  if (q(n))
+  if (U(n))
     for (r = n.length, s = 0; s < r; s++)
       t.call(e, n[s], s);
   else if (E(n))
@@ -1198,7 +1202,7 @@ function yn(n, t) {
   return !0;
 }
 function _n(n) {
-  if (q(n))
+  if (U(n))
     return n.map(_n);
   if (E(n)) {
     const t = /* @__PURE__ */ Object.create(null), e = Object.keys(n), i = e.length;
@@ -1223,7 +1227,7 @@ function Ea(n, t, e, i) {
   E(s) && E(r) ? Re(s, r, i) : t[n] = _n(r);
 }
 function Re(n, t, e) {
-  const i = q(t) ? t : [
+  const i = U(t) ? t : [
     t
   ], s = i.length;
   if (!E(n))
@@ -1242,10 +1246,10 @@ function Re(n, t, e) {
 }
 function Pe(n, t) {
   return Re(n, t, {
-    merger: $a
+    merger: Ia
   });
 }
-function $a(n, t, e) {
+function Ia(n, t, e) {
   if (!Pr(n))
     return;
   const i = t[n], s = e[n];
@@ -1258,7 +1262,7 @@ const ts = {
   x: (n) => n.x,
   y: (n) => n.y
 };
-function Ia(n) {
+function $a(n) {
   const t = n.split("."), e = [];
   let i = "";
   for (const s of t)
@@ -1266,7 +1270,7 @@ function Ia(n) {
   return e;
 }
 function La(n) {
-  const t = Ia(n);
+  const t = $a(n);
   return (e) => {
     for (const i of t) {
       if (i === "")
@@ -1293,7 +1297,7 @@ const wn = (n) => typeof n < "u", Tt = (n) => typeof n == "function", es = (n, t
 function Fa(n) {
   return n.type === "mouseup" || n.type === "click" || n.type === "contextmenu";
 }
-const Q = Math.PI, at = 2 * Q, Ra = at + Q, vn = Number.POSITIVE_INFINITY, Ha = Q / 180, rt = Q / 2, It = Q / 4, ns = Q * 2 / 3, Sr = Math.log10, re = Math.sign;
+const Q = Math.PI, at = 2 * Q, Ra = at + Q, vn = Number.POSITIVE_INFINITY, Ha = Q / 180, rt = Q / 2, $t = Q / 4, ns = Q * 2 / 3, Sr = Math.log10, re = Math.sign;
 function Se(n, t, e) {
   return Math.abs(n - t) < e;
 }
@@ -1363,7 +1367,7 @@ function Or(n, t, e, i) {
 function ot(n, t, e) {
   return Math.max(t, Math.min(e, n));
 }
-function qa(n) {
+function Ua(n) {
   return ot(n, -32768, 32767);
 }
 function ee(n, t, e, i = 1e-6) {
@@ -1382,7 +1386,7 @@ function Mi(n, t, e) {
 const Bt = (n, t, e, i) => Mi(n, e, i ? (s) => {
   const r = n[s][t];
   return r < e || r === e && n[s + 1][t] === e;
-} : (s) => n[s][t] < e), Ua = (n, t, e) => Mi(n, e, (i) => n[i][t] >= e);
+} : (s) => n[s][t] < e), qa = (n, t, e) => Mi(n, e, (i) => n[i][t] >= e);
 function Xa(n, t, e) {
   let i = 0, s = n.length;
   for (; i < s && n[i] < t; )
@@ -1654,12 +1658,12 @@ function rc(n, t) {
   let i = ls.get(e);
   return i || (i = new Intl.NumberFormat(n, t), ls.set(e, i)), i;
 }
-function $r(n, t, e) {
+function Ir(n, t, e) {
   return rc(t, e).format(n);
 }
 const oc = {
   values(n) {
-    return q(n) ? n : "" + n;
+    return U(n) ? n : "" + n;
   },
   numeric(n, t, e) {
     if (n === 0)
@@ -1675,14 +1679,14 @@ const oc = {
       minimumFractionDigits: a,
       maximumFractionDigits: a
     };
-    return Object.assign(c, this.options.ticks.format), $r(n, i, c);
+    return Object.assign(c, this.options.ticks.format), Ir(n, i, c);
   }
 };
 function ac(n, t) {
   let e = t.length > 3 ? t[2].value - t[1].value : t[1].value - t[0].value;
   return Math.abs(e) >= 1 && n !== Math.floor(n) && (e = n - Math.floor(n)), e;
 }
-var Ir = {
+var $r = {
   formatters: oc
 };
 function cc(n) {
@@ -1729,7 +1733,7 @@ function cc(n) {
       autoSkip: !0,
       autoSkipPadding: 3,
       labelOffset: 0,
-      callback: Ir.formatters.values,
+      callback: $r.formatters.values,
       minor: {},
       major: {},
       align: "center",
@@ -1749,7 +1753,7 @@ function cc(n) {
     _indexable: (t) => t !== "backdropPadding"
   });
 }
-const qt = /* @__PURE__ */ Object.create(null), ii = /* @__PURE__ */ Object.create(null);
+const Ut = /* @__PURE__ */ Object.create(null), ii = /* @__PURE__ */ Object.create(null);
 function Te(n, t) {
   if (!t)
     return n;
@@ -1793,7 +1797,7 @@ class lc {
     return Yn(ii, t, e);
   }
   override(t, e) {
-    return Yn(qt, t, e);
+    return Yn(Ut, t, e);
   }
   route(t, e, i, s) {
     const r = Te(this, t), o = Te(this, i), a = "_" + e;
@@ -1868,26 +1872,26 @@ function Lr(n, t, e, i, s) {
         h = s ? s / 2 : m, n.moveTo(e + Math.sin(p) * h, i - Math.cos(p) * m), p += ns, n.lineTo(e + Math.sin(p) * h, i - Math.cos(p) * m), p += ns, n.lineTo(e + Math.sin(p) * h, i - Math.cos(p) * m), n.closePath();
         break;
       case "rectRounded":
-        l = m * 0.516, c = m - l, o = Math.cos(p + It) * c, u = Math.cos(p + It) * (s ? s / 2 - l : c), a = Math.sin(p + It) * c, d = Math.sin(p + It) * (s ? s / 2 - l : c), n.arc(e - u, i - a, l, p - Q, p - rt), n.arc(e + d, i - o, l, p - rt, p), n.arc(e + u, i + a, l, p, p + rt), n.arc(e - d, i + o, l, p + rt, p + Q), n.closePath();
+        l = m * 0.516, c = m - l, o = Math.cos(p + $t) * c, u = Math.cos(p + $t) * (s ? s / 2 - l : c), a = Math.sin(p + $t) * c, d = Math.sin(p + $t) * (s ? s / 2 - l : c), n.arc(e - u, i - a, l, p - Q, p - rt), n.arc(e + d, i - o, l, p - rt, p), n.arc(e + u, i + a, l, p, p + rt), n.arc(e - d, i + o, l, p + rt, p + Q), n.closePath();
         break;
       case "rect":
         if (!g) {
           c = Math.SQRT1_2 * m, h = s ? s / 2 : c, n.rect(e - h, i - c, 2 * h, 2 * c);
           break;
         }
-        p += It;
+        p += $t;
       /* falls through */
       case "rectRot":
         u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + d, i - o), n.lineTo(e + u, i + a), n.lineTo(e - d, i + o), n.closePath();
         break;
       case "crossRot":
-        p += It;
+        p += $t;
       /* falls through */
       case "cross":
         u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + u, i + a), n.moveTo(e + d, i - o), n.lineTo(e - d, i + o);
         break;
       case "star":
-        u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + u, i + a), n.moveTo(e + d, i - o), n.lineTo(e - d, i + o), p += It, u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + u, i + a), n.moveTo(e + d, i - o), n.lineTo(e - d, i + o);
+        u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + u, i + a), n.moveTo(e + d, i - o), n.lineTo(e - d, i + o), p += $t, u = Math.cos(p) * (s ? s / 2 : m), o = Math.cos(p) * m, a = Math.sin(p) * m, d = Math.sin(p) * (s ? s / 2 : m), n.moveTo(e - u, i - a), n.lineTo(e + u, i + a), n.moveTo(e + d, i - o), n.lineTo(e - d, i + o);
         break;
       case "line":
         o = s ? s / 2 : Math.cos(p) * m, a = Math.sin(p) * m, n.moveTo(e - o, i - a), n.lineTo(e + o, i + a);
@@ -1939,7 +1943,7 @@ function mc(n, t) {
   n.fillStyle = t.color, n.fillRect(t.left, t.top, t.width, t.height), n.fillStyle = e;
 }
 function Mn(n, t, e, i, s, r = {}) {
-  const o = q(t) ? t : [
+  const o = U(t) ? t : [
     t
   ], a = r.strokeWidth > 0 && r.strokeColor !== "";
   let c, l;
@@ -2021,7 +2025,7 @@ function wc(n, t, e) {
     max: o(s, r)
   };
 }
-function Ut(n, t) {
+function qt(n, t) {
   return Object.assign(Object.create(n), t);
 }
 function Di(n, t = [
@@ -2171,7 +2175,7 @@ function Hr(n, t, e) {
 function Mc(n, t, e) {
   const { _proxy: i, _context: s, _subProxy: r, _descriptors: o } = n;
   let a = i[t];
-  return Tt(a) && o.isScriptable(t) && (a = kc(t, a, n, e)), q(a) && a.length && (a = Dc(t, a, n, o.isIndexable)), Pi(t, a) && (a = oe(a, s, r && r[t], o)), a;
+  return Tt(a) && o.isScriptable(t) && (a = kc(t, a, n, e)), U(a) && a.length && (a = Dc(t, a, n, o.isIndexable)), Pi(t, a) && (a = oe(a, s, r && r[t], o)), a;
 }
 function kc(n, t, e, i) {
   const { _proxy: s, _context: r, _subProxy: o, _stack: a } = e;
@@ -2232,7 +2236,7 @@ function Oc(n, t, e) {
   const i = n._getTarget();
   t in i || (i[t] = {});
   const s = i[t];
-  return q(s) && E(e) ? e : s || {};
+  return U(s) && E(e) ? e : s || {};
 }
 function Tc(n, t, e, i) {
   let s;
@@ -2277,7 +2281,7 @@ function Ec(n, t, e, i) {
     }
   };
 }
-function $c(n, t, e) {
+function Ic(n, t, e) {
   const i = n.length;
   let s, r, o, a, c, l = ae(n, 0);
   for (let h = 0; h < i - 1; ++h)
@@ -2289,7 +2293,7 @@ function $c(n, t, e) {
       s = e[h] / t[h], r = e[h + 1] / t[h], a = Math.pow(s, 2) + Math.pow(r, 2), !(a <= 9) && (o = 3 / Math.sqrt(a), e[h] = s * o * t[h], e[h + 1] = r * o * t[h]);
     }
 }
-function Ic(n, t, e = "x") {
+function $c(n, t, e = "x") {
   const i = Wr(e), s = n.length;
   let r, o, a, c = ae(n, 0);
   for (let l = 0; l < s; ++l) {
@@ -2310,7 +2314,7 @@ function Lc(n, t = "x") {
       }
       r[o] = a ? l ? re(s[o - 1]) !== re(s[o]) ? 0 : (s[o - 1] + s[o]) / 2 : s[o - 1] : s[o];
     }
-  $c(n, s, r), Ic(n, r, t);
+  Ic(n, s, r), $c(n, r, t);
 }
 function nn(n, t, e) {
   return Math.max(Math.min(n, e), t);
@@ -2453,7 +2457,7 @@ function Vc(n, t, e, i) {
     y: i === "middle" ? e < 0.5 ? n.y : t.y : i === "after" ? e < 1 ? n.y : t.y : e > 0 ? t.y : n.y
   };
 }
-function qc(n, t, e, i) {
+function Uc(n, t, e, i) {
   const s = {
     x: n.cp2x,
     y: n.cp2y
@@ -2463,7 +2467,7 @@ function qc(n, t, e, i) {
   }, o = Ht(n, s, e), a = Ht(s, r, e), c = Ht(r, t, e), l = Ht(o, a, e), h = Ht(a, c, e);
   return Ht(l, h, e);
 }
-const Uc = function(n, t) {
+const qc = function(n, t) {
   return {
     x(e) {
       return n + n + t - e;
@@ -2500,7 +2504,7 @@ const Uc = function(n, t) {
   };
 };
 function ne(n, t, e) {
-  return n ? Uc(t, e) : Xc();
+  return n ? qc(t, e) : Xc();
 }
 function Br(n, t) {
   let e, i;
@@ -2570,7 +2574,7 @@ function Vr(n, t, e) {
     style: f
   })), g;
 }
-function qr(n, t) {
+function Ur(n, t) {
   const e = [], i = n.segments;
   for (let s = 0; s < i.length; s++) {
     const r = Vr(i[s], n.points, t);
@@ -2651,7 +2655,7 @@ function Jc(n, t, e, i) {
     let m = e[u % c], p;
     for (d = u + 1; d <= g.end; d++) {
       const b = e[d % c];
-      p = ys(i.setContext(Ut(s, {
+      p = ys(i.setContext(qt(s, {
         type: "segment",
         p0: m,
         p1: b,
@@ -2695,7 +2699,7 @@ function el(n, t) {
     bottom: sn(i, t, "bottom")
   } : t;
 }
-function Ur(n, t) {
+function qr(n, t) {
   const e = t._clip;
   if (e.disabled)
     return !1;
@@ -2883,7 +2887,7 @@ class Xr {
       const o = {};
       for (const a of e)
         o[a] = r[a];
-      (q(r.properties) && r.properties || [
+      (U(r.properties) && r.properties || [
         s
       ]).forEach((a) => {
         (a === s || !i.has(a)) && i.set(a, o);
@@ -3061,7 +3065,7 @@ function Vn(n, t) {
   return Object.keys(e).filter((i) => e[i].axis === t).shift();
 }
 function fl(n, t) {
-  return Ut(n, {
+  return qt(n, {
     active: !1,
     dataset: void 0,
     datasetIndex: t,
@@ -3071,7 +3075,7 @@ function fl(n, t) {
   });
 }
 function gl(n, t, e) {
-  return Ut(n, {
+  return qt(n, {
     active: !1,
     dataIndex: t,
     parsed: void 0,
@@ -3094,7 +3098,7 @@ function de(n, t) {
     }
   }
 }
-const qn = (n) => n === "reset" || n === "none", ks = (n, t) => t ? n : Object.assign({}, n), ml = (n, t, e) => n && !t.hidden && t._stacked && {
+const Un = (n) => n === "reset" || n === "none", ks = (n, t) => t ? n : Object.assign({}, n), ml = (n, t, e) => n && !t.hidden && t._stacked && {
   keys: Qr(e, !0),
   values: null
 };
@@ -3168,7 +3172,7 @@ class Ae {
     if (this._parsing === !1)
       i._parsed = s, i._sorted = !0, d = s;
     else {
-      q(s[t]) ? d = this.parseArrayData(i, s, t, e) : E(s[t]) ? d = this.parseObjectData(i, s, t, e) : d = this.parsePrimitiveData(i, s, t, e);
+      U(s[t]) ? d = this.parseArrayData(i, s, t, e) : E(s[t]) ? d = this.parseObjectData(i, s, t, e) : d = this.parsePrimitiveData(i, s, t, e);
       const f = () => u[a] === null || l && u[a] < l[a];
       for (h = 0; h < e; ++h)
         i._parsed[h + t] = u = d[h], c && (f() && (c = !1), l = u);
@@ -3334,7 +3338,7 @@ class Ae {
       return this._sharedOptions || (this._sharedOptions = Object.assign({}, t));
   }
   includeOptions(t, e) {
-    return !e || qn(t) || this.chart._animationsDisabled;
+    return !e || Un(t) || this.chart._animationsDisabled;
   }
   _getSharedOptions(t, e) {
     const i = this.resolveDataElementOptions(t, e), s = this._sharedOptions, r = this.getSharedOptions(i), o = this.includeOptions(e, r) || r !== s;
@@ -3344,10 +3348,10 @@ class Ae {
     };
   }
   updateElement(t, e, i, s) {
-    qn(s) ? Object.assign(t, i) : this._resolveAnimations(e, s).update(t, i);
+    Un(s) ? Object.assign(t, i) : this._resolveAnimations(e, s).update(t, i);
   }
   updateSharedOptions(t, e, i) {
-    t && !qn(e) && this._resolveAnimations(void 0, e).update(t, i);
+    t && !Un(e) && this._resolveAnimations(void 0, e).update(t, i);
   }
   _setStyle(t, e, i, s) {
     t.active = s;
@@ -3561,7 +3565,7 @@ var Gr = {
 function pl(n, t, e, i) {
   const { controller: s, data: r, _sorted: o } = n, a = s._cachedMeta.iScale, c = n.dataset && n.dataset.options ? n.dataset.options.spanGaps : null;
   if (a && t === a.axis && t !== "r" && o && r.length) {
-    const l = a._reversePixels ? Ua : Bt;
+    const l = a._reversePixels ? qa : Bt;
     if (i) {
       if (s._sharedOptions) {
         const h = r[0], u = typeof h.getRange == "function" && h.getRange(t);
@@ -3589,7 +3593,7 @@ function pl(n, t, e, i) {
     hi: r.length - 1
   };
 }
-function $n(n, t, e, i, s) {
+function In(n, t, e, i, s) {
   const r = n.getSortedVisibleDatasetMetas(), o = e[t];
   for (let a = 0, c = r.length; a < c; ++a) {
     const { index: l, data: h } = r[a], { lo: u, hi: d } = pl(r[a], t, o, s);
@@ -3606,9 +3610,9 @@ function bl(n) {
     return Math.sqrt(Math.pow(r, 2) + Math.pow(o, 2));
   };
 }
-function Un(n, t, e, i, s) {
+function qn(n, t, e, i, s) {
   const r = [];
-  return !s && !n.isPointInArea(t) || $n(n, e, t, function(a, c, l) {
+  return !s && !n.isPointInArea(t) || In(n, e, t, function(a, c, l) {
     !s && !ze(a, n.chartArea, 0) || a.inRange(t.x, t.y, i) && r.push({
       element: a,
       datasetIndex: c,
@@ -3632,7 +3636,7 @@ function yl(n, t, e, i) {
       index: c
     });
   }
-  return $n(n, e, t, r), s;
+  return In(n, e, t, r), s;
 }
 function _l(n, t, e, i, s, r) {
   let o = [];
@@ -3658,7 +3662,7 @@ function _l(n, t, e, i, s, r) {
       index: d
     });
   }
-  return $n(n, e, t, l), o;
+  return In(n, e, t, l), o;
 }
 function Xn(n, t, e, i, s, r) {
   return !r && !n.isPointInArea(t) ? [] : e === "r" && !i ? yl(n, t, e, s) : _l(n, t, e, i, s, r);
@@ -3666,7 +3670,7 @@ function Xn(n, t, e, i, s, r) {
 function Ds(n, t, e, i, s) {
   const r = [], o = e === "x" ? "inXRange" : "inYRange";
   let a = !1;
-  return $n(n, e, t, (c, l, h) => {
+  return In(n, e, t, (c, l, h) => {
     c[o] && c[o](t[e], s) && (r.push({
       element: c,
       datasetIndex: l,
@@ -3677,7 +3681,7 @@ function Ds(n, t, e, i, s) {
 var xl = {
   modes: {
     index(n, t, e, i) {
-      const s = Rt(t, n), r = e.axis || "x", o = e.includeInvisible || !1, a = e.intersect ? Un(n, s, r, i, o) : Xn(n, s, r, !1, i, o), c = [];
+      const s = Rt(t, n), r = e.axis || "x", o = e.includeInvisible || !1, a = e.intersect ? qn(n, s, r, i, o) : Xn(n, s, r, !1, i, o), c = [];
       return a.length ? (n.getSortedVisibleDatasetMetas().forEach((l) => {
         const h = a[0].index, u = l.data[h];
         u && !u.skip && c.push({
@@ -3689,7 +3693,7 @@ var xl = {
     },
     dataset(n, t, e, i) {
       const s = Rt(t, n), r = e.axis || "xy", o = e.includeInvisible || !1;
-      let a = e.intersect ? Un(n, s, r, i, o) : Xn(n, s, r, !1, i, o);
+      let a = e.intersect ? qn(n, s, r, i, o) : Xn(n, s, r, !1, i, o);
       if (a.length > 0) {
         const c = a[0].datasetIndex, l = n.getDatasetMeta(c).data;
         a = [];
@@ -3704,7 +3708,7 @@ var xl = {
     },
     point(n, t, e, i) {
       const s = Rt(t, n), r = e.axis || "xy", o = e.includeInvisible || !1;
-      return Un(n, s, r, i, o);
+      return qn(n, s, r, i, o);
     },
     nearest(n, t, e, i) {
       const s = Rt(t, n), r = e.axis || "xy", o = e.includeInvisible || !1;
@@ -4016,7 +4020,7 @@ function Al(n, t, e) {
 function El(n, t, e) {
   n && n.canvas && n.canvas.removeEventListener(t, e, to);
 }
-function $l(n, t) {
+function Il(n, t) {
   const e = Tl[n.type] || n.type, { x: i, y: s } = Rt(n, t);
   return {
     type: e,
@@ -4031,7 +4035,7 @@ function Dn(n, t) {
     if (e === t || e.contains(t))
       return !0;
 }
-function Il(n, t, e) {
+function $l(n, t, e) {
   const i = n.canvas, s = new MutationObserver((r) => {
     let o = !1;
     for (const a of r)
@@ -4087,7 +4091,7 @@ function Qn(n, t, e) {
 }
 function zl(n, t, e) {
   const i = n.canvas, s = Ar((r) => {
-    n.ctx !== null && e($l(r, n));
+    n.ctx !== null && e(Il(r, n));
   }, n);
   return Al(i, t, s), s;
 }
@@ -4116,7 +4120,7 @@ class Nl extends Jr {
   addEventListener(t, e, i) {
     this.removeEventListener(t, e);
     const s = t.$proxies || (t.$proxies = {}), o = {
-      attach: Il,
+      attach: $l,
       detach: Ll,
       resize: Hl
     }[e] || zl;
@@ -4181,7 +4185,7 @@ y(Ct, "defaults", {}), y(Ct, "defaultRoutes");
 function Bl(n, t) {
   const e = n.options.ticks, i = Yl(n), s = Math.min(e.maxTicksLimit || i, i), r = e.major.enabled ? Vl(t) : [], o = r.length, a = r[0], c = r[o - 1], l = [];
   if (o > s)
-    return ql(t, l, r, o / s), l;
+    return Ul(t, l, r, o / s), l;
   const h = jl(r, t, s);
   if (o > 0) {
     let u, d;
@@ -4197,7 +4201,7 @@ function Yl(n) {
   return Math.floor(Math.min(i, s));
 }
 function jl(n, t, e) {
-  const i = Ul(n), s = t.length / e;
+  const i = ql(n), s = t.length / e;
   if (!i)
     return Math.max(s, 1);
   const r = za(i);
@@ -4215,7 +4219,7 @@ function Vl(n) {
     n[e].major && t.push(e);
   return t;
 }
-function ql(n, t, e, i) {
+function Ul(n, t, e, i) {
   let s = 0, r = e[0], o;
   for (i = Math.ceil(i), o = 0; o < n.length; o++)
     o === r && (t.push(n[o]), s++, r = e[s * i]);
@@ -4228,7 +4232,7 @@ function on(n, t, e, i, s) {
   for (l = Math.max(r, 0); l < o; l++)
     l === h && (t.push(n[l]), a++, h = Math.round(r + a * e));
 }
-function Ul(n) {
+function ql(n) {
   const t = n.length;
   let e, i;
   if (t < 2)
@@ -4239,7 +4243,7 @@ function Ul(n) {
   return i;
 }
 const Xl = (n) => n === "left" ? "right" : n === "right" ? "left" : n, As = (n, t, e) => t === "top" || t === "left" ? n[t] + e : n[t] - e, Es = (n, t) => Math.min(t || n, n);
-function $s(n, t) {
+function Is(n, t) {
   const e = [], i = n.length / t, s = n.length;
   let r = 0;
   for (; r < s; r += i)
@@ -4266,20 +4270,20 @@ function Gl(n, t) {
 function me(n) {
   return n.drawTicks ? n.tickLength : 0;
 }
-function Is(n, t) {
+function $s(n, t) {
   if (!n.display)
     return 0;
   const e = J(n.font, t), i = ct(n.padding);
-  return (q(n.text) ? n.text.length : 1) * e.lineHeight + i.height;
+  return (U(n.text) ? n.text.length : 1) * e.lineHeight + i.height;
 }
 function Kl(n, t) {
-  return Ut(n, {
+  return qt(n, {
     scale: t,
     type: "scale"
   });
 }
 function Zl(n, t, e) {
-  return Ut(n, {
+  return qt(n, {
     tick: e,
     index: t,
     type: "tick"
@@ -4387,7 +4391,7 @@ class je extends Ct {
       bottom: 0
     }, i), this.ticks = null, this._labelSizes = null, this._gridLineItems = null, this._labelItems = null, this.beforeSetDimensions(), this.setDimensions(), this.afterSetDimensions(), this._maxLength = this.isHorizontal() ? this.width + i.left + i.right : this.height + i.top + i.bottom, this._dataLimitsCached || (this.beforeDataLimits(), this.determineDataLimits(), this.afterDataLimits(), this._range = wc(this, r, s), this._dataLimitsCached = !0), this.beforeBuildTicks(), this.ticks = this.buildTicks() || [], this.afterBuildTicks();
     const c = a < this.ticks.length;
-    this._convertTicksToLabels(c ? $s(this.ticks, a) : this.ticks), this.configure(), this.beforeCalculateLabelRotation(), this.calculateLabelRotation(), this.afterCalculateLabelRotation(), o.display && (o.autoSkip || o.source === "auto") && (this.ticks = Bl(this, this.ticks), this._labelSizes = null, this.afterAutoSkip()), c && this._convertTicksToLabels(this.ticks), this.beforeFit(), this.fit(), this.afterFit(), this.afterUpdate();
+    this._convertTicksToLabels(c ? Is(this.ticks, a) : this.ticks), this.configure(), this.beforeCalculateLabelRotation(), this.calculateLabelRotation(), this.afterCalculateLabelRotation(), o.display && (o.autoSkip || o.source === "auto") && (this.ticks = Bl(this, this.ticks), this._labelSizes = null, this.afterAutoSkip()), c && this._convertTicksToLabels(this.ticks), this.beforeFit(), this.fit(), this.afterFit(), this.afterUpdate();
   }
   configure() {
     let t = this.options.reverse, e, i;
@@ -4466,7 +4470,7 @@ class je extends Ct {
       return;
     }
     const h = this._getLabelSizes(), u = h.widest.width, d = h.highest.height, f = ot(this.chart.width - u, 0, this.maxWidth);
-    a = t.offset ? this.maxWidth / i : f / (i - 1), u + 6 > a && (a = f / (i - (t.offset ? 0.5 : 1)), c = this.maxHeight - me(t.grid) - e.padding - Is(t.title, this.chart.options.font), l = Math.sqrt(u * u + d * d), o = Ya(Math.min(Math.asin(ot((h.highest.height + 6) / a, -1, 1)), Math.asin(ot(c / l, -1, 1)) - Math.asin(ot(d / l, -1, 1)))), o = Math.max(s, Math.min(r, o))), this.labelRotation = o;
+    a = t.offset ? this.maxWidth / i : f / (i - 1), u + 6 > a && (a = f / (i - (t.offset ? 0.5 : 1)), c = this.maxHeight - me(t.grid) - e.padding - $s(t.title, this.chart.options.font), l = Math.sqrt(u * u + d * d), o = Ya(Math.min(Math.asin(ot((h.highest.height + 6) / a, -1, 1)), Math.asin(ot(c / l, -1, 1)) - Math.asin(ot(d / l, -1, 1)))), o = Math.max(s, Math.min(r, o))), this.labelRotation = o;
   }
   afterCalculateLabelRotation() {
     F(this.options.afterCalculateLabelRotation, [
@@ -4486,7 +4490,7 @@ class je extends Ct {
       height: 0
     }, { chart: e, options: { ticks: i, title: s, grid: r } } = this, o = this._isVisible(), a = this.isHorizontal();
     if (o) {
-      const c = Is(s, e.options.font);
+      const c = $s(s, e.options.font);
       if (a ? (t.width = this.maxWidth, t.height = me(r) + c) : (t.height = this.maxHeight, t.width = me(r) + c), i.display && this.ticks.length) {
         const { first: l, last: h, widest: u, highest: d } = this._getLabelSizes(), f = i.padding * 2, g = Wt(this.labelRotation), m = Math.cos(g), p = Math.sin(g);
         if (a) {
@@ -4539,7 +4543,7 @@ class je extends Ct {
     if (!t) {
       const e = this.options.ticks.sampleSize;
       let i = this.ticks;
-      e < i.length && (i = $s(i, e)), this._labelSizes = t = this._computeLabelSizes(i, i.length, this.options.ticks.maxTicksLimit);
+      e < i.length && (i = Is(i, e)), this._labelSizes = t = this._computeLabelSizes(i, i.length, this.options.ticks.maxTicksLimit);
     }
     return t;
   }
@@ -4550,11 +4554,11 @@ class je extends Ct {
       if (g = t[u].label, m = this._resolveTickFontOptions(u), s.font = p = m.string, b = r[p] = r[p] || {
         data: {},
         gc: []
-      }, x = m.lineHeight, v = M = 0, !R(g) && !q(g))
+      }, x = m.lineHeight, v = M = 0, !R(g) && !U(g))
         v = hs(s, b.data, b.gc, v, g), M = x;
-      else if (q(g))
+      else if (U(g))
         for (d = 0, f = g.length; d < f; ++d)
-          w = g[d], !R(w) && !q(w) && (v = hs(s, b.data, b.gc, v, w), M += x);
+          w = g[d], !R(w) && !U(w) && (v = hs(s, b.data, b.gc, v, w), M += x);
       o.push(v), a.push(M), l = Math.max(v, l), h = Math.max(M, h);
     }
     Gl(r, e);
@@ -4586,7 +4590,7 @@ class je extends Ct {
   getPixelForDecimal(t) {
     this._reversePixels && (t = 1 - t);
     const e = this._startPixel + t * this._length;
-    return qa(this._alignToPixels ? Lt(this.chart, e, 0) : e);
+    return Ua(this._alignToPixels ? Lt(this.chart, e, 0) : e);
   }
   getDecimalForPixel(t) {
     const e = (t - this._startPixel) / this._length;
@@ -4619,11 +4623,11 @@ class je extends Ct {
     const e = this.axis, i = this.chart, s = this.options, { grid: r, position: o, border: a } = s, c = r.offset, l = this.isHorizontal(), u = this.ticks.length + (c ? 1 : 0), d = me(r), f = [], g = a.setContext(this.getContext()), m = g.display ? g.width : 0, p = m / 2, b = function(X) {
       return Lt(i, X, m);
     };
-    let x, v, M, w, P, D, _, k, O, T, C, U;
+    let x, v, M, w, P, D, _, k, O, T, C, q;
     if (o === "top")
-      x = b(this.bottom), D = this.bottom - d, k = x - p, T = b(t.top) + p, U = t.bottom;
+      x = b(this.bottom), D = this.bottom - d, k = x - p, T = b(t.top) + p, q = t.bottom;
     else if (o === "bottom")
-      x = b(this.top), T = t.top, U = b(t.bottom) - p, D = x + p, k = this.top + d;
+      x = b(this.top), T = t.top, q = b(t.bottom) - p, D = x + p, k = this.top + d;
     else if (o === "left")
       x = b(this.right), P = this.right - d, _ = x - p, O = b(t.left) + p, C = t.right;
     else if (o === "right")
@@ -4635,7 +4639,7 @@ class je extends Ct {
         const X = Object.keys(o)[0], it = o[X];
         x = b(this.chart.scales[X].getPixelForValue(it));
       }
-      T = t.top, U = t.bottom, D = x + p, k = D + d;
+      T = t.top, q = t.bottom, D = x + p, k = D + d;
     } else if (e === "y") {
       if (o === "center")
         x = b((t.left + t.right) / 2);
@@ -4648,7 +4652,7 @@ class je extends Ct {
     const tt = A(s.ticks.maxTicksLimit, u), W = Math.max(1, Math.ceil(u / tt));
     for (v = 0; v < u; v += W) {
       const X = this.getContext(v), it = r.setContext(X), Xe = a.setContext(X), Qe = it.lineWidth, Gt = it.color, Ge = Xe.dash || [], Kt = Xe.dashOffset, le = it.tickWidth, At = it.tickColor, he = it.tickBorderDash || [], Et = it.tickBorderDashOffset;
-      M = Ql(this, v, c), M !== void 0 && (w = Lt(i, M, Qe), l ? P = _ = O = C = w : D = k = T = U = w, f.push({
+      M = Ql(this, v, c), M !== void 0 && (w = Lt(i, M, Qe), l ? P = _ = O = C = w : D = k = T = q = w, f.push({
         tx1: P,
         ty1: D,
         tx2: _,
@@ -4656,7 +4660,7 @@ class je extends Ct {
         x1: O,
         y1: T,
         x2: C,
-        y2: U,
+        y2: q,
         width: Qe,
         color: Gt,
         borderDash: Ge,
@@ -4671,7 +4675,7 @@ class je extends Ct {
   }
   _computeLabelItems(t) {
     const e = this.axis, i = this.options, { position: s, ticks: r } = i, o = this.isHorizontal(), a = this.ticks, { align: c, crossAlign: l, padding: h, mirror: u } = r, d = me(i.grid), f = d + h, g = u ? -h : f, m = -Wt(this.labelRotation), p = [];
-    let b, x, v, M, w, P, D, _, k, O, T, C, U = "middle";
+    let b, x, v, M, w, P, D, _, k, O, T, C, q = "middle";
     if (s === "top")
       P = this.bottom - g, D = this._getXAxisLabelAlignment();
     else if (s === "bottom")
@@ -4699,12 +4703,12 @@ class je extends Ct {
       }
       D = this._getYAxisLabelAlignment(d).textAlign;
     }
-    e === "y" && (c === "start" ? U = "top" : c === "end" && (U = "bottom"));
+    e === "y" && (c === "start" ? q = "top" : c === "end" && (q = "bottom"));
     const tt = this._getLabelSizes();
     for (b = 0, x = a.length; b < x; ++b) {
       v = a[b], M = v.label;
       const W = r.setContext(this.getContext(b));
-      _ = this.getPixelForTick(b) + r.labelOffset, k = this._resolveTickFontOptions(b), O = k.lineHeight, T = q(M) ? M.length : 1;
+      _ = this.getPixelForTick(b) + r.labelOffset, k = this._resolveTickFontOptions(b), O = k.lineHeight, T = U(M) ? M.length : 1;
       const X = T / 2, it = W.color, Xe = W.textStrokeColor, Qe = W.textStrokeWidth;
       let Gt = D;
       o ? (w = _, D === "inner" && (b === x - 1 ? Gt = this.options.reverse ? "left" : "right" : b === 0 ? Gt = this.options.reverse ? "right" : "left" : Gt = "center"), s === "top" ? l === "near" || m !== 0 ? C = -T * O + O / 2 : l === "center" ? C = -tt.highest.height / 2 - X * O + O : C = -tt.highest.height + O / 2 : l === "near" || m !== 0 ? C = O / 2 : l === "center" ? C = tt.highest.height / 2 - X * O : C = tt.highest.height - T * O, u && (C *= -1), m !== 0 && !W.showLabelBackdrop && (w += O / 2 * Math.sin(m))) : (P = _, C = (1 - T) * O / 2);
@@ -4712,7 +4716,7 @@ class je extends Ct {
       if (W.showLabelBackdrop) {
         const Kt = ct(W.backdropPadding), le = tt.heights[b], At = tt.widths[b];
         let he = C - Kt.top, Et = 0 - Kt.left;
-        switch (U) {
+        switch (q) {
           case "middle":
             he -= le / 2;
             break;
@@ -4749,7 +4753,7 @@ class je extends Ct {
           strokeColor: Xe,
           strokeWidth: Qe,
           textAlign: Gt,
-          textBaseline: U,
+          textBaseline: q,
           translation: [
             w,
             P
@@ -4860,7 +4864,7 @@ class je extends Ct {
       return;
     const r = J(i.font), o = ct(i.padding), a = i.align;
     let c = r.lineHeight / 2;
-    e === "bottom" || e === "center" || E(e) ? (c += o.bottom, q(i.text) && (c += r.lineHeight * (i.text.length - 1))) : c += o.top;
+    e === "bottom" || e === "center" || E(e) ? (c += o.bottom, U(i.text) && (c += r.lineHeight * (i.text.length - 1))) : c += o.top;
     const { titleX: l, titleY: h, maxWidth: u, rotation: d } = th(this, c, e, a);
     Mn(t, i.text, 0, 0, r, {
       color: i.color,
@@ -4946,7 +4950,7 @@ class an {
   }
   unregister(t) {
     const e = this.items, i = t.id, s = this.scope;
-    i in e && delete e[i], s && i in B[s] && (delete B[s][i], this.override && delete qt[i]);
+    i in e && delete e[i], s && i in B[s] && (delete B[s][i], this.override && delete Ut[i]);
   }
 }
 function eh(n, t, e) {
@@ -5177,7 +5181,7 @@ function fh(n, t) {
   return {};
 }
 function gh(n, t) {
-  const e = qt[n.type] || {
+  const e = Ut[n.type] || {
     scales: {}
   }, i = t.scales || {}, s = oi(n.type, t), r = /* @__PURE__ */ Object.create(null);
   return Object.keys(i).forEach((o) => {
@@ -5196,7 +5200,7 @@ function gh(n, t) {
       h[l]
     ]);
   }), n.data.datasets.forEach((o) => {
-    const a = o.type || n.type, c = o.indexAxis || oi(a, t), h = (qt[a] || {}).scales || {};
+    const a = o.type || n.type, c = o.indexAxis || oi(a, t), h = (Ut[a] || {}).scales || {};
     Object.keys(h).forEach((u) => {
       const d = hh(u, c), f = o[d + "AxisID"] || d;
       r[f] = r[f] || /* @__PURE__ */ Object.create(null), Pe(r[f], [
@@ -5319,7 +5323,7 @@ class ph {
       return a;
     const c = /* @__PURE__ */ new Set();
     e.forEach((h) => {
-      t && (c.add(t), h.forEach((u) => pe(c, t, u))), h.forEach((u) => pe(c, s, u)), h.forEach((u) => pe(c, qt[r] || {}, u)), h.forEach((u) => pe(c, B, u)), h.forEach((u) => pe(c, ii, u));
+      t && (c.add(t), h.forEach((u) => pe(c, t, u))), h.forEach((u) => pe(c, s, u)), h.forEach((u) => pe(c, Ut[r] || {}, u)), h.forEach((u) => pe(c, B, u)), h.forEach((u) => pe(c, ii, u));
     });
     const l = Array.from(c);
     return l.length === 0 && l.push(/* @__PURE__ */ Object.create(null)), so.has(e) && o.set(e, l), l;
@@ -5328,7 +5332,7 @@ class ph {
     const { options: t, type: e } = this;
     return [
       t,
-      qt[e] || {},
+      Ut[e] || {},
       B.datasets[e] || {},
       {
         type: e
@@ -5375,7 +5379,7 @@ function yh(n, t) {
   const { isScriptable: e, isIndexable: i } = Rr(n);
   for (const s of t) {
     const r = e(s), o = i(s), a = (o || r) && n[s];
-    if (r && (Tt(a) || bh(a)) || o && q(a))
+    if (r && (Tt(a) || bh(a)) || o && U(a))
       return !0;
   }
   return !1;
@@ -5715,7 +5719,7 @@ class xt {
       meta: t,
       index: t.index,
       cancelable: !0
-    }, s = Ur(this, t);
+    }, s = qr(this, t);
     this.notifyPlugins("beforeDatasetDraw", i) !== !1 && (s && Cn(e, s), t.controller.draw(), s && An(e), i.cancelable = !1, this.notifyPlugins("afterDatasetDraw", i));
   }
   isPointInArea(t) {
@@ -5744,7 +5748,7 @@ class xt {
     }, i.push(s)), s;
   }
   getContext() {
-    return this.$context || (this.$context = Ut(null, {
+    return this.$context || (this.$context = qt(null, {
       chart: this,
       type: "chart"
     }));
@@ -5903,7 +5907,7 @@ class xt {
     return this.getElementsAtEventForMode(t, r.mode, r, s);
   }
 }
-y(xt, "defaults", B), y(xt, "instances", mn), y(xt, "overrides", qt), y(xt, "registry", ut), y(xt, "version", _h), y(xt, "getChart", Bs);
+y(xt, "defaults", B), y(xt, "instances", mn), y(xt, "overrides", Ut), y(xt, "registry", ut), y(xt, "version", _h), y(xt, "getChart", Bs);
 function Ys() {
   return L(xt.instances, (n) => n._plugins.invalidate());
 }
@@ -5951,7 +5955,7 @@ function ci(n) {
   return !n._decimated && !n._loop && !t.tension && t.cubicInterpolationMode !== "monotone" && !t.stepped && !e ? Sh : Ph;
 }
 function Oh(n) {
-  return n.stepped ? Vc : n.tension || n.cubicInterpolationMode === "monotone" ? qc : Ht;
+  return n.stepped ? Vc : n.tension || n.cubicInterpolationMode === "monotone" ? Uc : Ht;
 }
 function Th(n, t, e, i) {
   let s = t._path;
@@ -5998,7 +6002,7 @@ class Pt extends Ct {
     return i && e[t[i - 1].end];
   }
   interpolate(t, e) {
-    const i = this.options, s = t[e], r = this.points, o = qr(this, {
+    const i = this.options, s = t[e], r = this.points, o = Ur(this, {
       property: e,
       start: s,
       end: s
@@ -6127,11 +6131,11 @@ y(pn, "defaultRoutes", {
   backgroundColor: "backgroundColor",
   borderColor: "borderColor"
 });
-function $h(n, t, e) {
+function Ih(n, t, e) {
   const i = n.segments, s = n.points, r = t.points, o = [];
   for (const a of i) {
     let { start: c, end: l } = a;
-    l = In(c, l, s);
+    l = $n(c, l, s);
     const h = li(e, s[c], s[l], a.loop);
     if (!t.segments) {
       o.push({
@@ -6142,7 +6146,7 @@ function $h(n, t, e) {
       });
       continue;
     }
-    const u = qr(t, h);
+    const u = Ur(t, h);
     for (const d of u) {
       const f = li(e, r[d.start], r[d.end], d.loop), g = Vr(a, s, f);
       for (const m of g)
@@ -6170,10 +6174,10 @@ function li(n, t, e, i) {
     end: r
   };
 }
-function Ih(n, t) {
+function $h(n, t) {
   const { x: e = null, y: i = null } = n || {}, s = t.points, r = [];
   return t.segments.forEach(({ start: o, end: a }) => {
-    a = In(o, a, s);
+    a = $n(o, a, s);
     const c = s[o], l = s[a];
     i !== null ? (r.push({
       x: c.x,
@@ -6190,7 +6194,7 @@ function Ih(n, t) {
     }));
   }), r;
 }
-function In(n, t, e) {
+function $n(n, t, e) {
   for (; t > n; t--) {
     const i = e[t];
     if (!isNaN(i.x) && !isNaN(i.y))
@@ -6203,7 +6207,7 @@ function Vs(n, t, e, i) {
 }
 function co(n, t) {
   let e = [], i = !1;
-  return q(n) ? (i = !0, e = n) : e = Ih(n, t), e.length ? new Pt({
+  return U(n) ? (i = !0, e = n) : e = $h(n, t), e.length ? new Pt({
     points: e,
     options: {
       tension: 0
@@ -6212,7 +6216,7 @@ function co(n, t) {
     _fullLoop: i
   }) : null;
 }
-function qs(n) {
+function Us(n) {
   return n && n.fill !== !1;
 }
 function Lh(n, t, e) {
@@ -6344,19 +6348,19 @@ class lo {
 function Vh(n) {
   const { chart: t, fill: e, line: i } = n;
   if (G(e))
-    return qh(t, e);
+    return Uh(t, e);
   if (e === "stack")
     return Wh(n);
   if (e === "shape")
     return !0;
-  const s = Uh(n);
+  const s = qh(n);
   return s instanceof lo ? s : co(s, i);
 }
-function qh(n, t) {
+function Uh(n, t) {
   const e = n.getDatasetMeta(t);
   return e && n.isDatasetVisible(t) ? e.dataset : null;
 }
-function Uh(n) {
+function qh(n) {
   return (n.scale || {}).getPointPositionForValue ? Qh(n) : Xh(n);
 }
 function Xh(n) {
@@ -6385,7 +6389,7 @@ function Qh(n) {
   return a;
 }
 function Gn(n, t, e) {
-  const i = Vh(t), { chart: s, index: r, line: o, scale: a, axis: c } = t, l = o.options, h = l.fill, u = l.backgroundColor, { above: d = u, below: f = u } = h || {}, g = s.getDatasetMeta(r), m = Ur(s, g);
+  const i = Vh(t), { chart: s, index: r, line: o, scale: a, axis: c } = t, l = o.options, h = l.fill, u = l.backgroundColor, { above: d = u, below: f = u } = h || {}, g = s.getDatasetMeta(r), m = qr(s, g);
   i && o.points.length && (Cn(n, e), Gh(n, {
     line: o,
     target: i,
@@ -6401,14 +6405,14 @@ function Gh(n, t) {
   const { line: e, target: i, above: s, below: r, area: o, scale: a, clip: c } = t, l = e._loop ? "angle" : t.axis;
   n.save();
   let h = r;
-  r !== s && (l === "x" ? (Us(n, i, o.top), Kn(n, {
+  r !== s && (l === "x" ? (qs(n, i, o.top), Kn(n, {
     line: e,
     target: i,
     color: s,
     scale: a,
     property: l,
     clip: c
-  }), n.restore(), n.save(), Us(n, i, o.bottom)) : l === "y" && (Xs(n, i, o.left), Kn(n, {
+  }), n.restore(), n.save(), qs(n, i, o.bottom)) : l === "y" && (Xs(n, i, o.left), Kn(n, {
     line: e,
     target: i,
     color: r,
@@ -6424,12 +6428,12 @@ function Gh(n, t) {
     clip: c
   }), n.restore();
 }
-function Us(n, t, e) {
+function qs(n, t, e) {
   const { segments: i, points: s } = t;
   let r = !0, o = !1;
   n.beginPath();
   for (const a of i) {
-    const { start: c, end: l } = a, h = s[c], u = s[In(c, l, s)];
+    const { start: c, end: l } = a, h = s[c], u = s[$n(c, l, s)];
     r ? (n.moveTo(h.x, h.y), r = !1) : (n.lineTo(h.x, e), n.lineTo(h.x, h.y)), o = !!t.pathSegment(n, a, {
       move: o
     }), o ? n.closePath() : n.lineTo(u.x, e);
@@ -6441,7 +6445,7 @@ function Xs(n, t, e) {
   let r = !0, o = !1;
   n.beginPath();
   for (const a of i) {
-    const { start: c, end: l } = a, h = s[c], u = s[In(c, l, s)];
+    const { start: c, end: l } = a, h = s[c], u = s[$n(c, l, s)];
     r ? (n.moveTo(h.x, h.y), r = !1) : (n.lineTo(e, h.y), n.lineTo(h.x, h.y)), o = !!t.pathSegment(n, a, {
       move: o
     }), o ? n.closePath() : n.lineTo(e, u.y);
@@ -6449,7 +6453,7 @@ function Xs(n, t, e) {
   n.lineTo(e, t.first().y), n.closePath(), n.clip();
 }
 function Kn(n, t) {
-  const { line: e, target: i, property: s, color: r, scale: o, clip: a } = t, c = $h(e, i, s);
+  const { line: e, target: i, property: s, color: r, scale: o, clip: a } = t, c = Ih(e, i, s);
   for (const { source: l, target: h, start: u, end: d } of c) {
     const { style: { backgroundColor: f = r } = {} } = l, g = i !== !0;
     n.save(), n.fillStyle = f, Kh(n, o, a, g && li(s, u, d)), n.beginPath();
@@ -6508,12 +6512,12 @@ var Zh = {
     const i = n.getSortedVisibleDatasetMetas();
     for (let s = i.length - 1; s >= 0; --s) {
       const r = i[s].$filler;
-      qs(r) && Gn(n.ctx, r, n.chartArea);
+      Us(r) && Gn(n.ctx, r, n.chartArea);
     }
   },
   beforeDatasetDraw(n, t, e) {
     const i = t.meta.$filler;
-    !qs(i) || e.drawTime !== "beforeDatasetDraw" || Gn(n.ctx, i, n.chartArea);
+    !Us(i) || e.drawTime !== "beforeDatasetDraw" || Gn(n.ctx, i, n.chartArea);
   },
   defaults: {
     propagate: !0,
@@ -6635,7 +6639,7 @@ class Ks extends Ct {
         Lr(s, O, T, C, o.pointStyleWidth && g);
       } else {
         const O = D + Math.max((u - m) / 2, 0), T = c.leftForLtr(P, g), C = Ce(_.borderRadius);
-        s.beginPath(), Object.values(C).some((U) => U !== 0) ? ri(s, {
+        s.beginPath(), Object.values(C).some((q) => q !== 0) ? ri(s, {
           x: T,
           y: O,
           w: g,
@@ -6665,8 +6669,8 @@ class Ks extends Ct {
       const _ = s.measureText(P.text).width, k = c.textAlign(P.textAlign || (P.textAlign = o.textAlign)), O = g + d + _;
       let T = f.x, C = f.y;
       c.setWidth(this.width), v ? D > 0 && T + O + h > this.right && (C = f.y += w, f.line++, T = f.x = nt(r, this.left + h, this.right - i[f.line])) : D > 0 && C + w > this.bottom && (T = f.x = T + e[f.line].width + h, f.line++, C = f.y = nt(r, this.top + M + h, this.bottom - e[f.line].height));
-      const U = c.x(T);
-      if (b(U, C, P), T = Za(k, T + g + d, v ? T + O : this.right, t.rtl), x(c.x(T), C, P), v)
+      const q = c.x(T);
+      if (b(q, C, P), T = Za(k, T + g + d, v ? T + O : this.right, t.rtl), x(c.x(T), C, P), v)
         f.x += O + h;
       else if (typeof P.text != "string") {
         const tt = l.lineHeight;
@@ -6873,7 +6877,7 @@ const ve = {
   }
 };
 function ht(n, t) {
-  return t && (q(t) ? Array.prototype.push.apply(n, t) : n.push(t)), n;
+  return t && (U(t) ? Array.prototype.push.apply(n, t) : n.push(t)), n;
 }
 function yt(n) {
   return (typeof n == "string" || n instanceof String) && n.indexOf(`
@@ -6959,7 +6963,7 @@ function er(n) {
   return ht([], yt(n));
 }
 function uu(n, t, e) {
-  return Ut(n, {
+  return qt(n, {
     tooltip: t,
     tooltipItems: e,
     type: "tooltip"
@@ -7468,7 +7472,7 @@ class gu extends je {
     this._startValue = e, this._endValue = i, this._valueRange = i - e;
   }
   getLabelForValue(t) {
-    return $r(t, this.chart.options.locale, this.options.ticks.format);
+    return Ir(t, this.chart.options.locale, this.options.ticks.format);
   }
 }
 class ui extends gu {
@@ -7489,7 +7493,7 @@ class ui extends gu {
 }
 y(ui, "id", "linear"), y(ui, "defaults", {
   ticks: {
-    callback: Ir.formatters.numeric
+    callback: $r.formatters.numeric
   }
 });
 const Ln = {
@@ -7816,7 +7820,7 @@ class lr extends We {
   }
 }
 y(lr, "id", "timeseries"), y(lr, "defaults", We.defaults);
-const fo = 6048e5, yu = 864e5, Ve = 6e4, qe = 36e5, _u = 1e3, hr = Symbol.for("constructDateFrom");
+const fo = 6048e5, yu = 864e5, Ve = 6e4, Ue = 36e5, _u = 1e3, hr = Symbol.for("constructDateFrom");
 function z(n, t) {
   return typeof n == "function" ? n(t) : n && typeof n == "object" && hr in n ? n[hr](t) : n instanceof Date ? new n.constructor(t) : new Date(t);
 }
@@ -7845,7 +7849,7 @@ function Ei(n, t, e) {
   return z(n, +S(n) + t);
 }
 function xu(n, t, e) {
-  return Ei(n, t * qe);
+  return Ei(n, t * Ue);
 }
 let wu = {};
 function Xt() {
@@ -7962,7 +7966,7 @@ function ur(n, t) {
   const e = n.getFullYear() - t.getFullYear() || n.getMonth() - t.getMonth() || n.getDate() - t.getDate() || n.getHours() - t.getHours() || n.getMinutes() - t.getMinutes() || n.getSeconds() - t.getSeconds() || n.getMilliseconds() - t.getMilliseconds();
   return e < 0 ? -1 : e > 0 ? 1 : e;
 }
-function Ue(n) {
+function qe(n) {
   return (t) => {
     const i = (n ? Math[n] : Math.trunc)(t);
     return i === 0 ? 0 : i;
@@ -7973,15 +7977,15 @@ function Au(n, t, e) {
     e == null ? void 0 : e.in,
     n,
     t
-  ), r = (+i - +s) / qe;
-  return Ue(e == null ? void 0 : e.roundingMethod)(r);
+  ), r = (+i - +s) / Ue;
+  return qe(e == null ? void 0 : e.roundingMethod)(r);
 }
-function $i(n, t) {
+function Ii(n, t) {
   return +S(n) - +S(t);
 }
 function Eu(n, t, e) {
-  const i = $i(n, t) / Ve;
-  return Ue(e == null ? void 0 : e.roundingMethod)(i);
+  const i = Ii(n, t) / Ve;
+  return qe(e == null ? void 0 : e.roundingMethod)(i);
 }
 function yo(n, t) {
   const e = S(n, t == null ? void 0 : t.in);
@@ -7991,7 +7995,7 @@ function _o(n, t) {
   const e = S(n, t == null ? void 0 : t.in), i = e.getMonth();
   return e.setFullYear(e.getFullYear(), i + 1, 0), e.setHours(23, 59, 59, 999), e;
 }
-function $u(n, t) {
+function Iu(n, t) {
   const e = S(n, t == null ? void 0 : t.in);
   return +yo(e, t) == +_o(e, t);
 }
@@ -8007,21 +8011,21 @@ function xo(n, t, e) {
   if (a < 1) return 0;
   s.getMonth() === 1 && s.getDate() > 27 && s.setDate(30), s.setMonth(s.getMonth() - o * a);
   let c = Ee(s, r) === -o;
-  $u(i) && a === 1 && Ee(i, r) === 1 && (c = !1);
+  Iu(i) && a === 1 && Ee(i, r) === 1 && (c = !1);
   const l = o * (a - +c);
   return l === 0 ? 0 : l;
 }
-function Iu(n, t, e) {
+function $u(n, t, e) {
   const i = xo(n, t, e) / 3;
-  return Ue(e == null ? void 0 : e.roundingMethod)(i);
+  return qe(e == null ? void 0 : e.roundingMethod)(i);
 }
 function Lu(n, t, e) {
-  const i = $i(n, t) / 1e3;
-  return Ue(e == null ? void 0 : e.roundingMethod)(i);
+  const i = Ii(n, t) / 1e3;
+  return qe(e == null ? void 0 : e.roundingMethod)(i);
 }
 function Fu(n, t, e) {
   const i = bo(n, t, e) / 7;
-  return Ue(e == null ? void 0 : e.roundingMethod)(i);
+  return qe(e == null ? void 0 : e.roundingMethod)(i);
 }
 function Ru(n, t, e) {
   const [i, s] = Qt(
@@ -8070,7 +8074,7 @@ function Vu(n, t) {
   const e = S(n, t == null ? void 0 : t.in);
   return e.setMilliseconds(999), e;
 }
-const qu = {
+const Uu = {
   lessThanXSeconds: {
     one: "less than a second",
     other: "less than {{count}} seconds"
@@ -8132,9 +8136,9 @@ const qu = {
     one: "almost 1 year",
     other: "almost {{count}} years"
   }
-}, Uu = (n, t, e) => {
+}, qu = (n, t, e) => {
   let i;
-  const s = qu[n];
+  const s = Uu[n];
   return typeof s == "string" ? i = s : t === 1 ? i = s.one : i = s.other.replace("{{count}}", t.toString()), e != null && e.addSuffix ? e.comparison && e.comparison > 0 ? "in " + i : i + " ago" : i;
 };
 function Zn(n) {
@@ -8491,7 +8495,7 @@ const ud = /^(\d+)(th|st|nd|rd)?/i, dd = /\d+/i, fd = {
   })
 }, vo = {
   code: "en-US",
-  formatDistance: Uu,
+  formatDistance: qu,
   formatLong: Ku,
   formatRelative: Ju,
   localize: ad,
@@ -8509,7 +8513,7 @@ function Mo(n, t) {
   const e = S(n, t == null ? void 0 : t.in), i = +ce(e) - +vu(e);
   return Math.round(i / fo) + 1;
 }
-function Ii(n, t) {
+function $i(n, t) {
   var h, u, d, f;
   const e = S(n, t == null ? void 0 : t.in), i = e.getFullYear(), s = Xt(), r = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((u = (h = t == null ? void 0 : t.locale) == null ? void 0 : h.options) == null ? void 0 : u.firstWeekContainsDate) ?? s.firstWeekContainsDate ?? ((f = (d = s.locale) == null ? void 0 : d.options) == null ? void 0 : f.firstWeekContainsDate) ?? 1, o = z((t == null ? void 0 : t.in) || n, 0);
   o.setFullYear(i + 1, 0, r), o.setHours(0, 0, 0, 0);
@@ -8520,14 +8524,14 @@ function Ii(n, t) {
 }
 function Dd(n, t) {
   var a, c, l, h;
-  const e = Xt(), i = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((c = (a = t == null ? void 0 : t.locale) == null ? void 0 : a.options) == null ? void 0 : c.firstWeekContainsDate) ?? e.firstWeekContainsDate ?? ((h = (l = e.locale) == null ? void 0 : l.options) == null ? void 0 : h.firstWeekContainsDate) ?? 1, s = Ii(n, t), r = z((t == null ? void 0 : t.in) || n, 0);
+  const e = Xt(), i = (t == null ? void 0 : t.firstWeekContainsDate) ?? ((c = (a = t == null ? void 0 : t.locale) == null ? void 0 : a.options) == null ? void 0 : c.firstWeekContainsDate) ?? e.firstWeekContainsDate ?? ((h = (l = e.locale) == null ? void 0 : l.options) == null ? void 0 : h.firstWeekContainsDate) ?? 1, s = $i(n, t), r = z((t == null ? void 0 : t.in) || n, 0);
   return r.setFullYear(s, 0, i), r.setHours(0, 0, 0, 0), mt(r, t);
 }
 function ko(n, t) {
   const e = S(n, t == null ? void 0 : t.in), i = +mt(e, t) - +Dd(e, t);
   return Math.round(i / fo) + 1;
 }
-function I(n, t) {
+function $(n, t) {
   const e = n < 0 ? "-" : "", i = Math.abs(n).toString().padStart(t, "0");
   return e + i;
 }
@@ -8535,16 +8539,16 @@ const wt = {
   // Year
   y(n, t) {
     const e = n.getFullYear(), i = e > 0 ? e : 1 - e;
-    return I(t === "yy" ? i % 100 : i, t.length);
+    return $(t === "yy" ? i % 100 : i, t.length);
   },
   // Month
   M(n, t) {
     const e = n.getMonth();
-    return t === "M" ? String(e + 1) : I(e + 1, 2);
+    return t === "M" ? String(e + 1) : $(e + 1, 2);
   },
   // Day of the month
   d(n, t) {
-    return I(n.getDate(), t.length);
+    return $(n.getDate(), t.length);
   },
   // AM or PM
   a(n, t) {
@@ -8564,26 +8568,26 @@ const wt = {
   },
   // Hour [1-12]
   h(n, t) {
-    return I(n.getHours() % 12 || 12, t.length);
+    return $(n.getHours() % 12 || 12, t.length);
   },
   // Hour [0-23]
   H(n, t) {
-    return I(n.getHours(), t.length);
+    return $(n.getHours(), t.length);
   },
   // Minute
   m(n, t) {
-    return I(n.getMinutes(), t.length);
+    return $(n.getMinutes(), t.length);
   },
   // Second
   s(n, t) {
-    return I(n.getSeconds(), t.length);
+    return $(n.getSeconds(), t.length);
   },
   // Fraction of second
   S(n, t) {
     const e = t.length, i = n.getMilliseconds(), s = Math.trunc(
       i * Math.pow(10, e - 3)
     );
-    return I(s, t.length);
+    return $(s, t.length);
   }
 }, Jt = {
   midnight: "midnight",
@@ -8621,17 +8625,17 @@ const wt = {
   },
   // Local week-numbering year
   Y: function(n, t, e, i) {
-    const s = Ii(n, i), r = s > 0 ? s : 1 - s;
+    const s = $i(n, i), r = s > 0 ? s : 1 - s;
     if (t === "YY") {
       const o = r % 100;
-      return I(o, 2);
+      return $(o, 2);
     }
-    return t === "Yo" ? e.ordinalNumber(r, { unit: "year" }) : I(r, t.length);
+    return t === "Yo" ? e.ordinalNumber(r, { unit: "year" }) : $(r, t.length);
   },
   // ISO week-numbering year
   R: function(n, t) {
     const e = go(n);
-    return I(e, t.length);
+    return $(e, t.length);
   },
   // Extended year. This is a single number designating the year of this calendar system.
   // The main difference between `y` and `u` localizers are B.C. years:
@@ -8644,7 +8648,7 @@ const wt = {
   // while `uu` pads single digit years to 2 characters and returns other years unchanged.
   u: function(n, t) {
     const e = n.getFullYear();
-    return I(e, t.length);
+    return $(e, t.length);
   },
   // Quarter
   Q: function(n, t, e) {
@@ -8655,7 +8659,7 @@ const wt = {
         return String(i);
       // 01, 02, 03, 04
       case "QQ":
-        return I(i, 2);
+        return $(i, 2);
       // 1st, 2nd, 3rd, 4th
       case "Qo":
         return e.ordinalNumber(i, { unit: "quarter" });
@@ -8689,7 +8693,7 @@ const wt = {
         return String(i);
       // 01, 02, 03, 04
       case "qq":
-        return I(i, 2);
+        return $(i, 2);
       // 1st, 2nd, 3rd, 4th
       case "qo":
         return e.ordinalNumber(i, { unit: "quarter" });
@@ -8751,7 +8755,7 @@ const wt = {
         return String(i + 1);
       // 01, 02, ..., 12
       case "LL":
-        return I(i + 1, 2);
+        return $(i + 1, 2);
       // 1st, 2nd, ..., 12th
       case "Lo":
         return e.ordinalNumber(i + 1, { unit: "month" });
@@ -8776,12 +8780,12 @@ const wt = {
   // Local week of year
   w: function(n, t, e, i) {
     const s = ko(n, i);
-    return t === "wo" ? e.ordinalNumber(s, { unit: "week" }) : I(s, t.length);
+    return t === "wo" ? e.ordinalNumber(s, { unit: "week" }) : $(s, t.length);
   },
   // ISO week of year
   I: function(n, t, e) {
     const i = Mo(n);
-    return t === "Io" ? e.ordinalNumber(i, { unit: "week" }) : I(i, t.length);
+    return t === "Io" ? e.ordinalNumber(i, { unit: "week" }) : $(i, t.length);
   },
   // Day of the month
   d: function(n, t, e) {
@@ -8790,7 +8794,7 @@ const wt = {
   // Day of year
   D: function(n, t, e) {
     const i = kd(n);
-    return t === "Do" ? e.ordinalNumber(i, { unit: "dayOfYear" }) : I(i, t.length);
+    return t === "Do" ? e.ordinalNumber(i, { unit: "dayOfYear" }) : $(i, t.length);
   },
   // Day of week
   E: function(n, t, e) {
@@ -8834,7 +8838,7 @@ const wt = {
         return String(r);
       // Padded numerical value
       case "ee":
-        return I(r, 2);
+        return $(r, 2);
       // 1st, 2nd, ..., 7th
       case "eo":
         return e.ordinalNumber(r, { unit: "day" });
@@ -8873,7 +8877,7 @@ const wt = {
         return String(r);
       // Padded numerical value
       case "cc":
-        return I(r, t.length);
+        return $(r, t.length);
       // 1st, 2nd, ..., 7th
       case "co":
         return e.ordinalNumber(r, { unit: "day" });
@@ -8912,7 +8916,7 @@ const wt = {
         return String(s);
       // 02
       case "ii":
-        return I(s, t.length);
+        return $(s, t.length);
       // 2nd
       case "io":
         return e.ordinalNumber(s, { unit: "day" });
@@ -9040,12 +9044,12 @@ const wt = {
   // Hour [0-11]
   K: function(n, t, e) {
     const i = n.getHours() % 12;
-    return t === "Ko" ? e.ordinalNumber(i, { unit: "hour" }) : I(i, t.length);
+    return t === "Ko" ? e.ordinalNumber(i, { unit: "hour" }) : $(i, t.length);
   },
   // Hour [1-24]
   k: function(n, t, e) {
     let i = n.getHours();
-    return i === 0 && (i = 24), t === "ko" ? e.ordinalNumber(i, { unit: "hour" }) : I(i, t.length);
+    return i === 0 && (i = 24), t === "ko" ? e.ordinalNumber(i, { unit: "hour" }) : $(i, t.length);
   },
   // Minute
   m: function(n, t, e) {
@@ -9140,22 +9144,22 @@ const wt = {
   // Seconds timestamp
   t: function(n, t, e) {
     const i = Math.trunc(+n / 1e3);
-    return I(i, t.length);
+    return $(i, t.length);
   },
   // Milliseconds timestamp
   T: function(n, t, e) {
-    return I(+n, t.length);
+    return $(+n, t.length);
   }
 };
 function fr(n, t = "") {
   const e = n > 0 ? "-" : "+", i = Math.abs(n), s = Math.trunc(i / 60), r = i % 60;
-  return r === 0 ? e + String(s) : e + String(s) + t + I(r, 2);
+  return r === 0 ? e + String(s) : e + String(s) + t + $(r, 2);
 }
 function gr(n, t) {
-  return n % 60 === 0 ? (n > 0 ? "-" : "+") + I(Math.abs(n) / 60, 2) : zt(n, t);
+  return n % 60 === 0 ? (n > 0 ? "-" : "+") + $(Math.abs(n) / 60, 2) : zt(n, t);
 }
 function zt(n, t = "") {
-  const e = n > 0 ? "-" : "+", i = Math.abs(n), s = I(Math.trunc(i / 60), 2), r = I(i % 60, 2);
+  const e = n > 0 ? "-" : "+", i = Math.abs(n), s = $(Math.trunc(i / 60), 2), r = $(i % 60, 2);
   return e + s + t + r;
 }
 const mr = (n, t) => {
@@ -9221,7 +9225,7 @@ function Cd(n, t, e) {
   const i = n[0] === "Y" ? "years" : "days of the month";
   return `Use \`${n.toLowerCase()}\` instead of \`${n}\` (in \`${t}\`) for formatting ${i} to the input \`${e}\`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md`;
 }
-const Ad = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g, Ed = /P+p+|P+|p+|''|'(''|[^'])+('|$)|./g, $d = /^'([^]*?)'?$/, Id = /''/g, Ld = /[a-zA-Z]/;
+const Ad = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g, Ed = /P+p+|P+|p+|''|'(''|[^'])+('|$)|./g, Id = /^'([^]*?)'?$/, $d = /''/g, Ld = /[a-zA-Z]/;
 function Fd(n, t, e) {
   var h, u, d, f, g, m, p, b;
   const i = Xt(), s = (e == null ? void 0 : e.locale) ?? i.locale ?? vo, r = (e == null ? void 0 : e.firstWeekContainsDate) ?? ((u = (h = e == null ? void 0 : e.locale) == null ? void 0 : h.options) == null ? void 0 : u.firstWeekContainsDate) ?? i.firstWeekContainsDate ?? ((f = (d = i.locale) == null ? void 0 : d.options) == null ? void 0 : f.firstWeekContainsDate) ?? 1, o = (e == null ? void 0 : e.weekStartsOn) ?? ((m = (g = e == null ? void 0 : e.locale) == null ? void 0 : g.options) == null ? void 0 : m.weekStartsOn) ?? i.weekStartsOn ?? ((b = (p = i.locale) == null ? void 0 : p.options) == null ? void 0 : b.weekStartsOn) ?? 0, a = S(n, e == null ? void 0 : e.in);
@@ -9263,8 +9267,8 @@ function Fd(n, t, e) {
   }).join("");
 }
 function Rd(n) {
-  const t = n.match($d);
-  return t ? t[1].replace(Id, "'") : n;
+  const t = n.match(Id);
+  return t ? t[1].replace($d, "'") : n;
 }
 function Hd() {
   return Object.assign({}, Xt());
@@ -9317,7 +9321,7 @@ class jd extends Oo {
     return i.timestampIsSet ? e : z(e, Nd(e, this.context));
   }
 }
-class $ {
+class I {
   run(t, e, i, s) {
     const r = this.parse(t, e, i, s);
     return r ? {
@@ -9335,7 +9339,7 @@ class $ {
     return !0;
   }
 }
-class Vd extends $ {
+class Vd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 140);
@@ -9430,7 +9434,7 @@ function gt(n, t) {
     };
   const i = e[1] === "+" ? 1 : -1, s = e[2] ? parseInt(e[2], 10) : 0, r = e[3] ? parseInt(e[3], 10) : 0, o = e[5] ? parseInt(e[5], 10) : 0;
   return {
-    value: i * (s * qe + r * Ve + o * _u),
+    value: i * (s * Ue + r * Ve + o * _u),
     rest: t.slice(e[0].length)
   };
 }
@@ -9496,7 +9500,7 @@ function Co(n, t) {
 function Ao(n) {
   return n % 400 === 0 || n % 4 === 0 && n % 100 !== 0;
 }
-class qd extends $ {
+class Ud extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 130);
@@ -9537,7 +9541,7 @@ class qd extends $ {
     return e.setFullYear(o, 0, 1), e.setHours(0, 0, 0, 0), e;
   }
 }
-class Ud extends $ {
+class qd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 130);
@@ -9580,7 +9584,7 @@ class Ud extends $ {
     return i.isTwoDigitYear || i.year > 0;
   }
   set(e, i, s, r) {
-    const o = Ii(e, r);
+    const o = $i(e, r);
     if (s.isTwoDigitYear) {
       const c = Co(
         s.year,
@@ -9596,7 +9600,7 @@ class Ud extends $ {
     return e.setFullYear(a, 0, r.firstWeekContainsDate), e.setHours(0, 0, 0, 0), mt(e, r);
   }
 }
-class Xd extends $ {
+class Xd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 130);
@@ -9626,7 +9630,7 @@ class Xd extends $ {
     return r.setFullYear(s, 0, 4), r.setHours(0, 0, 0, 0), ce(r);
   }
 }
-class Qd extends $ {
+class Qd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 130);
@@ -9639,7 +9643,7 @@ class Qd extends $ {
     return e.setFullYear(s, 0, 1), e.setHours(0, 0, 0, 0), e;
   }
 }
-class Gd extends $ {
+class Gd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 120);
@@ -9706,7 +9710,7 @@ class Gd extends $ {
     return e.setMonth((s - 1) * 3, 1), e.setHours(0, 0, 0, 0), e;
   }
 }
-class Kd extends $ {
+class Kd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 120);
@@ -9773,7 +9777,7 @@ class Kd extends $ {
     return e.setMonth((s - 1) * 3, 1), e.setHours(0, 0, 0, 0), e;
   }
 }
-class Zd extends $ {
+class Zd extends I {
   constructor() {
     super(...arguments);
     y(this, "incompatibleTokens", [
@@ -9841,7 +9845,7 @@ class Zd extends $ {
     return e.setMonth(s, 1), e.setHours(0, 0, 0, 0), e;
   }
 }
-class Jd extends $ {
+class Jd extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 110);
@@ -9913,7 +9917,7 @@ function tf(n, t, e) {
   const i = S(n, e == null ? void 0 : e.in), s = ko(i, e) - t;
   return i.setDate(i.getDate() - s * 7), S(i, e == null ? void 0 : e.in);
 }
-class ef extends $ {
+class ef extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 100);
@@ -9954,7 +9958,7 @@ function nf(n, t, e) {
   const i = S(n, e == null ? void 0 : e.in), s = Mo(i, e) - t;
   return i.setDate(i.getDate() - s * 7), i;
 }
-class sf extends $ {
+class sf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 100);
@@ -10006,7 +10010,7 @@ const rf = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], of = [
   30,
   31
 ];
-class af extends $ {
+class af extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10044,7 +10048,7 @@ class af extends $ {
     return e.setDate(s), e.setHours(0, 0, 0, 0), e;
   }
 }
-class cf extends $ {
+class cf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10091,7 +10095,7 @@ function Fi(n, t, e) {
   const i = Xt(), s = (e == null ? void 0 : e.weekStartsOn) ?? ((d = (u = e == null ? void 0 : e.locale) == null ? void 0 : u.options) == null ? void 0 : d.weekStartsOn) ?? i.weekStartsOn ?? ((g = (f = i.locale) == null ? void 0 : f.options) == null ? void 0 : g.weekStartsOn) ?? 0, r = S(n, e == null ? void 0 : e.in), o = r.getDay(), c = (t % 7 + 7) % 7, l = 7 - s, h = t < 0 || t > 6 ? t - (o + l) % 7 : (c + l) % 7 - (o + l) % 7;
   return Fn(r, h, e);
 }
-class lf extends $ {
+class lf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10132,7 +10136,7 @@ class lf extends $ {
     return e = Fi(e, s, r), e.setHours(0, 0, 0, 0), e;
   }
 }
-class hf extends $ {
+class hf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10203,7 +10207,7 @@ class hf extends $ {
     return e = Fi(e, s, r), e.setHours(0, 0, 0, 0), e;
   }
 }
-class uf extends $ {
+class uf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10278,7 +10282,7 @@ function df(n, t, e) {
   const i = S(n, e == null ? void 0 : e.in), s = zd(i, e), r = t - s;
   return Fn(i, r, e);
 }
-class ff extends $ {
+class ff extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 90);
@@ -10374,7 +10378,7 @@ class ff extends $ {
     return e = df(e, s), e.setHours(0, 0, 0, 0), e;
   }
 }
-class gf extends $ {
+class gf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 80);
@@ -10415,7 +10419,7 @@ class gf extends $ {
     return e.setHours(Li(s), 0, 0, 0), e;
   }
 }
-class mf extends $ {
+class mf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 80);
@@ -10456,7 +10460,7 @@ class mf extends $ {
     return e.setHours(Li(s), 0, 0, 0), e;
   }
 }
-class pf extends $ {
+class pf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 80);
@@ -10497,7 +10501,7 @@ class pf extends $ {
     return e.setHours(Li(s), 0, 0, 0), e;
   }
 }
-class bf extends $ {
+class bf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 70);
@@ -10521,7 +10525,7 @@ class bf extends $ {
     return r && s < 12 ? e.setHours(s + 12, 0, 0, 0) : !r && s === 12 ? e.setHours(0, 0, 0, 0) : e.setHours(s, 0, 0, 0), e;
   }
 }
-class yf extends $ {
+class yf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 70);
@@ -10544,7 +10548,7 @@ class yf extends $ {
     return e.setHours(s, 0, 0, 0), e;
   }
 }
-class _f extends $ {
+class _f extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 70);
@@ -10567,7 +10571,7 @@ class _f extends $ {
     return e.getHours() >= 12 && s < 12 ? e.setHours(s + 12, 0, 0, 0) : e.setHours(s, 0, 0, 0), e;
   }
 }
-class xf extends $ {
+class xf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 70);
@@ -10591,7 +10595,7 @@ class xf extends $ {
     return e.setHours(r, 0, 0, 0), e;
   }
 }
-class wf extends $ {
+class wf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 60);
@@ -10614,7 +10618,7 @@ class wf extends $ {
     return e.setMinutes(s, 0, 0), e;
   }
 }
-class vf extends $ {
+class vf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 50);
@@ -10637,7 +10641,7 @@ class vf extends $ {
     return e.setSeconds(s, 0), e;
   }
 }
-class Mf extends $ {
+class Mf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 30);
@@ -10651,7 +10655,7 @@ class Mf extends $ {
     return e.setMilliseconds(s), e;
   }
 }
-class kf extends $ {
+class kf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 10);
@@ -10688,7 +10692,7 @@ class kf extends $ {
     );
   }
 }
-class Df extends $ {
+class Df extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 10);
@@ -10725,7 +10729,7 @@ class Df extends $ {
     );
   }
 }
-class Pf extends $ {
+class Pf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 40);
@@ -10738,7 +10742,7 @@ class Pf extends $ {
     return [z(e, s * 1e3), { timestampIsSet: !0 }];
   }
 }
-class Sf extends $ {
+class Sf extends I {
   constructor() {
     super(...arguments);
     y(this, "priority", 20);
@@ -10753,8 +10757,8 @@ class Sf extends $ {
 }
 const Of = {
   G: new Vd(),
-  y: new qd(),
-  Y: new Ud(),
+  y: new Ud(),
+  Y: new qd(),
   R: new Xd(),
   u: new Qd(),
   Q: new Gd(),
@@ -10783,7 +10787,7 @@ const Of = {
   x: new Df(),
   t: new Pf(),
   T: new Sf()
-}, Tf = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g, Cf = /P+p+|P+|p+|''|'(''|[^'])+('|$)|./g, Af = /^'([^]*?)'?$/, Ef = /''/g, $f = /\S/, If = /[a-zA-Z]/;
+}, Tf = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g, Cf = /P+p+|P+|p+|''|'(''|[^'])+('|$)|./g, Af = /^'([^]*?)'?$/, Ef = /''/g, If = /\S/, $f = /[a-zA-Z]/;
 function Lf(n, t, e, i) {
   var p, b, x, v, M, w, P, D;
   const s = () => z((i == null ? void 0 : i.in) || e, NaN), r = Hd(), o = (i == null ? void 0 : i.locale) ?? r.locale ?? vo, a = (i == null ? void 0 : i.firstWeekContainsDate) ?? ((b = (p = i == null ? void 0 : i.locale) == null ? void 0 : p.options) == null ? void 0 : b.firstWeekContainsDate) ?? r.firstWeekContainsDate ?? ((v = (x = r.locale) == null ? void 0 : x.options) == null ? void 0 : v.firstWeekContainsDate) ?? 1, c = (i == null ? void 0 : i.weekStartsOn) ?? ((w = (M = i == null ? void 0 : i.locale) == null ? void 0 : M.options) == null ? void 0 : w.weekStartsOn) ?? r.weekStartsOn ?? ((D = (P = r.locale) == null ? void 0 : P.options) == null ? void 0 : D.weekStartsOn) ?? 0;
@@ -10807,12 +10811,12 @@ function Lf(n, t, e, i) {
     if (O) {
       const { incompatibleTokens: T } = O;
       if (Array.isArray(T)) {
-        const U = d.find(
+        const q = d.find(
           (tt) => T.includes(tt.token) || tt.token === k
         );
-        if (U)
+        if (q)
           throw new RangeError(
-            `The format string mustn't contain \`${U.fullToken}\` and \`${_}\` at the same time`
+            `The format string mustn't contain \`${q.fullToken}\` and \`${_}\` at the same time`
           );
       } else if (O.incompatibleTokens === "*" && d.length > 0)
         throw new RangeError(
@@ -10829,7 +10833,7 @@ function Lf(n, t, e, i) {
         return s();
       h.push(C.setter), n = C.rest;
     } else {
-      if (k.match(If))
+      if (k.match($f))
         throw new RangeError(
           "Format string contains an unescaped latin alphabet character `" + k + "`"
         );
@@ -10839,7 +10843,7 @@ function Lf(n, t, e, i) {
         return s();
     }
   }
-  if (n.length > 0 && $f.test(n))
+  if (n.length > 0 && If.test(n))
     return s();
   const f = h.map((_) => _.priority).sort((_, k) => k - _).filter((_, k, O) => O.indexOf(_) === k).map(
     (_) => h.filter((k) => k.priority === _).sort((k, O) => O.subPriority - k.subPriority)
@@ -10875,12 +10879,12 @@ function Nf(n, t) {
   let r;
   if (s.date) {
     const l = Vf(s.date, i);
-    r = qf(l.restDateString, l.year);
+    r = Uf(l.restDateString, l.year);
   }
   if (!r || isNaN(+r)) return e();
   const o = +r;
   let a = 0, c;
-  if (s.time && (a = Uf(s.time), isNaN(a)))
+  if (s.time && (a = qf(s.time), isNaN(a)))
     return e();
   if (s.timezone) {
     if (c = Xf(s.timezone), isNaN(c)) return e();
@@ -10929,7 +10933,7 @@ function Vf(n, t) {
     restDateString: n.slice((i[1] || i[2]).length)
   };
 }
-function qf(n, t) {
+function Uf(n, t) {
   if (t === null) return /* @__PURE__ */ new Date(NaN);
   const e = n.match(Wf);
   if (!e) return /* @__PURE__ */ new Date(NaN);
@@ -10944,11 +10948,11 @@ function qf(n, t) {
 function _e(n) {
   return n ? parseInt(n) : 1;
 }
-function Uf(n) {
+function qf(n) {
   const t = n.match(Bf);
   if (!t) return NaN;
   const e = Jn(t[1]), i = Jn(t[2]), s = Jn(t[3]);
-  return tg(e, i, s) ? e * qe + i * Ve + s * 1e3 : NaN;
+  return tg(e, i, s) ? e * Ue + i * Ve + s * 1e3 : NaN;
 }
 function Jn(n) {
   return n && parseFloat(n.replace(",", ".")) || 0;
@@ -10958,7 +10962,7 @@ function Xf(n) {
   const t = n.match(Yf);
   if (!t) return 0;
   const e = t[1] === "+" ? -1 : 1, i = parseInt(t[2]), s = t[3] && parseInt(t[3]) || 0;
-  return eg(i, s) ? e * (i * qe + s * Ve) : NaN;
+  return eg(i, s) ? e * (i * Ue + s * Ve) : NaN;
 }
 function Qf(n, t, e) {
   const i = /* @__PURE__ */ new Date(0);
@@ -11045,7 +11049,7 @@ Gr._date.override({
   diff: function(n, t, e) {
     switch (e) {
       case "millisecond":
-        return $i(n, t);
+        return Ii(n, t);
       case "second":
         return Lu(n, t);
       case "minute":
@@ -11059,7 +11063,7 @@ Gr._date.override({
       case "month":
         return xo(n, t);
       case "quarter":
-        return Iu(n, t);
+        return $u(n, t);
       case "year":
         return Ru(n, t);
       default:
@@ -11207,12 +11211,14 @@ const On = class On extends De {
   getCardSize() {
     return 4;
   }
-  firstUpdated() {
-    const t = this.renderRoot.querySelector("canvas");
-    t && (this._chartRenderer = new ig(t));
-  }
   updated(t) {
-    (t.has("hass") || t.has("_config") || t.has("_state")) && (this._state.status === "loading" && this._loadData(), this._state.status === "ready" && this._state.comparisonSeries && this._chartRenderer && this._chartRenderer.update(this._state.comparisonSeries));
+    if ((t.has("hass") || t.has("_config") || t.has("_state")) && (this._state.status === "loading" && this._loadData(), this._state.status === "ready" && this._state.comparisonSeries)) {
+      if (!this._chartRenderer) {
+        const e = this.renderRoot.querySelector("canvas");
+        e && (this._chartRenderer = new ig(e));
+      }
+      this._chartRenderer && this._chartRenderer.update(this._state.comparisonSeries);
+    }
   }
   async _loadData() {
     if (!this._config || !this.hass) return;
@@ -11243,6 +11249,9 @@ const On = class On extends De {
           console.log(
             `[Energy Burndown] Data for entity "${this._config.entity}":`,
             x ? `${Array.isArray(x) ? x.length : 0} points` : "not found"
+          ), console.log(
+            "[Energy Burndown] Reference API Response (raw):",
+            c
           );
         } else
           console.log(
@@ -11285,7 +11294,7 @@ const On = class On extends De {
     }
   }
   render() {
-    var f, g;
+    var m, p, b, x, v;
     if (!this._config || !this.hass)
       return et``;
     if (this._state.status === "loading")
@@ -11307,12 +11316,12 @@ const On = class On extends De {
           Brak danych do wyświetlenia dla wybranego okresu.
         </ha-alert>
       </ha-card>`;
-    const t = (f = this._state.textSummary) == null ? void 0 : f.heading, e = this._state.summary, i = this._state.forecast, s = ((g = this.hass.locale) == null ? void 0 : g.language) ?? this.hass.language ?? navigator.language, r = this._config.precision ?? 1, o = new Intl.NumberFormat(s, {
+    const t = (m = this._state.textSummary) == null ? void 0 : m.heading, e = this._state.summary, i = this._state.forecast, s = ((p = this.hass.locale) == null ? void 0 : p.language) ?? this.hass.language ?? navigator.language, r = this._config.precision ?? 1, o = ((v = (x = (b = this.hass.states) == null ? void 0 : b[this._config.entity]) == null ? void 0 : x.attributes) == null ? void 0 : v.unit_of_measurement) ?? "", a = new Intl.NumberFormat(s, {
       minimumFractionDigits: r,
       maximumFractionDigits: r
-    }), a = new Intl.NumberFormat(s, {
+    }), c = new Intl.NumberFormat(s, {
       maximumFractionDigits: 1
-    }), c = e != null ? `${o.format(e.current_cumulative)} ${e.unit}` : "", l = e != null && e.reference_cumulative != null ? `${o.format(e.reference_cumulative)} ${e.unit}` : null, h = e != null && e.difference != null ? `${o.format(Math.abs(e.difference))} ${e.unit}` : null, u = e != null && e.differencePercent != null ? `${a.format(e.differencePercent)} %` : null, d = i != null && i.enabled && this._config.show_forecast !== !1;
+    }), l = (e == null ? void 0 : e.unit) || o, h = e != null ? `${a.format(e.current_cumulative)} ${l}` : "", u = e != null && e.reference_cumulative != null ? `${a.format(e.reference_cumulative)} ${l}` : null, d = e != null && e.difference != null ? `${a.format(Math.abs(e.difference))} ${l}` : null, f = e != null && e.differencePercent != null ? `${c.format(e.differencePercent)} %` : null, g = i != null && i.enabled && this._config.show_forecast !== !1;
     return et`<ha-card>
       <div class="content">
         ${t ? et`<div class="heading">${t}</div>` : null}
@@ -11320,22 +11329,22 @@ const On = class On extends De {
         ${e ? et`<div class="summary">
               <div class="summary-row">
                 <span class="label">Bieżący okres</span>
-                <span class="value">${c}</span>
+                <span class="value">${h}</span>
               </div>
 
-              ${l ? et`<div class="summary-row">
-                    <span class="label">Okres referencyjny</span>
-                    <span class="value">${l}</span>
-                  </div>` : null}
-
-              ${h ? et`<div class="summary-row">
-                    <span class="label">Różnica</span>
-                    <span class="value">${h}</span>
-                  </div>` : null}
-
               ${u ? et`<div class="summary-row">
-                    <span class="label">Różnica [%]</span>
+                    <span class="label">Okres referencyjny</span>
                     <span class="value">${u}</span>
+                  </div>` : null}
+
+              ${d ? et`<div class="summary-row">
+                    <span class="label">Różnica</span>
+                    <span class="value">${d}</span>
+                  </div>` : null}
+
+              ${f ? et`<div class="summary-row">
+                    <span class="label">Różnica [%]</span>
+                    <span class="value">${f}</span>
                   </div>` : null}
 
               ${e.reference_cumulative == null ? et`<div class="summary-note">
@@ -11344,11 +11353,11 @@ const On = class On extends De {
                   </div>` : null}
             </div>` : null}
 
-        ${d && i ? et`<div class="forecast">
+        ${g && i ? et`<div class="forecast">
               <div class="summary-row">
                 <span class="label">Prognoza bieżącego okresu</span>
                 <span class="value"
-                  >${o.format(
+                  >${a.format(
       i.forecast_total ?? 0
     )} ${i.unit}</span
                 >
@@ -11356,7 +11365,7 @@ const On = class On extends De {
               ${i.reference_total != null ? et`<div class="summary-row">
                     <span class="label">Wartość historyczna</span>
                     <span class="value"
-                      >${o.format(
+                      >${a.format(
       i.reference_total
     )} ${i.unit}</span
                     >
