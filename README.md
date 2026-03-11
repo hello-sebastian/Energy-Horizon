@@ -100,6 +100,31 @@ The card uses the `recorder/statistics_during_period` API. Use entity IDs that h
 - Statistics from the Energy dashboard
 - Entities that appear in **Developer Tools → Statistics**
 
+## Forecast calculation
+
+The forecast for the current period is based on the **average daily cumulative usage** observed so far and a simple extrapolation to the full period.
+
+Let:
+- **\(n\)** – number of days with data in the current period,
+- **\(C_n\)** – cumulative usage after day \(n\) (sum of daily values from day 1 to \(n\)),
+- **\(D\)** – assumed total number of days in the full period (length of the current month or year, depending on configuration),
+- **\(\bar{d}\)** – average daily usage observed so far.
+
+We compute:
+
+\[
+\bar{d} = \frac{C_n}{n}
+\]
+
+\[
+\text{forecast\_total} = \bar{d} \cdot D
+\]
+
+The confidence level is derived only from the number of observed days:
+- **low** – fewer than 7 days,
+- **medium** – from 7 to 13 days,
+- **high** – 14 days or more.
+
 ## Troubleshooting
 
 | Issue                           | Solution                                                                 |
