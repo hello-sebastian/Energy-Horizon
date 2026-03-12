@@ -4,7 +4,7 @@ import type { CardConfig, CardState, ComparisonSeries } from "./types";
 import {
   buildComparisonPeriod,
   buildLtsQuery,
-  mapLtsResponseToSeries,
+  mapLtsResponseToCumulativeSeries,
   computeSummary,
   computeForecast,
   computeTextSummary
@@ -33,15 +33,6 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     return 4;
   }
 
-  protected firstUpdated(): void {
-    const canvas = this.renderRoot.querySelector("canvas") as
-      | HTMLCanvasElement
-      | null;
-    if (canvas) {
-      this._chartRenderer = new ChartRenderer(canvas);
-    }
-  }
-
   protected updated(changedProps: Map<string, unknown>): void {
     if (
       changedProps.has("hass") ||
@@ -54,10 +45,20 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
 
       if (
         this._state.status === "ready" &&
-        this._state.comparisonSeries &&
-        this._chartRenderer
+        this._state.comparisonSeries
       ) {
-        this._chartRenderer.update(this._state.comparisonSeries);
+        if (!this._chartRenderer) {
+          const canvas = this.renderRoot.querySelector("canvas") as
+            | HTMLCanvasElement
+            | null;
+          if (canvas) {
+            this._chartRenderer = new ChartRenderer(canvas);
+          }
+        }
+
+        if (this._chartRenderer) {
+          this._chartRenderer.update(this._state.comparisonSeries);
+        }
       }
     }
   }
@@ -68,26 +69,116 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     const now = new Date();
     const timeZone = "UTC";
     const period = buildComparisonPeriod(this._config, now, timeZone);
-    const query = buildLtsQuery(period, this._config.entity);
+    const currentQuery = buildLtsQuery(period, this._config.entity);
+    const referencePeriod: typeof period = {
+      ...period,
+      current_start: period.reference_start,
+      current_end: period.reference_end
+    };
+    const referenceQuery = buildLtsQuery(referencePeriod, this._config.entity);
 
     try {
-      const response = await this.hass.connection.sendMessagePromise(
-        query as unknown as Record<string, unknown>
+      if (this._config.debug) {
+        // eslint-disable-next-line no-console
+        console.log("[Energy Burndown] API Query (current):", currentQuery);
+        console.log("[Energy Burndown] API Query (reference):", referenceQuery);
+      }
+
+      const [currentResponse, referenceResponse] = await Promise.all([
+        this.hass.connection.sendMessagePromise(
+          currentQuery as unknown as Record<string, unknown>
+        ),
+        this.hass.connection.sendMessagePromise(
+          referenceQuery as unknown as Record<string, unknown>
+        )
+      ]);
+
+      if (this._config.debug) {
+        const data =
+          (currentResponse as { result?: Record<string, unknown> })?.result ??
+          currentResponse;
+        const results =
+          (data as { results?: Record<string, unknown> }).results ??
+          (data as Record<string, unknown>);
+        // eslint-disable-next-line no-console
+        console.log("[Energy Burndown] API Response (current, raw):", currentResponse);
+        if (results && typeof results === "object") {
+          const keys = Object.keys(results);
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] Results keys (available statistic_ids):",
+            keys
+          );
+          const entityData = results[this._config.entity];
+          // eslint-disable-next-line no-console
+          console.log(
+            `[Energy Burndown] Data for entity "${this._config.entity}":`,
+            entityData
+              ? `${Array.isArray(entityData) ? entityData.length : 0} points`
+              : "not found"
+          );
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] Reference API Response (raw):",
+            referenceResponse
+          );
+        } else {
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] No results in response or invalid structure"
+          );
+        }
+      }
+
+      const current = mapLtsResponseToCumulativeSeries(
+        currentResponse as any,
+        this._config.entity,
+        "Bieżący okres"
       );
 
-      const series = mapLtsResponseToSeries(
-        response as any,
-        this._config.entity,
-        period
-      ) as ComparisonSeries | undefined;
-
-      if (!series) {
+      if (!current) {
+        if (this._config.debug) {
+          // eslint-disable-next-line no-console
+          console.log(
+            "[Energy Burndown] current series could not be built – check entity ID and results structure above"
+          );
+        }
         this._state = { status: "no-data" };
         return;
       }
 
+      const reference = mapLtsResponseToCumulativeSeries(
+        referenceResponse as any,
+        this._config.entity,
+        "Okres referencyjny"
+      );
+
+      const entityUnit =
+        (this.hass.states?.[this._config.entity]?.attributes as {
+          unit_of_measurement?: string;
+        })?.unit_of_measurement ?? "";
+
+      const series: ComparisonSeries = {
+        current: entityUnit ? { ...current, unit: current.unit || entityUnit } : current,
+        reference: reference
+          ? entityUnit
+            ? { ...reference, unit: reference.unit || entityUnit }
+            : reference
+          : undefined,
+        aggregation: period.aggregation,
+        time_zone: period.time_zone
+      };
+
       const summary = computeSummary(series);
       const forecast = computeForecast(series);
+
+      if (!summary.unit && entityUnit) {
+        summary.unit = entityUnit;
+      }
+      if (forecast && !forecast.unit && entityUnit) {
+        forecast.unit = entityUnit;
+      }
+
       const textSummary = computeTextSummary(summary);
 
       this._state = {
@@ -113,7 +204,7 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     }
 
     if (this._state.status === "loading") {
-      return html`<ha-card>
+      return html`<ha-card class="ebc-card">
         <div class="loading">
           <ha-circular-progress active size="small"></ha-circular-progress>
           <span>Ładowanie danych statystyk długoterminowych...</span>
@@ -122,7 +213,7 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     }
 
     if (this._state.status === "error") {
-      return html`<ha-card>
+      return html`<ha-card class="ebc-card">
         <ha-alert alert-type="error">
           ${this._state.errorMessage ??
           "Wystąpił błąd podczas wczytywania danych."}
@@ -131,7 +222,7 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     }
 
     if (this._state.status === "no-data") {
-      return html`<ha-card>
+      return html`<ha-card class="ebc-card">
         <ha-alert alert-type="info">
           Brak danych do wyświetlenia dla wybranego okresu.
         </ha-alert>
@@ -146,6 +237,12 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
       this.hass.locale?.language ?? this.hass.language ?? navigator.language;
     const precision = this._config.precision ?? 1;
 
+    // Jeśli z API nie przyszła jednostka, spróbuj użyć tej z encji HA.
+    const fallbackUnit =
+      (this.hass.states?.[this._config.entity]?.attributes as {
+        unit_of_measurement?: string;
+      })?.unit_of_measurement ?? "";
+
     const numberFormatter = new Intl.NumberFormat(locale, {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision
@@ -155,24 +252,26 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
       maximumFractionDigits: 1
     });
 
+    const displayUnit = summary?.unit || fallbackUnit;
+
     const currentSummaryValue =
       summary != null
         ? `${numberFormatter.format(summary.current_cumulative)} ${
-            summary.unit
+            displayUnit
           }`
         : "";
 
     const referenceSummaryValue =
       summary != null && summary.reference_cumulative != null
         ? `${numberFormatter.format(summary.reference_cumulative)} ${
-            summary.unit
+            displayUnit
           }`
         : null;
 
     const differenceValue =
       summary != null && summary.difference != null
         ? `${numberFormatter.format(Math.abs(summary.difference))} ${
-            summary.unit
+            displayUnit
           }`
         : null;
 
@@ -184,12 +283,14 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
     const shouldShowForecast =
       forecast != null && forecast.enabled && this._config.show_forecast !== false;
 
-    return html`<ha-card>
-      <div class="content">
-        ${heading ? html`<div class="heading">${heading}</div>` : null}
+    const forecastUnit = forecast?.unit || displayUnit;
+
+    return html`<ha-card class="ebc-card">
+      <div class="content ebc-content">
+        ${heading ? html`<div class="heading ebc-header">${heading}</div>` : null}
 
         ${summary
-          ? html`<div class="summary">
+          ? html`<div class="summary ebc-stats">
               <div class="summary-row">
                 <span class="label">Bieżący okres</span>
                 <span class="value">${currentSummaryValue}</span>
@@ -226,15 +327,25 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
           : null}
 
         ${shouldShowForecast && forecast
-          ? html`<div class="forecast">
+          ? html`<div class="forecast ebc-forecast">
               <div class="summary-row">
                 <span class="label">Prognoza bieżącego okresu</span>
                 <span class="value"
                   >${numberFormatter.format(
                     forecast.forecast_total ?? 0
-                  )} ${forecast.unit}</span
+                  )} ${forecastUnit}</span
                 >
               </div>
+              ${forecast.reference_total != null
+                ? html`<div class="summary-row">
+                    <span class="label">Zużycie w okresie referencyjnym</span>
+                    <span class="value"
+                      >${numberFormatter.format(
+                        forecast.reference_total
+                      )} ${forecastUnit}</span
+                    >
+                  </div>`
+                : null}
               ${forecast.reference_total != null
                 ? html`<div class="summary-row">
                     <span class="label">Wartość historyczna</span>
@@ -251,7 +362,7 @@ export class EnergyBurndownCard extends LitElement implements LovelaceCard {
             </div>`
           : null}
 
-        <div class="chart-container">
+        <div class="chart-container ebc-chart">
           <canvas></canvas>
         </div>
       </div>

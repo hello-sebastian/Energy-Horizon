@@ -35,6 +35,7 @@ export interface LtsStatisticPoint {
   mean?: number;
   sum?: number;
   state?: number;
+  change?: number;
   unit_of_measurement?: string;
 }
 

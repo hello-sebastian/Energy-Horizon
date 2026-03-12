@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-energy-burndown-card`  
 **Created**: 2026-03-05  
-**Status**: Draft  
+**Status**: In Progress (implementation ongoing; Phase 3–5 mostly implemented, Phase 6 polish pending)  
 **Input**: User description: Energy Burndown – karta do porównania skumulowanego zużycia energii w czasie bieżącym vs okres historyczny (miesiąc/rok) z wizualnym trendem i prostymi wnioskami.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -68,10 +68,30 @@ Użytkownik chciałby zobaczyć przewidywaną łączną wartość zużycia energ
 ### Edge Cases
 
 - Co się dzieje, gdy wybrana encja ma dane tylko dla jednego z dwóch okresów (np. brak pełnej historii sprzed roku)?
+  - **Acceptance – missing reference period**:  
+    **Given** wybrana encja ma długoterminowe dane tylko dla bieżącego okresu,  
+    **When** użytkownik wybierze porównanie rok‑do‑roku lub miesiąc‑do‑roku,  
+    **Then** karta:
+    - pokazuje wykres tylko dla bieżącego okresu,  
+    - wyświetla czytelną informację, że brak danych referencyjnych uniemożliwia porównanie liczbowej wartości,  
+    - nie zgłasza błędu w konsoli ani nie zaburza layoutu dashboardu.
 - Jak karta zachowuje się, gdy w ciągu bieżącego okresu występują dłuższe przerwy w danych (brak odczytów), np. z powodu awarii czujnika?
 - Co się dzieje, gdy konfiguracja YAML wskazuje nieistniejącą lub niedostępną encję?
 - Jak system reaguje, gdy zakres czasu obejmuje rok przestępny, a okres referencyjny – nie (lub odwrotnie)?
+  - **Acceptance – leap year**:  
+    **Given** bieżący okres to luty w roku przestępnym, a okres referencyjny to luty w roku nieprzestępnym (lub odwrotnie),  
+    **When** użytkownik porównuje oba okresy,  
+    **Then** karta:
+    - wyrównuje osie czasu tak, aby dni o tym samym numerze (1–28/29) były porównywane bez przesunięcia,  
+    - dni „nadmiarowe” (np. 29 lutego w jednym okresie) traktuje jako dodatkowy punkt tylko w jednej serii, bez sztucznego dopasowywania brakującego dnia w drugiej.
 - Jak karta zachowuje się na bardzo małych ekranach (telefon) oraz przy bardzo wąskich kafelkach na dashboardzie (np. czytelność etykiet osi czasu)?
+  - **Acceptance – small screens**:  
+    **Given** karta jest wyświetlana na bardzo wąskim kafelku lub ekranie telefonu,  
+    **When** użytkownik otwiera dashboard,  
+    **Then** karta:
+    - zachowuje czytelne etykiety osi (np. automatycznie redukuje liczbę ticków na osi X),  
+    - nie wymusza poziomego scrolla wewnątrz `ha-card`,  
+    - nadal pokazuje czytelny nagłówek i wartości skumulowane.
 
 ### Założenia platformowe i kompatybilność
 
@@ -94,10 +114,18 @@ Użytkownik chciałby zobaczyć przewidywaną łączną wartość zużycia energ
 - **FR-002**: System MUST compute and display two cumulative series of energy usage over time: one for the current period and one for the corresponding historical period, using wspólną oś czasu, tak aby możliwe było bezpośrednie porównanie kształtu obu linii.
 - **FR-003**: Users MUST be able to read current cumulative values for both the current period and the corresponding reference period date in a clear textual summary (np. dwie wartości z opisem okresów i jednostką), niezależnie od tego, czy są w stanie odczytać je z samego wykresu.
 - **FR-004**: System MUST provide an estimate of the total cumulative energy usage for the full current period, based on observed data so far, and present it obok łącznej wartości z okresu referencyjnego, w sposób zrozumiały dla użytkownika (wraz z jednostką).
-- **FR-005**: System MUST handle incomplete, missing or inconsistent data defensively, tak aby karta nadal się renderowała (z odpowiednimi komunikatami lub uproszczoną wizualizacją) i nie powodowała zawieszenia ani błędów całego dashboardu Lovelace.
+- **FR-005**: System MUST handle incomplete, missing or inconsistent data defensively, so that:
+  - **FR-005a**: przy całkowitym braku danych w bieżącym lub referencyjnym okresie karta wyświetla stan „brak danych porównawczych” (informacja tekstowa + brak wykresu zamiast błędu),
+  - **FR-005b**: przy częściowych lukach w danych (pojedyncze dni bez statystyk) karta po prostu nie wyświetla brakujących punktów (lub pozostawia płaską linię) i nie uzupełnia ich sztucznymi wartościami,
+  - **FR-005c**: przy wykryciu niespójnych jednostek pomiędzy punktami (np. kWh vs Wh) karta odrzuca taką serię i prezentuje czytelny komunikat o nieobsługiwanej kombinacji jednostek,
+  - **FR-005d**: w żadnym z powyższych przypadków karta nie powoduje błędu renderowania ani zawieszenia całego dashboardu Lovelace.
 - **FR-006**: System MUST respect the user’s locale settings for date and number formatting when presenting dates on the time axis and values in textual summaries.
 - **FR-007**: System MUST support YAML-based configuration, including wybór encji, tytułu karty, wariantu okresu do wizualizacji oraz opcjonalnego nadpisania domyślnej agregacji (np. dzień, tydzień, miesiąc), bez wymagania dodatkowych kroków konfiguracyjnych poza standardową konfiguracją Lovelace.
-- **FR-008**: System MUST ensure that interaction states such as loading, error and „no comparison data” są komunikowane w sposób zwięzły i zgodny ze stylem Home Assistant, tak aby użytkownik rozumiał, dlaczego nie widzi pełnego porównania.
+- **FR-008**: System MUST ensure that interaction states such as loading, error, partial-data and no-comparison są komunikowane w sposób zwięzły i zgodny ze stylem Home Assistant, tak aby użytkownik rozumiał, dlaczego nie widzi pełnego porównania. Co najmniej następujące stany muszą być rozróżnialne:
+  - **loading** – karta pokazuje wskaźnik ładowania (`ha-circular-progress`) i krótki opis (np. „Ładowanie danych statystyk długoterminowych…”),
+  - **error** – karta pokazuje `<ha-alert alert-type="error">` z treścią błędu przy nieudanym zapytaniu do API,
+  - **no-data** – karta pokazuje `<ha-alert alert-type="info">` z komunikatem o braku danych w jednym lub obu okresach,
+  - **partial-data** – karta pokazuje zarówno dane, jak i informację, że porównanie może być niepełne (np. brak części okresu referencyjnego); wizualnie powinna różnić się od „no-data”.
 - **FR-009**: System MUST generate a short, localized textual heading that interprets the comparison between current and reference cumulative usage (np. „Twoje zużycie jest o **X kWh niższe/wyższe** niż w tym samym okresie w poprzednim roku”), przy czym:
   - Dla dodatniej różnicy (`current_cumulative > reference_cumulative`) komunikat używa formy „wyższe” oraz wyświetla wartość różnicy w jednostce energii.
   - Dla ujemnej różnicy (`current_cumulative < reference_cumulative`) komunikat używa formy „niższe” oraz wyświetla wartość bezwzględną różnicy.
@@ -121,5 +149,9 @@ Użytkownik chciałby zobaczyć przewidywaną łączną wartość zużycia energ
 
 - **SC-001**: Co najmniej 80% użytkowników, którzy mają dane historyczne za analogiczny okres, jest w stanie w mniej niż 30 sekund na podstawie karty poprawnie odpowiedzieć, czy w bieżącym okresie zużywają więcej czy mniej energii niż w okresie referencyjnym.
 - **SC-002**: Użytkownicy są w stanie samodzielnie, bez dodatkowych narzędzi czy ręcznych obliczeń, odczytać bieżące skumulowane zużycie oraz wartość referencyjną i opisać różnicę (np. „zużywam o około 10 kWh mniej niż rok temu”) w mniej niż 1 minutę.
-- **SC-003**: Dla typowego zakresu danych (co najmniej miesiąc historii) karta renderuje się w czasie akceptowalnym dla użytkownika, tak że interaktywne wyświetlenie porównania nie jest odczuwalne jako opóźnione (subiektywnie „prawie natychmiastowe” przy przejściu na dashboard).
-- **SC-004**: W co najmniej 90% przypadków użytkownicy nie potrzebują dodatkowych wyjaśnień ani dokumentacji, aby zrozumieć, jak interpretować dwie serie na wykresie i podstawowe tekstowe podsumowania (w badaniach z obserwacją użytkowników lub feedbackiem jakościowym).  
+- **SC-003**: Dla typowego zakresu danych (co najmniej miesiąc historii, ≤ 400 punktów na wykresie) karta renderuje się w czasie akceptowalnym dla użytkownika, tzn.:
+  - czas od otwarcia dashboardu do pełnego wyrenderowania karty (łącznie z danymi) jest **mniejszy niż 2 sekundy** na referencyjnej konfiguracji testowej (np. przeglądarka desktopowa, lokalna instancja HA),
+  - w subiektywnych testach UX jest oceniany jako „prawie natychmiastowy” przez ≥ 80% uczestników.
+- **SC-004**: W badaniach jakościowych z co najmniej 5 użytkownikami:
+  - **≥ 90%** uczestników potrafi, po krótkim objaśnieniu celu karty, bez dodatkowej dokumentacji wyjaśnić, która linia odpowiada bieżącemu okresowi, a która referencyjnemu,
+  - **≥ 80%** uczestników poprawnie interpretuje nagłówek tekstowy (wyższe/niższe/podobne) i jest w stanie własnymi słowami opisać różnicę („zużywam o około X mniej/więcej niż rok temu”).
