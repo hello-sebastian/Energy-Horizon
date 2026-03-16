@@ -60,7 +60,7 @@ Wstępna ocena: **brak naruszeń konstytucji** – plan jest spójny z zasadami;
 ### Documentation (this feature)
 
 ```text
-specs/001-energy-burndown-card/
+specs/001-energy-horizon-card/
 ├── plan.md              # Ten plik – plan implementacji
 ├── research.md          # Phase 0 – decyzje technologiczne i architektoniczne
 ├── data-model.md        # Phase 1 – definicje encji, serii, okresów porównawczych

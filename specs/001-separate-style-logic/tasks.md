@@ -94,7 +94,7 @@
 **Purpose**: Dopracowanie dokumentacji i upewnienie się, że separacja stylów/logiki jest zrozumiała dla przyszłych kontrybutorów.
 
 - [X] T020 [P] Zaktualizować `README.md`, dodając krótką wzmiankę o dedykowanym pliku stylów oraz o tym, że zmiany wizualne mogą być wprowadzane bez dotykania logiki
-- [X] T021 [P] Upewnić się, że inne specyfikacje powiązane z kartą (np. `specs/001-energy-burndown-card/spec.md`) są spójne z nową architekturą stylów/logiki (ewentualne dopisanie odniesienia do FR dotyczących separacji)
+- [X] T021 [P] Upewnić się, że inne specyfikacje powiązane z kartą (np. `specs/001-energy-horizon-card/spec.md`) są spójne z nową architekturą stylów/logiki (ewentualne dopisanie odniesienia do FR dotyczących separacji)
 - [X] T022 Przejrzeć całość zmian pod kątem regresji (krótki smoke‑test karty w HA: różne motywy, różne konfiguracje karty) i w razie potrzeby zanotować uwagi do dalszych usprawnień
 
 ---

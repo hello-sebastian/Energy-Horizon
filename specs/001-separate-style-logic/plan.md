@@ -101,7 +101,7 @@ Pliki `ha-api.ts` i `chart-renderer.ts` są traktowane jako czysto logiczne – 
 ## Phase 0: Research (research.md)
 
 Zakres researchu dla tego feature’u jest stosunkowo niewielki, ponieważ:
-- kontekst technologiczny (TypeScript, LitElement, Chart.js, HA theming) został już rozpoznany w `001-energy-burndown-card` i `001-ha-theming-classes`,
+- kontekst technologiczny (TypeScript, LitElement, Chart.js, HA theming) został już rozpoznany w `001-energy-horizon-card` i `001-ha-theming-classes`,
 - głównym celem jest uporządkowanie architektury wewnątrz istniejącej karty.
 
 `research.md` powinien zawierać:
