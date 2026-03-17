@@ -7,6 +7,7 @@ export interface HomeAssistant {
   config?: {
     time_zone?: string;
   };
+  states?: Record<string, { state: string; attributes: Record<string, unknown> }>;
   connection: {
     sendMessagePromise<T = unknown>(_msg: Record<string, unknown>): Promise<T>;
   };

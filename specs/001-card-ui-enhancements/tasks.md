@@ -28,11 +28,11 @@
 
 **⚠️ CRITICAL**: Complete fully before starting Phases 3–7.
 
-- [ ] T005 Add typed `states` field to `HomeAssistant` interface in `src/ha-types.ts`. Field signature: `states?: Record<string, { state: string; attributes: Record<string, unknown> }>`. This eliminates the existing `as` casts that access entity attributes.
-- [ ] T006 [P] Add three optional fields to `CardConfig` in `src/card/types.ts`: `show_title?: boolean` (default `true`), `icon?: string` (e.g. `"mdi:solar-power"`), `show_icon?: boolean` (default `true`). Keep all existing fields unchanged.
-- [ ] T007 [P] Add one optional field to `CardState` in `src/card/types.ts`: `period?: ComparisonPeriod`. Set alongside `comparisonSeries` in the `_loadData()` success path; `undefined` in all other states.
+- [x] T005 Add typed `states` field to `HomeAssistant` interface in `src/ha-types.ts`. Field signature: `states?: Record<string, { state: string; attributes: Record<string, unknown> }>`. This eliminates the existing `as` casts that access entity attributes.
+- [x] T006 [P] Add three optional fields to `CardConfig` in `src/card/types.ts`: `show_title?: boolean` (default `true`), `icon?: string` (e.g. `"mdi:solar-power"`), `show_icon?: boolean` (default `true`). Keep all existing fields unchanged.
+- [x] T007 [P] Add one optional field to `CardState` in `src/card/types.ts`: `period?: ComparisonPeriod`. Set alongside `comparisonSeries` in the `_loadData()` success path; `undefined` in all other states.
 
-**Checkpoint**: Both `src/ha-types.ts` and `src/card/types.ts` compile under `tsc --strict` with zero new errors.
+**Checkpoint**: Both `src/ha-types.ts` and `src/card/types.ts` compile under `tsc --strict` with zero new errors. ✅ VERIFIED
 
 ---
 

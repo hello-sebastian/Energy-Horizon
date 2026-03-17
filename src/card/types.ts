@@ -4,6 +4,9 @@ export interface CardConfig {
   type: string;
   entity: string;
   title?: string;
+  show_title?: boolean;
+  icon?: string;
+  show_icon?: boolean;
   comparison_mode: ComparisonMode;
   aggregation?: "day" | "week" | "month";
   period_offset?: number;
@@ -97,5 +100,6 @@ export interface CardState {
   summary?: SummaryStats;
   forecast?: ForecastStats;
   textSummary?: TextSummary;
+  period?: ComparisonPeriod;
 }
 
