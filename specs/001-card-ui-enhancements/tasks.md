@@ -99,13 +99,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T017 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/en.json`
-- [ ] T018 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/de.json`
-- [ ] T019 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/pl.json`
-- [ ] T020 [US4] In `src/card/cumulative-comparison-chart.ts`, delete the rendering block for the "Historical value" row (the block that uses the `forecast.historical_value` translation key and renders `forecast.reference_total` a second time). Keep the "Consumption in reference period" block untouched.
-- [ ] T021 [US4] In `tests/integration/card-render.test.ts`, add assertion: forecast section contains no element with text matching `historical_value` translation; also assert "Consumption in reference period" row is present with correct value.
+- [x] T017 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/en.json`
+- [x] T018 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/de.json`
+- [x] T019 [P] [US4] Remove the `forecast.historical_value` key from `src/translations/pl.json`
+- [x] T020 [US4] In `src/card/cumulative-comparison-chart.ts`, delete the rendering block for the "Historical value" row (the block that uses the `forecast.historical_value` translation key and renders `forecast.reference_total` a second time). Keep the "Consumption in reference period" block untouched.
+- [x] T021 [US4] In `tests/integration/card-render.test.ts`, add assertion: forecast section contains no element with text matching `historical_value` translation; also assert "Consumption in reference period" row is present with correct value.
 
-**Checkpoint**: `npm test` passes (no reference to removed translation key or DOM element); forecast section shows exactly one reference-period statistic row.
+**Checkpoint**: `npm test` passes (no reference to removed translation key or DOM element); forecast section shows exactly one reference-period statistic row. ✅ VERIFIED
 
 ---
 
@@ -117,14 +117,14 @@
 
 ### Implementation for User Story 5
 
-- [ ] T022 [US5] In `src/card/cumulative-comparison-chart.ts`, in the `_loadData()` success path, set `this._state.period = comparisonPeriod` (the `ComparisonPeriod` returned from `buildComparisonPeriod()`). Use the `CardState.period` field added in T007.
-- [ ] T023 [US5] Implement pure helper function `buildPeriodSuffix` in `src/card/cumulative-comparison-chart.ts` (module-level). Signature: `function buildPeriodSuffix(date: Date, mode: ComparisonMode, language: string): string`. Logic: `year_over_year` → `String(date.getFullYear())`; `month_over_year` → `new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' }).format(date)`.
-- [ ] T024 [US5] In `src/card/cumulative-comparison-chart.ts`, in `render()`, when `_state.status === 'ready' && _state.period` is set, compute:
+- [x] T022 [US5] In `src/card/cumulative-comparison-chart.ts`, in the `_loadData()` success path, set `this._state.period = comparisonPeriod` (the `ComparisonPeriod` returned from `buildComparisonPeriod()`). Use the `CardState.period` field added in T007.
+- [x] T023 [US5] Implement pure helper function `buildPeriodSuffix` in `src/card/cumulative-comparison-chart.ts` (module-level). Signature: `function buildPeriodSuffix(date: Date, mode: ComparisonMode, language: string): string`. Logic: `year_over_year` → `String(date.getFullYear())`; `month_over_year` → `new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' }).format(date)`.
+- [x] T024 [US5] In `src/card/cumulative-comparison-chart.ts`, in `render()`, when `_state.status === 'ready' && _state.period` is set, compute:
   - `const lang = this._config.language ?? this.hass?.language ?? 'en';`
   - `const currentSuffix = buildPeriodSuffix(_state.period.current_start, _config.comparison_mode, lang);`
   - `const referenceSuffix = buildPeriodSuffix(_state.period.reference_start, _config.comparison_mode, lang);`
   - Append ` (${currentSuffix})` / ` (${referenceSuffix})` to the respective period label strings for "Current period" and "Reference period" rows.
-- [ ] T025 [P] [US5] Write unit tests for `buildPeriodSuffix` in `tests/unit/period-label.test.ts` (new file). Cover: `year_over_year` with date `2026-01-01` → `"2026"`; `month_over_year` with date `2026-03-01`, language `"en"` → `"March 2026"`; `month_over_year` with date `2026-03-01`, language `"pl"` → `"marzec 2026"`; `year_over_year` with `period_offset: -2` (date `2024-01-01`) → `"2024"`.
+- [x] T025 [P] [US5] Write unit tests for `buildPeriodSuffix` in `tests/unit/period-label.test.ts` (new file). Cover: `year_over_year` with date `2026-01-01` → `"2026"`; `month_over_year` with date `2026-03-01`, language `"en"` → `"March 2026"`; `month_over_year` with date `2026-03-01`, language `"pl"` → `"marzec 2026"`; `year_over_year` with `period_offset: -2` (date `2024-01-01`) → `"2024"`.
 
 **Checkpoint**: `npm test` passes; period labels render as `Current period (2026)` / `Reference period (2025)` in year mode, and `Current period (March 2026)` / `Reference period (March 2025)` in month mode.
 

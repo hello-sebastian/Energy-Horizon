@@ -32,6 +32,16 @@ export function formatSigned(
   return `${formatter.format(0)} ${unit}`;
 }
 
+export function buildPeriodSuffix(date: Date, mode: string, language: string): string {
+  if (mode === "year_over_year") {
+    return String(date.getFullYear());
+  }
+  if (mode === "month_over_year") {
+    return new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(date);
+  }
+  return "";
+}
+
 export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   static properties = {
     hass: { type: Object, attribute: false },
@@ -247,7 +257,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         comparisonSeries: series,
         summary,
         forecast,
-        textSummary
+        textSummary,
+        period
       };
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -334,6 +345,17 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const displayUnit = summary?.unit || fallbackUnit;
 
+    let currentPeriodLabel = this._localizeOrError(localize, "summary.current_period");
+    let referencePeriodLabel = this._localizeOrError(localize, "summary.reference_period");
+
+    if (this._state.status === "ready" && this._state.period) {
+      const lang = this._config.language ?? this.hass?.language ?? "en";
+      const currentSuffix = buildPeriodSuffix(this._state.period.current_start, this._config.comparison_mode, lang);
+      const referenceSuffix = buildPeriodSuffix(this._state.period.reference_start, this._config.comparison_mode, lang);
+      currentPeriodLabel = `${currentPeriodLabel} (${currentSuffix})`;
+      referencePeriodLabel = `${referencePeriodLabel} (${referenceSuffix})`;
+    }
+
     const currentSummaryValue =
       summary != null
         ? `${numberFormatter.format(summary.current_cumulative)} ${
@@ -413,20 +435,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         ${summary
           ? html`<div class="summary ebc-stats">
               <div class="summary-row">
-                <span class="label"
-                  >${this._localizeOrError(localize, "summary.current_period")}</span
-                >
+                <span class="label">${currentPeriodLabel}</span>
                 <span class="value">${currentSummaryValue}</span>
               </div>
 
               ${referenceSummaryValue
                 ? html`<div class="summary-row">
-                    <span class="label"
-                      >${this._localizeOrError(
-                        localize,
-                        "summary.reference_period"
-                      )}</span
-                    >
+                    <span class="label">${referencePeriodLabel}</span>
                     <span class="value">${referenceSummaryValue}</span>
                   </div>`
                 : null}
@@ -490,21 +505,6 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                       >${numberFormatter.format(
                         forecast.reference_total
                       )} ${forecastUnit}</span
-                    >
-                  </div>`
-                : null}
-              ${forecast.reference_total != null
-                ? html`<div class="summary-row">
-                    <span class="label"
-                      >${this._localizeOrError(
-                        localize,
-                        "forecast.historical_value"
-                      )}</span
-                    >
-                    <span class="value"
-                      >${numberFormatter.format(
-                        forecast.reference_total
-                      )} ${forecast.unit}</span
                     >
                   </div>`
                 : null}
