@@ -72,7 +72,10 @@ comparison_mode: year_over_year
 | `period_offset`   | number   | `-1`               | Offset for reference period (e.g. -1 = previous year)                      |
 | `show_forecast`   | boolean  | `true`             | Show forecast of total usage for current period                            |
 | `precision`       | number   | `1`                | Decimal places for numeric values                                          |
-| `title`           | string   | -                  | Optional card title                                                        |
+| `title`           | string   | -                  | Optional card title. If not set (or empty), falls back to entity `friendly_name`, then entity ID. |
+| `show_title`      | boolean  | `true`             | Show/hide the title text in the header                                     |
+| `icon`            | string   | -                  | Optional icon (e.g. `mdi:flash`). If not set (or empty), card uses the entity icon (including Home Assistant’s default icon for that entity) |
+| `show_icon`       | boolean  | `true`             | Show/hide the pictogram in the header                                      |
 | `language`        | string   | from HA            | Override dashboard language for this card only (e.g. `en`, `pl`, `de`)     |
 | `number_format`   | string   | from HA            | Override number format: `comma`, `decimal`, `language`, or `system`         |
 | `debug`           | boolean  | `false`            | Log API query/response to browser console (F12) for troubleshooting        |
@@ -86,6 +89,24 @@ entity: sensor.energy_consumption_total
 comparison_mode: year_over_year
 aggregation: day
 ```
+
+**Header options (title + icon):**
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.energy_consumption_total
+comparison_mode: year_over_year
+
+# Title (optional)
+title: "My Solar Panels"
+show_title: true      # set to false to hide title text
+
+# Pictogram (optional)
+icon: mdi:solar-power # e.g. any Home Assistant icon identifier like mdi:flash
+show_icon: true       # set to false to hide the pictogram
+```
+
+If you omit `icon`, the card will **inherit the entity icon** (including Home Assistant’s default icon for that entity).  
+If you set both `show_title: false` and `show_icon: false`, the entire header row is omitted.
 
 **Month-over-year (current month vs. same month last year):**
 ```yaml

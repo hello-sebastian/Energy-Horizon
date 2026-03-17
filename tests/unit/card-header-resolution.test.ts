@@ -13,6 +13,7 @@ function resolveTitleLogic(
   effectiveTitle: string;
   showIcon: boolean;
   effectiveIcon: string | undefined;
+  canRenderEntityIcon: boolean;
   shouldRenderHeader: boolean;
 } {
   const showTitle = config.show_title !== false;
@@ -24,15 +25,19 @@ function resolveTitleLogic(
   ) as string;
 
   const showIcon = config.show_icon !== false;
-  const effectiveIcon = config.icon?.trim() || (entityState?.attributes.icon as string | undefined);
+  const effectiveIcon = config.icon?.trim() || undefined;
+  const canRenderEntityIcon = !!entityState;
 
-  const shouldRenderHeader = (showTitle && !!effectiveTitle) || (showIcon && !!effectiveIcon);
+  const shouldRenderHeader =
+    (showTitle && !!effectiveTitle) ||
+    (showIcon && (!!effectiveIcon || canRenderEntityIcon));
 
   return {
     showTitle,
     effectiveTitle,
     showIcon,
     effectiveIcon,
+    canRenderEntityIcon,
     shouldRenderHeader
   };
 }
@@ -235,7 +240,7 @@ describe("Card Header Resolution (US1)", () => {
       expect(result.showIcon).toBe(true);
     });
 
-    it("uses entity icon attribute when title is not provided", () => {
+    it("does not resolve entity icon string when icon is not configured (uses entity state icon renderer)", () => {
       const hass: HomeAssistant = {
         language: "en",
         states: {
@@ -258,17 +263,15 @@ describe("Card Header Resolution (US1)", () => {
       };
 
       const result = resolveTitleLogic(config, hass);
-      expect(result.effectiveIcon).toBe("mdi:solar-power");
+      expect(result.effectiveIcon).toBeUndefined();
+      expect(result.canRenderEntityIcon).toBe(true);
     });
 
-    it("returns undefined when no icon is available", () => {
+    it("cannot render entity icon when entity state is missing", () => {
       const hass: HomeAssistant = {
         language: "en",
         states: {
-          "sensor.test": {
-            state: "100",
-            attributes: {}
-          }
+          // entity missing
         },
         connection: {
           sendMessagePromise: async () => ({})
@@ -283,6 +286,7 @@ describe("Card Header Resolution (US1)", () => {
 
       const result = resolveTitleLogic(config, hass);
       expect(result.effectiveIcon).toBeUndefined();
+      expect(result.canRenderEntityIcon).toBe(false);
     });
 
     it("prefers explicit icon over entity icon", () => {
@@ -360,6 +364,32 @@ describe("Card Header Resolution (US1)", () => {
 
       const result = resolveTitleLogic(config, undefined);
       expect(result.shouldRenderHeader).toBe(true);
+    });
+
+    it("renders header when icon is shown and entity state exists (even without explicit icon)", () => {
+      const hass: HomeAssistant = {
+        language: "en",
+        states: {
+          "sensor.test": {
+            state: "100",
+            attributes: {}
+          }
+        },
+        connection: {
+          sendMessagePromise: async () => ({})
+        }
+      };
+
+      const config: CardConfig = {
+        type: "custom:energy-horizon-card",
+        entity: "sensor.test",
+        comparison_mode: "year_over_year",
+        show_title: false
+      };
+
+      const result = resolveTitleLogic(config, hass);
+      expect(result.shouldRenderHeader).toBe(true);
+      expect(result.canRenderEntityIcon).toBe(true);
     });
 
     it("renders header when both title and icon are available", () => {

@@ -318,9 +318,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     ) as string;
 
     const showIcon = this._config.show_icon !== false;
-    const effectiveIcon = this._config.icon?.trim() || (entityState?.attributes.icon as string | undefined);
+    const effectiveIcon = this._config.icon?.trim() || undefined;
 
-    const shouldRenderHeader = (showTitle && !!effectiveTitle) || (showIcon && !!effectiveIcon);
+    const canRenderEntityIcon = !!entityState; // ha-state-icon will compute a default icon if attributes.icon is missing
+    const shouldRenderHeader =
+      (showTitle && !!effectiveTitle) ||
+      (showIcon && (!!effectiveIcon || canRenderEntityIcon));
 
     const numberLocale = numberFormatToLocale(
       resolved.numberFormat,
@@ -421,8 +424,16 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       <div class="content ebc-content">
         ${shouldRenderHeader
           ? html`<div class="ebc-title-row">
-              ${showIcon && !!effectiveIcon
-                ? html`<ha-icon class="ebc-icon" icon=${effectiveIcon}></ha-icon>`
+              ${showIcon
+                ? effectiveIcon
+                  ? html`<ha-icon class="ebc-icon" .icon=${effectiveIcon}></ha-icon>`
+                  : entityState
+                    ? html`<ha-state-icon
+                        class="ebc-icon"
+                        .hass=${this.hass}
+                        .stateObj=${entityState}
+                      ></ha-state-icon>`
+                    : null
                 : null}
               ${showTitle && !!effectiveTitle
                 ? html`<span class="ebc-title">${effectiveTitle}</span>`
