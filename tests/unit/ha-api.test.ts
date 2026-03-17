@@ -4,6 +4,7 @@ import {
   computeTextSummary,
   mapLtsResponseToSeries
 } from "../../src/card/ha-api";
+import { formatSigned } from "../../src/card/cumulative-comparison-chart";
 import type {
   ComparisonSeries,
   LtsStatisticsResponse
@@ -223,6 +224,42 @@ describe("computeTextSummary", () => {
     expect(text.trend).toBe("unknown");
     expect(text.diffValue).toBeUndefined();
     expect(text.unit).toBe("kWh");
+  });
+});
+
+describe("formatSigned", () => {
+  const formatter = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+
+  it("formats positive value with + prefix", () => {
+    const result = formatSigned(12.5, formatter, "kWh");
+    expect(result).toBe("+12.5 kWh");
+  });
+
+  it("formats negative value with − (U+2212) prefix and absolute value", () => {
+    const result = formatSigned(-12.5, formatter, "kWh");
+    expect(result).toBe("\u221212.5 kWh");
+  });
+
+  it("formats zero with no sign prefix", () => {
+    const result = formatSigned(0, formatter, "kWh");
+    expect(result).toBe("0.0 kWh");
+  });
+
+  it("appends unit string correctly", () => {
+    const result = formatSigned(5.3, formatter, "%");
+    expect(result).toBe("+5.3 %");
+  });
+
+  it("respects formatter precision for negative values", () => {
+    const precisionFormatter = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    const result = formatSigned(-99.999, precisionFormatter, "Wh");
+    expect(result).toMatch(/\u2212100\.\d{2} Wh/);
   });
 });
 

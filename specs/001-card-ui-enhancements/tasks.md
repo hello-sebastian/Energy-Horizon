@@ -83,9 +83,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Implement pure helper function `formatSigned` in `src/card/cumulative-comparison-chart.ts` (module-level, before `render()`). Signature: `function formatSigned(value: number, formatter: Intl.NumberFormat, unit: string): string`. Logic: `value > 0` → `` `+${formatter.format(value)} ${unit}` ``; `value < 0` → `` `\u2212${formatter.format(Math.abs(value))} ${unit}` ``; `value === 0` → `` `${formatter.format(0)} ${unit}` ``.
-- [ ] T015 [US3] In `src/card/cumulative-comparison-chart.ts`, replace the existing difference value rendering (Wh row) and percentage difference rendering (% row) in `render()` to call `formatSigned()` instead of the current plain `formatter.format(value) + " " + unit` pattern.
-- [ ] T016 [P] [US3] Write unit tests for `formatSigned` in `tests/unit/ha-api.test.ts` (extend existing file). Cover: positive value → `+` prefix; negative value → `−` (U+2212) prefix and `Math.abs(value)` formatted; zero → no sign prefix; check that the `unit` string is appended correctly.
+- [x] T014 [US3] Implement pure helper function `formatSigned` in `src/card/cumulative-comparison-chart.ts` (module-level, before `render()`). Signature: `function formatSigned(value: number, formatter: Intl.NumberFormat, unit: string): string`. Logic: `value > 0` → `` `+${formatter.format(value)} ${unit}` ``; `value < 0` → `` `\u2212${formatter.format(Math.abs(value))} ${unit}` ``; `value === 0` → `` `${formatter.format(0)} ${unit}` ``.
+- [x] T015 [US3] In `src/card/cumulative-comparison-chart.ts`, replace the existing difference value rendering (Wh row) and percentage difference rendering (% row) in `render()` to call `formatSigned()` instead of the current plain `formatter.format(value) + " " + unit` pattern.
+- [x] T016 [P] [US3] Write unit tests for `formatSigned` in `tests/unit/ha-api.test.ts` (extend existing file). Cover: positive value → `+` prefix; negative value → `−` (U+2212) prefix and `Math.abs(value)` formatted; zero → no sign prefix; check that the `unit` string is appended correctly.
 
 **Checkpoint**: `npm test` passes; rendered difference stats show `+12.5 kWh`, `−12.5 kWh`, or `0.0 kWh` as appropriate.
 

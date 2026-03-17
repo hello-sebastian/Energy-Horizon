@@ -18,6 +18,20 @@ import {
 } from "./localize";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 
+export function formatSigned(
+  value: number,
+  formatter: Intl.NumberFormat,
+  unit: string
+): string {
+  if (value > 0) {
+    return `+${formatter.format(value)} ${unit}`;
+  }
+  if (value < 0) {
+    return `\u2212${formatter.format(Math.abs(value))} ${unit}`;
+  }
+  return `${formatter.format(0)} ${unit}`;
+}
+
 export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   static properties = {
     hass: { type: Object, attribute: false },
@@ -336,14 +350,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const differenceValue =
       summary != null && summary.difference != null
-        ? `${numberFormatter.format(Math.abs(summary.difference))} ${
-            displayUnit
-          }`
+        ? formatSigned(summary.difference, numberFormatter, displayUnit)
         : null;
 
     const differencePercentValue =
       summary != null && summary.differencePercent != null
-        ? `${percentFormatter.format(summary.differencePercent)} %`
+        ? formatSigned(summary.differencePercent, percentFormatter, "%")
         : null;
 
     const shouldShowForecast =
