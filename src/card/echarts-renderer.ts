@@ -372,8 +372,16 @@ export class EChartsRenderer {
 
     const option: EChartsOption = {
       animation: false,
-      grid: { containLabel: true },
-      legend: { show: true },
+      // Explicit grid bounds to avoid ECharts default large paddings.
+      // `containLabel: true` keeps axis labels inside the grid area.
+      grid: {
+        containLabel: true,
+        left: 0,
+        right: 0,
+        top: 32,
+        bottom: 0
+      },
+      legend: { show: true, top: 0, left: "center" },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
@@ -481,7 +489,12 @@ export class EChartsRenderer {
         splitLine: { show: false },
         // Show only a few readable labels (avoid overlapping text).
         axisTick: { show: false },
-        axisLabel: { formatter: (value: number) => formatXAxisLabel(value) }
+        axisLine: { show: false },
+        axisLabel: {
+          formatter: (value: number) => formatXAxisLabel(value),
+          margin: 0,
+          hideOverlap: true
+        }
       },
       yAxis: {
         type: 'value',
@@ -496,7 +509,8 @@ export class EChartsRenderer {
               return `${value} ${rendererConfig.unit}`;
             }
             return String(value);
-          }
+          },
+          margin: 0
         }
       },
       series

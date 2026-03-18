@@ -3,6 +3,7 @@ import { css } from "lit";
 export const energyHorizonCardStyles = css`
   :host {
     display: block;
+    height: 100%;
   }
 
   .loading {
@@ -14,6 +15,10 @@ export const energyHorizonCardStyles = css`
 
   .content {
     padding: 16px;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
   }
 
   .heading {
@@ -56,7 +61,13 @@ export const energyHorizonCardStyles = css`
 
   .chart-container {
     position: relative;
-    height: 290px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .ebc-card {
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .ebc-title-row {
