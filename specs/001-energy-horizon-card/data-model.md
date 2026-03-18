@@ -33,6 +33,8 @@ Fields:
   - Opcjonalne przesunięcie okresu referencyjnego (np. -1 rok przy customowych okresach).
 - `show_forecast?: boolean`  
   - Czy prezentować prognozę końcowego zużycia bieżącego okresu.
+- `connect_nulls?: boolean`  
+  - Czy wizualnie "łączyć" luki `null` (dni bez danych) przerywaną, interpolowaną serię na wykresie.
 - `precision?: number`  
   - Liczba miejsc po przecinku do prezentacji wartości.
 - `debug?: boolean`  

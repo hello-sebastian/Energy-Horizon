@@ -1,6 +1,6 @@
 # Contract: Card Configuration Schema (YAML)
 
-**Wersja kontraktu**: 0.2.0 (dodane opcje US3–US7)  
+**Wersja kontraktu**: 0.3.0 (dodane opcje US3–US7 + connect_nulls)  
 **Dotyczy brancha**: `001-chart-updates`  
 **Typ kontraktu**: Publiczne API konfiguracji karty Lovelace (YAML / Storage UI)
 
@@ -32,6 +32,9 @@ precision: 1                         # number? — miejsca po przecinku; domyśl
 
 # --- Opcje prognozy ---
 show_forecast: false                 # boolean? — linia prognozy na wykresie; domyślnie: false
+
+# --- Opcje null gap (łączenie braków) ---
+connect_nulls: true                 # boolean? — rysuje przerywane interpolacje w lukach (sloty z brakami danych); domyślnie: true
 
 # --- Opcje kolorów i wypełnienia (NOWE w tej funkcji) ---
 primary_color: "#E53935"             # string? — kolor serii bieżącej (hex/rgb/rgba/CSS name)
@@ -67,6 +70,7 @@ debug: false                         # boolean? — logowanie diagnostyczne do k
 | `period_offset` | number | `-1` | — | Offset roku/okresu referencyjnego |
 | `precision` | number | `1` | — | Liczba miejsc dziesiętnych w wartościach |
 | `show_forecast` | boolean | `false` | — | **US5**: Linia prognozy na wykresie |
+| `connect_nulls` | boolean | `true` | — | Włącza/wyłącza rysowanie przerywanej interpolacji w lukach dla `null` (brak danych) |
 | `primary_color` | string (CSS color) | `--accent-color` HA | — | **US4**: Kolor linii serii bieżącej |
 | `fill_current` | boolean | `true` | — | **US3**: Wypełnienie pod serią bieżącą |
 | `fill_reference` | boolean | `false` | — | **US3**: Wypełnienie pod serią referencyjną |
@@ -143,3 +147,4 @@ Karta musi tolerować niepoprawne wartości pól opcjonalnych bez crash-u:
 | `fill_current_opacity: "abc"` | Nie-liczba | Clamp do 30 (domyślna) |
 | `fill_current: "yes"` | Nie-boolean | Traktowane jak truthy → `true` |
 | `show_forecast: 1` | Nie-boolean | Traktowane jak truthy → `true` |
+| `connect_nulls: 0` | Nie-boolean | Traktowane jak falsy → `false` |

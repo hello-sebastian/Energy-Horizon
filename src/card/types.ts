@@ -20,6 +20,11 @@ export interface CardConfig {
   fill_current_opacity?: number;
   fill_reference_opacity?: number;
   primary_color?: string;
+  /**
+   * If true, missing (null) slots are "visually connected" using an interpolated dashed
+   * overlay series. If false, the chart keeps actual gaps for null slots.
+   */
+  connect_nulls?: boolean;
 }
 
 export interface ComparisonPeriod {
@@ -114,6 +119,11 @@ export interface ChartRendererConfig {
   fillReference: boolean;
   fillCurrentOpacity: number;
   fillReferenceOpacity: number;
+  /**
+   * Controls whether we generate the dashed interpolation overlay across null gaps.
+   * (Solid series always keeps null gaps as gaps.)
+   */
+  connectNulls: boolean;
   comparisonMode: ComparisonMode;
   language: string;
   numberLocale: string;

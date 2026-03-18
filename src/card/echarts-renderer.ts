@@ -299,29 +299,31 @@ export class EChartsRenderer {
     });
 
     // Dashed series over null gaps (T009 null-gap dashed).
-    const dashedCurrentValues = this.buildDashedNullGapValues(currentValues);
-    if (dashedCurrentValues.some((v) => v !== null)) {
-      series.push({
-        name: `${labels.current} (dashed)`,
-        type: 'line',
-        // ECharts uses `series.color` (and/or itemStyle) for hover symbols and tooltip markers.
-        color: primaryColor,
-        data: dashedCurrentValues.map((y, i) => (y !== null ? [i, y] : null)),
-        lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 },
-        areaStyle: {
-          // Prevent any filled area under interpolated dashed segments.
-          opacity: 0
-        },
-        connectNulls: false,
-        showSymbol: false,
-        smooth: false,
-        itemStyle: { color: primaryColor },
-        showInLegend: false,
-        silent: true,
-        tooltip: { show: false },
-        // Keep focus/hover quiet (series is "silent" anyway, but this avoids edge-cases).
-        emphasis: { focus: 'none' }
-      });
+    if (rendererConfig.connectNulls) {
+      const dashedCurrentValues = this.buildDashedNullGapValues(currentValues);
+      if (dashedCurrentValues.some((v) => v !== null)) {
+        series.push({
+          name: `${labels.current} (dashed)`,
+          type: 'line',
+          // ECharts uses `series.color` (and/or itemStyle) for hover symbols and tooltip markers.
+          color: primaryColor,
+          data: dashedCurrentValues.map((y, i) => (y !== null ? [i, y] : null)),
+          lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 },
+          areaStyle: {
+            // Prevent any filled area under interpolated dashed segments.
+            opacity: 0
+          },
+          connectNulls: false,
+          showSymbol: false,
+          smooth: false,
+          itemStyle: { color: primaryColor },
+          showInLegend: false,
+          silent: true,
+          tooltip: { show: false },
+          // Keep focus/hover quiet (series is "silent" anyway, but this avoids edge-cases).
+          emphasis: { focus: 'none' }
+        });
+      }
     }
 
     // Reference series (T011) - optional
@@ -354,7 +356,7 @@ export class EChartsRenderer {
       });
 
       const dashedReferenceValues = this.buildDashedNullGapValues(referenceValues);
-      if (dashedReferenceValues.some((v) => v !== null)) {
+      if (rendererConfig.connectNulls && dashedReferenceValues.some((v) => v !== null)) {
         series.push({
           name: `${labels.reference} (dashed)`,
           type: 'line',

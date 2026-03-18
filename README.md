@@ -70,12 +70,13 @@ comparison_mode: year_over_year
 | `comparison_mode` | string   | required           | `year_over_year` or `month_over_year`                                      |
 | `aggregation`     | string   | `day`              | `day`, `week`, or `month`                                                  |
 | `period_offset`   | number   | `-1`               | Offset for reference period (e.g. -1 = previous year)                      |
-| `show_forecast`   | boolean  | `true`             | Show forecast of total usage for current period                            |
+| `show_forecast`   | boolean  | `false`            | Show forecast of total usage for current period                            |
 | `precision`       | number   | `1`                | Decimal places for numeric values                                          |
 | `title`           | string   | -                  | Optional card title. If not set (or empty), falls back to entity `friendly_name`, then entity ID. |
 | `show_title`      | boolean  | `true`             | Show/hide the title text in the header                                     |
 | `icon`            | string   | -                  | Optional icon (e.g. `mdi:flash`). If not set (or empty), card uses the entity icon (including Home Assistant’s default icon for that entity) |
 | `show_icon`       | boolean  | `true`             | Show/hide the pictogram in the header                                      |
+| `connect_nulls`  | boolean  | `true`             | Draw dashed interpolation segments across null (missing-data) days |
 | `language`        | string   | from HA            | Override dashboard language for this card only (e.g. `en`, `pl`, `de`)     |
 | `number_format`   | string   | from HA            | Override number format: `comma`, `decimal`, `language`, or `system`         |
 | `primary_color`   | string   | accent color HA    | CSS color value for current series line, fill, and markers (e.g. `#E53935`). Fallback: `--accent-color` HA → `--primary-color` HA → `#03a9f4` |
