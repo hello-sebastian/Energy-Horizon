@@ -131,7 +131,7 @@ export class EChartsRenderer {
     const styles = getComputedStyle(host);
 
     const referenceColor =
-      styles.getPropertyValue('--secondary-text-color').trim() || '#727272';
+      styles.getPropertyValue('--secondary-text-color').trim() || 'rgba(127, 127, 127, 0.4)';
     const gridColor =
       styles.getPropertyValue('--divider-color').trim() ||
       'rgba(127, 127, 127, 0.3)';
@@ -179,6 +179,11 @@ export class EChartsRenderer {
     primaryColor: string,
     theme: { referenceLine: string; grid: string }
   ): EChartsOption {
+    // Keep a fixed visual gap between axis ticks and tick labels.
+    // For yAxis labels this manifests as spacing on the right side of the label;
+    // for xAxis labels as spacing above the label.
+    const tickLabelGapPx = 8;
+
     // Compute nice max Y value
     const dataMax = Math.max(
       ...currentValues.filter((v) => v !== null) as number[],
@@ -492,7 +497,7 @@ export class EChartsRenderer {
         axisLine: { show: false },
         axisLabel: {
           formatter: (value: number) => formatXAxisLabel(value),
-          margin: 0,
+          margin: tickLabelGapPx,
           hideOverlap: true
         }
       },
@@ -510,7 +515,9 @@ export class EChartsRenderer {
             }
             return String(value);
           },
-          margin: 0
+          margin: tickLabelGapPx,
+          // Ensures the margin translates to spacing on the right side.
+          align: 'right'
         }
       },
       series
