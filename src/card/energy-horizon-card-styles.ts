@@ -62,7 +62,10 @@ export const energyHorizonCardStyles = css`
   .chart-container {
     position: relative;
     flex: 1 1 auto;
-    min-height: 0;
+    /* ECharts requires a non-zero container height.
+       In Home Assistant cards, percentage heights are often not resolved,
+       so a plain min-height: 0 can collapse the chart to 0px. */
+    min-height: 240px;
   }
 
   .ebc-card {
