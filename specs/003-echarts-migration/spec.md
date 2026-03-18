@@ -82,8 +82,9 @@ Użytkownik wielokrotnie przebudowuje kartę (np. przez odświeżenie widoku w H
 - Co jeśli dzisiejszy dzień nie istnieje w `fullTimeline` (np. karta skonfigurowana dla przeszłego okresu)? → Marker „dziś" nie jest wyświetlany; linia prognozy nie jest wyświetlana.
 - Co jeśli `fullTimeline` jest pustą tablicą? → Wykres renderuje się jako pusty bez błędów JS.
 - Co jeśli seria referencyjna jest `undefined`? → Wykres renderuje tylko serię bieżącą; legenda i tooltip wyświetlają jedną pozycję.
+- Co jeśli dokładnie jedna seria ma `null` dla slotu dzisiejszego? → Pionowa linia przerywana biegnie do wartości serii niezerowej (`null` = nieobecny, nie zero).
 - Co jeśli obie serie mają `null` dla slotu odpowiadającego dzisiejszemu dniowi? → Pionowa linia przerywana (marker dziś) biegnie do samej góry obszaru wykresu (od y=0 do górnej krawędzi).
-- Co jeśli renderer jest inicjalizowany w Shadow DOM? → ECharts musi poprawnie obsługiwać resize i eventy myszy wewnątrz Shadow DOM (brak izolacji styli wpływającej na tooltip).
+- Co jeśli renderer jest inicjalizowany w Shadow DOM? → `tooltip.appendTo` MUSI być ustawione na kontener karty wewnątrz Shadow DOM — zapobiega błędom pozycjonowania tooltipów wynikającym z domyślnego renderowania ECharts do `document.body`.
 
 ---
 
@@ -96,13 +97,13 @@ Użytkownik wielokrotnie przebudowuje kartę (np. przez odświeżenie widoku w H
 - **FR-001**: Renderer MUSI wyświetlać na osi poziomej wszystkie sloty `fullTimeline` (0..N-1), niezależnie od dostępności danych, zachowując pełną oś czasu okresu (FR-001 z 001-chart-updates).
 - **FR-002**: Linie serii MUSZĄ przerywać się (gap) w slotach, gdzie wartość wynosi `null` — punkty po obu stronach luki NIE MOGĄ być połączone (FR-002 z 001-chart-updates, `connectNulls: false` lub ekwiwalent ECharts).
 - **FR-003**: Marker „dziś" MUSI być zrealizowany wyłącznie przez wbudowane mechanizmy ECharts: pionowa linia przerywana przez `markLine`, kropki przez `markPoint` lub dane z efektem punktowym — bez żadnych bezpośrednich operacji Canvas API.
-- **FR-004**: Pionowa linia przerywana markera „dziś" MUSI biec od y=0 do wyższej z dwóch wartości (bieżąca lub referencyjna), a gdy brak obu — do górnej krawędzi obszaru wykresu.
+- **FR-004**: Pionowa linia przerywana markera „dziś" MUSI biec od y=0 do wyższej z dwóch wartości (bieżąca lub referencyjna). Wartości `null` są traktowane jako nieobecne (nie jako zero) — jeśli dokładnie jedna seria ma `null` w slocie dzisiejszym, linia biegnie do wartości serii niezerowej. Gdy obie serie mają `null` — do górnej krawędzi obszaru wykresu.
 - **FR-005**: Wypełnienie (area) pod każdą serią MUSI być realizowane przez `areaStyle` ECharts z niezależnym kryciem (`opacity`) dla każdej serii, nie wpływając na krycie samej linii.
 - **FR-006**: Prognoza MUSI być renderowana jako oddzielna seria liniowa z `lineStyle.type: 'dashed'`, bez wypełnienia, od indeksu slotu dzisiejszego dnia do ostatniego slotu `fullTimeline`.
 - **FR-007**: Oś Y MUSI wyświetlać dokładnie 5 ticków (w tym 0), realizowane przez konfigurację ECharts (`splitNumber: 4`, `min: 0`) bez żadnej dodatkowej logiki poza konfiguracją.
 - **FR-008**: Etykieta jednostki MUSI być wyświetlana przy najwyższym ticku osi Y, realizowana przez `axisLabel.formatter` ECharts wykrywający najwyższy tick — bez rysowania własnego tekstu na canvas.
 - **FR-009**: Pionowe linie siatki MUSZĄ być wyłączone; poziome linie siatki i ticki/etykiety osi X MUSZĄ pozostać widoczne (odpowiednik FR-020 z 001-chart-updates).
-- **FR-010**: Tooltip MUSI działać w trybie „po indeksie" (mode: 'axis', axisPointer) dla wszystkich serii jednocześnie.
+- **FR-010**: Tooltip MUSI działać w trybie „po indeksie" (mode: 'axis', axisPointer) dla wszystkich serii jednocześnie. Opcja `tooltip.appendTo` MUSI być ustawiona na kontener karty (element wewnątrz Shadow DOM), aby tooltip był poprawnie pozycjonowany w środowisku Lit/HA — bez renderowania do `document.body`.
 - **FR-011**: Legenda MUSI być włączona i wyświetlać etykiety serii (bieżąca i referencyjna).
 - **FR-012**: Animacje MUSZĄ być wyłączone (`animation: false`).
 - **FR-013**: Kolor z `primary_color` (lub fallback do CSS `--accent-color` / `--primary-color` HA) MUSI być stosowany do: linii serii bieżącej, wypełnienia pod nią, markera „dziś" (linia przerywana + kropka bieżąca), linii prognozy.
@@ -110,10 +111,10 @@ Użytkownik wielokrotnie przebudowuje kartę (np. przez odświeżenie widoku w H
 **Architektura i import:**
 
 - **FR-014**: Nowy renderer MUSI implementować ten sam publiczny interfejs co `ChartRenderer`: metody `update(series, fullTimeline, rendererConfig, labels)` i `destroy()`.
-- **FR-015**: ECharts MUSI być importowany wyłącznie modularnie — bez `import * as echarts from 'echarts'`. Dozwolone importy: `echarts/core`, `echarts/charts` (tylko `LineChart`), `echarts/components` (tylko faktycznie używane: `GridComponent`, `TooltipComponent`, `LegendComponent`, `MarkLineComponent`, `MarkPointComponent`), `echarts/renderers` (tylko `CanvasRenderer`).
+- **FR-015**: ECharts MUSI być importowany wyłącznie modularnie — bez `import * as echarts from 'echarts'`. Dozwolone importy: `echarts/core`, `echarts/charts` (tylko `LineChart`), `echarts/components` (tylko faktycznie używane: `GridComponent`, `TooltipComponent`, `LegendComponent`, `MarkLineComponent`, `MarkPointComponent`), `echarts/renderers` (tylko `CanvasRenderer`). Wersja zależności: `^5.6.0` (najnowsze stabilne ECharts 5.x).
 - **FR-016**: `chart.js` i `chartjs-adapter-date-fns` MUSZĄ zostać usunięte z `package.json` po migracji.
 - **FR-017**: Logika biznesowa w `cumulative-comparison-chart.ts` (metody `buildFullTimeline`, `_buildRendererConfig`, mechanizm odświeżania) MUSI pozostać niezmieniona — zmieniamy wyłącznie klasę renderera.
-- **FR-018**: Renderer MUSI poprawnie obsługiwać `ResizeObserver` lub `echartsInstance.resize()` reagując na zmiany rozmiaru kontenera — bez tworzenia nowej instancji.
+- **FR-018**: Renderer MUSI wewnętrznie tworzyć i zarządzać własnym `ResizeObserver` obserwującym element kontenera — po zmianie jego rozmiaru wywołuje `echartsInstance.resize()`. Rodzic (`cumulative-comparison-chart.ts`) nie zarządza obsługą resize. `ResizeObserver` jest odłączany (`disconnect()`) w metodzie `destroy()`.
 - **FR-019**: Renderer MUSI wywoływać `echartsInstance.dispose()` w metodzie `destroy()`, zwalniając wszystkie zasoby.
 
 ### Key Entities
@@ -128,12 +129,24 @@ Użytkownik wielokrotnie przebudowuje kartę (np. przez odświeżenie widoku w H
 
 ### Measurable Outcomes
 
-- **SC-001**: Wszystkie 22 scenariusze akceptacyjne z `specs/001-chart-updates/spec.md` przechodzą wizualnie po migracji — 0 regresji w zachowaniu wykresu.
+- **SC-001**: Wszystkie 22 scenariusze akceptacyjne z `specs/001-chart-updates/spec.md` przechodzą przez ręczną inspekcję wizualną po migracji — 0 regresji w zachowaniu wykresu. Automatyczne testy Vitest obejmują wyłącznie zagadnienia specyficzne dla ECharts: poprawność cyklu życia instancji (US-4), brak bezpośrednich wywołań Canvas API (US-2) i strukturę opcji ECharts (weryfikacja `ECOption`).
 - **SC-002**: Kod renderera nie zawiera żadnych bezpośrednich wywołań Canvas API (`ctx.arc`, `ctx.stroke`, `ctx.fillRect` itp.) — 0 custom hacków rysowania.
 - **SC-003**: Importy ECharts w kodzie źródłowym są wyłącznie modularnie — 0 wystąpień `import * as echarts from 'echarts'`.
 - **SC-004**: Bundle końcowy po migracji nie zawiera zależności Chart.js — rozmiar bundle nie wzrasta o więcej niż 50 kB gzip względem wersji przed migracją.
 - **SC-005**: Wielokrotne wywołanie `update()` i `destroy()` nie powoduje wycieków instancji — liczba aktywnych instancji ECharts w kontenerze wynosi zawsze dokładnie 1 (lub 0 po `destroy()`).
 - **SC-006**: Zmiana rozmiaru okna HA powoduje automatyczne dopasowanie wykresu bez przeładowania karty.
+
+---
+
+## Clarifications
+
+### Session 2026-03-18
+
+- Q: Czy 22 scenariusze akceptacyjne z SC-001 muszą być pokryte przez automatyczne testy Vitest? → A: Nie — SC-001 weryfikowany przez ręczną inspekcję wizualną; automatyczne testy Vitest obejmują wyłącznie zagadnienia ECharts-specyficzne (cykl życia, brak Canvas API, struktura ECOption).
+- Q: Która wersja ECharts ma być użyta? → A: `^5.6.0` (najnowsze stabilne ECharts 5.x).
+- Q: Kto zarządza ResizeObserver — renderer czy rodzic? → A: `EChartsRenderer` tworzy i zarządza własnym `ResizeObserver` wewnętrznie; `disconnect()` w `destroy()`.
+- Q: Jak wyznaczana jest wysokość markLine „dziś", gdy dokładnie jedna seria ma `null` w slocie dzisiejszym? → A: Linia biegnie do wartości niezerowej serii; `null` traktowany jako nieobecny (nie jako zero).
+- Q: Czy ECharts tooltip wymaga jawnej mitigacji dla Shadow DOM? → A: Tak — `tooltip.appendTo` musi wskazywać na kontener karty wewnątrz Shadow DOM (nie `document.body`).
 
 ---
 
@@ -144,6 +157,6 @@ Użytkownik wielokrotnie przebudowuje kartę (np. przez odświeżenie widoku w H
 - Marker „dziś" można w pełni zrealizować przez `markLine` (linia przerywana) i `markPoint` (kropki) bez potrzeby użycia `graphic` API.
 - Wymuszenie dokładnie 5 ticków na osi Y jest deterministyczne przez `splitNumber: 4` + `min: 0` + kontrola `max` i `interval` w ECharts — bez dodatkowej logiki JS.
 - Etykieta jednostki przy najwyższym ticku Y jest realizowana przez `axisLabel.formatter` rozpoznający najwyższą wartość ticka.
-- ECharts w Shadow DOM (Lit/HA) działa poprawnie z `CanvasRenderer` bez dodatkowych obejść dla tooltipów czy eventów myszy.
+- ECharts w Shadow DOM (Lit/HA) działa poprawnie z `CanvasRenderer` dla renderowania i eventów myszy. Tooltip wymaga jawnego ustawienia `tooltip.appendTo` na kontener karty — nie można polegać na domyślnym `document.body`.
 - Logika `alignSeriesOnTimeline` pozostaje w aktualnej formie lub jest przeniesiona 1:1 do nowego renderera — bez żadnych zmian algorytmu.
 - `ResizeObserver` jest dostępny w środowisku HA (nowoczesna przeglądarka) — nie potrzeba polyfilla.
