@@ -335,4 +335,102 @@ describe('EChartsRenderer', () => {
       expect(html2).toContain(`${expectedFmt.format(1.04)} MWh`);
     });
   });
+
+  describe('T026: null-gap dashed series no fill', () => {
+    function buildBaseRendererConfig(
+      overrides: Partial<ChartRendererConfig>
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        unit: "kWh",
+        periodLabel: "",
+        ...overrides
+      };
+    }
+
+    function buildSeries(
+      points: Array<{ timestamp: number; value: number }>
+    ): ComparisonSeries {
+      const unit = "kWh";
+      return {
+        current: {
+          points: points.map((p) => ({ timestamp: p.timestamp, value: p.value })),
+          unit,
+          periodLabel: "",
+          total: 0
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+    }
+
+    function captureOption() {
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as any[];
+      return option as any;
+    }
+
+    it("adds dashed null-gap series with no fill, while solid keeps null", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const rendererConfig = buildBaseRendererConfig({
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        unit: "kWh"
+      });
+
+      // Solid current must keep a null at slot index 1 (missing points in that slot).
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0] + 10, value: 2 },
+        // slot index 1 intentionally missing => null
+        { timestamp: fullTimeline[2] + 10, value: 6 }
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        rendererConfig,
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+
+      const series = (option.series ?? []) as any[];
+      const solidCurrent = series.find((s) => s?.name === "Current");
+      expect(solidCurrent).toBeDefined();
+
+      const dashed = series.find((s) => s?.lineStyle?.type === "dashed");
+      expect(dashed).toBeDefined();
+
+      // Solid series keeps null in the gap.
+      expect(solidCurrent.data[1]).toBeNull();
+
+      // Dashed series exists, does not fill, and has non-null interpolated value inside the gap.
+      expect(dashed.areaStyle?.opacity).toBe(0);
+
+      const dashedDataMiddle = dashed.data[1];
+      expect(dashedDataMiddle).not.toBeNull();
+      expect(Array.isArray(dashedDataMiddle)).toBe(true);
+      expect(dashedDataMiddle[0]).toBe(1);
+      expect(dashedDataMiddle[1]).toBeCloseTo(4, 6); // linear interpolation between 2 and 6
+    });
+  });
 });

@@ -167,6 +167,52 @@ export class EChartsRenderer {
   }
 
   /**
+   * Build values for a "null-gap dashed" series.
+   * For every contiguous run of `null` values with a non-null value on both sides,
+   * it linearly interpolates values across the whole span between the surrounding points
+   * (including those non-null endpoints). Outside such spans it returns `null`.
+   */
+  private buildDashedNullGapValues(
+    values: (number | null)[]
+  ): (number | null)[] {
+    const result: (number | null)[] = new Array(values.length).fill(null);
+
+    let lastNonNullIndex: number | undefined;
+
+    let i = 0;
+    while (i < values.length) {
+      if (values[i] !== null) {
+        lastNonNullIndex = i;
+        i++;
+        continue;
+      }
+
+      // i is at the start of a contiguous null block.
+      while (i < values.length && values[i] === null) i++;
+
+      const rightIndex = i < values.length ? i : undefined;
+      if (lastNonNullIndex === undefined || rightIndex === undefined) {
+        continue;
+      }
+
+      const leftIndex = lastNonNullIndex;
+      const leftVal = values[leftIndex]!;
+      const rightVal = values[rightIndex]!;
+      const span = rightIndex - leftIndex;
+
+      for (let k = leftIndex; k <= rightIndex; k++) {
+        const t = (k - leftIndex) / span;
+        result[k] = leftVal + (rightVal - leftVal) * t;
+      }
+
+      lastNonNullIndex = rightIndex;
+      i = rightIndex + 1; // skip the right endpoint (already included)
+    }
+
+    return result;
+  }
+
+  /**
    * Build EChart option configuration (T008–T012).
    * Handles chart layout, axes, legend, tooltip, and series data.
    */
@@ -211,6 +257,8 @@ export class EChartsRenderer {
     };
 
     const series: any[] = [];
+    const solidCurrentSeriesIndex = series.length;
+    let solidReferenceSeriesIndex: number | undefined;
 
     // Current series (T009)
     const fillCurrentOpacity = Math.min(
@@ -250,8 +298,35 @@ export class EChartsRenderer {
       itemStyle: { color: primaryColor }
     });
 
+    // Dashed series over null gaps (T009 null-gap dashed).
+    const dashedCurrentValues = this.buildDashedNullGapValues(currentValues);
+    if (dashedCurrentValues.some((v) => v !== null)) {
+      series.push({
+        name: `${labels.current} (dashed)`,
+        type: 'line',
+        // ECharts uses `series.color` (and/or itemStyle) for hover symbols and tooltip markers.
+        color: primaryColor,
+        data: dashedCurrentValues.map((y, i) => (y !== null ? [i, y] : null)),
+        lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 },
+        areaStyle: {
+          // Prevent any filled area under interpolated dashed segments.
+          opacity: 0
+        },
+        connectNulls: false,
+        showSymbol: false,
+        smooth: false,
+        itemStyle: { color: primaryColor },
+        showInLegend: false,
+        silent: true,
+        tooltip: { show: false },
+        // Keep focus/hover quiet (series is "silent" anyway, but this avoids edge-cases).
+        emphasis: { focus: 'none' }
+      });
+    }
+
     // Reference series (T011) - optional
     if (rendererConfig.showForecast && referenceValues.some((v) => v !== null)) {
+      solidReferenceSeriesIndex = series.length;
       series.push({
         name: labels.reference,
         type: 'line',
@@ -277,6 +352,29 @@ export class EChartsRenderer {
         },
         itemStyle: { color: theme.referenceLine }
       });
+
+      const dashedReferenceValues = this.buildDashedNullGapValues(referenceValues);
+      if (dashedReferenceValues.some((v) => v !== null)) {
+        series.push({
+          name: `${labels.reference} (dashed)`,
+          type: 'line',
+          color: theme.referenceLine,
+          data: dashedReferenceValues.map((y, i) => (y !== null ? [i, y] : null)),
+          lineStyle: { type: 'dashed', color: theme.referenceLine, width: 1.5 },
+          areaStyle: {
+            // Prevent any filled area under interpolated dashed segments.
+            opacity: 0
+          },
+          connectNulls: false,
+          showSymbol: false,
+          smooth: false,
+          itemStyle: { color: theme.referenceLine },
+          showInLegend: false,
+          silent: true,
+          tooltip: { show: false },
+          emphasis: { focus: 'none' }
+        });
+      }
     }
 
     // Today marker computation (T010)
@@ -317,21 +415,21 @@ export class EChartsRenderer {
         });
       }
 
-      (series[0] as any).markLine = {
+      (series[solidCurrentSeriesIndex] as any).markLine = {
         silent: true,
         symbol: ['none', 'none'],
         data: markLineData,
         lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 }
       };
 
-      (series[0] as any).markPoint = {
+      (series[solidCurrentSeriesIndex] as any).markPoint = {
         silent: true,
         data: markPointData
       };
 
       // Add reference series today mark point (T011)
-      if (series.length > 1 && todayReferenceY !== null) {
-        (series[1] as any).markPoint = {
+      if (solidReferenceSeriesIndex !== undefined && todayReferenceY !== null) {
+        (series[solidReferenceSeriesIndex] as any).markPoint = {
           silent: true,
           data: [{
             coord: [todaySlotIndex, todayReferenceY],
@@ -372,10 +470,10 @@ export class EChartsRenderer {
       }
     } else {
       // No today marker - add empty mark point arrays
-      (series[0] as any).markPoint = { silent: true, data: [] };
-      (series[0] as any).markLine = { silent: true, symbol: ['none', 'none'], data: [], lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 } };
-      if (series.length > 1) {
-        (series[1] as any).markPoint = { silent: true, data: [] };
+      (series[solidCurrentSeriesIndex] as any).markPoint = { silent: true, data: [] };
+      (series[solidCurrentSeriesIndex] as any).markLine = { silent: true, symbol: ['none', 'none'], data: [], lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 } };
+      if (solidReferenceSeriesIndex !== undefined) {
+        (series[solidReferenceSeriesIndex] as any).markPoint = { silent: true, data: [] };
       }
     }
 
