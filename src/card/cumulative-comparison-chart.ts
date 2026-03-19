@@ -253,7 +253,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       };
 
       const summary = computeSummary(series);
-      const forecast = computeForecast(series);
+      const fullEnd = this._computeFullEnd(period);
+      const fullTimeline = buildFullTimeline(period, fullEnd);
+      const forecast = computeForecast(series, fullTimeline.length);
 
       if (!summary.unit && entityUnit) {
         summary.unit = entityUnit;

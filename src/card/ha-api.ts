@@ -12,8 +12,6 @@ import type {
   TextSummary
 } from "./types";
 
-const MIN_POINTS_FOR_FORECAST = 5;
-
 export function buildFullTimeline(
   period: ComparisonPeriod,
   fullEnd: Date
@@ -272,71 +270,105 @@ export function computeSummary(series: ComparisonSeries): SummaryStats {
 }
 
 export function computeForecast(
-  series: ComparisonSeries
+  series: ComparisonSeries,
+  periodTotalBuckets: number
 ): ForecastStats {
-  const currentPoints = series.current.points;
-  const n = currentPoints.length;
+  const disabled = (unit: string): ForecastStats => ({
+    enabled: false,
+    confidence: "low",
+    unit
+  });
 
-  // Potrzebujemy co najmniej MIN_POINTS_FOR_FORECAST pełnych dni (bez dnia bieżącego)
-  const completedDays = Math.max(0, n - 1);
-  if (completedDays < MIN_POINTS_FOR_FORECAST) {
-    return {
-      enabled: false,
-      unit: series.current.unit,
-      confidence: "low"
-    };
+  const currentPoints = series.current.points;
+  const unit = series.current.unit;
+
+  // Guard 1 (wymagany skończony periodTotalBuckets > 0 — kontrakt computeForecast)
+  if (
+    typeof periodTotalBuckets !== "number" ||
+    !Number.isFinite(periodTotalBuckets) ||
+    periodTotalBuckets <= 0 ||
+    currentPoints.length === 0
+  ) {
+    return disabled(unit);
+  }
+
+  const completedBuckets = currentPoints.length - 1;
+  const pct = completedBuckets / periodTotalBuckets;
+
+  // Guard 2 — wbudowany floor 3 (FR-016) + próg procentowy 5%
+  if (completedBuckets < 3 || pct < 0.05) {
+    return disabled(unit);
   }
 
   const referencePoints = series.reference?.points;
-  // Jeśli nie mamy wystarczających danych referencyjnych, nie liczymy prognozy
-  if (!referencePoints || referencePoints.length < completedDays + 1) {
-    return {
-      enabled: false,
-      unit: series.current.unit,
-      confidence: "low"
-    };
+
+  // Guard 3
+  if (!referencePoints || referencePoints.length === 0) {
+    return disabled(unit);
   }
 
-  const sumSlice = (points: CumulativeSeries["points"], from: number, to: number) =>
-    points
-      .slice(from, to)
-      .reduce((acc, p) => acc + (p.rawValue ?? 0), 0);
+  const currentRangeMs =
+    currentPoints[completedBuckets - 1]!.timestamp -
+    currentPoints[0]!.timestamp;
+  const cutoffTs = currentPoints[0]!.timestamp + currentRangeMs;
 
-  // A – suma bieżąca (od 1. dnia do wczoraj)
-  const A = sumSlice(currentPoints, 0, completedDays);
+  let splitIdx = -1;
+  for (let i = referencePoints.length - 1; i >= 0; i--) {
+    if (referencePoints[i]!.timestamp <= cutoffTs) {
+      splitIdx = i;
+      break;
+    }
+  }
 
-  // B – suma historyczna dla tego samego zakresu dni (rok temu)
-  const B = sumSlice(referencePoints, 0, completedDays);
+  // Guard 4
+  if (splitIdx === -1) {
+    return disabled(unit);
+  }
 
+  const B = referencePoints
+    .slice(0, splitIdx + 1)
+    .reduce((acc, p) => acc + (p.rawValue ?? 0), 0);
+
+  // Guard 5
   if (!Number.isFinite(B) || B <= 0) {
-    return {
-      enabled: false,
-      unit: series.current.unit,
-      confidence: "low"
-    };
+    return disabled(unit);
   }
 
-  // C – historyczna „reszta” miesiąca (od dzisiaj do końca miesiąca rok temu)
-  const C = sumSlice(referencePoints, completedDays, referencePoints.length);
-  const referenceTotal = sumSlice(referencePoints, 0, referencePoints.length);
+  const A = currentPoints
+    .slice(0, completedBuckets)
+    .reduce((acc, p) => acc + (p.rawValue ?? 0), 0);
 
-  // Współczynnik trendu (A / B), z prostym ograniczeniem, aby złagodzić anomalie
   const rawTrend = A / B;
   const trend = Math.min(5, Math.max(0.2, rawTrend));
 
+  // Granice 0.3 i 3.3 — porównania 10A vs 3B / 33B (równoważne A/B < 0.3 / > 3.3 przy B > 0),
+  // unikają błędu float przy brzegu (np. A=33, B=10).
+  const anomalousReference = 10 * A < 3 * B || 10 * A > 33 * B;
+
+  let confidence: ForecastStats["confidence"] =
+    pct >= 0.4 ? "high" : pct >= 0.2 ? "medium" : "low";
+  if (anomalousReference) {
+    confidence = "low";
+  }
+
+  const C = referencePoints
+    .slice(splitIdx + 1)
+    .reduce((acc, p) => acc + (p.rawValue ?? 0), 0);
+
+  const reference_total = B + C;
   const forecast_total = A + C * trend;
 
-  let confidence: ForecastStats["confidence"] = "low";
-  if (completedDays >= 14) confidence = "high";
-  else if (completedDays >= 7) confidence = "medium";
-
-  return {
+  const result: ForecastStats = {
     enabled: true,
     forecast_total,
-    reference_total: referenceTotal,
-    unit: series.current.unit,
-    confidence
+    reference_total,
+    confidence,
+    unit
   };
+  if (anomalousReference) {
+    result.anomalousReference = true;
+  }
+  return result;
 }
 
 export function computeTextSummary(

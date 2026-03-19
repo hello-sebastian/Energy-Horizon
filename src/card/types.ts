@@ -100,6 +100,8 @@ export interface ForecastStats {
   forecast_total?: number;
   reference_total?: number;
   confidence: "low" | "medium" | "high";
+  /** True when rawTrend is strictly below 0.3 or strictly above 3.3 (anomalous reference year). */
+  anomalousReference?: boolean;
   unit: string;
 }
 

@@ -12,7 +12,7 @@ A Lovelace card for Home Assistant that compares cumulative energy usage between
 - **Cumulative comparison chart** – Visual comparison of current vs. reference period (e.g. this month vs. same month last year)
 - **Summary statistics** – Current cumulative, reference cumulative, difference and percentage
 - **Text summary** – Localized heading describing the trend (higher/lower/similar)
-- **Forecast** – Predicted total usage for the current period based on observed data, with confidence level
+- **Forecast** – Predicted total for the current period using a **time-aligned** reference split (works with gaps in statistics), **percentage-based** activation across the whole period (day/week/month), capped trend factor, and **confidence** derived from how much of the period has elapsed; extreme year-over-year ratios cap confidence at **low** (anomalous reference handling)
 - **Flexible periods** – Year-over-year or month-over-year comparison
 - **Aggregation** – Daily, weekly, or monthly aggregation of data
 - **Localization (i18n)** – Card follows your Home Assistant language and number format. Optional per-card overrides: `language` and `number_format` in YAML. Supported languages include English, Polish, and German (others can be added via translation files).
@@ -70,7 +70,7 @@ comparison_mode: year_over_year
 | `comparison_mode` | string   | required           | `year_over_year` or `month_over_year`                                      |
 | `aggregation`     | string   | `day`              | `day`, `week`, or `month`                                                  |
 | `period_offset`   | number   | `-1`               | Offset for reference period (e.g. -1 = previous year)                      |
-| `show_forecast`   | boolean  | `false`            | Show forecast of total usage for current period                            |
+| `show_forecast`   | boolean  | —                  | `false` = hide forecast block and chart line. `true` = show forecast line on the chart when a forecast is enabled. If omitted, the forecast **summary** can still appear when the model is enabled; the **chart line** is drawn only when set to `true` (recommended: `true` if you want the line). |
 | `precision`       | number   | `1`                | Decimal places for numeric values                                          |
 | `title`           | string   | -                  | Optional card title. If not set (or empty), falls back to entity `friendly_name`, then entity ID. |
 | `show_title`      | boolean  | `true`             | Show/hide the title text in the header                                     |
@@ -145,7 +145,7 @@ fill_current: true             # Show fill under current series (default: true)
 fill_current_opacity: 20       # Adjust transparency (0–100, default: 30)
 fill_reference: true           # Show fill under reference series (default: false)
 fill_reference_opacity: 15     # Reference series transparency (0–100, default: 30)
-show_forecast: true            # Show forecast line (default: true)
+show_forecast: true            # Forecast line on chart + summary when enabled (use false to hide all)
 ```
 
 ## Supported entities
@@ -196,30 +196,53 @@ Internally, the card’s visual styles are grouped in a dedicated style module i
 
 ## Forecast calculation
 
-The forecast for the current period uses a **Historical Index** method that takes into account how the rest of the same month behaved in the previous year.
+The card uses a **scaled remainder** model: compare how much energy you have used so far (**A**) to the reference period over the **same elapsed time** (**B**), then scale the reference period’s **remaining** amount (**C**) by a capped trend factor.
 
-For daily aggregation we split the month into two parts:
+### When a forecast is shown (`enabled`)
 
-- from day **1** to **yesterday** (completed days),
-- from **today** to the **end of the month**.
+The model runs only if all of the following hold:
+
+- Valid **period length** in buckets: `periodTotalBuckets` is the length of the full comparison timeline (depends on `comparison_mode` and `aggregation`: e.g. days in the month or year).
+- At least **3** completed buckets in the current series, and **≥ 5%** of the period completed:  
+  `(currentPoints.length - 1) / periodTotalBuckets ≥ 0.05`.
+- Reference series exists, aligns in time, and **B > 0** (sum of reference usage over the elapsed window).
+
+### Time alignment (not index alignment)
+
+The split between “elapsed” and “remainder” in the **reference** series uses **timestamps**, not array positions—so missing statistics in the middle of the period do not skew **B** and **C** the way a pure day-index split would.
+
+- **cutoff** = start of current series + (time span from first to last **completed** current point).
+- **splitIdx** = last reference point with `timestamp ≤ cutoff`.
+- If no reference point falls before/on cutoff, the forecast is disabled.
+
+### Symbols and formula
 
 Let:
-- **A** – sum of usage in the current year from day 1 to yesterday,
-- **B** – sum of usage in the previous year for the same days (day 1 to yesterday),
-- **C** – sum of usage in the previous year from today to the end of the month,
-- **k** – trend factor describing how this year compares to last year.
 
-We compute:
+- **A** – sum of `rawValue` over current points from the first bucket through the last **completed** bucket (all but the open “today” bucket).
+- **B** – sum of reference `rawValue` from the first reference point through **splitIdx** (same elapsed window in time).
+- **C** – sum of reference `rawValue` after **splitIdx** (the remainder of the reference period; **C** can be **0** if the reference series ends at the split—then `forecast_total = A`).
+- **rawTrend** = **A / B**
+- **trend** = `rawTrend` clamped to **[0.2, 5]**
+- **forecast_total** = **A + C × trend**
+- **reference_total** = **B + C** (reference period total implied by the same split)
 
-- **k = A / B**
-- **forecast_total = A + C * k**
+Intuition: the rest of the period is assumed to track the reference remainder, scaled by how this period’s completed slice compares to the reference slice.
 
-The idea: we assume that the remaining part of the month will behave similarly to the same days last year, but scaled by the current trend \(k\) (you already use more or less energy than a year ago).
+### Confidence (`low` / `medium` / `high`)
 
-The confidence level is derived only from the number of **completed days**:
-- **low** – fewer than 7 completed days,
-- **medium** – from 7 to 13 completed days,
-- **high** – 14 or more completed days.
+Based on the fraction of the period that has **completed** buckets:  
+**pct** = `(currentPoints.length - 1) / periodTotalBuckets`
+
+- **high** – pct ≥ **40%**
+- **medium** – **20%** ≤ pct &lt; 40%
+- **low** – pct &lt; 20%
+
+If the year-over-year ratio is extreme (**rawTrend &lt; 0.3** or **rawTrend &gt; 3.3**), the reference year is treated as **anomalous**: confidence is forced to **low** (values **0.3** and **3.3** themselves are *not* flagged). The forecast value is still returned when otherwise enabled; the UI reflects the lowered confidence in the forecast note.
+
+### Implementation note
+
+Details and acceptance criteria for this logic live in [`specs/001-compute-forecast/`](specs/001-compute-forecast/) (spec, plan, tests).
 
 ## Troubleshooting
 
@@ -227,10 +250,13 @@ The confidence level is derived only from the number of **completed days**:
 |---------------------------------|---------------------------------------------------------------------------|
 | "Custom element doesn't exist"  | Ensure the resource URL is correct and the file loads (check browser console) |
 | No data / empty chart           | Verify the entity has statistics; check that the recorder is enabled     |
+| No forecast / forecast disabled | Needs ≥3 completed buckets, ≥5% of the period elapsed, valid reference slice (**B** > 0), and time alignment; set `show_forecast: true` for the chart line |
 | Wrong units                     | Ensure all data points use the same unit of measurement                  |
 | Card shows error                | Open browser console (F12) for details; verify entity ID is correct      |
 
 ## Development
+
+Stack: **TypeScript** (strict), **Lit** 3, **Apache ECharts** 5, **Vite** 6, **Vitest** 2.
 
 ```bash
 npm install

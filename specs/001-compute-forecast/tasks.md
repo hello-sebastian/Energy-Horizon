@@ -18,8 +18,8 @@
 
 **⚠️ CRITICAL**: No implementation tasks can compile until T001 is done.
 
-- [ ] T001 [P] Add `anomalousReference?: boolean` field to `ForecastStats` interface in `src/card/types.ts` (per data-model.md §ForecastStats and contracts/compute-forecast.ts lines 15–50)
-- [ ] T002 [P] Remove constant `MIN_POINTS_FOR_FORECAST` (= 5) from `src/card/ha-api.ts` (FR-016 — replace with inline floor = 3, non-exported)
+- [x] T001 [P] Add `anomalousReference?: boolean` field to `ForecastStats` interface in `src/card/types.ts` (per data-model.md §ForecastStats and contracts/compute-forecast.ts lines 15–50)
+- [x] T002 [P] Remove constant `MIN_POINTS_FOR_FORECAST` (= 5) from `src/card/ha-api.ts` (FR-016 — replace with inline floor = 3, non-exported)
 
 **Checkpoint**: TypeScript types are updated; project still compiles (call-site not yet updated)
 
@@ -33,15 +33,15 @@
 
 ### Tests for US1+US2 (write FIRST — verify they FAIL before implementation)
 
-- [ ] T003 [US1] Add `describe("computeForecast")` block to `tests/unit/ha-api.test.ts` with test scenarios 1–4: scenario 1 (2/365 buckets, pct≈0.003 → `enabled:false`); scenario 2 (4/30, pct≈0.13 → `enabled:true`, `confidence:"low"`); scenario 3 (7/30, pct≈0.23 → `confidence:"medium"`); scenario 4 (13/30, pct≈0.43 → `confidence:"high"`)
-- [ ] T004 [US1] Add guard test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 10 (no reference series → `enabled:false`); scenario 11 (`periodTotalBuckets=0` → `enabled:false`); scenario 12 (B=0 / rawTrend=Infinity → `enabled:false`); scenario 13 (`completedBuckets=2` < 3 → `enabled:false`)
-- [ ] T005 [US2] Add time-gap test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 9 (current series has missing midpoint gap — verify `splitIdx` is computed from ms range, not array index, B/C are correct); scenario 14 (all reference timestamps later than current range → `splitIdx=-1`, `enabled:false`)
+- [x] T003 [US1] Add `describe("computeForecast")` block to `tests/unit/ha-api.test.ts` with test scenarios 1–4: scenario 1 (2/365 buckets, pct≈0.003 → `enabled:false`); scenario 2 (4/30, pct≈0.13 → `enabled:true`, `confidence:"low"`); scenario 3 (7/30, pct≈0.23 → `confidence:"medium"`); scenario 4 (13/30, pct≈0.43 → `confidence:"high"`)
+- [x] T004 [US1] Add guard test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 10 (no reference series → `enabled:false`); scenario 11 (`periodTotalBuckets=0` → `enabled:false`); scenario 12 (B=0 / rawTrend=Infinity → `enabled:false`); scenario 13 (`completedBuckets=2` < 3 → `enabled:false`)
+- [x] T005 [US2] Add time-gap test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 9 (current series has missing midpoint gap — verify `splitIdx` is computed from ms range, not array index, B/C are correct); scenario 14 (all reference timestamps later than current range → `splitIdx=-1`, `enabled:false`)
 
 ### Implementation for US1+US2
 
-- [ ] T006 [US1] In `src/card/ha-api.ts`: replace `computeForecast` signature to `computeForecast(series: ComparisonSeries, periodTotalBuckets: number): ForecastStats` — implement Guard 1 (`periodTotalBuckets <= 0` or `currentPoints.length === 0` → disabled), Guard 2 (`completedBuckets = length - 1 < 3` or `pct = completedBuckets / periodTotalBuckets < 0.05` → disabled), Guard 3 (empty/null `referencePoints` → disabled)
-- [ ] T007 [US2] In `src/card/ha-api.ts`: implement time-based `splitIdx` — compute `currentRangeMs = currentPoints[completedBuckets-1].timestamp - currentPoints[0].timestamp`, `cutoffTs = currentPoints[0].timestamp + currentRangeMs`, find last `referencePoints[i].timestamp <= cutoffTs`; add Guard 4 (`splitIdx === -1` → disabled)
-- [ ] T008 [US1] In `src/card/ha-api.ts`: implement B sum (`referencePoints[0..splitIdx].rawValue ?? 0`), Guard 5 (`B <= 0` → disabled), A sum (`currentPoints[0..completedBuckets-1].rawValue ?? 0`), `rawTrend = A / B`, `confidence` from pct (`>= 0.40 → "high"`, `>= 0.20 → "medium"`, else `"low"`), `trend = Math.min(5, Math.max(0.2, rawTrend))`, C sum (`referencePoints[splitIdx+1..end]`), `forecast_total = A + C * trend`, `reference_total = B + C`; return `{ enabled: true, forecast_total, reference_total, confidence, unit }`
+- [x] T006 [US1] In `src/card/ha-api.ts`: replace `computeForecast` signature to `computeForecast(series: ComparisonSeries, periodTotalBuckets: number): ForecastStats` — implement Guard 1 (`periodTotalBuckets <= 0` or `currentPoints.length === 0` → disabled), Guard 2 (`completedBuckets = length - 1 < 3` or `pct = completedBuckets / periodTotalBuckets < 0.05` → disabled), Guard 3 (empty/null `referencePoints` → disabled)
+- [x] T007 [US2] In `src/card/ha-api.ts`: implement time-based `splitIdx` — compute `currentRangeMs = currentPoints[completedBuckets-1].timestamp - currentPoints[0].timestamp`, `cutoffTs = currentPoints[0].timestamp + currentRangeMs`, find last `referencePoints[i].timestamp <= cutoffTs`; add Guard 4 (`splitIdx === -1` → disabled)
+- [x] T008 [US1] In `src/card/ha-api.ts`: implement B sum (`referencePoints[0..splitIdx].rawValue ?? 0`), Guard 5 (`B <= 0` → disabled), A sum (`currentPoints[0..completedBuckets-1].rawValue ?? 0`), `rawTrend = A / B`, `confidence` from pct (`>= 0.40 → "high"`, `>= 0.20 → "medium"`, else `"low"`), `trend = Math.min(5, Math.max(0.2, rawTrend))`, C sum (`referencePoints[splitIdx+1..end]`), `forecast_total = A + C * trend`, `reference_total = B + C`; return `{ enabled: true, forecast_total, reference_total, confidence, unit }`
 
 **Checkpoint**: `npm test` — scenarios 1–5 (threshold + splitIdx) should pass. `computeSummary` / `computeTextSummary` tests unchanged.
 
@@ -55,11 +55,11 @@
 
 ### Tests for US3 (write FIRST — verify they FAIL before implementation)
 
-- [ ] T009 [US3] Add anomaly test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 5 (`rawTrend=4.0` → `anomalousReference:true`, `confidence:"low"`, `enabled:true`); scenario 6 (`rawTrend=0.2` → `anomalousReference:true`, `confidence:"low"`, `enabled:true`); scenario 7 (`rawTrend=1.1` → `anomalousReference` absent/false, confidence not degraded); scenario 15 (`rawTrend=3.3` exactly, boundary — NOT anomaly → `anomalousReference` absent/false)
+- [x] T009 [US3] Add anomaly test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 5 (`rawTrend=4.0` → `anomalousReference:true`, `confidence:"low"`, `enabled:true`); scenario 6 (`rawTrend=0.2` → `anomalousReference:true`, `confidence:"low"`, `enabled:true`); scenario 7 (`rawTrend=1.1` → `anomalousReference` absent/false, confidence not degraded); scenario 15 (`rawTrend=3.3` exactly, boundary — NOT anomaly → `anomalousReference` absent/false)
 
 ### Implementation for US3
 
-- [ ] T010 [US3] In `src/card/ha-api.ts` inside `computeForecast`: after computing `rawTrend`, add `const anomalousReference = rawTrend < 0.3 || rawTrend > 3.3`; if true, override `confidence = "low"`; conditionally set `if (anomalousReference) result.anomalousReference = true` on the returned object (FR-009, FR-014)
+- [x] T010 [US3] In `src/card/ha-api.ts` inside `computeForecast`: after computing `rawTrend`, add `const anomalousReference = rawTrend < 0.3 || rawTrend > 3.3`; if true, override `confidence = "low"`; conditionally set `if (anomalousReference) result.anomalousReference = true` on the returned object (FR-009, FR-014)
 
 **Checkpoint**: `npm test` — scenarios 5–7, 15 should now pass.
 
@@ -73,7 +73,7 @@
 
 ### Tests for US4 (write FIRST — verify they FAIL, then pass after Phase 2 impl is complete)
 
-- [ ] T011 [US4] Add C=0 test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 8 (reference ends at splitIdx → C=0 → `enabled:true`, `forecast_total = A`); combined scenario (C=0 + rawTrend=4.0 → `enabled:true`, `forecast_total=A`, `anomalousReference:true`, `confidence:"low"`)
+- [x] T011 [US4] Add C=0 test scenarios to describe block in `tests/unit/ha-api.test.ts`: scenario 8 (reference ends at splitIdx → C=0 → `enabled:true`, `forecast_total = A`); combined scenario (C=0 + rawTrend=4.0 → `enabled:true`, `forecast_total=A`, `anomalousReference:true`, `confidence:"low"`)
 
 *(No implementation task — formula `A + C * trend` handles C=0 naturally. Test confirms correctness.)*
 
@@ -85,9 +85,9 @@
 
 **Purpose**: Wire the new `periodTotalBuckets` argument into the actual card rendering pipeline and validate no regressions.
 
-- [ ] T012 Update call-site in `_loadData()` method in `src/card/cumulative-comparison-chart.ts` — replace `const forecast = computeForecast(series)` with: `const fullEnd = this._computeFullEnd(period); const fullTimeline = buildFullTimeline(period, fullEnd); const forecast = computeForecast(series, fullTimeline.length);` (FR-015; `buildFullTimeline` already imported from `./ha-api` line 11; `_computeFullEnd` is existing private method)
-- [ ] T013 Run `npm test` — verify all min. 15 scenarios pass and existing `computeSummary`, `computeTextSummary`, `buildFullTimeline`, chart renderer tests are unaffected (SC-005)
-- [ ] T014 Run `npm run lint` — fix any TypeScript strict-mode errors or lint warnings introduced by the changes
+- [x] T012 Update call-site in `_loadData()` method in `src/card/cumulative-comparison-chart.ts` — replace `const forecast = computeForecast(series)` with: `const fullEnd = this._computeFullEnd(period); const fullTimeline = buildFullTimeline(period, fullEnd); const forecast = computeForecast(series, fullTimeline.length);` (FR-015; `buildFullTimeline` already imported from `./ha-api` line 11; `_computeFullEnd` is existing private method)
+- [x] T013 Run `npm test` — verify all min. 15 scenarios pass and existing `computeSummary`, `computeTextSummary`, `buildFullTimeline`, chart renderer tests are unaffected (SC-005)
+- [x] T014 Run `npm run lint` — fix any TypeScript strict-mode errors or lint warnings introduced by the changes
 
 ---
 
@@ -160,4 +160,5 @@ Task 6: T008 — A/B/C sums + confidence + return value
 - Do NOT modify: `computeSummary`, `computeTextSummary`, `buildFullTimeline`, chart renderer, echarts-renderer
 - `rawValue ?? 0` is the safe fallback for all point sums (`normalizePoints` always sets it)
 - Boundary values `rawTrend === 0.3` and `rawTrend === 3.3` are NOT anomalies (condition is `< 0.3 || > 3.3`)
+- Implementacja T010: `10*A < 3*B || 10*A > 33*B` przy `B > 0` — równoważne ścisłym nierównościom na `A/B`, bez błędu float na brzegu (np. A=33, B=10)
 - `anomalousReference` absent from result object is contractually equivalent to `false` (quickstart.md Assumptions)

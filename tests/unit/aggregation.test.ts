@@ -41,43 +41,39 @@ describe("computeSummary (edge cases)", () => {
 });
 
 describe("computeForecast", () => {
-  it("disables forecast when there are not enough points", () => {
-    const series = makeSeriesFromDaily([1, 2, 3, 4]); // 4 < MIN_POINTS_FOR_FORECAST
+  it("disables forecast when there are not enough completed buckets", () => {
+    const series = makeSeriesFromDaily([1, 2, 3]); // completedBuckets = 2 < 3
 
-    const forecast = computeForecast(series);
+    const forecast = computeForecast(series, 30);
 
     expect(forecast.enabled).toBe(false);
   });
 
-  it("enables forecast and sets confidence based on number of points", () => {
-    // completedDays = n - 1; need >= 5 for forecast; reference must have enough points
+  it("enables forecast and sets confidence from pct vs periodTotalBuckets", () => {
     const withRef = (s: ComparisonSeries, refValues: number[]) =>
       ({ ...s, reference: makeSeriesFromDaily(refValues).current });
+    const periodBuckets = 30;
     const seriesLow = withRef(
       makeSeriesFromDaily([1, 2, 3, 4, 5, 6]),
       [1, 1, 1, 1, 1, 1, 1]
     );
-    const forecastLow = computeForecast(seriesLow);
+    const forecastLow = computeForecast(seriesLow, periodBuckets);
     expect(forecastLow.enabled).toBe(true);
-    expect(forecastLow.confidence === "low" || forecastLow.confidence === "medium").toBe(
-      true
-    );
+    expect(forecastLow.confidence).toBe("low");
 
     const seriesMedium = withRef(
       makeSeriesFromDaily(Array.from({ length: 9 }, () => 2)),
       Array.from({ length: 10 }, () => 2)
     );
-    const forecastMedium = computeForecast(seriesMedium);
+    const forecastMedium = computeForecast(seriesMedium, periodBuckets);
     expect(forecastMedium.enabled).toBe(true);
-    expect(forecastMedium.confidence === "medium" || forecastMedium.confidence === "high").toBe(
-      true
-    );
+    expect(forecastMedium.confidence).toBe("medium");
 
     const seriesHigh = withRef(
       makeSeriesFromDaily(Array.from({ length: 20 }, () => 2)),
       Array.from({ length: 21 }, () => 2)
     );
-    const forecastHigh = computeForecast(seriesHigh);
+    const forecastHigh = computeForecast(seriesHigh, periodBuckets);
     expect(forecastHigh.enabled).toBe(true);
     expect(forecastHigh.confidence).toBe("high");
   });

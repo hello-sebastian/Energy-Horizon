@@ -1,14 +1,66 @@
 import { describe, it, expect } from "vitest";
 import {
   computeSummary,
+  computeForecast,
   computeTextSummary,
   mapLtsResponseToSeries
 } from "../../src/card/ha-api";
 import { formatSigned } from "../../src/card/cumulative-comparison-chart";
 import type {
   ComparisonSeries,
+  CumulativeSeries,
   LtsStatisticsResponse
 } from "../../src/card/types";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Punkty kumulacyjne z jawnym rawValue (computeForecast sumuje rawValue). */
+function makeCumulativeFromTimestamps(
+  timestamps: number[],
+  rawEach: number
+): CumulativeSeries {
+  let running = 0;
+  const points = timestamps.map((timestamp) => {
+    running += rawEach;
+    return { timestamp, value: running, rawValue: rawEach };
+  });
+  return {
+    points,
+    unit: "kWh",
+    periodLabel: "test",
+    total: running
+  };
+}
+
+function makeCumulativeFromTimestampsRaws(
+  timestamps: number[],
+  raws: number[]
+): CumulativeSeries {
+  let running = 0;
+  const points = timestamps.map((timestamp, i) => {
+    const raw = raws[i] ?? 0;
+    running += raw;
+    return { timestamp, value: running, rawValue: raw };
+  });
+  return {
+    points,
+    unit: "kWh",
+    periodLabel: "test",
+    total: running
+  };
+}
+
+function comparisonFrom(
+  current: CumulativeSeries,
+  reference?: CumulativeSeries
+): ComparisonSeries {
+  return {
+    current,
+    reference,
+    aggregation: "day",
+    time_zone: "UTC"
+  };
+}
 
 function makeSeries(values: number[]): ComparisonSeries {
   const points = values.map((v, idx) => ({
@@ -27,6 +79,250 @@ function makeSeries(values: number[]): ComparisonSeries {
     time_zone: "UTC"
   };
 }
+
+describe("computeForecast", () => {
+  const T0 = Date.UTC(2024, 0, 1);
+
+  // US1 — scenariusze 1–4 (progi procentowe)
+  it("scenario 1: 2 completed buckets / 365 (pct < 0.05) → disabled", () => {
+    const ts = [T0, T0 + DAY_MS, T0 + 2 * DAY_MS];
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 1),
+      makeCumulativeFromTimestamps(ts, 1)
+    );
+    expect(computeForecast(s, 365).enabled).toBe(false);
+  });
+
+  it("scenario 2: 4/30 buckets → enabled, confidence low", () => {
+    const n = 5;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 2),
+      makeCumulativeFromTimestamps(
+        Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS),
+        2
+      )
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.confidence).toBe("low");
+  });
+
+  it("scenario 3: 7/30 buckets → enabled, confidence medium", () => {
+    const n = 8;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 2),
+      makeCumulativeFromTimestamps(
+        Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS),
+        2
+      )
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.confidence).toBe("medium");
+  });
+
+  it("scenario 4: 13/30 buckets → enabled, confidence high", () => {
+    const n = 14;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 2),
+      makeCumulativeFromTimestamps(
+        Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS),
+        2
+      )
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.confidence).toBe("high");
+  });
+
+  // US1 — scenariusze 10–13 (strażniki)
+  it("scenario 10: no reference series → disabled", () => {
+    const ts = Array.from({ length: 6 }, (_, i) => T0 + i * DAY_MS);
+    const s = comparisonFrom(makeCumulativeFromTimestamps(ts, 1));
+    expect(computeForecast(s, 30).enabled).toBe(false);
+  });
+
+  it("scenario 11: periodTotalBuckets = 0 → disabled", () => {
+    const ts = Array.from({ length: 6 }, (_, i) => T0 + i * DAY_MS);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 1),
+      makeCumulativeFromTimestamps(
+        Array.from({ length: 8 }, (_, i) => T0 + i * DAY_MS),
+        1
+      )
+    );
+    expect(computeForecast(s, 0).enabled).toBe(false);
+  });
+
+  it("scenario 12: B = 0 → disabled", () => {
+    const n = 6;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+    const refRaws = Array.from({ length: n + 2 }, () => 0);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 1),
+      makeCumulativeFromTimestampsRaws(refTs, refRaws)
+    );
+    expect(computeForecast(s, 30).enabled).toBe(false);
+  });
+
+  it("scenario 13: completedBuckets = 2 (< 3) → disabled", () => {
+    const ts = [T0, T0 + DAY_MS, T0 + 2 * DAY_MS];
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, 1),
+      makeCumulativeFromTimestamps(
+        [T0, T0 + DAY_MS, T0 + 2 * DAY_MS, T0 + 3 * DAY_MS],
+        1
+      )
+    );
+    expect(computeForecast(s, 30).enabled).toBe(false);
+  });
+
+  // US2 — scenariusze 9 i 14
+  it("scenario 9: gap in current series — split by time range, not index", () => {
+    const curTs = [T0, T0 + 2 * DAY_MS, T0 + 4 * DAY_MS, T0 + 6 * DAY_MS];
+    const curRaws = [1, 1, 1, 1];
+    const refTs = Array.from({ length: 10 }, (_, i) => T0 + i * DAY_MS);
+    const refRaws = Array.from({ length: 10 }, () => 1);
+    const current = makeCumulativeFromTimestampsRaws(curTs, curRaws);
+    const reference = makeCumulativeFromTimestampsRaws(refTs, refRaws);
+    const s = comparisonFrom(current, reference);
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    const completedBuckets = 3;
+    const cutoffTs =
+      curTs[completedBuckets - 1]! - curTs[0]! + curTs[0]!;
+    let expectedSplit = -1;
+    for (let i = refTs.length - 1; i >= 0; i--) {
+      if (refTs[i]! <= cutoffTs) {
+        expectedSplit = i;
+        break;
+      }
+    }
+    expect(expectedSplit).toBe(4);
+    const B = refRaws.slice(0, expectedSplit + 1).reduce((a, b) => a + b, 0);
+    const A = curRaws.slice(0, completedBuckets).reduce((a, b) => a + b, 0);
+    const rawTrend = A / B;
+    const trend = Math.min(5, Math.max(0.2, rawTrend));
+    const C = refRaws.slice(expectedSplit + 1).reduce((a, b) => a + b, 0);
+    expect(f.forecast_total).toBeCloseTo(A + C * trend, 5);
+  });
+
+  it("scenario 14: all reference timestamps after current range → disabled", () => {
+    const curTs = Array.from({ length: 5 }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: 8 }, (_, i) => T0 + 400 * DAY_MS + i * DAY_MS);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(curTs, 1),
+      makeCumulativeFromTimestamps(refTs, 1)
+    );
+    expect(computeForecast(s, 30).enabled).toBe(false);
+  });
+
+  // US3 — anomalia referencji (rawTrend poza [0.3, 3.3])
+  it("scenario 5: rawTrend ≈ 4 → anomalousReference, confidence low, enabled", () => {
+    const n = 14;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+    const curRaws = Array.from({ length: n }, () => 4);
+    const refRaws = Array.from({ length: n + 2 }, () => 1);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestampsRaws(ts, curRaws),
+      makeCumulativeFromTimestampsRaws(refTs, refRaws)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.anomalousReference).toBe(true);
+    expect(f.confidence).toBe("low");
+  });
+
+  it("scenario 6: rawTrend = 0.2 → anomalousReference, confidence low, enabled", () => {
+    const n = 14;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+    const curRaws = [2, ...Array.from({ length: n - 1 }, () => 0)];
+    const refRaws = [...Array.from({ length: 10 }, () => 1), ...Array.from({ length: n + 2 - 10 }, () => 0)];
+    const s = comparisonFrom(
+      makeCumulativeFromTimestampsRaws(ts, curRaws),
+      makeCumulativeFromTimestampsRaws(refTs, refRaws)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.anomalousReference).toBe(true);
+    expect(f.confidence).toBe("low");
+  });
+
+  it("scenario 7: rawTrend = 1.1 → no anomaly, confidence from pct (high)", () => {
+    const n = 14;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+    const curEach = 11;
+    const refEach = 10;
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(ts, curEach),
+      makeCumulativeFromTimestamps(refTs, refEach)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.anomalousReference).toBeFalsy();
+    expect(f.confidence).toBe("high");
+  });
+
+  it("scenario 15: rawTrend = 3.3 boundary → not anomaly, confidence high", () => {
+    const n = 14;
+    const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+    // A = 33 (13 pierwszych bucketów), B = 10 — dokładnie 33/10 = 3.3 (granica: nie anomalia)
+    const curRaws = [...Array.from({ length: 11 }, () => 3), 0, 0, 0];
+    const refRaws = [...Array.from({ length: 10 }, () => 1), 0, 0, 0, 1, 1, 1];
+    const s = comparisonFrom(
+      makeCumulativeFromTimestampsRaws(ts, curRaws),
+      makeCumulativeFromTimestampsRaws(refTs, refRaws)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    expect(f.anomalousReference).toBeFalsy();
+    expect(f.confidence).toBe("high");
+  });
+
+  // US4 — C = 0 (seria referencyjna kończy się na splitIdx)
+  it("scenario 8: reference ends at splitIdx → C=0 → enabled, forecast_total = A", () => {
+    const n = 14;
+    const curTs = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n - 1 }, (_, i) => T0 + i * DAY_MS);
+    const rawEach = 2;
+    const s = comparisonFrom(
+      makeCumulativeFromTimestamps(curTs, rawEach),
+      makeCumulativeFromTimestamps(refTs, rawEach)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    const completedBuckets = n - 1;
+    const A = completedBuckets * rawEach;
+    expect(f.forecast_total).toBeCloseTo(A, 5);
+    expect(f.reference_total).toBeCloseTo(A, 5);
+  });
+
+  it("combined: C=0 and rawTrend≈4 → forecast_total=A, anomalousReference, confidence low", () => {
+    const n = 14;
+    const curTs = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+    const refTs = Array.from({ length: n - 1 }, (_, i) => T0 + i * DAY_MS);
+    const curRaws = Array.from({ length: n }, () => 4);
+    const refRaws = Array.from({ length: n - 1 }, () => 1);
+    const s = comparisonFrom(
+      makeCumulativeFromTimestampsRaws(curTs, curRaws),
+      makeCumulativeFromTimestampsRaws(refTs, refRaws)
+    );
+    const f = computeForecast(s, 30);
+    expect(f.enabled).toBe(true);
+    const A = (n - 1) * 4;
+    expect(f.forecast_total).toBeCloseTo(A, 5);
+    expect(f.anomalousReference).toBe(true);
+    expect(f.confidence).toBe("low");
+  });
+});
 
 describe("computeSummary", () => {
   it("computes difference and percent when reference is available", () => {
