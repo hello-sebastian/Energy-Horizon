@@ -25,6 +25,8 @@ export interface CardConfig {
    * overlay series. If false, the chart keeps actual gaps for null slots.
    */
   connect_nulls?: boolean;
+  /** When omitted or false, the chart legend is hidden. Set to true to show it. */
+  show_legend?: boolean;
 }
 
 export interface ComparisonPeriod {
@@ -126,6 +128,8 @@ export interface ChartRendererConfig {
    * (Solid series always keeps null gaps as gaps.)
    */
   connectNulls: boolean;
+  /** When false, the chart legend is not displayed (default YAML behavior). */
+  showLegend: boolean;
   comparisonMode: ComparisonMode;
   language: string;
   numberLocale: string;

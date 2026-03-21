@@ -622,7 +622,7 @@ export class EChartsRenderer {
         bottom: 0
       },
       legend: {
-        show: true,
+        show: rendererConfig.showLegend,
         top: 0,
         left: 'center',
         textStyle: { color: theme.primaryText },

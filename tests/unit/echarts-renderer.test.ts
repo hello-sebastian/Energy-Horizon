@@ -246,6 +246,7 @@ describe('EChartsRenderer', () => {
         precision: 1,
         forecastLabel: "Forecast",
         showForecast: false,
+        showLegend: false,
         unit: "kWh",
         periodLabel: "",
         ...overrides
@@ -437,6 +438,7 @@ describe('EChartsRenderer', () => {
         precision: 1,
         forecastLabel: "Forecast",
         showForecast: false,
+        showLegend: false,
         unit: "kWh",
         periodLabel: "",
         ...overrides
@@ -580,6 +582,7 @@ describe('EChartsRenderer', () => {
         precision: 1,
         forecastLabel: "Forecast",
         showForecast: false,
+        showLegend: false,
         unit: "kWh",
         periodLabel: "",
         ...overrides
@@ -637,7 +640,7 @@ describe('EChartsRenderer', () => {
           { timestamp: fullTimeline[1] + 10, value: 2 }
         ]),
         fullTimeline,
-        buildBaseRendererConfig(),
+        buildBaseRendererConfig({ showLegend: true }),
         { current: "Current", reference: "Reference" }
       );
 
@@ -645,6 +648,7 @@ describe('EChartsRenderer', () => {
       const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
 
       expect(option.legend).toMatchObject({
+        show: true,
         textStyle: { color: "#aabbcc" },
         pageTextStyle: { color: "#aabbcc" }
       });
@@ -676,6 +680,37 @@ describe('EChartsRenderer', () => {
       renderer.destroy();
       document.body.removeChild(host);
     });
+
+    it("sets legend.show from ChartRendererConfig.showLegend", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000];
+      const seriesData = buildSeries([
+        { timestamp: fullTimeline[0] + 10, value: 1 },
+        { timestamp: fullTimeline[1] + 10, value: 2 }
+      ]);
+      const labels = { current: "Current", reference: "Reference" };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(seriesData, fullTimeline, buildBaseRendererConfig(), labels);
+      const [optionHidden] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      expect((optionHidden.legend as { show?: boolean }).show).toBe(false);
+
+      setOptionMock.mockClear();
+      renderer.update(
+        seriesData,
+        fullTimeline,
+        buildBaseRendererConfig({ showLegend: true }),
+        labels
+      );
+      const [optionVisible] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      expect((optionVisible.legend as { show?: boolean }).show).toBe(true);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
   });
 
   describe("Theme snapshot in update() hash", () => {
@@ -695,6 +730,7 @@ describe('EChartsRenderer', () => {
         precision: 1,
         forecastLabel: "Forecast",
         showForecast: false,
+        showLegend: false,
         unit: "kWh",
         periodLabel: "",
         ...overrides
