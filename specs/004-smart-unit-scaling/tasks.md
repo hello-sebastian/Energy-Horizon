@@ -96,8 +96,8 @@
 
 **Independent Test**: Card renders 1500 Wh entity showing "1.5 kWh" on Y-axis and in summary (visual check or integration test).
 
-- [ ] T015 [US1] In `src/card/cumulative-comparison-chart.ts`: add import `import { scaleSeriesValues } from '../utils/unit-scaler';`; retrieve `rawUnit` as `(this.hass?.states?.[this._config.entity]?.attributes?.unit_of_measurement as string) ?? ''`; extract `rawValues = series.current.points.map(p => p.value)` (as `(number | null)[]`); call `const scaleResult = scaleSeriesValues(rawValues, rawUnit, this._config.unit_display)`. Place this call in the render/update method, after series data is available and before `ChartRendererConfig` is constructed.
-- [ ] T016 [US1] In `src/card/cumulative-comparison-chart.ts`: update `ChartRendererConfig` construction to use `unit: scaleResult.unit` (replacing any existing `unit` derivation from raw HA state); pass `scaleResult.values` as the data for `current` series (replacing raw `rawValues`); set `precision: this._config.unit_display?.precision ?? this._config.precision ?? 2`. Also update `SummaryStats.unit` and `ForecastStats.unit` to `scaleResult.unit` for FR-010 consistency.
+- [X] T015 [US1] In `src/card/cumulative-comparison-chart.ts`: add import `import { scaleSeriesValues } from '../utils/unit-scaler';`; retrieve `rawUnit` as `(this.hass?.states?.[this._config.entity]?.attributes?.unit_of_measurement as string) ?? ''`; extract `rawValues = series.current.points.map(p => p.value)` (as `(number | null)[]`); call `const scaleResult = scaleSeriesValues(rawValues, rawUnit, this._config.unit_display)`. Place this call in the render/update method, after series data is available and before `ChartRendererConfig` is constructed.
+- [X] T016 [US1] In `src/card/cumulative-comparison-chart.ts`: update `ChartRendererConfig` construction to use `unit: scaleResult.unit` (replacing any existing `unit` derivation from raw HA state); pass `scaleResult.values` as the data for `current` series (replacing raw `rawValues`); set `precision: this._config.unit_display?.precision ?? this._config.precision ?? 2`. Also update `SummaryStats.unit` and `ForecastStats.unit` to `scaleResult.unit` for FR-010 consistency.
 
 **Checkpoint**: Build passes (`npm run build` or `tsc --noEmit`) with no errors in `cumulative-comparison-chart.ts`.
 
@@ -109,7 +109,7 @@
 
 **Independent Test**: Y-axis label reads "kWh"; tooltip reads "1.5 kWh" for a 1500 Wh entity.
 
-- [ ] T017 [P] [US1] In `src/card/echarts-renderer.ts`: verify that Y-axis `axisLabel.formatter` (or equivalent) uses `config.unit` from `ChartRendererConfig` — not a raw HA unit. If it already does, add a comment `// unit is pre-scaled by scaleSeriesValues() in cumulative-comparison-chart.ts`. If not, update the label/tooltip to reference `config.unit`. No scaling logic may be added here — renderer is display-only.
+- [X] T017 [P] [US1] In `src/card/echarts-renderer.ts`: verify that Y-axis `axisLabel.formatter` (or equivalent) uses `config.unit` from `ChartRendererConfig` — not a raw HA unit. If it already does, add a comment `// unit is pre-scaled by scaleSeriesValues() in cumulative-comparison-chart.ts`. If not, update the label/tooltip to reference `config.unit`. No scaling logic may be added here — renderer is display-only.
 
 ---
 

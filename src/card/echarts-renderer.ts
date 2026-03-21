@@ -772,6 +772,7 @@ export class EChartsRenderer {
           color: theme.primaryText,
           formatter: (value: number) => {
             if (value === yMax) {
+              // unit is pre-scaled by scaleSeriesValues() in cumulative-comparison-chart.ts
               return `${value} ${rendererConfig.unit}`;
             }
             return String(value);

@@ -10,6 +10,7 @@ Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace d
 - Projekt domyślnie zakłada instalację i aktualizację przez HACS, z poprawnie utrzymywanym `repository.json`, semantycznym wersjonowaniem i czytelnym changelogiem.
 - Konfiguracja karty nie może naruszać istniejących wzorców HA (np. nazewnictwa encji, sposobu użycia `state`, `attributes`, `unit_of_measurement`).
 - Karta powinna zachowywać się przewidywalnie w trybach `edit`/`view` dashboardu oraz nie wpływać negatywnie na inne karty.
+- Tam gdzie to tylko mozliwe nalezy wykorzystać wbudoane rozwiązania, standardy, style wizualne, zachowania, biblioteki z Home Assistant.
 
 ### II. Bezpieczeństwo i odporność na błędy
 
@@ -46,7 +47,7 @@ Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace d
 ## Dodatkowe wymagania i ograniczenia
 
 - Projekt utrzymuje spójny styl pracy z ekosystemem open‑source: przejrzysty `README`, jasne zasady zgłaszania problemów i kontrybucji, szacunek dla użytkowników i współtwórców.
-- Biblioteki zewnętrzne dobieramy rozważnie: preferujemy lekkie, dobrze utrzymane, szeroko stosowane pakiety; unikamy nadmiernych zależności i „vendor lock‑in”, a każda nowa zależność NPM musi być uzasadniona i nie duplikować funkcjonalności dostępnej natywnie lub w istniejącym kodzie.
+- Biblioteki zewnętrzne dobieramy rozważnie: preferujemy lekkie, dobrze utrzymane, szeroko stosowane pakiety; unikamy nadmiernych zależności i „vendor lock‑in”, a każda nowa zależność NPM musi być uzasadniona i nie duplikować funkcjonalności dostępnej natywnie, w Home Assistant lub w istniejącym kodzie.
 - Wszelkie operacje na danych energii powinny szanować lokalne uwarunkowania (strefa czasowa, jednostki, formaty dat/liczb) i jak najpełniej wykorzystywać natywne możliwości Home Assistant.
 - Funkcje eksperymentalne lub „zaawansowane” muszą być wyraźnie oznaczone i domyślnie nie powinny komplikować podstawowego doświadczenia użytkownika.
 

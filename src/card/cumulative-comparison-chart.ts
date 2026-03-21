@@ -17,6 +17,7 @@ import {
   numberFormatToLocale,
   MISSING_TRANSLATION_KEY
 } from "./localize";
+import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 
 export function formatSigned(
@@ -297,14 +298,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const resolved = resolveLocale(this.hass ?? null, this._config);
     const language = resolved.language;
     const numberLocale = numberFormatToLocale(resolved.numberFormat, resolved.language);
-    const precision = this._config.precision ?? 1;
     const localize = createLocalize(language);
     const forecastLabel = this._localizeOrError(
       localize,
       "forecast.current_forecast"
     );
 
-    if (!this._state.period) {
+    if (!this._state.period || !this._state.comparisonSeries) {
       return {
         primaryColor: this._config.primary_color ?? "",
         fillCurrent: this._config.fill_current ?? true,
@@ -320,12 +320,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         comparisonMode: this._config.comparison_mode,
         language,
         numberLocale,
-        precision,
+        precision: this._config.precision ?? 1,
         forecastLabel
       };
     }
 
     const period = this._state.period;
+    const series = this._state.comparisonSeries;
 
     let periodLabel = "";
     if (this._config.comparison_mode === "year_over_year") {
@@ -334,8 +335,55 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       periodLabel = new Intl.DateTimeFormat(language, { month: "long" }).format(period.current_start);
     }
 
-    const entityState = this.hass?.states?.[this._config.entity];
-    const unit = (entityState?.attributes as { unit_of_measurement?: string })?.unit_of_measurement ?? "";
+    // Retrieve raw unit from HA entity attributes
+    const rawUnit = (this.hass?.states?.[this._config.entity]?.attributes as { unit_of_measurement?: string })?.unit_of_measurement ?? "";
+
+    // Extract raw values from current series
+    const rawValues = series.current.points.map((p) => p.value) as (number | null)[];
+
+    // Apply scaling
+    const scaleResult = scaleSeriesValues(rawValues, rawUnit, this._config.unit_display);
+
+    // Update precision: use unit_display.precision if present, otherwise config.precision, default 2
+    const precision = this._config.unit_display?.precision ?? this._config.precision ?? 2;
+
+    // Update series with scaled values
+    const scaledCurrentSeries = {
+      ...series.current,
+      points: series.current.points.map((p, idx) => ({
+        ...p,
+        value: scaleResult.values[idx] ?? p.value
+      })),
+      unit: scaleResult.unit
+    };
+
+    const scaledReferenceSeries = series.reference
+      ? {
+          ...series.reference,
+          unit: scaleResult.unit
+        }
+      : undefined;
+
+    // Update summary and forecast units to match scaled unit (FR-010 consistency)
+    const updatedSummary = this._state.summary
+      ? { ...this._state.summary, unit: scaleResult.unit }
+      : undefined;
+
+    const updatedForecast = this._state.forecast
+      ? { ...this._state.forecast, unit: scaleResult.unit }
+      : undefined;
+
+    // Store updated state for rendering
+    this._state = {
+      ...this._state,
+      comparisonSeries: {
+        ...series,
+        current: scaledCurrentSeries,
+        reference: scaledReferenceSeries
+      },
+      summary: updatedSummary,
+      forecast: updatedForecast
+    };
 
     return {
       primaryColor: this._config.primary_color ?? "",
@@ -346,15 +394,16 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       connectNulls: this._config.connect_nulls ?? true,
       showLegend: this._config.show_legend === true,
       showForecast: this._config.show_forecast ?? false,
-      forecastTotal: this._state.forecast?.forecast_total,
-      unit,
+      forecastTotal: updatedForecast?.forecast_total,
+      unit: scaleResult.unit,
       periodLabel,
       referencePeriodStart: period.reference_start.getTime(),
       comparisonMode: this._config.comparison_mode,
       language,
       numberLocale,
       precision,
-      forecastLabel
+      forecastLabel,
+      unitDisplay: this._config.unit_display
     };
   }
 
