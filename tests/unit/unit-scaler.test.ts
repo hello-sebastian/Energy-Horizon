@@ -52,11 +52,12 @@ describe('scaleSeriesValues — auto mode', () => {
     expect(result.factor).toBe(1);
   });
 
-  it('should treat undefined unitDisplay as auto mode', () => {
-    const result1 = scaleSeriesValues([1500], 'Wh', undefined);
-    const result2 = scaleSeriesValues([1500], 'Wh', { force_prefix: 'auto' });
-    expect(result1.values).toEqual(result2.values);
-    expect(result1.unit).toBe(result2.unit);
+  it('should use auto scaling when options omitted or force_prefix unset (root default)', () => {
+    const explicit = scaleSeriesValues([1500], 'Wh', { force_prefix: 'auto' });
+    const omittedThirdArg = scaleSeriesValues([1500], 'Wh', undefined);
+    const emptyOptions = scaleSeriesValues([1500], 'Wh', {});
+    expect(omittedThirdArg).toEqual(explicit);
+    expect(emptyOptions).toEqual(explicit);
   });
 
   it('should choose µ (micro) prefix for very small values', () => {
@@ -262,14 +263,6 @@ describe('scaleSeriesValues — force_prefix none / µ normalization', () => {
     expect(result.unit).toBe('Wh');
     expect(result.factor).toBe(1);
     expect(result.prefix).toBe('');
-  });
-
-  it('should treat undefined unitDisplay as auto (backward compat)', () => {
-    const result = scaleSeriesValues([1500], 'Wh', undefined);
-    // Should behave like auto mode (picks 'k' for 1500)
-    expect(result.values).toEqual([1.5]);
-    expect(result.unit).toBe('kWh');
-    expect(result.prefix).toBe('k');
   });
 
   it('should normalize µ (U+00B5) to u in force_prefix', () => {

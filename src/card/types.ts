@@ -1,4 +1,4 @@
-import type { UnitDisplayConfig } from '../utils/unit-scaler';
+import type { ForcePrefix } from '../utils/unit-scaler';
 
 export type ComparisonMode = "year_over_year" | "month_over_year";
 
@@ -30,10 +30,9 @@ export interface CardConfig {
   /** When omitted or false, the chart legend is hidden. Set to true to show it. */
   show_legend?: boolean;
   /**
-   * Configuration for unit display and SI scaling.
-   * When omitted, defaults to auto mode.
+   * SI unit scaling: `auto` (default when omitted), `none`, or a forced prefix (`k`, `M`, …).
    */
-  unit_display?: UnitDisplayConfig;
+  force_prefix?: ForcePrefix;
 }
 
 export interface ComparisonPeriod {
@@ -148,11 +147,5 @@ export interface ChartRendererConfig {
   periodLabel: string;
   /** Timestamp of reference period start (for aligning reference series on timeline). */
   referencePeriodStart?: number;
-  /**
-   * Unit display configuration passed to the renderer.
-   * The renderer does NOT compute scaling — it only uses the pre-scaled unit string.
-   * This field is optional and serves only for debugging if needed.
-   */
-  unitDisplay?: UnitDisplayConfig;
 }
 

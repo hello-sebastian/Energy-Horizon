@@ -30,18 +30,18 @@ export type ForcePrefix = 'auto' | 'none' | SIPrefix | 'µ';
 
 ---
 
-### `UnitDisplayConfig`
+### `UnitScaleOptions`
 ```typescript
-export interface UnitDisplayConfig {
+export interface UnitScaleOptions {
   force_prefix?: ForcePrefix;
-  precision?: number;
 }
 ```
-Odpowiada bezpośrednio sekcji YAML:
+Używane jako trzeci argument `scaleSeriesValues` — odpowiada polu `force_prefix` z **głównego poziomu** konfiguracji karty YAML (nie zagnieżdżonej sekcji):
 ```yaml
-unit_display:
-  force_prefix: auto   # auto | none | u | m | k | M | G
-  precision: 2         # opcjonalne
+type: custom:energy-horizon-card
+entity: sensor.example
+force_prefix: auto   # auto | none | u | m | k | M | G — opcjonalne
+precision: 2         # opcjonalne; wyłącznie w CardConfig, nie w UnitScaleOptions
 ```
 
 ---
@@ -60,14 +60,14 @@ export interface ScaleResult {
 
 ## Eksportowane funkcje
 
-### `scaleSeriesValues(values, rawUnit, unitDisplay)`
+### `scaleSeriesValues(values, rawUnit, options)`
 
 **Sygnatura**
 ```typescript
 export function scaleSeriesValues(
   values: (number | null)[],
   rawUnit: string,
-  unitDisplay: UnitDisplayConfig | undefined,
+  options: UnitScaleOptions | undefined,
 ): ScaleResult
 ```
 
@@ -76,7 +76,7 @@ export function scaleSeriesValues(
 |----------|-----|--------------|
 | `values` | `(number \| null)[]` | Może być pusta (`[]`); `null` = brak danych |
 | `rawUnit` | `string` | Wartość `unit_of_measurement` z HA; może być `''` |
-| `unitDisplay` | `UnitDisplayConfig \| undefined` | `undefined` = domyślnie `auto` |
+| `options` | `UnitScaleOptions \| undefined` | `undefined` lub brak `force_prefix` = domyślnie `auto` |
 
 **Kontrakty wyjścia**
 | Pole | Gwarancja |
@@ -191,23 +191,21 @@ src/utils/unit-scaler.ts
 ### `src/card/types.ts` — modyfikacje
 
 ```typescript
-// Dodanie do istniejącego interfejsu CardConfig:
-unit_display?: UnitDisplayConfig;
-
-// Dodanie do istniejącego interfejsu ChartRendererConfig:
-unitDisplay?: UnitDisplayConfig;
+// W istniejącym interfejsie CardConfig (płaska konfiguracja):
+precision?: number;
+force_prefix?: ForcePrefix;
 ```
 
-Oba pola są **opcjonalne** — brak łamania wstecznej kompatybilności.
+`ChartRendererConfig` przekazuje wyłącznie już obliczone `unit` (string) — bez osobnego pola na opcje skalowania.
 
 ### `src/card/cumulative-comparison-chart.ts` — modyfikacje
 
 Przed wywołaniem `EChartsRenderer.update()`:
 1. Pobranie `rawUnit` z `hass.states[config.entity]?.attributes?.unit_of_measurement ?? ''`.
-2. Wywołanie `scaleSeriesValues(rawValues, rawUnit, config.unit_display)`.
+2. Wywołanie `scaleSeriesValues(rawValues, rawUnit, { force_prefix: config.force_prefix })`.
 3. Podstawienie `result.values` jako dane serii.
 4. Przekazanie `result.unit` do `ChartRendererConfig.unit`.
-5. Użycie `precision` z `config.unit_display?.precision ?? config.precision ?? 2` w `Intl.NumberFormat`.
+5. Użycie `config.precision ?? 2` w formatowaniu liczb (`Intl.NumberFormat` / `formatScaledValue`).
 
 ### `src/card/echarts-renderer.ts` — modyfikacje
 

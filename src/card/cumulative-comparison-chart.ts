@@ -307,7 +307,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const refVals = refPoints?.map((p) => p.value) as (number | null)[] | undefined;
     const combined = refVals?.length ? [...currentVals, ...refVals] : [...currentVals];
 
-    const scaleResult = scaleSeriesValues(combined, rawUnit, this._config.unit_display);
+    const scaleResult = scaleSeriesValues(combined, rawUnit, {
+      force_prefix: this._config.force_prefix
+    });
     const n = currentVals.length;
     const scaledCurrentVals = scaleResult.values.slice(0, n);
     const scaledRefVals =
@@ -398,7 +400,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         comparisonMode: this._config.comparison_mode,
         language,
         numberLocale,
-        precision: this._config.precision ?? 1,
+        precision: this._config.precision ?? 2,
         forecastLabel
       };
     }
@@ -414,7 +416,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
 
     const displayUnit = series.current.unit;
-    const precision = this._config.unit_display?.precision ?? this._config.precision ?? 2;
+    const precision = this._config.precision ?? 2;
 
     return {
       primaryColor: this._config.primary_color ?? "",
@@ -433,8 +435,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       language,
       numberLocale,
       precision,
-      forecastLabel,
-      unitDisplay: this._config.unit_display
+      forecastLabel
     };
   }
 
@@ -497,7 +498,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       resolved.numberFormat,
       resolved.language
     );
-    const precision = this._config.precision ?? 1;
+    const precision = this._config.precision ?? 2;
 
     // Jeśli z API nie przyszła jednostka, spróbuj użyć tej z encji HA.
     const fallbackUnit =

@@ -30,7 +30,7 @@ npm test -- unit-scaler
 |------|-------|----------|
 | `src/utils/unit-scaler.ts` | **STWÓRZ** | Główna logika skalowania i formatowania |
 | `tests/unit/unit-scaler.test.ts` | **STWÓRZ** | Testy Vitest dla wszystkich scenariuszy |
-| `src/card/types.ts` | **MODYFIKUJ** | Dodaj `UnitDisplayConfig`, `ForcePrefix`, `SIPrefix`; rozszerz `CardConfig` |
+| `src/card/types.ts` | **MODYFIKUJ** | Import `ForcePrefix` z `unit-scaler`; `CardConfig`: `force_prefix?`, `precision?` |
 | `src/card/cumulative-comparison-chart.ts` | **MODYFIKUJ** | Wywołaj `scaleSeriesValues()` przed renderem |
 | `src/card/echarts-renderer.ts` | **MODYFIKUJ** | Użyj skalowanej etykiety `unit` w osi Y i tooltip |
 
@@ -67,7 +67,7 @@ const numberLocale = numberFormatToLocale(resolvedLocale.numberFormat, resolvedL
 ### 4. unit-scaler.ts musi być bezstanowy
 ```typescript
 // ✅ Czyste funkcje — zero stanu modułu, zero side effects
-export function scaleSeriesValues(values, rawUnit, unitDisplay): ScaleResult { ... }
+export function scaleSeriesValues(values, rawUnit, options): ScaleResult { ... }
 export function formatScaledValue(value, unit, locale, precision): string { ... }
 ```
 
@@ -105,10 +105,12 @@ const rawUnit = (this.hass?.states?.[this._config.entity]?.attributes?.unit_of_m
 const rawValues = series.current.points.map(p => p.value);
 
 // 3. Skaluj
-const scaleResult = scaleSeriesValues(rawValues, rawUnit, this._config.unit_display);
+const scaleResult = scaleSeriesValues(rawValues, rawUnit, {
+  force_prefix: this._config.force_prefix,
+});
 
-// 4. Wyznacz precision
-const precision = this._config.unit_display?.precision ?? this._config.precision ?? 2;
+// 4. Wyznacz precision (wyłącznie z CardConfig)
+const precision = this._config.precision ?? 2;
 
 // 5. Przekaż do ChartRendererConfig
 const rendererConfig: ChartRendererConfig = {

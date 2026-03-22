@@ -72,7 +72,7 @@ comparison_mode: year_over_year
 | `aggregation`     | string   | `day`              | `day`, `week`, or `month`                                                  |
 | `period_offset`   | number   | `-1`               | Offset for reference period (e.g. -1 = previous year)                      |
 | `show_forecast`   | boolean  | —                  | `false` = hide forecast block and chart line. `true` = show forecast line on the chart when a forecast is enabled. If omitted, the forecast **summary** can still appear when the model is enabled; the **chart line** is drawn only when set to `true` (recommended: `true` if you want the line). |
-| `precision`       | number   | `1`                | Decimal places for numeric values                                          |
+| `precision`       | number   | `2`                | Decimal places for numeric values (chart, summary, tooltips)                |
 | `title`           | string   | -                  | Optional card title. If not set (or empty), falls back to entity `friendly_name`, then entity ID. |
 | `show_title`      | boolean  | `true`             | Show/hide the title text in the header                                     |
 | `icon`            | string   | -                  | Optional icon (e.g. `mdi:flash`). If not set (or empty), card uses the entity icon (including Home Assistant’s default icon for that entity) |
@@ -86,7 +86,7 @@ comparison_mode: year_over_year
 | `fill_reference`  | boolean  | `false`            | Show semi-transparent fill under the reference series line                 |
 | `fill_current_opacity` | number | `30`              | Opacity of current series fill (0–100)                                     |
 | `fill_reference_opacity` | number | `30`             | Opacity of reference series fill (0–100)                                   |
-| `unit_display`     | object  | `{ force_prefix: 'auto' }` | SI unit scaling. `force_prefix`: `auto` (default) = choose prefix from data; `none` = raw values from HA; `k`, `M`, `G`, `m`, `u` = force specific prefix. Optional `precision` overrides card `precision` for scaled values. |
+| `force_prefix`    | string  | — (same as `auto`) | SI unit scaling at **card root**: `auto` = choose prefix from data; `none` = raw values from HA; `k`, `M`, `G`, `m`, `u` = force a specific prefix. Omit for automatic scaling. |
 | `debug`           | boolean  | `false`            | Log API query/response to browser console (F12) for troubleshooting        |
 
 ### Example configurations
@@ -157,18 +157,18 @@ type: custom:energy-horizon-card
 entity: sensor.energy_consumption_total
 comparison_mode: year_over_year
 
-# Unit scaling (optional — defaults to auto)
-unit_display:
-  force_prefix: auto    # auto = pick best prefix from data; none = raw values; k/m/M/G/u = force
-  precision: 2          # optional override for scaled values
+# Unit scaling — flat keys on the card (optional; omit force_prefix for auto)
+force_prefix: auto   # auto = pick best prefix from data; none = raw values; k/m/M/G/u = force
+precision: 2         # decimal places for displayed numbers
 ```
 
 **Force specific unit prefix:**
 ```yaml
-unit_display:
-  force_prefix: k       # always show kWh (e.g. 500 Wh → 0.5 kWh)
-# or: force_prefix: none  # no scaling, show raw values from HA
+force_prefix: k      # always show kWh (e.g. 500 Wh → 0.5 kWh)
+# or: force_prefix: none   # no scaling, show raw values from HA
 ```
+
+Configuration for scaling and precision is **flat** at the card root (`force_prefix`, `precision`). There is no nested `unit_display` block; extra YAML keys are ignored by Home Assistant as usual, so an old `unit_display:` section would not apply—migrate to the keys above.
 
 ## Supported entities
 
@@ -270,7 +270,7 @@ Details and acceptance criteria for this logic live in [`specs/001-compute-forec
 
 ## Smart unit scaling
 
-The card scales energy and current values to readable SI prefixes (Wh → kWh, A → mA, etc.) based on the data range, avoiding cluttered axes with large raw numbers.
+The card scales energy and current values to readable SI prefixes (Wh → kWh, A → mA, etc.) based on the data range, avoiding cluttered axes with large raw numbers. Use root-level `force_prefix` and `precision` in YAML (not a nested section).
 
 ### Modes
 
@@ -294,7 +294,7 @@ Spec and tasks: [`specs/004-smart-unit-scaling/`](specs/004-smart-unit-scaling/)
 | No data / empty chart           | Verify the entity has statistics; check that the recorder is enabled     |
 | No forecast / forecast disabled | Needs ≥3 completed buckets, ≥5% of the period elapsed, valid reference slice (**B** > 0), and time alignment; set `show_forecast: true` for the chart line |
 | Wrong units                     | Ensure all data points use the same unit of measurement                  |
-| Unit scaling unexpected         | Set `unit_display.force_prefix: none` to disable; check `unit_of_measurement` on the entity |
+| Unit scaling unexpected         | Set `force_prefix: none` on the card to disable; check `unit_of_measurement` on the entity |
 | Card shows error                | Open browser console (F12) for details; verify entity ID is correct      |
 
 ## Development

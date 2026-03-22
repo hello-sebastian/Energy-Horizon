@@ -13,7 +13,7 @@ Użytkownik ma encję HA z danymi energii w Wh (np. 1500 Wh dziennie). Otwiera k
 
 **Why this priority**: Główna wartość funkcji — eliminacja nieczytelnych wykresów przy surowych danych z HA.
 
-**Independent Test**: Konfiguracja karty z encją zwracającą wartości w Wh (np. 1200–5000 Wh), `unit_display.force_prefix: auto` → wartości na wykresie i w podsumowaniu wyświetlają się w kWh (1,2–5 kWh) z zachowaniem spójności jednostek.
+**Independent Test**: Konfiguracja karty z encją zwracającą wartości w Wh (np. 1200–5000 Wh), `force_prefix: auto` (lub pominięte) → wartości na wykresie i w podsumowaniu wyświetlają się w kWh (1,2–5 kWh) z zachowaniem spójności jednostek.
 
 **Acceptance Scenarios**:
 
@@ -25,11 +25,11 @@ Użytkownik ma encję HA z danymi energii w Wh (np. 1500 Wh dziennie). Otwiera k
 
 ### User Story 2 – Ręczne wymuszenie prefiksu (Priority: P2)
 
-Użytkownik preferuje stałą skalę niezależnie od danych — np. zawsze kWh nawet przy małych wartościach (50 Wh), lub zawsze Wh przy dużych (5000 Wh). W konfiguracji YAML ustawia `unit_display.force_prefix: k` (lub `m`, `u`, `M`, `G`). Karta interpretuje konkretny prefiks jako tryb manual i wyświetla wartości w wymuszonej skali.
+Użytkownik preferuje stałą skalę niezależnie od danych — np. zawsze kWh nawet przy małych wartościach (50 Wh), lub zawsze Wh przy dużych (5000 Wh). W konfiguracji YAML ustawia na poziomie karty `force_prefix: k` (lub `m`, `u`, `M`, `G`). Karta interpretuje konkretny prefiks jako tryb manual i wyświetla wartości w wymuszonej skali.
 
 **Why this priority**: Zapewnia kontrolę użytkownika nad prezentacją; ważne dla spójności raportów i porównań.
 
-**Independent Test**: `unit_display.force_prefix: k` → encja 500 Wh wyświetla się jako 0,5 kWh; encja 2000 Wh jako 2 kWh.
+**Independent Test**: `force_prefix: k` → encja 500 Wh wyświetla się jako 0,5 kWh; encja 2000 Wh jako 2 kWh.
 
 **Acceptance Scenarios**:
 
@@ -41,16 +41,16 @@ Użytkownik preferuje stałą skalę niezależnie od danych — np. zawsze kWh n
 
 ### User Story 3 – Tryb surowych danych (bez skalowania) (Priority: P2)
 
-Użytkownik chce widzieć dokładnie to, co zwraca Home Assistant — bez żadnej konwersji. Ustawia `unit_display.force_prefix: none`. Karta wyświetla wartości i jednostki wprost z encji HA.
+Użytkownik chce widzieć dokładnie to, co zwraca Home Assistant — bez żadnej konwersji. Ustawia `force_prefix: none`. Karta wyświetla wartości i jednostki wprost z encji HA.
 
-**Why this priority**: Zapewnia tryb fallback i kompatybilność wsteczną dla użytkowników preferujących surowe dane.
+**Why this priority**: Zapewnia tryb jawnego wyłączenia skalowania dla użytkowników preferujących surowe dane.
 
-**Independent Test**: `unit_display.force_prefix: none` → wartości i jednostki identyczne z `unit_of_measurement` encji; brak konwersji.
+**Independent Test**: `force_prefix: none` → wartości i jednostki identyczne z `unit_of_measurement` encji; brak konwersji.
 
 **Acceptance Scenarios**:
 
 1. **Given** `force_prefix: none`, encja z `unit_of_measurement: "Wh"` i wartością 1500, **When** karta jest renderowana, **Then** wyświetla się "1500 Wh"
-2. **Given** konfiguracja bez sekcji `unit_display` lub bez `force_prefix`, **When** karta jest renderowana, **Then** stosowana jest wartość domyślna `force_prefix: auto` (skalowanie włączone)
+2. **Given** konfiguracja bez pola `force_prefix` (lub z `force_prefix: auto`), **When** karta jest renderowana, **Then** stosowane jest automatyczne skalowanie SI (`auto`)
 
 ---
 
@@ -93,7 +93,7 @@ Użytkownik ma encję z jednostką czasu (h, min, s) — np. sensor czasu pracy 
 - Co gdy max serii = 0 lub seria pusta (brak wartości)? → Jednostka bazowa z encji (bez prefiksu); wyświetl 0 w oryginalnej jednostce.
 - Granice skalowania (1000, 1): ≥1000 → skala w górę (1000 Wh → 1 kWh); <1 → skala w dół (0,5 A → 500 mA). Zgodne ze standardem SI.
 - Co gdy wartości w serii mieszają się w zakresach (np. 0,5 Wh i 5000 Wh)? → Skala wybierana na podstawie maksimum serii — zapewnia czytelność osi (max mieści się w zakresie).
-- Co gdy `precision` jest ustawione w `unit_display`? → Nadpisuje globalne `precision` dla wartości skalowanych; domyślnie użycie globalnego.
+- Co gdy `precision` jest ustawione w konfiguracji karty? → Używane do formatowania liczb (wykres, podsumowanie, tooltip); brak pola → sensowna wartość domyślna w implementacji (np. 2 miejsca dziesiętne).
 - Co gdy `unit_of_measurement` ma już prefiks (kWh, mA, MWh)? → System parsuje na bazę + prefiks; dopuszcza dalsze skalowanie (np. 5000 kWh → 5 MWh).
 
 ## Requirements *(mandatory)*
@@ -107,7 +107,7 @@ Użytkownik ma encję z jednostką czasu (h, min, s) — np. sensor czasu pracy 
 - **FR-005**: Jednostka bazowa MUSI być pobierana z atrybutu encji `unit_of_measurement`.
 - **FR-006**: Nowa etykieta jednostki po skalowaniu MUSI być złączeniem prefiksu i jednostki bazowej (np. 'k' + 'Wh' = 'kWh').
 - **FR-007**: Formatowanie liczb (separatory dziesiętne i tysięcy) MUSI używać standardu zależnego od lokalizacji użytkownika, zasilanego przez lokalizację z obiektu HA (`hass.locale` lub równoważne), z zachowaniem zgodności z istniejącą opcją `number_format` karty.
-- **FR-008**: Konfiguracja YAML MUSI zawierać sekcję `unit_display` z polem `force_prefix`: `"auto"` | `"none"` | `"u"` | `"m"` | `"k"` | `"M"` | `"G"`. Wartość `auto` = automatyczny wybór prefiksu; `none` = surowe dane; konkretny prefiks = wymuszenie skali (tryb manual). Opcjonalne `precision` (liczba miejsc dziesiętnych). Brak pola `mode` — jedno pole steruje zachowaniem.
+- **FR-008**: Konfiguracja YAML karty MUSI udostępniać **płaskie** pola na poziomie głównym: opcjonalne `force_prefix`: `"auto"` | `"none"` | `"u"` | `"m"` | `"k"` | `"M"` | `"G"` oraz opcjonalne `precision` (liczba miejsc dziesiętnych). Wartość `auto` lub brak `force_prefix` = automatyczny wybór prefiksu; `none` = surowe dane; konkretny prefiks = wymuszenie skali (tryb manual). Brak pola `mode` — `force_prefix` steruje zachowaniem skalowania.
 - **FR-009**: Jednostki czasu (h, min, s) NIE MOGĄ być skalowane — muszą być wyświetlane w oryginalnej formie niezależnie od trybu.
 - **FR-010**: Etykiety na osiach wykresu MUSZĄ być spójne ze skalą wybraną dla wartości głównej (ta sama jednostka na osi Y i w podsumowaniu).
 - **FR-011**: Logika skalowania MUSI być wydzielona do czystej funkcji pomocniczej (utility), łatwej do testowania jednostkowego.
@@ -117,7 +117,7 @@ Użytkownik ma encję z jednostką czasu (h, min, s) — np. sensor czasu pracy 
 ### Key Entities
 
 - **unit_of_measurement**: Atrybut encji HA określający jednostkę bazową (np. Wh, A, V, h).
-- **unit_display**: Konfiguracja użytkownika — `force_prefix` (auto | none | u | m | k | M | G) steruje trybem; opcjonalna precyzja.
+- **CardConfig (fragment)**: `force_prefix` (auto | none | u | m | k | M | G) steruje skalowaniem; opcjonalne `precision` formatuje liczby — oba pola na poziomie głównym karty YAML.
 - **ScaledValue**: Wynik skalowania — wartość liczbową w nowej skali oraz etykieta jednostki (prefiks + jednostka bazowa).
 
 ## Success Criteria *(mandatory)*
@@ -129,14 +129,14 @@ Użytkownik ma encję z jednostką czasu (h, min, s) — np. sensor czasu pracy 
 - **SC-003**: Etykiety osi Y i wartości w podsumowaniu używają tej samej jednostki dla danej serii — weryfikowalne przez przegląd UI.
 - **SC-004**: Logika skalowania jest w pełni zweryfikowalna — każdy scenariusz akceptacji ma odpowiadający powtarzalny przypadek weryfikacyjny.
 - **SC-005**: Formatowanie liczb jest zgodne z lokalizacją HA — użytkownik z locale pl widzi przecinek dziesiętny, z en-US — kropkę.
-- **SC-006**: Istniejące konfiguracje YAML bez `unit_display` działają bez błędów (kompatybilność wsteczna — domyślnie tryb `auto`).
+- **SC-006**: Pominięcie opcjonalnego `force_prefix` w YAML nie powoduje błędów — stosowany jest tryb `auto` (automatyczne skalowanie).
 
 ## Assumptions
 
 - Atrybut `unit_of_measurement` encji HA jest dostępny synchronicznie w `hass.states[entity].attributes`.
 - Istniejąca opcja `number_format` i mechanizm `resolveLocale` / `numberFormatToLocale` pozostają źródłem locale dla formatowania liczb (zgodne z HA); nowa funkcja skalowania korzysta z tego samego mechanizmu. HA nie definiuje jawnie progów skalowania jednostek — stosujemy standardową konwencję SI (≥1000, <1).
 - Jednostki energii (Wh, kWh, MWh itd.) i prądu (A, mA) są priorytetowe; jednostki czasu (h, min, s) są wyłączone z skalowania.
-- Domyślna wartość `force_prefix: auto`; brak sekcji `unit_display` lub brak `force_prefix` oznacza `auto`. Kompatybilność wsteczna: użytkownicy bez `unit_display` otrzymują skalowanie auto; użytkownik może ustawić `force_prefix: none` aby przywrócić surowe dane.
+- Domyślne zachowanie odpowiada `force_prefix: auto` — brak pola `force_prefix` w YAML oznacza automatyczny wybór prefiksu. Użytkownik może ustawić `force_prefix: none`, aby wyłączyć skalowanie i pokazać surowe dane z encji.
 - Reprezentatywna wartość dla wyboru skali w trybie auto: maksimum serii (gwarantuje czytelność osi i brak przepełnienia).
 
 ## Clarifications

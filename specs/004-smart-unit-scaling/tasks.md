@@ -40,8 +40,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until both tasks below are complete.
 
-- [X] T002 Create `src/utils/unit-scaler.ts` — export types only: `SIPrefix = 'G' | 'M' | 'k' | '' | 'm' | 'u'`, `ForcePrefix = 'auto' | 'none' | SIPrefix | 'µ'`, `UnitDisplayConfig { force_prefix?: ForcePrefix; precision?: number }`, `ScaleResult { values: (number | null)[]; unit: string; prefix: SIPrefix; factor: number }` — plus constants `SI_PREFIX_DATA` and `NON_SCALABLE_UNITS` (see data-model.md for exact values). Internal type `ParsedUnit` (not exported). Function stubs only (no bodies yet): `export function scaleSeriesValues(...)` and `export function formatScaledValue(...)` — both `throw new Error('not implemented')`.
-- [X] T003 Extend `src/card/types.ts` — import `UnitDisplayConfig` from `'../utils/unit-scaler'`; add `unit_display?: UnitDisplayConfig` to `CardConfig`; add `unitDisplay?: UnitDisplayConfig` to `ChartRendererConfig`. No other changes.
+- [X] T002 Create `src/utils/unit-scaler.ts` — export types only: `SIPrefix`, `ForcePrefix`, `UnitScaleOptions { force_prefix?: ForcePrefix }`, `ScaleResult { ... }` — plus constants `SI_PREFIX_DATA` and `NON_SCALABLE_UNITS` (see data-model.md for exact values). Internal type `ParsedUnit` (not exported). Function stubs only (no bodies yet): `export function scaleSeriesValues(...)` and `export function formatScaledValue(...)` — both `throw new Error('not implemented')`.
+- [X] T003 Extend `src/card/types.ts` — import `ForcePrefix` from `'../utils/unit-scaler'`; add `force_prefix?: ForcePrefix` to `CardConfig` (płaska konfiguracja YAML). `precision` pozostaje jedynym źródłem precyzji na karcie.
 
 **Checkpoint**: `npm run build` (or `tsc --noEmit`) must pass with no type errors before Phase 3.
 
@@ -57,12 +57,12 @@
 
 - [x] T004 [US1] Implement `parseUnit(rawUnit: string): ParsedUnit` internal function in `src/utils/unit-scaler.ts`. Algorithm (from research.md §3): (1) If `rawUnit` is in `NON_SCALABLE_UNITS` → `{ baseUnit: rawUnit, existingPrefix: '', scalable: false }`. (2) For each SI prefix in descending order of key length — if `rawUnit` starts with prefix symbol AND remainder is non-empty AND remainder is not in `NON_SCALABLE_UNITS` → `{ baseUnit: remainder, existingPrefix: prefix, scalable: true }`. (3) Fallback → `{ baseUnit: rawUnit, existingPrefix: '', scalable: true }`. Special case: empty `rawUnit` → `{ baseUnit: '', existingPrefix: '', scalable: false }`.
 - [x] T005 [US1] Implement `choosePrefix(absoluteMaxInBase: number): SIPrefix` internal function in `src/utils/unit-scaler.ts`. Algorithm (from research.md §4): If `absoluteMaxInBase === 0` or `isNaN(absoluteMaxInBase)` → return `''`. Iterate `SI_PREFIX_DATA` from highest factor (G) to lowest (u): if `absoluteMaxInBase / entry.factor >= 1` → return that prefix. Fallback → `'u'`.
-- [x] T006 [US1] [US5] Implement `scaleSeriesValues(values, rawUnit, unitDisplay)` export in `src/utils/unit-scaler.ts` — **auto mode only** (ignore force_prefix for now). Steps: (1) Normalize `force_prefix`: `undefined` or missing → `'auto'`; `'µ'` (U+00B5) or `'\u03BC'` → `'u'`. (2) Call `parseUnit(rawUnit)`. (3) If `!parsed.scalable` or `force_prefix === 'none'` → return identity result `{ values: [...values], unit: rawUnit, prefix: '', factor: 1 }`. (4) Compute `absoluteMax`: `max(abs(non-null values)) * SI_PREFIX_DATA[parsed.existingPrefix].factor`. If empty or max=0 → return unit without prefix. (5) Call `choosePrefix(absoluteMax)` → `targetPrefix`. (6) Compute `factor = SI_PREFIX_DATA[targetPrefix].factor` and `inputFactor = SI_PREFIX_DATA[parsed.existingPrefix].factor`; `scaleFactor = inputFactor / factor`. (7) Map values: `null → null`, `v → v * scaleFactor`. (8) Build `unit = PREFIX_DISPLAY[targetPrefix] + parsed.baseUnit`. Return `ScaleResult`. Handle `null` values throughout — `null` in → `null` out.
+- [x] T006 [US1] [US5] Implement `scaleSeriesValues(values, rawUnit, options)` export in `src/utils/unit-scaler.ts` — **auto mode only** (ignore force_prefix for now). Steps: (1) Normalize `force_prefix`: `undefined` or missing → `'auto'`; `'µ'` (U+00B5) or `'\u03BC'` → `'u'`. (2) Call `parseUnit(rawUnit)`. (3) If `!parsed.scalable` or `force_prefix === 'none'` → return identity result `{ values: [...values], unit: rawUnit, prefix: '', factor: 1 }`. (4) Compute `absoluteMax`: `max(abs(non-null values)) * SI_PREFIX_DATA[parsed.existingPrefix].factor`. If empty or max=0 → return unit without prefix. (5) Call `choosePrefix(absoluteMax)` → `targetPrefix`. (6) Compute `factor = SI_PREFIX_DATA[targetPrefix].factor` and `inputFactor = SI_PREFIX_DATA[parsed.existingPrefix].factor`; `scaleFactor = inputFactor / factor`. (7) Map values: `null → null`, `v → v * scaleFactor`. (8) Build `unit = PREFIX_DISPLAY[targetPrefix] + parsed.baseUnit`. Return `ScaleResult`. Handle `null` values throughout — `null` in → `null` out.
 - [x] T007 [US4] Implement `formatScaledValue(value, unit, numberLocale, precision)` export in `src/utils/unit-scaler.ts`. Rules (from contracts/unit-scaler-api.md): Use ONLY `Intl.NumberFormat` — zero `replace()` calls. `precision < 0` or `NaN` → treat as `0`. Return `"${formatted} ${unit}".trim()`. If `unit = ''` return only the formatted number. Example: `new Intl.NumberFormat(numberLocale, { minimumFractionDigits: 0, maximumFractionDigits: Math.max(0, precision) }).format(value)`.
 
 ### Tests for Phase 3 (US1 + US4 + US5)
 
-- [x] T008 [US1] Create `tests/unit/unit-scaler.test.ts` with `describe('scaleSeriesValues — auto mode')` block. Test cases (from spec.md §US1 and quickstart.md): `1500 Wh → { values: [1.5], unit: 'kWh', factor: 0.001 }`; `0.05–0.15 A → mA (×1000)`; `5000 kWh → MWh (FR-013 existing prefix)`; `500000 Wh → 500 kWh`; `null in → null out`; `empty series → { values: [], unit: 'Wh', prefix: '', factor: 1 }`; `max=0 → base unit no prefix`; `undefined unitDisplay → same as auto`.
+- [x] T008 [US1] Create `tests/unit/unit-scaler.test.ts` with `describe('scaleSeriesValues — auto mode')` block. Test cases (from spec.md §US1 and quickstart.md): `1500 Wh → { values: [1.5], unit: 'kWh', factor: 0.001 }`; `0.05–0.15 A → mA (×1000)`; `5000 kWh → MWh (FR-013 existing prefix)`; `500000 Wh → 500 kWh`; `null in → null out`; `empty series → { values: [], unit: 'Wh', prefix: '', factor: 1 }`; `max=0 → base unit no prefix`; `undefined` jako trzeci argument (`options`) → same as auto.
 - [x] T009 [US4] Add `describe('formatScaledValue')` block to `tests/unit/unit-scaler.test.ts`. Test cases (from spec.md §US4 and quickstart.md): `formatScaledValue(1234.5, 'kWh', 'pl', 2)` → contains `'kWh'` and does NOT contain `'.'`; `formatScaledValue(1234.5, 'kWh', 'en-US', 2)` → contains `'.'` and `'kWh'`; `formatScaledValue(50, '\u00B5A', 'en', 0)` → `'50 µA'`; `formatScaledValue(0, 'Wh', 'pl', 1)` → `'0 Wh'`; `precision < 0` → treated as 0 (no crash); `unit = ''` → no trailing space.
 - [x] T010 [US5] Add `describe('scaleSeriesValues — non-scalable units')` block to `tests/unit/unit-scaler.test.ts`. Test cases (from spec.md §US5): `'h' with auto → { unit: 'h', factor: 1 }`; `'min' with force k → unit stays 'min', no scaling`; `'s' with auto and value 7200 → unit stays 's'`; `'%' with auto → no scaling`; `'°C' with auto → no scaling`.
 
@@ -84,7 +84,7 @@
 ### Tests for Phase 4
 
 - [x] T013 [US2] Add `describe('scaleSeriesValues — force_prefix manual')` to `tests/unit/unit-scaler.test.ts`. Test cases (from spec.md §US2): `force_prefix: 'k'`, 500 Wh → `{ values: [0.5], unit: 'kWh' }`; `force_prefix: 'm'`, 1.5 A → `{ values: [1500], unit: 'mA' }`; `force_prefix: 'M'`, 500000 Wh → `{ values: [0.5], unit: 'MWh' }`; `force_prefix: 'u'`, 0.00005 A → `{ values: [50], unit: '\u00B5A' }`; force_prefix on `'h'` → ignored, returns identity; invalid `force_prefix: 'X'` → fallback to auto (no crash).
-- [x] T014 [US3] Add `describe('scaleSeriesValues — force_prefix none / µ normalization')` to `tests/unit/unit-scaler.test.ts`. Test cases (from spec.md §US3): `force_prefix: 'none'`, 1500 Wh → `{ values: [1500], unit: 'Wh', factor: 1 }`; no `unit_display` field at all → same as auto (backward compat, SC-006); `force_prefix: 'µ'` (U+00B5) → normalized to `'u'`, result same as `force_prefix: 'u'`; `force_prefix: '\u03BC'` (Greek) → same normalization.
+- [x] T014 [US3] Add `describe('scaleSeriesValues — force_prefix none / µ normalization')` to `tests/unit/unit-scaler.test.ts`. Test cases (from spec.md §US3): `force_prefix: 'none'`, 1500 Wh → `{ values: [1500], unit: 'Wh', factor: 1 }`; brak `force_prefix` w opcjach (`undefined` / `{}`) → same as auto (SC-006); `force_prefix: 'µ'` (U+00B5) → normalized to `'u'`, result same as `force_prefix: 'u'`; `force_prefix: '\u03BC'` (Greek) → same normalization.
 
 **Checkpoint**: `npm test -- unit-scaler` — all tests including US2/US3 cases pass before Phase 5.
 
@@ -96,8 +96,8 @@
 
 **Independent Test**: Card renders 1500 Wh entity showing "1.5 kWh" on Y-axis and in summary (visual check or integration test).
 
-- [X] T015 [US1] In `src/card/cumulative-comparison-chart.ts`: add import `import { scaleSeriesValues } from '../utils/unit-scaler';`; retrieve `rawUnit` as `(this.hass?.states?.[this._config.entity]?.attributes?.unit_of_measurement as string) ?? ''`; extract `rawValues = series.current.points.map(p => p.value)` (as `(number | null)[]`); call `const scaleResult = scaleSeriesValues(rawValues, rawUnit, this._config.unit_display)`. Place this call in the render/update method, after series data is available and before `ChartRendererConfig` is constructed.
-- [X] T016 [US1] In `src/card/cumulative-comparison-chart.ts`: update `ChartRendererConfig` construction to use `unit: scaleResult.unit` (replacing any existing `unit` derivation from raw HA state); pass `scaleResult.values` as the data for `current` series (replacing raw `rawValues`); set `precision: this._config.unit_display?.precision ?? this._config.precision ?? 2`. Also update `SummaryStats.unit` and `ForecastStats.unit` to `scaleResult.unit` for FR-010 consistency.
+- [X] T015 [US1] In `src/card/cumulative-comparison-chart.ts`: add import `import { scaleSeriesValues } from '../utils/unit-scaler';`; retrieve `rawUnit` as `(this.hass?.states?.[this._config.entity]?.attributes?.unit_of_measurement as string) ?? ''`; extract `rawValues = series.current.points.map(p => p.value)` (as `(number | null)[]`); call `const scaleResult = scaleSeriesValues(rawValues, rawUnit, { force_prefix: this._config.force_prefix })`. Place this call in the render/update method, after series data is available and before `ChartRendererConfig` is constructed.
+- [X] T016 [US1] In `src/card/cumulative-comparison-chart.ts`: update `ChartRendererConfig` construction to use `unit: scaleResult.unit` (replacing any existing `unit` derivation from raw HA state); pass `scaleResult.values` as the data for `current` series (replacing raw `rawValues`); set `precision: this._config.precision ?? 2`. Also update `SummaryStats.unit` and `ForecastStats.unit` to `scaleResult.unit` for FR-010 consistency.
 
 **Checkpoint**: Build passes (`npm run build` or `tsc --noEmit`) with no errors in `cumulative-comparison-chart.ts`.
 
@@ -115,7 +115,7 @@
 
 ## Final Phase: Polish & Cross-Cutting Concerns
 
-- [x] T018 [P] Add edge case tests to `tests/unit/unit-scaler.test.ts` — `describe('scaleSeriesValues — edge cases')`: `rawUnit = ''` → `{ values: rawValues, unit: '', factor: 1 }` (no scaling); `precision: -1` in `UnitDisplayConfig` → `formatScaledValue` treats as 0 (no crash); series with all `null` values → `{ values: [null, null], unit: rawUnit, factor: 1 }`; `force_prefix: 'G'` with small values (e.g. 5 Wh) → `{ values: [5e-9], unit: 'GWh' }` (correct even if tiny).
+- [x] T018 [P] Add edge case tests to `tests/unit/unit-scaler.test.ts` — `describe('scaleSeriesValues — edge cases')`: `rawUnit = ''` → `{ values: rawValues, unit: '', factor: 1 }` (no scaling); `precision: -1` przekazane do `formatScaledValue` → traktowane jako 0 (no crash); series with all `null` values → `{ values: [null, null], unit: rawUnit, factor: 1 }`; `force_prefix: 'G'` with small values (e.g. 5 Wh) → `{ values: [5e-9], unit: 'GWh' }` (correct even if tiny).
 - [x] T019 Run `npm test && npm run lint` from repository root; fix any TypeScript `strict`-mode errors, unused imports, or ESLint violations introduced by this feature.
 
 ---
@@ -136,7 +136,7 @@ Phase 1 (T001)
 
 ### Within-Phase Dependencies
 
-- **Phase 2**: T002 → T003 (T003 imports `UnitDisplayConfig` from `unit-scaler.ts`)
+- **Phase 2**: T002 → T003 (T003 imports `ForcePrefix` / `UnitScaleOptions` from `unit-scaler.ts`)
 - **Phase 3**: T004 → T005 → T006 → T007 (sequential, same file); T008 after T005; T009, T010 after T008 (same test file)
 - **Phase 4**: T011 → T012 (same file); T013 → T014 (same test file, after T013)
 - **Phase 5**: T015 → T016 (same file, T016 uses `scaleResult` from T015)
@@ -203,5 +203,5 @@ T010: time unit bypass tests
 - Use `'\u00B5'` (Micro Sign) **always** in code — never paste µ directly (research.md §2)
 - Never use `replace()` for number formatting — always `Intl.NumberFormat` (research.md §1)
 - `scaleSeriesValues()` must never mutate the input `values[]` — always `values.map(...)` (quickstart.md pitfalls)
-- Backward compat: absence of `unit_display` in YAML config → behaves as `force_prefix: 'auto'` (SC-006)
+- Domyślne skalowanie: brak `force_prefix` w YAML / `undefined` w opcjach skalera → zachowanie jak `force_prefix: 'auto'` (SC-006)
 - `null` in values array = ECharts gap marker — must pass through unchanged

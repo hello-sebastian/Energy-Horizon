@@ -133,7 +133,7 @@ Nowa logika trafia wyłącznie do `src/utils/unit-scaler.ts`. Integracja z kart�
 ### Ścieżka danych
 ```
 hass.states[entity].attributes.unit_of_measurement
-  → [unit-scaler.ts] scaleSeriesValues(values, rawUnit, config, locale)
+  → [unit-scaler.ts] scaleSeriesValues(values, rawUnit, { force_prefix: config.force_prefix })
   → ScaleResult { values, unit, factor, prefix }
   → ChartRendererConfig.unit (przekazany do echarts-renderer)
   → oś Y ECharts, tooltip, podsumowanie
@@ -142,7 +142,7 @@ hass.states[entity].attributes.unit_of_measurement
 ### Rationale
 - `src/utils/unit-scaler.ts`: brak zależności od Lit/HA → łatwy do testowania i do ponownego użycia w innych kartach (cel użytkownika).
 - `ChartRendererConfig.unit` już istnieje jako `string` → minimalna zmiana interfejsu: wystarczy przekazać już przeliczoną etykietę.
-- `precision` z `unit_display` nadpisuje globalny `config.precision` — konwencja zgodna ze specyfikacją.
+- `precision` z `CardConfig` steruje formatowaniem liczb; nie jest częścią `UnitScaleOptions` przekazywanych do `scaleSeriesValues`.
 
 ### Alternatives considered
 - Skalowanie wewnątrz `echarts-renderer.ts` — naruszenie SRP; renderer nie powinien znać logiki biznesowej skalowania; odrzucone.

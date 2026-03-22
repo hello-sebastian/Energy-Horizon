@@ -53,19 +53,19 @@ export type ForcePrefix = 'auto' | 'none' | SIPrefix | 'µ';
 
 ---
 
-### 3. `UnitDisplayConfig` — konfiguracja `unit_display` z YAML
+### 3. `UnitScaleOptions` — argument skalowania (tylko prefiks SI)
 
 ```typescript
-// src/card/types.ts (rozszerzenie istniejącego pliku)
+// src/utils/unit-scaler.ts
 
 /**
- * Sekcja unit_display w konfiguracji YAML karty.
- * Brak tej sekcji lub brak force_prefix → domyślnie 'auto'.
+ * Opcje przekazywane do scaleSeriesValues — wyłącznie wybór prefiksu SI.
+ * Precyzja dziesiętna nie należy do tego obiektu; jest w CardConfig.precision.
  */
-export interface UnitDisplayConfig {
+export interface UnitScaleOptions {
   /**
    * Sterowanie skalowaniem SI:
-   *   'auto'  — automatyczny prefiks na podstawie max serii (domyślne)
+   *   'auto'  — automatyczny prefiks na podstawie max serii (domyślne gdy pominięte)
    *   'none'  — surowe dane z HA bez konwersji
    *   'u'/'µ' — wymuszony prefiks mikro (µ)
    *   'm'     — wymuszony prefiks milli
@@ -74,19 +74,12 @@ export interface UnitDisplayConfig {
    *   'G'     — wymuszony prefiks giga
    */
   force_prefix?: ForcePrefix;
-
-  /**
-   * Liczba miejsc dziesiętnych dla wartości skalowanych.
-   * Nadpisuje globalną opcję `precision` z konfiguracji karty.
-   * Brak → używany globalny config.precision.
-   */
-  precision?: number;
 }
 ```
 
 **Walidacje**:
 - `force_prefix` poza zdefiniowanym zbiorem → fallback do `'auto'`; komunikat `console.warn` w trybie debug.
-- `precision < 0` lub `!Number.isFinite(precision)` → ignorowane; używany globalny precision.
+- `precision` dla wyświetlania liczb: wyłącznie `CardConfig.precision` (formatowanie w karcie / `formatScaledValue`).
 
 ---
 
@@ -148,41 +141,28 @@ export interface ScaleResult {
 ### 6. Rozszerzenie `CardConfig` (istniejący typ)
 
 ```typescript
-// src/card/types.ts (dodanie pola do istniejącego interfejsu)
+// src/card/types.ts — pola na poziomie głównym karty YAML
 
 export interface CardConfig {
   // ... istniejące pola bez zmian ...
 
+  /** Opcjonalne: precyzja formatowania liczb (wykres, podsumowanie). */
+  precision?: number;
+
   /**
-   * Konfiguracja wyświetlania jednostek i skalowania SI.
-   * Brak tej sekcji → domyślny tryb 'auto'.
+   * Skalowanie SI: `auto` (domyślnie gdy pominięte), `none`, lub wymuszony prefiks.
    */
-  unit_display?: UnitDisplayConfig;
+  force_prefix?: ForcePrefix;
 }
 ```
 
-**Wsteczna kompatybilność**: `unit_display` jest opcjonalne; istniejące konfiguracje bez tego pola działają jak dotychczas z trybem `auto`.
+**Domyślne zachowanie**: brak `force_prefix` → automatyczny wybór prefiksu (`auto`).
 
 ---
 
-### 7. Rozszerzenie `ChartRendererConfig` (istniejący typ)
+### 7. `ChartRendererConfig` — etykieta jednostki
 
-```typescript
-// src/card/types.ts (dodanie pola do istniejącego interfejsu)
-
-export interface ChartRendererConfig {
-  // ... istniejące pola bez zmian ...
-
-  /**
-   * Konfiguracja unit_display przekazana do renderera.
-   * Renderer NIE oblicza skalowania — używa wyłącznie unit (string) z ScaleResult.
-   * To pole jest opcjonalne i służy jedynie do ewentualnego debugowania.
-   */
-  unitDisplay?: UnitDisplayConfig;
-}
-```
-
-> **Uwaga**: `ChartRendererConfig.unit` (już istniejące pole `string`) będzie zawierać **już skalowaną** etykietę jednostki (np. `"kWh"`, `"µA"`), obliczoną przez `unit-scaler.ts` przed wywołaniem renderera. Renderer nie musi znać logiki skalowania.
+`ChartRendererConfig` zawiera pole `unit: string` z **już skalowaną** etykietą (np. `"kWh"`, `"µA"`) z `ScaleResult.unit`. Renderer nie otrzymuje osobnego obiektu opcji skalowania — tylko gotowy łańcuch do osi Y i tooltipów.
 
 ---
 
@@ -241,13 +221,13 @@ const NON_SCALABLE_UNITS = new Set<string>([
  *
  * @param values        - Tablica wartości z HA (null = brak danych, zachowane jako null)
  * @param rawUnit       - Surowa jednostka z encji HA (np. "kWh", "mA", "Wh", "h")
- * @param unitDisplay   - Konfiguracja unit_display z YAML (undefined → tryb auto)
+ * @param options      - Opcje skalowania: `force_prefix` z karty (undefined → tryb auto)
  * @returns             - ScaleResult z przeskalowanymi wartościami i etykietą jednostki
  */
 export function scaleSeriesValues(
   values: (number | null)[],
   rawUnit: string,
-  unitDisplay: UnitDisplayConfig | undefined,
+  options: UnitScaleOptions | undefined,
 ): ScaleResult
 ```
 
@@ -277,13 +257,13 @@ export function formatScaledValue(
 ## Diagram przepływu danych
 
 ```
-YAML config (unit_display.force_prefix)
+YAML config (force_prefix na poziomie karty)
               │
               ▼
 cumulative-comparison-chart.ts
   ├── hass.states[entity].attributes.unit_of_measurement  ──► rawUnit
   ├── ComparisonSeries.current.points[].value              ──► values[]
-  └── scaleSeriesValues(values, rawUnit, config.unit_display)
+  └── scaleSeriesValues(values, rawUnit, { force_prefix: config.force_prefix })
               │
               ▼
         ScaleResult
@@ -308,7 +288,7 @@ cumulative-comparison-chart.ts
 | `unit_of_measurement` w NON_SCALABLE | Brak skalowania; unit bez prefiksu          |
 | Seria pusta (`values = []`)      | `ScaleResult { values: [], unit: rawUnit, prefix: '', factor: 1 }` |
 | max serii = 0 lub NaN            | Jednostka bazowa, brak prefiksu                   |
-| `precision` < 0 lub NaN         | Ignorowane; używany globalny precision            |
+| `CardConfig.precision` < 0 lub NaN w formatowaniu | W `formatScaledValue` traktowane jak 0            |
 | `force_prefix: 'µ'` (U+00B5)    | Normalizacja do `'u'` przed przetworzeniem        |
 | `force_prefix: 'µ'` (U+03BC)    | Normalizacja do `'u'` przed przetworzeniem        |
 | `null` w values[]                | Przekazywane jako `null` w wynikowej tablicy      |

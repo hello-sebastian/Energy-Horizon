@@ -1,9 +1,11 @@
 /**
  * Smart unit scaling and number formatting for Home Assistant energy data.
  * Pure TypeScript utility with zero external dependencies.
- * 
- * Handles SI prefix selection (auto/manual) and localized number formatting
- * via Intl.NumberFormat for all Home Assistant unit types.
+ *
+ * Public types: {@link SIPrefix}, {@link ForcePrefix}, {@link UnitScaleOptions},
+ * {@link ScaleResult}. Scaling uses {@link scaleSeriesValues}; decimal precision for
+ * displayed numbers is **not** part of {@link UnitScaleOptions} — pass `precision`
+ * from card config into {@link formatScaledValue} separately.
  */
 
 /**
@@ -22,26 +24,24 @@ export type SIPrefix = 'G' | 'M' | 'k' | '' | 'm' | 'u';
 export type ForcePrefix = 'auto' | 'none' | SIPrefix | 'µ';
 
 /**
- * Configuration object for unit display from unit_display section in YAML.
+ * Options for {@link scaleSeriesValues}: SI prefix selection only.
+ *
+ * Omit the argument or leave {@link UnitScaleOptions.force_prefix} unset for automatic
+ * prefix selection (`auto`). Decimal precision for tooltips/axis labels belongs on the
+ * Lovelace card (`CardConfig.precision`), not on this object.
  */
-export interface UnitDisplayConfig {
+export interface UnitScaleOptions {
   /**
    * Scaling control:
-   *   'auto'  — automatic prefix selection (default)
-   *   'none'  — raw data without conversion
-   *   'u'/'µ' — forced micro prefix
-   *   'm'     — forced milli prefix
-   *   'k'     — forced kilo prefix
-   *   'M'     — forced mega prefix
-   *   'G'     — forced giga prefix
+   *   `'auto'` — automatic prefix selection (default when omitted or `undefined`)
+   *   `'none'` — raw data without conversion
+   *   `'u'` / `'µ'` — forced micro prefix (µ is normalized to `u` internally)
+   *   `'m'` — forced milli prefix
+   *   `'k'` — forced kilo prefix
+   *   `'M'` — forced mega prefix
+   *   `'G'` — forced giga prefix
    */
   force_prefix?: ForcePrefix;
-
-  /**
-   * Number of decimal places for scaled values.
-   * Overrides global config.precision when present.
-   */
-  precision?: number;
 }
 
 /**
@@ -214,16 +214,16 @@ function choosePrefix(absoluteMaxInBase: number): SIPrefix {
  * 
  * @param values - Array of numeric values (null values pass through unchanged)
  * @param rawUnit - Raw unit string from HA entity attributes
- * @param unitDisplay - Configuration object with force_prefix and precision (undefined → auto mode)
- * @returns ScaleResult with scaled values, unit label, prefix, and factor
+ * @param options - {@link UnitScaleOptions} (`undefined` is equivalent to `{ force_prefix: 'auto' }`)
+ * @returns {@link ScaleResult} with scaled values, unit label, prefix, and factor
  */
 export function scaleSeriesValues(
   values: (number | null)[],
   rawUnit: string,
-  unitDisplay: UnitDisplayConfig | undefined,
+  options: UnitScaleOptions | undefined,
 ): ScaleResult {
   // Step 1: Normalize force_prefix
-  let forcePrefixNormalized: ForcePrefix = unitDisplay?.force_prefix ?? 'auto';
+  let forcePrefixNormalized: ForcePrefix = options?.force_prefix ?? 'auto';
   if (forcePrefixNormalized === 'µ' || forcePrefixNormalized === '\u03BC') {
     forcePrefixNormalized = 'u';
   }
