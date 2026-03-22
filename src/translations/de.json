@@ -17,5 +17,12 @@
   "text_summary.similar": "Ihr Energieverbrauch entspricht in etwa dem gleichen Zeitraum des Vorjahres.",
   "text_summary.higher": "Ihr Energieverbrauch liegt {{diff}} über dem gleichen Zeitraum des Vorjahres.",
   "text_summary.lower": "Ihr Energieverbrauch liegt {{diff}} unter dem gleichen Zeitraum des Vorjahres.",
-  "error.missing_translation": "Fehlender Übersetzungsschlüssel: {{key}}"
+  "error.missing_translation": "Fehlender Übersetzungsschlüssel: {{key}}",
+  "editor.entity": "Entität",
+  "editor.title": "Titel",
+  "editor.comparison_mode": "Vergleichsmodus",
+  "editor.force_prefix": "Einheitenpräfix",
+  "editor.visual_mode": "Visuell",
+  "editor.yaml_mode": "YAML",
+  "editor.yaml_error": "Ungültiges YAML"
 }

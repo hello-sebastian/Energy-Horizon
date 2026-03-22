@@ -19,3 +19,25 @@ export interface LovelaceCard extends HTMLElement {
   getCardSize?(): number;
 }
 
+export type HaFormSchema =
+  | { name: string; selector: { entity: { domain?: string } }; required?: boolean }
+  | { name: string; selector: { text: Record<string, never> }; required?: boolean }
+  | {
+      name: string;
+      selector: { select: { options: Array<{ value: string; label: string }> } };
+      required?: boolean;
+    };
+
+export interface LovelaceCardEditor extends HTMLElement {
+  hass?: HomeAssistant;
+  setConfig(_config: unknown): void;
+}
+
+declare global {
+  interface Window {
+    jsyaml?: {
+      dump(obj: unknown, options?: Record<string, unknown>): string;
+      load(str: string): unknown;
+    };
+  }
+}

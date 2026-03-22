@@ -17,6 +17,13 @@
   "text_summary.similar": "Twoje zużycie jest na podobnym poziomie jak w tym samym okresie w poprzednim roku.",
   "text_summary.higher": "Twoje zużycie jest o {{diff}} wyższe niż w tym samym okresie w poprzednim roku.",
   "text_summary.lower": "Twoje zużycie jest o {{diff}} niższe niż w tym samym okresie w poprzednim roku.",
-  "error.missing_translation": "Brak tłumaczenia dla klucza: {{key}}"
+  "error.missing_translation": "Brak tłumaczenia dla klucza: {{key}}",
+  "editor.entity": "Encja",
+  "editor.title": "Tytuł",
+  "editor.comparison_mode": "Tryb porównania",
+  "editor.force_prefix": "Prefiks jednostki",
+  "editor.visual_mode": "Wizualny",
+  "editor.yaml_mode": "YAML",
+  "editor.yaml_error": "Nieprawidłowy YAML"
 }
 

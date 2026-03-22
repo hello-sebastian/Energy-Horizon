@@ -17,6 +17,13 @@
   "text_summary.similar": "Your energy consumption is at a similar level to the same period last year.",
   "text_summary.higher": "Your energy consumption is {{diff}} higher than in the same period last year.",
   "text_summary.lower": "Your energy consumption is {{diff}} lower than in the same period last year.",
-  "error.missing_translation": "Missing translation key: {{key}}"
+  "error.missing_translation": "Missing translation key: {{key}}",
+  "editor.entity": "Entity",
+  "editor.title": "Title",
+  "editor.comparison_mode": "Comparison Mode",
+  "editor.force_prefix": "Unit Prefix",
+  "editor.visual_mode": "Visual",
+  "editor.yaml_mode": "YAML",
+  "editor.yaml_error": "Invalid YAML"
 }
 
