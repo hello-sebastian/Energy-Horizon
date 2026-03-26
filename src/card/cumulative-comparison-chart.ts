@@ -26,6 +26,7 @@ import {
 } from "./localize";
 import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
+import "./energy-horizon-card-editor.js";
 
 export function formatSigned(
   value: number,
@@ -699,6 +700,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         <div class="chart-container ebc-chart"></div>
       </div>
     </ha-card>`;
+  }
+
+  static getConfigElement(): HTMLElement {
+    return document.createElement("energy-horizon-card-editor");
+  }
+
+  static getStubConfig(): Partial<CardConfig> {
+    return { entity: "", comparison_mode: "year_over_year" };
   }
 }
 

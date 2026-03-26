@@ -97,6 +97,14 @@ const SI_PREFIX_DATA: ReadonlyArray<{
 ];
 
 /**
+ * Valid SI prefixes for `force_prefix` mode.
+ * Derived from `SI_PREFIX_DATA` to keep validation consistent when prefixes change.
+ */
+const VALID_FORCE_PREFIXES: ReadonlyArray<SIPrefix> = SI_PREFIX_DATA.map(
+  (d) => d.prefix,
+);
+
+/**
  * Map of prefix symbols to their display representation.
  */
 const PREFIX_DISPLAY: Record<SIPrefix, string> = {
@@ -263,9 +271,8 @@ export function scaleSeriesValues(
   if (forcePrefixNormalized === 'auto') {
     targetPrefix = choosePrefix(absoluteMaxInBase);
   } else {
-    // force_prefix is one of: 'G', 'M', 'k', '', 'm', 'u'
-    const validPrefixes: SIPrefix[] = ['G', 'M', 'k', '', 'm', 'u'];
-    if (validPrefixes.includes(forcePrefixNormalized as SIPrefix)) {
+    // force_prefix is one of: derived from SI_PREFIX_DATA
+    if (VALID_FORCE_PREFIXES.includes(forcePrefixNormalized as SIPrefix)) {
       targetPrefix = forcePrefixNormalized as SIPrefix;
     } else {
       // Fallback to auto

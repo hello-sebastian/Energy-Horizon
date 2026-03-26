@@ -19,6 +19,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-10
 - N/A — przetwarzanie in-browser, dane read-only z HA (003-echarts-migration)
 - TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement) — bez nowych zależności (001-compute-forecast)
 - TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement), Apache ECharts 5.6.0 (modularny), Vite 6, Vitest 2 — żadna nowa zależność NPM nie jest wymagana przez tę funkcję (004-smart-unit-scaling)
+- TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement, `html`, `css`, `property` decorator), `window.jsyaml` (HA frontend global — no npm addition), Vite 6 (bundler), Vitest 2 (tests) (005-gui-editor)
+- N/A — in-browser only; config written by HA Lovelace infrastructure (005-gui-editor)
 
 - TypeScript (ES2020+, `strict` enabled) + Lit (`lit`, `lit/decorators.js`), Chart.js (core + line/tooltip/legend/gradient plugins), Home Assistant Lovelace card API typings, Vite bundler (001-energy-horizon-card)
 
@@ -39,9 +41,9 @@ npm test && npm run lint
 TypeScript (ES2020+, `strict` enabled): Follow standard conventions
 
 ## Recent Changes
+- 005-gui-editor: Added TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement, `html`, `css`, `property` decorator), `window.jsyaml` (HA frontend global — no npm addition), Vite 6 (bundler), Vitest 2 (tests)
 - 004-smart-unit-scaling: Added TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement), Apache ECharts 5.6.0 (modularny), Vite 6, Vitest 2 — żadna nowa zależność NPM nie jest wymagana przez tę funkcję
 - 001-compute-forecast: Added TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement) — bez nowych zależności
-- 003-echarts-migration: Added TypeScript 5.6 (ES2020+, `strict` enabled) + Lit 3.1 (LitElement), Apache ECharts 5.6.0 (modularny — `echarts/core`, `echarts/charts`, `echarts/components`, `echarts/renderers`), Vite 6 (bundler), Vitest 2 (testy)
 
 
 <!-- MANUAL ADDITIONS START -->

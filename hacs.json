@@ -1,5 +1,7 @@
 {
     "name": "Energy Horizon Card",
     "render_readme": true,
-    "filename": "energy-horizon-card.js"
+    "filename": "energy-horizon-card.js",
+    "content_in_root": false,
+    "zip_release": false
   }

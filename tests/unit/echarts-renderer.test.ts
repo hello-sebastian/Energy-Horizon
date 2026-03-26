@@ -831,4 +831,139 @@ describe('EChartsRenderer', () => {
       document.body.removeChild(host);
     });
   });
+
+  describe("Y-axis axisLabel formatter regression", () => {
+    function buildBaseRendererConfig(
+      overrides: Partial<ChartRendererConfig> = {}
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: true,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 8,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: false,
+        unit: "kWh",
+        periodLabel: "",
+        ...overrides
+      };
+    }
+
+    function buildSeries(
+      points: Array<{ timestamp: number; value: number }>
+    ): ComparisonSeries {
+      const unit = "kWh";
+      return {
+        current: {
+          points: points.map((p) => ({ timestamp: p.timestamp, value: p.value })),
+          unit,
+          periodLabel: "",
+          total: 0
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+    }
+
+    function captureOption() {
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as any[];
+      return option as any;
+    }
+
+    it("adds unit when formatter input is close to yAxis.max", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000]; // 2 slots: 0,1
+
+      const rendererConfig = buildBaseRendererConfig({
+        numberLocale: "en-US",
+        precision: 8,
+        unit: "kWh"
+      });
+
+      // Use a small value range so that the old String(value) behavior would
+      // be prone to scientific notation, while the new Intl formatting is stable.
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0] + 10, value: 5e-8 },
+        { timestamp: fullTimeline[1] + 10, value: 1e-7 } // dataMax -> yMax
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        rendererConfig,
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const yAxis = option.yAxis as any;
+      expect(typeof yAxis.axisLabel?.formatter).toBe("function");
+
+      const formatter = yAxis.axisLabel.formatter as (value: number) => string;
+      const yMax = yAxis.max as number;
+      expect(Number.isFinite(yMax)).toBe(true);
+
+      const exact = formatter(yMax);
+      const nearMax = formatter(yMax * (1 + 1e-11));
+
+      expect(exact).toContain("kWh");
+      expect(nearMax).toContain("kWh");
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("does not return scientific notation (e/E) in axis labels", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000]; // 2 slots: 0,1
+
+      const rendererConfig = buildBaseRendererConfig({
+        numberLocale: "en-US",
+        precision: 8,
+        unit: "kWh"
+      });
+
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0] + 10, value: 5e-8 },
+        { timestamp: fullTimeline[1] + 10, value: 1e-7 } // dataMax -> yMax
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        rendererConfig,
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const yAxis = option.yAxis as any;
+      const formatter = yAxis.axisLabel.formatter as (value: number) => string;
+
+      const yMax = yAxis.max as number;
+      const labelAtMax = formatter(yMax);
+      const labelMid = formatter(yMax * 0.5);
+
+      expect(labelAtMax).not.toMatch(/[eE]/);
+      expect(labelMid).not.toMatch(/[eE]/);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
 });

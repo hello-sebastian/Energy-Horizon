@@ -19,6 +19,7 @@ It is designed for long-term energy statistics (not live instant power charts).
 - [Minimal configuration examples](#minimal-configuration-examples)
 - [Beginner-friendly options](#beginner-friendly-options)
 - [Forecast in plain words](#forecast-in-plain-words)
+- [Visual Editor](#visual-editor)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 - [Advanced documentation (Wiki)](#advanced-documentation-wiki)
@@ -171,6 +172,17 @@ Forecast may be unavailable when:
 For the full algorithm and confidence rules, see Wiki:
 
 - [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals)
+
+## Visual Editor
+
+The card supports a **visual editor** for common options. In the Lovelace dashboard, open the card's **three-dot menu** -> **Edit** to configure the card. The editor panel is titled **Energy Horizon**.
+
+- **Entity** - sensor-domain statistics entity (`entity` in YAML)
+- **Title** - optional display name for the card header
+- **Comparison Mode** - `year_over_year` or `month_over_year`. Labels are localized (e.g. English: "Year over year" / "Month over year"; Polish: "Rok do roku" / "Miesiac do miesiaca rok temu").
+- **Unit Prefix** - `auto`, empty (base unit, no forced prefix), `none`, `G`, `M`, `k`, `m`, or `u` (same meaning as root-level `force_prefix` in YAML). The empty option appears first and means the base unit without scaling.
+
+The editor includes a **YAML** (text) mode toggle so you can edit the **full** configuration, including advanced options such as colors and opacities. **YAML-only** fields are **preserved** when you use the visual form: keys not covered by the four fields above are kept when saving from the form.
 
 ## Troubleshooting
 
