@@ -35,7 +35,7 @@ It is designed for long-term energy statistics (not live instant power charts).
 - Localized trend text (higher/lower/similar)
 
 
-![Energy Horizon Card screenshot](tmp-wiki-live/energy-horizon-card.png)
+![Energy Horizon Card screenshot](wiki-publish/energy-horizon-card.png)
 
 ## Before you start
 
