@@ -29,6 +29,7 @@ It is designed for long-term energy statistics (not live instant power charts).
 
 ## What you get on the card
 
+- Long term energy consumption visualization
 - A chart comparing current cumulative energy vs. reference period (eg. same month but year ago)
 - Forecast for the current period total
 - Numeric summary (current, reference, difference, percentage)
