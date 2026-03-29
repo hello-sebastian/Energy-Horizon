@@ -7,6 +7,7 @@ Energy Horizon Card is a Home Assistant Lovelace card for comparing cumulative e
 It is designed for long-term energy statistics (not live instant power charts).
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue)
+![Energy Horizon Github Repo](https://img.shields.io/badge/GitHub-Energy_Horizon_Card-blue?logo=GitHub)
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
