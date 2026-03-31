@@ -164,6 +164,7 @@ Start with defaults. Change only what you need.
 | `comparison_preset` | `year_over_year` if omitted | `year_over_year` (year vs last year), `month_over_year` (this month vs same month last year), `month_over_month` (this month vs previous full month) |
 | `aggregation` | omitted → **auto** from `duration` (see [Aggregation and axis labels](#aggregation-and-axis-labels)) | Set `hour` / `day` / `week` / `month` explicitly when needed |
 | `x_axis_format` | omitted (adaptive axis labels) | Optional Luxon format string for every X tick (Home Assistant time zone); invalid patterns show a card error |
+| `tooltip_format` | omitted (aggregation-based header) | Optional Luxon format for the **tooltip** date/time line; same validation as `x_axis_format` |
 | `show_forecast` | `true` (on) | Set `false` to hide the forecast line on the chart |
 | `title` | auto | Custom card title |
 | `icon` | entity icon | Custom icon, e.g. `mdi:flash` |
@@ -250,6 +251,8 @@ For a full parameter table, merge behaviour, Mermaid diagrams, and copy-paste YA
 The card can **infer the LTS aggregation step** from **merged `duration`** when **`aggregation` is omitted** after preset / `time_window` / card merge (explicit `aggregation` anywhere in that chain skips auto-selection). The goal is roughly **20–100** timeline slots using Home Assistant’s supported steps only (`hour`, `day`, `week`, `month`).
 
 **X-axis labels** use **Home Assistant’s time zone**. By default they are **adaptive** (Intl-based, boundary-aware; first tick always gets full context). Set optional card-level **`x_axis_format`** to a **Luxon** pattern (supported **token subset**); invalid patterns fail at configuration time. Label **locale**: card `language` → HA user language → `en`.
+
+**Chart tooltip** (first line of the hover box) uses the **same label locale** as the X-axis. By default its **precision matches `aggregation`**: month → month name only; day/week → day + month **without year**; hour → clock time, and if the merged window is **longer than one day**, a short date is added so repeated clock times are not ambiguous. Optional **`tooltip_format`** overrides that matrix (same Luxon subset and validation as **`x_axis_format`**). The **year** of each series is not repeated in the default tooltip header when comparing periods—use the **legend / series names** for which period a line refers to.
 
 **Safety**: if the resolved timeline has **more than 5000** points per series, the card refuses to render and shows a localized error. With **`debug: true`**, details are logged to the browser console.
 

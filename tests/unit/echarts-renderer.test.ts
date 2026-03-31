@@ -233,7 +233,7 @@ describe('EChartsRenderer', () => {
     function buildBaseRendererConfig(
       overrides: Partial<ChartRendererConfig>
     ): ChartRendererConfig {
-      return {
+      const base: ChartRendererConfig = {
         primaryColor: "#00ADEF",
         fillCurrent: true,
         fillReference: false,
@@ -249,7 +249,17 @@ describe('EChartsRenderer', () => {
         showLegend: false,
         unit: "kWh",
         periodLabel: "",
+        haTimeZone: "UTC",
+        primaryAggregation: "day",
+        mergedDurationMs: 86400000 * 365,
         ...overrides
+      };
+      return {
+        ...base,
+        xAxisLabelLocale: base.xAxisLabelLocale ?? base.language ?? "en-US",
+        haTimeZone: base.haTimeZone ?? "UTC",
+        primaryAggregation: base.primaryAggregation ?? "day",
+        mergedDurationMs: base.mergedDurationMs ?? 86400000 * 365
       };
     }
 
@@ -285,9 +295,11 @@ describe('EChartsRenderer', () => {
 
       const precision = 2;
       const numberLocale = "pl-PL";
+      const labelLocale = "pl-PL";
       const rendererConfig = buildBaseRendererConfig({
         comparisonMode: "year_over_year",
         language: "pl-PL",
+        xAxisLabelLocale: labelLocale,
         numberLocale,
         precision,
         unit: "kWh"
@@ -317,7 +329,15 @@ describe('EChartsRenderer', () => {
         maximumFractionDigits: precision
       });
 
-      // slotIndex = 0 => "1 dzień"
+      const header0 = new Intl.DateTimeFormat(labelLocale, {
+        day: "numeric",
+        month: "long"
+      }).format(new Date(fullTimeline[0]!));
+      const header1 = new Intl.DateTimeFormat(labelLocale, {
+        day: "numeric",
+        month: "long"
+      }).format(new Date(fullTimeline[1]!));
+
       const html0 = formatter([
         {
           dataIndex: 0,
@@ -330,11 +350,10 @@ describe('EChartsRenderer', () => {
           data: [0, 9.5]
         }
       ]);
-      expect(html0).toContain("1 dzień");
+      expect(html0).toContain(header0);
       expect(html0).toContain(`${expectedFmt.format(1.234)} kWh`);
       expect(html0).toContain(`${expectedFmt.format(9.5)} kWh`);
 
-      // slotIndex = 1 => "2 dni"
       const html1 = formatter([
         {
           dataIndex: 1,
@@ -342,7 +361,7 @@ describe('EChartsRenderer', () => {
           data: [1, 2]
         }
       ]);
-      expect(html1).toContain("2 dni");
+      expect(html1).toContain(header1);
       expect(html1).toContain(`${expectedFmt.format(2)} kWh`);
     });
 
@@ -461,7 +480,7 @@ describe('EChartsRenderer', () => {
       expect(html2).toContain(`${expectedFmt.format(1.04)} MWh`);
     });
 
-    it("formats month_over_month tooltip header with day, month, and year", () => {
+    it("formats month_over_month tooltip header with day and month (no year in header)", () => {
       const container = document.createElement("div");
       document.body.appendChild(container);
 
@@ -475,6 +494,7 @@ describe('EChartsRenderer', () => {
       const rendererConfig = buildBaseRendererConfig({
         comparisonMode: "month_over_month",
         language,
+        xAxisLabelLocale: language,
         numberLocale,
         precision,
         unit: "kWh"
@@ -502,8 +522,7 @@ describe('EChartsRenderer', () => {
       });
       const expectedHeader = new Intl.DateTimeFormat(language, {
         day: "numeric",
-        month: "long",
-        year: "numeric"
+        month: "long"
       }).format(new Date(fullTimeline[0]!));
 
       const html = formatter([

@@ -122,6 +122,19 @@
 
 ---
 
+## Phase 10: Tooltip matrix & `tooltip_format` (FR-011–FR-014)
+
+**Purpose**: Aggregation-aligned tooltip headers; optional `tooltip_format`; Speckit docs + README/wiki.
+
+- [x] T025 [P] Update Speckit docs (`spec.md`, `plan.md`, `data-model.md`, `research.md`, `contracts/card-config-axis.md`, `quickstart.md`) for tooltip US8–US11, FR-011–FR-014, EC tooltip
+- [x] T026 Implement `src/card/axis/tooltip-format.ts` + `tests/unit/tooltip-format.test.ts`
+- [x] T027 Add `tooltip_format` to `CardConfig`, `ChartRendererConfig` (`mergedDurationMs`, `tooltipFormatPattern`); validate in `setConfig`; wire `_buildRendererConfig` in `cumulative-comparison-chart.ts`
+- [x] T028 Replace inline tooltip `formatHeader` in `echarts-renderer.ts` with `formatTooltipHeader` (`xAxisLabelLocale`)
+- [x] T029 [P] i18n `status.config_invalid_tooltip_format` in `src/translations/*.json`; adjust `echarts-renderer.test.ts` tooltip expectations
+- [x] T030 [P] README, `wiki-publish/Aggregation-and-Axis-Labels.md`, `changelog.md` tooltip matrix + `tooltip_format`
+
+---
+
 ## Dependencies & execution order
 
 ### Phase dependencies
@@ -181,9 +194,10 @@ T017 [US2] src/card/cumulative-comparison-chart.ts (debug logging)
 
 | Metric | Value |
 |--------|-------|
-| **Total tasks** | **24** (T001–T024) |
-| **Per user story (approx.)** | US1: **T014** + **T013**; US2: **T015–T017**; US3: **T018–T019**; US4: **T020** (validation **T006**); US5: **T021**; US6: **T007/T019**; US7: **T022** |
+| **Total tasks** | **30** (T001–T030) |
+| **Per user story (approx.)** | US1: **T014** + **T013**; US2: **T015–T017**; US3: **T018–T019**; US4: **T020** (validation **T006**); US5: **T021**; US6: **T007/T019**; US7: **T022**; Tooltip follow-up: **T025–T030** |
 | **Foundational + setup** | **13** tasks (T001–T013) |
 | **Polish** | **2** (T023–T024) |
+| **Tooltip (FR-011–FR-014)** | **6** (T025–T030) |
 
-**Format validation**: All tasks use `- [ ]`, sequential `T001`–`T024`, file paths in descriptions, `[USn]` only on user-story phases (3–8) and Polish has no story label; `[P]` only where parallelizable.
+**Format validation**: Tasks **T001–T030** use checklist lines; Phase 10 adds tooltip work items **T025–T030**.

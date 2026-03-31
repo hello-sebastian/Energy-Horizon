@@ -5,6 +5,7 @@
   "status.config_invalid_time_window": "Nieprawidłowa konfiguracja time_window. Sprawdź anchor, duration, step i count w YAML.",
   "status.config_too_many_windows": "Zbyt wiele okien czasowych (maksimum {{max}}). Zmniejsz count w time_window.",
   "status.config_invalid_x_axis_format": "Nieprawidłowy x_axis_format. Użyj obsługiwanego wzorca Luxon (patrz dokumentacja).",
+  "status.config_invalid_tooltip_format": "Nieprawidłowy tooltip_format. Użyj obsługiwanego wzorca Luxon (patrz dokumentacja).",
   "status.point_cap_exceeded": "Zbyt wiele slotów osi czasu dla tego wykresu (maksimum {{max}}). Użyj grubszej agregacji lub krótszego okna.",
   "status.error_api": "Nie udało się pobrać danych statystyk długoterminowych.",
   "status.error_generic": "Wystąpił błąd podczas wczytywania danych.",

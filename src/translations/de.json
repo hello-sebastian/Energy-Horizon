@@ -5,6 +5,7 @@
   "status.config_invalid_time_window": "Ungültige time_window-Konfiguration. Prüfen Sie anchor, duration, step und count in YAML.",
   "status.config_too_many_windows": "Zu viele Zeitfenster (Maximum {{max}}). Verringern Sie count in time_window.",
   "status.config_invalid_x_axis_format": "Ungültiges x_axis_format. Verwenden Sie eine unterstützte Luxon-Formatzeichenkette (siehe Dokumentation).",
+  "status.config_invalid_tooltip_format": "Ungültiges tooltip_format. Verwenden Sie eine unterstützte Luxon-Formatzeichenkette (siehe Dokumentation).",
   "status.point_cap_exceeded": "Zu viele Zeitachsen-Slots für dieses Diagramm (Maximum {{max}}). Wählen Sie eine gröbere Aggregation oder ein kürzeres Fenster.",
   "status.error_api": "Langzeitstatistiken konnten nicht geladen werden.",
   "status.error_generic": "Beim Laden der Daten ist ein Fehler aufgetreten.",

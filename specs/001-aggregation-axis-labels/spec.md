@@ -126,12 +126,46 @@ As a phone user, I want X-axis labels to stay horizontal and avoid overlapping; 
 
 ---
 
+### User Story 8 - Tooltip precision matches aggregation (Priority: P2)
+
+As a dashboard viewer, I want the chart **tooltip header** (time/date line) to show **only the precision implied by the effective aggregation** (for example month-only for monthly buckets, day+month without year for daily buckets), so I am not overwhelmed by irrelevant detail.
+
+**Independent Test**: For each supported `WindowAggregation`, hover a point and verify the header matches the matrix in Requirements (no year in default comparison tooltips except where the matrix specifies year-only for a true yearly bucket—see Assumptions / LTS limits).
+
+---
+
+### User Story 9 - Tooltip without redundant year in comparison (Priority: P2)
+
+As someone comparing periods (for example current year vs reference year), I do not want the **year repeated in the tooltip header** when the legend or series names already identify the periods; I want a **normalized date fragment** (for example “15 March”) and I read which calendar year applies from the series labels.
+
+**Independent Test**: With two series visible, tooltip header does not include a year for default formatting; values still show under series names that carry period context.
+
+---
+
+### User Story 10 - Tooltip i18n aligned with axis (Priority: P2)
+
+As a user, I expect month and day names in the **tooltip header** to use the **same resolved label locale** as the X-axis (`language` → HA → `en` cascade), not a different language source than the axis.
+
+**Independent Test**: Change HA user language with card `language` unset; tooltip header month/day wording matches axis label locale behavior.
+
+---
+
+### User Story 11 - Optional forced tooltip format (Priority: P2)
+
+As an advanced user, I want an optional card-level **`tooltip_format`** (Luxon-compatible subset) so I can **override** the default aggregation-based tooltip header when needed.
+
+**Independent Test**: Set `tooltip_format` to a valid pattern; header follows it for every slot. Invalid pattern fails at `setConfig` like `x_axis_format`.
+
+---
+
 ### Edge Cases
 
 - **Invalid `x_axis_format`**: Tokens outside the documented supported subset or syntactically invalid patterns MUST result in a user-visible configuration error (same class as other invalid YAML), not a silent fallback to adaptive labels.
 - **Forced format vs window length**: If the user forces a format that is too coarse for the window (for example only year on an hourly series), labels may repeat; the card still renders; the axis may be visually poor—acceptable if documented.
 - **Daylight saving time**: Windows that cross DST transitions may show duplicate hours or skipped hours; timestamps remain correct; labels reflect **civil time in Home Assistant’s configured time zone** (not the browser’s offset).
 - **Severe overlap on dense series**: With many ticks and wide label strings, the display layer may hide overlapping intermediate labels; behavior aligns with User Story 7.
+- **Tooltip header vs aligned series (comparison)**: The tooltip header MUST be derived only from **`fullTimeline[slotIndex]`** (primary / shared X-axis). Do not show each series’ physical calendar date in the header; comparison uses the same slot index for all windows (User Story 9).
+- **Sub-daily aggregation + multi-day window**: If aggregation is **hour** (or finer when supported) **and** merged window **duration > 1 day**, the tooltip header MUST add **day context** (for example time + short date) so identical clock times on different days are not ambiguous.
 - **First tick not on a calendar boundary**: The first data point is always treated as a label “boundary” for context (so the start of the series gets an appropriate label even mid-month or mid-day), without requiring a separate manual boundary detector if the chosen implementation simplifies this rule.
 - **Auto-interval vs data source limits**: Automatic step selection only uses aggregation sizes that the card can actually request for long-term statistics (for example hour and coarser while sub-hour LTS remains unsupported); “minute-level in the future” is out of scope until the data layer supports it.
 - **Card vs window `aggregation`**: No separate “conflict error” is required when both are set—**per-window** value wins for that window (**FR-002**) *where the YAML model carries window-level **`aggregation`***; **v1** implements this via the single merge chain on `MergedTimeWindowConfig` (see Key Entities / Assumptions). Card-level serves as the default when the merged window config omits **`aggregation`**.
@@ -151,10 +185,14 @@ As a phone user, I want X-axis labels to stay horizontal and avoid overlapping; 
 - **FR-008**: On small viewports, axis labels MUST remain horizontal; the layout MUST reduce overlap by hiding labels with priority for middle ticks over ends and important boundaries.
 - **FR-009**: The primary chart time axis MUST be driven from the main (current) window’s timeline; shorter comparison windows MUST align with that axis (including gaps where applicable) per existing comparison semantics.
 - **FR-010**: Documentation MUST be updated for this feature: project README, published wiki sources under `wiki-publish/`, and `changelog.md` under Unreleased (or the next release section when released).
+- **FR-011**: The chart tooltip **header** MUST default to a **precision matrix** driven by effective **`primaryAggregation`**: `month` → month name only; `day` / `week` → day + month **without year**; `hour` → time (hour+minute); if **hour** and merged **`duration` > 1 day**, append day disambiguation per Edge Cases. **Year** MUST NOT appear in default headers for comparison views except where a future **year bucket** exists in the statistics model (out of scope until LTS supports it—see Assumptions).
+- **FR-012**: Optional card-level **`tooltip_format`** MUST use the **same Luxon token subset validation** as **`x_axis_format`**; invalid values MUST fail at **`setConfig`**. When set, it MUST override FR-011 for the tooltip header.
+- **FR-013**: Tooltip header date/time formatting MUST use the **same label locale cascade** as X-axis labels (**FR-006** / `resolveLabelLocale`), not UI translation dictionary gating alone.
+- **FR-014**: Tooltip header timestamps MUST be interpreted in **Home Assistant’s time zone** (**FR-006a**), consistent with **`fullTimeline`**.
 
 ### Key Entities
 
-- **Axis configuration**: **`x_axis_format`** is **card-level only**. **`aggregation`**: merge order is **preset → `time_window` (deep merge) → `?? config.aggregation`** (`buildMergedTimeWindowConfig`); if still unset, **FR-001** auto-interval applies. **FR-002** (product intent): where the YAML model allows a window-specific **`aggregation`**, it overrides card-level; **implementation v1** uses **one** merged **`aggregation`** on `MergedTimeWindowConfig`, shared by all resolved windows, until a future schema supports per-window fields (see Assumptions). Optional forced tick strings use **`x_axis_format`** only.
+- **Axis configuration**: **`x_axis_format`** is **card-level only**. **`tooltip_format`** is **card-level only** (optional; overrides default tooltip header matrix). **`aggregation`**: merge order is **preset → `time_window` (deep merge) → `?? config.aggregation`** (`buildMergedTimeWindowConfig`); if still unset, **FR-001** auto-interval applies. **FR-002** (product intent): where the YAML model allows a window-specific **`aggregation`**, it overrides card-level; **implementation v1** uses **one** merged **`aggregation`** on `MergedTimeWindowConfig`, shared by all resolved windows, until a future schema supports per-window fields (see Assumptions). Optional forced tick strings use **`x_axis_format`** only.
 - **Threshold policy**: Maps window duration ranges to target bucket counts and allowed natural step sizes (hour, day, week, month, year, and future-supported sizes).
 - **Resolved aggregation**: The effective step after merging user overrides and automatic selection, subject to the maximum point rule.
 - **Axis label profile**: Either “adaptive” (derived from aggregation and boundaries) or “forced format” from **`x_axis_format`** (Luxon-compatible token string per documented subset).
@@ -167,6 +205,7 @@ As a phone user, I want X-axis labels to stay horizontal and avoid overlapping; 
 - Threshold examples from the brief (for example up to 24h → hourly; days to a week → daily or coarser; months → daily or weekly; beyond a year → monthly) inform the policy table; exact numeric boundaries will be finalized during planning so they stay consistent with Home Assistant long-term statistics capabilities.
 - The maximum points per series default is **5000** unless changed by maintainers during implementation planning.
 - Sub-hour automatic aggregation remains out of scope until long-term statistics support aligns with sub-hour steps for this card’s entities.
+- **Year-only** and **minute** buckets in the product matrix are **not** represented as separate `WindowAggregation` values in v1; **year**-only tooltip headers require a future LTS **year** period; **minute**-level tooltip rules apply when/if sub-hour aggregation is added.
 - **`x_axis_format`** is **card-level** only. **`aggregation`** remains available at **card level** and in merged **`time_window`** (single object); parallel keys such as `aggregation_step` are out of scope. **FR-002** precedence is implemented via that merge chain; **implementation v1** does **not** yet support an array of windows each with its own **`aggregation`**—all **`ResolvedWindow`** entries use the same effective **`aggregation`** after merge and auto-interval.
 - **`x_axis_format`** uses the **Luxon-format** token alphabet; user-facing documentation MUST list the supported subset and examples. ICU-only or preset-only formats are out of scope for this feature.
 - Axis and labels are interpreted in **Home Assistant’s time zone**; using only the browser’s local offset for the same chart is out of scope.

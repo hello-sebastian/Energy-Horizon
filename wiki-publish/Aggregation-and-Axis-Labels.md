@@ -35,6 +35,24 @@ Axis timestamps always use **Home Assistant’s configured time zone** (`hass.co
 
 If the shared timeline has **more than 5000** slots, the card shows a **localized error** and does not load the chart. Enable **`debug: true`** on the card to print details (including actual slot count) to the **browser console**.
 
+## Tooltip header (hover)
+
+The **first line** of the chart tooltip (above the value rows) is formatted for **readability**, not maximum calendar precision:
+
+- **Default**: Precision follows effective **`aggregation`**: **month** → month name only; **day** / **week** → day + month **without year**; **hour** → time (hour and minute). If the merged window **`duration`** is **longer than one day** while using **hour** buckets, a **short date** is added after the time so the same clock time on different days is not ambiguous.
+- **No redundant year**: In comparison charts, the default header **does not include the year**; which year a series refers to comes from the **legend** and series labels.
+- **Primary axis only**: The header always reflects **`fullTimeline[slot]`** for the shared X-axis (the current / primary window’s timeline), not each series’ physical calendar date at that slot—aligned with “same index = same position in the window” for comparisons.
+- **Locale**: Same cascade as X-axis labels (card `language` → HA → `en`).
+
+### Optional `tooltip_format` (card-level)
+
+- **Omitted**: use the default matrix above.
+- **Set**: Luxon **`toFormat`** with **Home Assistant** time zone; **same supported token subset** as **`x_axis_format`**. Invalid patterns produce a **configuration error** at card load.
+
+```yaml
+tooltip_format: dd LLL yyyy
+```
+
 ## Mobile / narrow layout
 
 The X axis keeps labels **horizontal** (`rotate: 0`) and uses **label overlap hiding** so the chart remains readable on small viewports. **Manual smoke**: verify on a phone or narrow panel that an over-cap error still shows **`ha-alert`**, not a white screen.

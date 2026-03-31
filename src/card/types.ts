@@ -86,6 +86,10 @@ export interface CardConfig {
    */
   x_axis_format?: string;
   /**
+   * Optional Luxon format for the chart tooltip header (overrides aggregation-based matrix).
+   */
+  tooltip_format?: string;
+  /**
    * SI unit scaling: `auto` (default when omitted), `none`, or a forced prefix (`k`, `M`, …).
    */
   force_prefix?: ForcePrefix;
@@ -259,5 +263,9 @@ export interface ChartRendererConfig {
   primaryAggregation?: WindowAggregation;
   /** Shared chart timeline (ms); tick index maps to this array. */
   fullTimeline?: number[];
+  /** Merged `duration` in ms; used for tooltip hour + multi-day disambiguation. */
+  mergedDurationMs?: number;
+  /** Luxon pattern from `tooltip_format` when set. */
+  tooltipFormatPattern?: string;
 }
 

@@ -11,6 +11,7 @@ import {
   formatAdaptiveTickLabel,
   formatForcedTickLabel
 } from './axis/axis-label-format';
+import { formatTooltipHeader } from './axis/tooltip-format';
 
 // Register modular ECharts components at module level (FR-016)
 echartsUse([
@@ -715,8 +716,6 @@ export class EChartsRenderer {
           const slotIndex =
             typeof rawIndex === 'number' ? rawIndex : Number(rawIndex);
 
-          const comparisonMode = rendererConfig.comparisonMode;
-          const language = rendererConfig.language;
           const numberLocale = rendererConfig.numberLocale;
           const precision = rendererConfig.precision;
           const unit = rendererConfig.unit;
@@ -733,43 +732,17 @@ export class EChartsRenderer {
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;');
 
-          const formatHeader = (): string => {
-            if (!Number.isFinite(slotIndex)) return '';
-
-            if (comparisonMode === 'year_over_year') {
-              const dayNumber = Math.trunc(slotIndex) + 1;
-              const lang = String(language).toLowerCase();
-
-              let unitWord: string;
-              if (lang.startsWith('pl')) {
-                unitWord = dayNumber === 1 ? 'dzień' : 'dni';
-              } else {
-                unitWord = dayNumber === 1 ? 'day' : 'days';
-              }
-
-              return `${dayNumber} ${unitWord}`;
-            }
-
-            const ts = fullTimeline[slotIndex];
-            if (ts == null) return '';
-
-            // month_over_month: two different calendar months — include year (e.g. Dec/Jan).
-            if (comparisonMode === 'month_over_month') {
-              return new Intl.DateTimeFormat(language, {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              }).format(new Date(ts));
-            }
-
-            // month_over_year
-            return new Intl.DateTimeFormat(language, {
-              day: 'numeric',
-              month: 'long'
-            }).format(new Date(ts));
-          };
-
-          const header = formatHeader();
+          const labelLocale =
+            rendererConfig.xAxisLabelLocale ?? rendererConfig.language ?? 'en';
+          const header = formatTooltipHeader({
+            slotIndex,
+            fullTimeline,
+            zone: rendererConfig.haTimeZone ?? 'UTC',
+            labelLocale,
+            primaryAggregation: rendererConfig.primaryAggregation ?? 'day',
+            mergedDurationMs: rendererConfig.mergedDurationMs ?? 0,
+            tooltipFormatPattern: rendererConfig.tooltipFormatPattern
+          });
 
           const valueLines: string[] = [];
           for (const p of items) {

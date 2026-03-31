@@ -19,13 +19,15 @@ npm run lint
 
 ## What to test locally
 
-1. **Unit**: `tests/unit/auto-aggregation.test.ts`, `point-cap.test.ts`, `x-axis-format-validate.test.ts`, `axis-label-format.test.ts` (after implementation).  
+1. **Unit**: `tests/unit/auto-aggregation.test.ts`, `point-cap.test.ts`, `x-axis-format-validate.test.ts`, `axis-label-format.test.ts`, `tooltip-format.test.ts` (after implementation).  
 2. **Manual smoke in HA** (after implementation):  
    - Card without `aggregation` — confirm auto step matches duration band (~20–100 buckets).  
    - `aggregation: day` — no auto-interval.  
    - Invalid `x_axis_format` — `ha-alert`, no chart.  
    - Config implying >5000 points — error state, no white screen.  
-   - `x_axis_format: 'yyyy-MM-dd HH:mm'` — forced labels; narrow panel — labels stay horizontal, overlap hidden.
+   - `x_axis_format: 'yyyy-MM-dd HH:mm'` — forced labels; narrow panel — labels stay horizontal, overlap hidden.  
+   - Optional `tooltip_format: 'dd LLL yyyy'` — tooltip header follows pattern; invalid pattern → card error.  
+   - Tooltip header: no redundant year in default mode; legend shows which period applies.
 
 ## Related source (orientation)
 

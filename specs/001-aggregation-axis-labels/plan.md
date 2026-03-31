@@ -7,7 +7,7 @@
 
 ## Summary
 
-Dodać **automatyczny dobór agregacji** z długości okna (`duration`) wg tabeli progów (cel ~20–100 slotów), zachowując istniejący łańcuch merge **`aggregation`** (YAML/`time_window` → karta → fallback). Rozszerzyć konfigurację o opcjonalne **`x_axis_format`** (Luxon, udokumentowany podzbiór tokenów) z walidacją przy `setConfig`. Wymusić **limit 5000 punktów na serię** przed pobraniem danych — przy przekroczeniu stan błędu (`ha-alert`) zamiast renderu wykresu. Zastąpić obecne **etykiety osi X oparte na indeksie** (`String(tick)`) formatowaniem czasu: tryb **wymuszony** — `DateTime.fromMillis(ms, zone).toFormat(x_axis_format)`; tryb **adaptacyjny** — `Intl.DateTimeFormat` + logika granic (dzień/rok) bez słowników miesięcy w repozytorium. **Strefa**: `hass.config.time_zone` (spójnie z Luxon w `resolve-windows`). **Język etykiet**: kaskada `language` karty → `hass.locale.language` → `en`. **ECharts**: `axisLabel.rotate: 0`, `hideOverlap: true` (już częściowo), formatter per indeks osi `value` mapujący na `fullTimeline[tick]`. Zaktualizować README, `wiki-publish/`, changelog (FR-010).
+Dodać **automatyczny dobór agregacji** z długości okna (`duration`) wg tabeli progów (cel ~20–100 slotów), zachowując istniejący łańcuch merge **`aggregation`** (YAML/`time_window` → karta → fallback). Rozszerzyć konfigurację o opcjonalne **`x_axis_format`** (Luxon, udokumentowany podzbiór tokenów) z walidacją przy `setConfig`. Wymusić **limit 5000 punktów na serię** przed pobraniem danych — przy przekroczeniu stan błędu (`ha-alert`) zamiast renderu wykresu. Zastąpić obecne **etykiety osi X oparte na indeksie** (`String(tick)`) formatowaniem czasu: tryb **wymuszony** — `DateTime.fromMillis(ms, zone).toFormat(x_axis_format)`; tryb **adaptacyjny** — `Intl.DateTimeFormat` + logika granic (dzień/rok) bez słowników miesięcy w repozytorium. **Strefa**: `hass.config.time_zone` (spójnie z Luxon w `resolve-windows`). **Język etykiet**: kaskada `language` karty → `hass.locale.language` → `en`. **ECharts**: `axisLabel.rotate: 0`, `hideOverlap: true` (już częściowo), formatter per indeks osi `value` mapujący na `fullTimeline[tick]`. Zaktualizować README, `wiki-publish/`, changelog (FR-010). **Tooltip**: nagłówek z **`src/card/axis/tooltip-format.ts`** (macierz zgodna z agregatem, bez roków w domyślnych porównaniach; opcjonalne **`tooltip_format`** jak **`x_axis_format`**); **`mergedDurationMs`** z merged YAML dla EC2.
 
 ## Technical Context
 
@@ -56,7 +56,7 @@ src/card/
 ├── types.ts                    # CardConfig: x_axis_format?: string; ewent. stałe MAX_POINTS_PER_SERIES
 ├── ha-api.ts                   # Po wyliczeniu okien: ewent. auto-interval na merged przed resolve; liczenie slotów → cap
 ├── cumulative-comparison-chart.ts  # setConfig: walidacja formatu; przekazanie locale + xAxisProfile do renderer config
-├── echarts-renderer.ts         # formatXAxisLabel: daty z fullTimeline + adaptive vs forced; axisLabel opcje
+├── echarts-renderer.ts         # formatXAxisLabel: daty z fullTimeline + adaptive vs forced; axisLabel opcje; tooltip header z tooltip-format
 ├── time-windows/
 │   ├── merge-config.ts         # Bez zmian semantyki merge (już zgodne z FR-002 dla pojedynczego pola aggregation)
 │   └── resolve-windows.ts      # Opcjonalnie: przyjmować już ustawione effective aggregation (z warstwy wyżej)
@@ -64,19 +64,21 @@ src/card/
     ├── auto-aggregation.ts     # duration (ms) + tabela progów → WindowAggregation
     ├── point-cap.ts            # assertPointCountWithinCap(timelineLength) → void | throw z kodem błędu
     ├── x-axis-format-validate.ts  # Walidacja podzbioru tokenów Luxon / odrzuć przy setConfig
-    └── axis-label-format.ts    # Adaptive: Intl + granice; forced: Luxon toFormat; locale string z kaskady
+    ├── axis-label-format.ts    # Adaptive: Intl + granice; forced: Luxon toFormat; locale string z kaskady
+    └── tooltip-format.ts       # Nagłówek tooltipa: macierz FR-011 + optional tooltip_format; EC2 (hour + duration > 1d)
 
 tests/unit/
 ├── auto-aggregation.test.ts
 ├── point-cap.test.ts
 ├── x-axis-format-validate.test.ts
 ├── axis-label-format.test.ts
+├── tooltip-format.test.ts
 └── echarts-renderer*.test.ts   # Rozszerzenia istniejących lub nowe przypadki etykiet
 ```
 
 **Structure Decision**: Nowy katalog `src/card/axis/` grupuje logikę niezależną od ECharts (łatwe testy), podczas gdy `echarts-renderer.ts` zawiera tylko podłączenie `formatter` i opcje osi. Alternatywa — `src/card/time-windows/auto-aggregation.ts` — odrzucona na rzecz wyraźnego rozdziału „oś/etykiety” vs „rozwiązywanie okien”.
 
-**Single place for pipeline hooks**: Efektywne **`aggregation`** (auto-interval + merge) i walidacja **`x_axis_format`** powinny być zastosowane w **jednej** ścieżce przed `resolveTimeWindows` — praktycznie `cumulative-comparison-chart.ts` (`setConfig` / inicjalizacja fetch). `ha-api.ts` pozostaje przy budowie timeline z już ustawionym `ResolvedWindow[].aggregation`; unikaj duplikacji logiki między plikami (remediacja `/speckit.analyze`).
+**Single place for pipeline hooks**: Efektywne **`aggregation`** (auto-interval + merge) i walidacja **`x_axis_format`** / **`tooltip_format`** powinny być zastosowane w **jednej** ścieżce przed `resolveTimeWindows` — praktycznie `cumulative-comparison-chart.ts` (`setConfig` / inicjalizacja fetch). `ha-api.ts` pozostaje przy budowie timeline z już ustawionym `ResolvedWindow[].aggregation`; unikaj duplikacji logiki między plikami (remediacja `/speckit.analyze`).
 
 ## Complexity Tracking
 

@@ -7,10 +7,12 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ## [0.4.0-beta]
 
 ### Added
-- **Time windows engine**: advanced YAML `time_window` support (preset merge, validation, LTS constraints, up to 24 windows).
+- **Time Windows Engine**: advanced data engine enable new way that data can handle to dispaly: use `time_window` in YAML to customize (preset merge, validation, LTS constraints).
+– **New `Month Over Month` comparison preset**. 
 - **Luxon** dependency for resolving anchored time ranges and window calculations.
 - **Inteligent Aggregation & X-axis**: optional card-level `x_axis_format` (Luxon subset, validated at config time); automatic `hour`/`day`/`week`/`month` selection from merged `duration` when `aggregation` is omitted (~20–100 slot target).
 - **Inteligent X-axis labeling**: adaptive Intl-based X labels (HA time zone; first tick is always a boundary); label locale cascade (`language` → HA → `en`); horizontal X labels with overlap hiding.
+- **Tooltip header**: aggregation-aligned default formatting (no redundant year in comparisons; hour + multi-day window gets date disambiguation); optional card-level `tooltip_format` (Luxon subset, same validation as `x_axis_format`).
 
 ### Changed
 - **Clarified `comparison_preset`** semantics in docs (`year_over_year`, `month_over_year`, `month_over_month`, including “month over month” meaning two consecutive full calendar months).

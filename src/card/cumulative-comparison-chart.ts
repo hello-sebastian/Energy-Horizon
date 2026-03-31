@@ -176,6 +176,19 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       }
     }
 
+    const tooltipRaw = this._config.tooltip_format;
+    if (tooltipRaw !== undefined && String(tooltipRaw).trim() !== "") {
+      try {
+        validateXAxisFormat(String(tooltipRaw).trim());
+      } catch {
+        this._state = {
+          status: "error",
+          errorMessage: "status.config_invalid_tooltip_format"
+        };
+        return;
+      }
+    }
+
     this._mergedTimeWindow = buildMergedTimeWindowConfig(this._config);
     assertLtsHardLimits(this._mergedTimeWindow);
     assertMergedTimeWindowConfig(this._mergedTimeWindow);
@@ -490,6 +503,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     };
   }
 
+  /** Merged window duration in ms (YAML `duration` after merge). */
+  private _mergedDurationMs(): number {
+    const merged = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+    const dur = parseDurationToken(merged?.duration ?? "1y");
+    return dur ? durationToMillis(dur) : 0;
+  }
+
   private _buildRendererConfig(fullTimeline: number[] = []): ChartRendererConfig {
     const resolved = resolveLocale(this.hass ?? null, this._config);
     const language = resolved.language;
@@ -502,6 +522,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const xAxisLabelLocale = resolveLabelLocale(this.hass, this._config);
     const xf = this._config.x_axis_format?.trim();
     const xAxisMode = xf ? ("forced" as const) : ("adaptive" as const);
+    const mergedDurationMs = this._mergedDurationMs();
+    const tf = this._config.tooltip_format?.trim();
 
     if (!this._state.period || !this._state.comparisonSeries) {
       return {
@@ -528,7 +550,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         xAxisLabelLocale,
         haTimeZone: resolved.timeZone,
         primaryAggregation: "day",
-        fullTimeline
+        fullTimeline,
+        mergedDurationMs,
+        tooltipFormatPattern: tf || undefined
       };
     }
 
@@ -580,7 +604,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       xAxisLabelLocale,
       haTimeZone: resolved.timeZone,
       primaryAggregation: period.aggregation,
-      fullTimeline
+      fullTimeline,
+      mergedDurationMs,
+      tooltipFormatPattern: tf || undefined
     };
   }
 

@@ -89,3 +89,19 @@
 **Rationale**: Remediacja `/speckit.analyze` (kolejność zadań); spójnie z `tasks.md` **T006**.
 
 **Alternatives considered**: Walidacja dopiero przy pierwszym renderze — odrzucone (późniejszy błąd, zbędna praca).
+
+---
+
+## R-010: Nagłówek tooltipa — macierz + `fullTimeline` (primary)
+
+**Decision**: Logika nagłówka w module czystym **`src/card/axis/tooltip-format.ts`**: domyślnie **`formatTooltipHeader`** używa wyłącznie **`fullTimeline[slotIndex]`** w strefie HA (Edge Case: „oś główna”), **`Intl`** wg **`primaryAggregation`** (bez roku w domyślnych porównaniach — **FR-011**). Opcjonalnie **`tooltip_format`** → Luxon **`toFormat`** (ta sama walidacja co **`x_axis_format`**).
+
+**Rationale**: Spójność z US8–US11; brak duplikacji roku z legendą; testowalność.
+
+---
+
+## R-011: Godzina + okno wielodniowe (EC2)
+
+**Decision**: Dla **`primaryAggregation === 'hour'`**, jeśli **`mergedDurationMs` > 1 doba**, dodać do nagłówka krótką datę (dzień + miesiąc), aby rozróżnić ten sam zegar na różnych dniach.
+
+**Rationale**: Spec Edge Case „sub-daily + duration > 1 day”.

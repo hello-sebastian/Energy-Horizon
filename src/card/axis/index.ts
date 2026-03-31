@@ -10,3 +10,5 @@ export {
   formatForcedTickLabel,
   formatAdaptiveTickLabel
 } from "./axis-label-format";
+export { formatTooltipHeader } from "./tooltip-format";
+export type { FormatTooltipHeaderParams } from "./tooltip-format";
