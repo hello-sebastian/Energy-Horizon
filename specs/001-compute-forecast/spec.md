@@ -128,14 +128,14 @@ z HA (seria referencyjna krótsza niż bieżąca).
 - **FR-012**: Gdy `C = 0`, system MUSI zwracać `enabled: true`, `forecast_total = A`. Detekcja anomalii (FR-009) nadal obowiązuje — jeśli równocześnie `rawTrend < 0.3 || > 3.3`, wynik zawiera również `confidence: "low"` i `anomalousReference: true`.
 - **FR-013**: Gdy `B = 0` (lub rawTrend === Infinity), system MUSI zwracać `enabled: false`.
 - **FR-014**: Typ `ForecastStats` MUSI zawierać opcjonalne pole `anomalousReference?: boolean`.
-- **FR-015**: Call-site w `cumulative-comparison-chart.ts` MUSI przekazywać `fullTimeline.length` jako drugi argument `computeForecast`.
+- **FR-015**: Call-site w `cumulative-comparison-chart.ts` MUSI przekazywać jako drugi argument `computeForecast` wartość **`forecastPeriodBuckets`** z `buildChartTimeline` w `ha-api.ts` (pełna liczba bucketów bieżącego okresu porównania). Dla wyłącznie presetów YoY/MoY na ścieżce legacy odpowiada ona długości timeline’u pełnego okresu kalendarzowego; przy wielu oknach czasowych z różnymi długościami — liczbie slotów **okna bieżącego (indeks 0)**, a nie długości osi wykresu (patrz [001-time-windows-engine FR-017](../001-time-windows-engine/spec.md)).
 - **FR-016**: Stała `MIN_POINTS_FOR_FORECAST` (= 5) MUSI zostać usunięta lub zastąpiona wbudowanym floor = 3 (nie eksportowaną stałą).
 
 ### Key Entities
 
 - **ComparisonSeries**: Struktura danych z polem `currentPoints` (tablica punktów z `timestamp` i `rawValue`) oraz `referencePoints` (analogiczna tablica dla roku referencyjnego).
 - **ForecastStats**: Wynik funkcji `computeForecast` – zawiera: `enabled: boolean`, `confidence: "low" | "medium" | "high"`, `forecast_total: number`, opcjonalnie `anomalousReference?: boolean`.
-- **periodTotalBuckets**: Całkowita liczba bucketów w pełnym porównywanym okresie, obliczona jako `fullTimeline.length` przed wywołaniem.
+- **periodTotalBuckets**: Całkowita liczba bucketów w pełnym **bieżącym** okresie porównania (seria `current`), przekazywana z karty jako `forecastPeriodBuckets` z `buildChartTimeline` — przy wielu oknach czasowych nie jest to automatycznie równe długości osi X wykresu.
 
 ## Success Criteria *(mandatory)*
 
@@ -149,7 +149,7 @@ z HA (seria referencyjna krótsza niż bieżąca).
 
 ## Assumptions
 
-- `fullTimeline` jest już obliczone w `cumulative-comparison-chart.ts` bezpośrednio przed wywołaniem `computeForecast` – nie wymaga dodatkowych obliczeń ani zapytań do HA.
+- Drugi argument wywołania jest uzgadniany z `buildChartTimeline` w `ha-api.ts` (`forecastPeriodBuckets`): ten sam kontrakt co wcześniej dla samych presetów (pełny okres bieżącej serii); przy konfiguracji wielookiennej — wyłącznie zakres **okna 0**, zgodnie z [001-time-windows-engine FR-017](../001-time-windows-engine/spec.md). Nie wymaga dodatkowych zapytań do HA.
 - Punkty w `currentPoints` i `referencePoints` mają pole `timestamp` w milisekundach (Unix ms) oraz `rawValue: number` (niezsumowana wartość bucketu).
 - Graniczne wartości `rawTrend === 0.3` i `rawTrend === 3.3` NIE są traktowane jako anomalia (warunek `< 0.3 || > 3.3`, nie `<=`/`>=`).
 - `anomalousReference` jest polem opcjonalnym w typie – brak pola jest równoznaczny z `false` dla przyszłego kodu UI.

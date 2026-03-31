@@ -37,7 +37,7 @@ A user wants to switch the card to a different energy sensor. They open the edit
 
 1. **Given** the editor is open, **When** the user selects a different `sensor` entity, **Then** the card's chart and summary update immediately to reflect the new entity's data.
 2. **Given** the editor is open, **When** the user types a new title value, **Then** the card title updates in real time as the user types.
-3. **Given** the editor is open, **When** the user changes `comparison_mode`, **Then** the card immediately re-renders with the appropriate comparison period data.
+3. **Given** the editor is open, **When** the user changes `comparison_preset`, **Then** the card immediately re-renders with the appropriate comparison period data.
 4. **Given** the editor is open, **When** the user changes `force_prefix`, **Then** the chart's Y-axis unit notation updates immediately.
 
 ---
@@ -94,7 +94,7 @@ An advanced user has configured the card via YAML with custom options not availa
 
 - What happens when the user clears the `entity` field (selects no entity)? → The editor emits `config-changed` immediately with `entity: ""` (HA standard behavior — no suppression, no revert). The card is responsible for handling the empty-entity state by showing its existing "no data" / "loading" UI. The editor must not crash or block the event.
 - What happens when the user opens the editor on a card config that was hand-written in YAML with an unknown `force_prefix` value (e.g. a typo)? → The field should show an empty/default selection without throwing an error.
-- What happens when the `comparison_mode` value in YAML is the legacy/incorrect value (e.g. `month_over_month`)? → The field should degrade gracefully (show empty selection); the editor must not prevent saving.
+- What happens when the `comparison_preset` value in YAML is unknown or legacy-only? → The field should degrade gracefully (show empty selection); the editor must not prevent saving. Deprecated `comparison_mode` alone should still pre-fill the select via card normalization when possible.
 - What happens when HA does not provide a `hass` object to the editor (e.g. during card initialization)? → The editor must render the form in a degraded state without crashing.
 - What happens when the user edits YAML text that removes a field that was previously set via the visual form? → The removal is intentional; the updated parsed config (without that field) is treated as the new `_config` and emitted.
 - What happens when the YAML text area contains YAML keys that conflict with form-controlled fields (e.g. user types a different `entity` in YAML text mode)? → The YAML text mode is authoritative; on switch back to Visual mode, the form fields reflect the YAML-parsed values (YAML wins).
@@ -110,7 +110,7 @@ An advanced user has configured the card via YAML with custom options not availa
 - **FR-003**: The editor schema MUST include the following fields:
   - `entity` — entity selector, filtered to `sensor` domain only.
   - `title` — free-text input field (optional).
-  - `comparison_mode` — dropdown with valid options: `year_over_year`, `month_over_year`.
+  - `comparison_preset` — dropdown with valid options: `year_over_year`, `month_over_year`, `month_over_month`.
   - `force_prefix` — dropdown with valid options: `auto`, `none`, `G`, `M`, `k`, `` (empty = no prefix), `m`, `µ`.
 - **FR-004**: The editor MUST emit a `config-changed` CustomEvent with the updated config object as `detail.config` whenever any field value changes.
 - **FR-005**: The editor MUST read the initial values from the card's current `config` object and pre-populate all fields accordingly.
@@ -151,7 +151,7 @@ An advanced user has configured the card via YAML with custom options not availa
 
 ## Assumptions
 
-- The valid `comparison_mode` values per the current codebase are `"year_over_year"` and `"month_over_year"`. The user's description mentioned `"month_over_month"` and `"none"` — these do **not** exist in the current `types.ts` (`ComparisonMode = "year_over_year" | "month_over_year"`). The editor schema will use the values that actually exist in the code. If the team decides to rename or add modes, that is a separate feature.
+- The valid `comparison_preset` values per the current codebase are `"year_over_year"`, `"month_over_year"`, and `"month_over_month"`. YAML key is `comparison_preset` (canonical); deprecated `comparison_mode` is still accepted by the card for backward compatibility. The editor schema uses the values that exist in `ComparisonMode` in `types.ts`.
 - The `ha-form` component and its selector types (`entity`, `text`, `select`) are assumed to be available in the HA frontend environment at runtime, consistent with HA's documented card editor API (as of HA 2024+).
 - The `force_prefix` empty string value (`""`) represents "no SI prefix" (base unit). In the editor dropdown it will be shown as a labeled option (e.g. "None / base unit") rather than a blank item.
 - The editor will only expose the four fields listed in FR-003. Advanced config options (colors, opacities, aggregation, debug, etc.) remain YAML-only for this feature.

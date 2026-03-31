@@ -108,7 +108,7 @@ customElements.define("energy-horizon-card-editor", EnergyHorizonCardEditor);
 **Decision**: On every `value-changed` event from `<ha-form>`, spread `_config` first, then spread the updated form data: `{ ...this._config, ...(e.detail.value) }`.
 
 **Rationale**:
-- `ha-form` only emits the fields it controls (entity, title, comparison_mode, force_prefix). Spreading it on top of `_config` ensures all other fields (colors, opacities, etc.) survive untouched.
+- `ha-form` only emits the fields it controls (entity, title, comparison_preset, force_prefix). Spreading it on top of `_config` ensures all other fields (colors, opacities, etc.) survive untouched.
 - This satisfies SC-006 (zero YAML-only field loss).
 
 **Edge case — YAML text mode**: When switching from YAML text mode back to Visual, the full parsed object replaces `_config` entirely (YAML is authoritative per spec). Form fields then reflect the parsed values.
@@ -123,7 +123,7 @@ customElements.define("energy-horizon-card-editor", EnergyHorizonCardEditor);
 ```
 editor.entity          → "Entity" / "Encja" / "Entität"
 editor.title           → "Title" / "Tytuł" / "Titel"
-editor.comparison_mode → "Comparison Mode" / "Tryb porównania" / "Vergleichsmodus"
+editor.comparison_preset → "Comparison Preset" / "Preset porównania" / "Vergleichs-Preset"
 editor.force_prefix    → "Unit Prefix" / "Prefiks jednostki" / "Einheitenpräfix"
 editor.visual_mode     → "Visual" / "Wizualny" / "Visuell"
 editor.yaml_mode       → "YAML" / "YAML" / "YAML"
@@ -160,7 +160,7 @@ static getConfigElement(): HTMLElement {
 }
 
 static getStubConfig(): Partial<CardConfig> {
-  return { entity: "", comparison_mode: "year_over_year" };
+  return { entity: "", comparison_preset: "year_over_year" };
 }
 ```
 

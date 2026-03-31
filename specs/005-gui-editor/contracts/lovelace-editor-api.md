@@ -27,7 +27,7 @@ static getConfigElement(): HTMLElement {
 
 ```ts
 static getStubConfig(): Partial<CardConfig> {
-  return { entity: "", comparison_mode: "year_over_year" };
+  return { entity: "", comparison_preset: "year_over_year" };
 }
 ```
 
@@ -91,7 +91,7 @@ The editor renders `<ha-form>` with these properties:
 | Property       | Type                            | Value |
 |----------------|---------------------------------|-------|
 | `.schema`      | `ReadonlyArray<HaFormSchema>`   | `EDITOR_SCHEMA` constant |
-| `.data`        | `Partial<CardConfig>`           | `{ entity, title, comparison_mode, force_prefix }` slice of `_config` |
+| `.data`        | `Partial<CardConfig>`           | `{ entity, title, comparison_preset, force_prefix }` slice of `_config` |
 | `.hass`        | `HomeAssistant \| undefined`    | forwarded from editor's `hass` property |
 | `.computeLabel`| `(schema: {name:string}) => string` | `(s) => localize("editor." + s.name)` |
 
@@ -104,6 +104,6 @@ The editor renders `<ha-form>` with these properties:
 
 1. **No YAML-only field loss**: `_config` always contains the complete card config as last set via `setConfig()` or YAML parse. Shallow-merge on `ha-form` changes never removes keys.
 2. **No crash on missing `hass`**: Editor renders (degraded) if `hass` is `undefined`.
-3. **No crash on unknown field values**: `comparison_mode` or `force_prefix` values outside the known union are shown as empty selection; no exception thrown.
+3. **No crash on unknown field values**: `comparison_preset` or `force_prefix` values outside the known union are shown as empty selection; no exception thrown.
 4. **YAML mode blocked on invalid YAML**: Mode switch from yaml → visual blocked until YAML is valid; `_yamlError` drives inline error display.
 5. **Empty entity is valid**: `entity: ""` emits `config-changed` immediately; no suppression.

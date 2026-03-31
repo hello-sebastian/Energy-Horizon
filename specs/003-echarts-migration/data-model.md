@@ -165,9 +165,15 @@ type ECOption = {
     appendTo: HTMLElement;  // FR-010: Shadow DOM fix
   };
 
-  series: EChartsSeries[];  // patrz poniżej
+  series: EChartsSeries[];  // patrz poniżej — kolejność warstw: następny podrozdział
 };
 ```
+
+#### Kolejność warstw (`series`) i legenda
+
+W ECharts **późniejsze** serie w tablicy `series` są domyślnie rysowane **nad** wcześniejszymi. Renderer MUSI więc układać wpisy tak, aby **młodsze okna czasowe przykrywały starsze** (FR-020 / FR-018 w 001-time-windows-engine): praktycznie `context` od najstarszego do najmłodszego okna, potem referencja (solid + opcjonalny dashed overlay null-gap), potem bieżąca (solid + dashed), na końcu prognoza.
+
+Kolejność w **legendzie** jest niezależna: `legend.data` ustawiane jest w kolejności bieżąca → referencja → prognoza (gdy włączona), aby zachować czytelność niezależnie od kolejności malowania.
 
 ---
 

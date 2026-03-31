@@ -17,7 +17,15 @@ describe("energy-horizon-card integration", () => {
       // Custom element not defined in this env (e.g. JSDOM); skip assertion
       return;
     }
-    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_mode: "year_over_year" });
+    // Legacy YAML key (deprecated): must still normalize to comparison_preset internally.
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_mode: "year_over_year"
+    });
+    expect(
+      (el as { _config?: { comparison_preset?: string } })._config?.comparison_preset
+    ).toBe("year_over_year");
     el.hass = {
       language: "pl",
       connection: {
@@ -38,7 +46,7 @@ describe("energy-horizon-card integration", () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
-    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_mode: "year_over_year" });
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
     el.hass = {
       language: "pl",
       connection: {
@@ -60,7 +68,7 @@ describe("energy-horizon-card integration", () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
-    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_mode: "year_over_year" });
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
     el.hass = {
       language: "pl",
       connection: {
@@ -81,7 +89,7 @@ describe("energy-horizon-card integration", () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
-    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_mode: "year_over_year" });
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
     el.hass = {
       language: "en",
       connection: {

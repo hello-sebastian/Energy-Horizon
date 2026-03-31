@@ -2,7 +2,7 @@ import { LitElement, html, css } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { TemplateResult } from "lit";
 import type { HomeAssistant, HaFormSchema } from "../ha-types";
-import type { CardConfig } from "./types";
+import { resolveComparisonPreset, type CardConfig, type CardConfigInput } from "./types";
 import { createLocalize } from "./localize";
 
 type EditorMode = "visual" | "yaml";
@@ -18,19 +18,30 @@ export class EnergyHorizonCardEditor extends LitElement {
 
   @state() private accessor _yamlError: string | null = null;
 
-  setConfig(config: CardConfig): void {
-    this._config = { ...config };
+  setConfig(config: CardConfigInput): void {
+    const raw = config;
+    const comparison_preset = resolveComparisonPreset(raw);
+    const { comparison_mode: _legacyComparisonMode, ...rest } = raw;
+    void _legacyComparisonMode;
+    this._config = {
+      ...rest,
+      comparison_preset
+    } as CardConfig;
     this._editorMode = "visual";
     this._yamlError = null;
     this.requestUpdate();
   }
 
   private _formData(): Partial<CardConfig> {
+    const cfg = this._config;
+    if (!cfg) {
+      return {};
+    }
     return {
-      entity: this._config?.entity ?? "",
-      title: this._config?.title,
-      comparison_mode: this._config?.comparison_mode,
-      force_prefix: this._config?.force_prefix
+      entity: cfg.entity ?? "",
+      title: cfg.title,
+      comparison_preset: resolveComparisonPreset(cfg as CardConfigInput),
+      force_prefix: cfg.force_prefix
     };
   }
 
@@ -60,12 +71,13 @@ export class EnergyHorizonCardEditor extends LitElement {
       { name: "entity", selector: { entity: { domain: "sensor" } } },
       { name: "title", selector: { text: {} } },
       {
-        name: "comparison_mode",
+        name: "comparison_preset",
         selector: {
           select: {
             options: [
               { value: "year_over_year", label: t("editor.year_over_year") },
-              { value: "month_over_year", label: t("editor.month_over_year") }
+              { value: "month_over_year", label: t("editor.month_over_year") },
+              { value: "month_over_month", label: t("editor.month_over_month") }
             ]
           }
         }

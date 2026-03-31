@@ -346,6 +346,47 @@ describe('EChartsRenderer', () => {
       expect(html1).toContain(`${expectedFmt.format(2)} kWh`);
     });
 
+    it("US2: axis tooltip shows at most two value rows for current+reference when extra series are present", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000];
+
+      const rendererConfig = buildBaseRendererConfig({
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        unit: "kWh"
+      });
+
+      const renderer = new EChartsRenderer(container);
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0] + 10, value: 1 }
+      ]);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        rendererConfig,
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption(renderer);
+      const formatter = option.tooltip.formatter as (params: unknown) => string;
+
+      const html = formatter([
+        { dataIndex: 0, seriesName: "Current", data: [0, 1] },
+        { dataIndex: 0, seriesName: "Reference", data: [0, 2] },
+        { dataIndex: 0, seriesName: "Context window", data: [0, 99] }
+      ]);
+      const rows = html.match(/class="tooltip-row"/g);
+      expect(rows?.length ?? 0).toBe(2);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
     it("formats month_over_year header + values with unit and precision", () => {
       const container = document.createElement("div");
       document.body.appendChild(container);
@@ -418,6 +459,65 @@ describe('EChartsRenderer', () => {
       ]);
       expect(html2).toContain(expectedHeader2);
       expect(html2).toContain(`${expectedFmt.format(1.04)} MWh`);
+    });
+
+    it("formats month_over_month tooltip header with day, month, and year", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const ts = Date.UTC(2026, 1, 15);
+      const fullTimeline = [ts];
+
+      const language = "en-US";
+      const numberLocale = "en-US";
+      const precision = 1;
+
+      const rendererConfig = buildBaseRendererConfig({
+        comparisonMode: "month_over_month",
+        language,
+        numberLocale,
+        precision,
+        unit: "kWh"
+      });
+
+      const renderer = new EChartsRenderer(container);
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0]! + 10, value: 5.2 }
+      ]);
+
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        rendererConfig,
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption(renderer);
+      expect(typeof option.tooltip?.formatter).toBe("function");
+
+      const formatter = option.tooltip.formatter as (params: unknown) => string;
+      const expectedFmt = new Intl.NumberFormat(numberLocale, {
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision
+      });
+      const expectedHeader = new Intl.DateTimeFormat(language, {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(new Date(fullTimeline[0]!));
+
+      const html = formatter([
+        {
+          dataIndex: 0,
+          seriesName: "Current",
+          data: [0, 5.2]
+        }
+      ]);
+      expect(html).toContain(expectedHeader);
+      expect(html).toContain(`${expectedFmt.format(5.2)} kWh`);
+
+      renderer.destroy();
+      document.body.removeChild(container);
     });
   });
 
@@ -961,6 +1061,180 @@ describe('EChartsRenderer', () => {
 
       expect(labelAtMax).not.toMatch(/[eE]/);
       expect(labelMid).not.toMatch(/[eE]/);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
+  describe("Series paint order (oldest layers first)", () => {
+    function buildBaseRendererConfig(
+      overrides: Partial<ChartRendererConfig>
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: false,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: true,
+        unit: "kWh",
+        periodLabel: "",
+        ...overrides
+      };
+    }
+
+    function captureOption() {
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as any[];
+      return option as any;
+    }
+
+    it("places solid reference before solid current in series array (ECharts draws later on top)", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2019, 5, 15);
+      const fullTimeline = [day0, day0 + 86400000];
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: [{ timestamp: day0 + 1, value: 10 }],
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 0
+        },
+        reference: {
+          points: [{ timestamp: day0 + 1, value: 20 }],
+          unit: "kWh",
+          periodLabel: "Ref",
+          total: 0
+        },
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        buildBaseRendererConfig({ showLegend: false }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const names = (option.series as any[]).map((s) => s.name as string);
+      const idxRef = names.indexOf("Reference");
+      const idxCur = names.indexOf("Current");
+      expect(idxRef).toBeGreaterThanOrEqual(0);
+      expect(idxCur).toBeGreaterThanOrEqual(0);
+      expect(idxRef).toBeLessThan(idxCur);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("orders context oldest window first, then reference, then current", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2018, 3, 1);
+      const fullTimeline = [day0, day0 + 86400000];
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: [{ timestamp: day0 + 1, value: 1 }],
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 0
+        },
+        reference: {
+          points: [{ timestamp: day0 + 1, value: 2 }],
+          unit: "kWh",
+          periodLabel: "Ref",
+          total: 0
+        },
+        context: [
+          {
+            points: [{ timestamp: day0 + 1, value: 3 }],
+            unit: "kWh",
+            periodLabel: "CtxYounger",
+            total: 0
+          },
+          {
+            points: [{ timestamp: day0 + 1, value: 4 }],
+            unit: "kWh",
+            periodLabel: "CtxOlder",
+            total: 0
+          }
+        ],
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        buildBaseRendererConfig({ showLegend: false }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const names = (option.series as any[]).map((s) => s.name as string);
+      const iOlder = names.indexOf("CtxOlder");
+      const iYounger = names.indexOf("CtxYounger");
+      const iRef = names.indexOf("Reference");
+      const iCur = names.indexOf("Current");
+      expect(iOlder).toBeLessThan(iYounger);
+      expect(iYounger).toBeLessThan(iRef);
+      expect(iRef).toBeLessThan(iCur);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("sets legend.data to Current then Reference (readable order independent of paint order)", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2017, 2, 10);
+      const fullTimeline = [day0, day0 + 86400000];
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: [{ timestamp: day0 + 1, value: 5 }],
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 0
+        },
+        reference: {
+          points: [{ timestamp: day0 + 1, value: 6 }],
+          unit: "kWh",
+          periodLabel: "Ref",
+          total: 0
+        },
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        buildBaseRendererConfig({ showLegend: true }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      expect(option.legend?.data).toEqual(["Current", "Reference"]);
 
       renderer.destroy();
       document.body.removeChild(container);

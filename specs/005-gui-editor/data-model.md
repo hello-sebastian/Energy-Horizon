@@ -15,7 +15,7 @@ interface CardConfig {
   type: string;
   entity: string;                        // FR-003: entity selector field
   title?: string;                        // FR-003: text input field
-  comparison_mode: ComparisonMode;       // FR-003: select field
+  comparison_preset: ComparisonMode;    // FR-003: select field (YAML key; ha-form name)
   force_prefix?: ForcePrefix;           // FR-003: select field
   // ... all other existing fields pass-through (YAML-only in editor)
 }
@@ -23,7 +23,7 @@ interface CardConfig {
 
 **Validation rules**:
 - `entity`: any string (including `""`). Empty string is valid and emitted as-is per spec.
-- `comparison_mode`: `"year_over_year"` | `"month_over_year"`. Unknown values shown as empty selection (no error thrown).
+- `comparison_preset`: `"year_over_year"` | `"month_over_year"` | `"month_over_month"`. Unknown values shown as empty selection (no error thrown). Legacy `comparison_mode` w surowym YAML jest wczytywany przez kartę i mapowany na to pole.
 - `force_prefix`: `ForcePrefix` union. Unknown values shown as empty selection (no error thrown).
 - `title`: any string or `undefined`. Optional.
 
@@ -44,7 +44,7 @@ const EDITOR_SCHEMA: ReadonlyArray<HaFormSchema> = [
     selector: { text: {} },
   },
   {
-    name: "comparison_mode",
+    name: "comparison_preset",
     selector: {
       select: {
         options: [
@@ -76,7 +76,7 @@ const EDITOR_SCHEMA: ReadonlyArray<HaFormSchema> = [
 
 **Field-level constraints**:
 - `entity.selector.entity.domain`: `"sensor"` — HA entity picker is filtered to sensor domain only.
-- `comparison_mode` and `force_prefix` options: values must exactly match `ComparisonMode` and `ForcePrefix` TypeScript types.
+- `comparison_preset` and `force_prefix` options: values must exactly match `ComparisonMode` and `ForcePrefix` TypeScript types.
 
 ---
 
@@ -137,7 +137,7 @@ class EnergyHorizonCardEditor extends LitElement {
 |-------------------------|---------------------|-----------------------------|-----------------------|
 | `editor.entity`         | Entity              | Encja                       | Entität               |
 | `editor.title`          | Title               | Tytuł                       | Titel                 |
-| `editor.comparison_mode`| Comparison Mode     | Tryb porównania             | Vergleichsmodus       |
+| `editor.comparison_preset` | Comparison Preset   | Preset porównania           | Vergleichs-Preset     |
 | `editor.force_prefix`   | Unit Prefix         | Prefiks jednostki           | Einheitenpräfix       |
 | `editor.visual_mode`    | Visual              | Wizualny                    | Visuell               |
 | `editor.yaml_mode`      | YAML                | YAML                        | YAML                  |

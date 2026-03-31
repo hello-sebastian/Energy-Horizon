@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Assumption regarding `comparison_mode` values documented: the user's description used `month_over_month` and `none`, but the codebase defines `"year_over_year" | "month_over_year"`. Spec uses the actual code values and flags the discrepancy explicitly.
+- Assumption regarding `comparison_preset` values documented: canonical YAML key is `comparison_preset` (legacy `comparison_mode` still read); `ComparisonMode` includes `year_over_year`, `month_over_year`, and `month_over_month`.
 - The spec intentionally limits editor scope to 4 fields. Advanced config options remain YAML-only — this is a deliberate scope boundary documented in Assumptions.
 - All items pass. Ready for `/speckit.plan`.

@@ -1,6 +1,51 @@
 import type { ForcePrefix } from '../utils/unit-scaler';
 
-export type ComparisonMode = "year_over_year" | "month_over_year";
+export type ComparisonMode =
+  | "year_over_year"
+  | "month_over_year"
+  | "month_over_month";
+
+export type TimeAnchor =
+  | "start_of_year"
+  | "start_of_month"
+  | "start_of_hour"
+  | "now";
+
+export type WindowAggregation = "day" | "week" | "month" | "hour";
+
+export type WindowRole = "current" | "reference" | "context";
+
+export interface TimeWindowYaml {
+  anchor?: TimeAnchor;
+  offset?: string;
+  duration?: string;
+  step?: string;
+  count?: number;
+  aggregation?: WindowAggregation;
+}
+
+/** Merged preset + YAML before validation / resolution. */
+export interface MergedTimeWindowConfig {
+  anchor?: TimeAnchor;
+  offset?: string;
+  duration?: string;
+  step?: string;
+  count?: number;
+  aggregation?: WindowAggregation;
+  currentEndIsNow?: boolean;
+  referenceFullPeriod?: boolean;
+  periodOffsetYears?: number;
+  comparisonMode?: ComparisonMode;
+}
+
+export interface ResolvedWindow {
+  index: number;
+  id: string;
+  role: WindowRole;
+  start: Date;
+  end: Date;
+  aggregation: WindowAggregation;
+}
 
 export interface CardConfig {
   type: string;
@@ -9,10 +54,14 @@ export interface CardConfig {
   show_title?: boolean;
   icon?: string;
   show_icon?: boolean;
-  comparison_mode: ComparisonMode;
-  aggregation?: "day" | "week" | "month";
+  /** YAML key `comparison_preset`; set by card if omitted (defaults to `year_over_year`). */
+  comparison_preset: ComparisonMode;
+  aggregation?: WindowAggregation;
   period_offset?: number;
+  time_window?: TimeWindowYaml;
   show_forecast?: boolean;
+  /** Alias for `show_forecast` (same meaning). Prefer `show_forecast` in docs. */
+  forecast?: boolean;
   precision?: number;
   debug?: boolean;
   language?: string;
@@ -35,12 +84,38 @@ export interface CardConfig {
   force_prefix?: ForcePrefix;
 }
 
+/**
+ * Raw Lovelace config before normalization in the card's `setConfig`.
+ * Prefer `comparison_preset`; deprecated `comparison_mode` is still accepted.
+ */
+export type CardConfigInput = Omit<CardConfig, "comparison_preset"> & {
+  comparison_preset?: ComparisonMode;
+  /** @deprecated Use `comparison_preset`. */
+  comparison_mode?: ComparisonMode;
+};
+
+/** Resolves YAML `comparison_preset` vs legacy `comparison_mode` (non-empty wins; else `year_over_year`). */
+export function resolveComparisonPreset(
+  raw: Pick<CardConfigInput, "comparison_preset" | "comparison_mode">
+): ComparisonMode {
+  const presetNew =
+    raw.comparison_preset != null &&
+    String(raw.comparison_preset).trim() !== ""
+      ? raw.comparison_preset
+      : undefined;
+  const presetLegacy =
+    raw.comparison_mode != null && String(raw.comparison_mode).trim() !== ""
+      ? raw.comparison_mode
+      : undefined;
+  return presetNew ?? presetLegacy ?? "year_over_year";
+}
+
 export interface ComparisonPeriod {
   current_start: Date;
   current_end: Date;
   reference_start: Date;
   reference_end: Date;
-  aggregation: "day" | "week" | "month";
+  aggregation: WindowAggregation;
   time_zone: string;
 }
 
@@ -83,7 +158,9 @@ export interface CumulativeSeries {
 export interface ComparisonSeries {
   current: CumulativeSeries;
   reference?: CumulativeSeries;
-  aggregation: "day" | "week" | "month";
+  /** Windows with index ≥ 2 — visual only (FR-008). */
+  context?: CumulativeSeries[];
+  aggregation: WindowAggregation;
   time_zone: string;
 }
 
@@ -116,11 +193,15 @@ export interface ForecastStats {
 export interface CardState {
   status: "loading" | "error" | "no-data" | "ready";
   errorMessage?: string;
+  /** Variables for `errorMessage` translation (e.g. `max` for too-many-windows). */
+  errorParams?: Record<string, string | number>;
   comparisonSeries?: ComparisonSeries;
   summary?: SummaryStats;
   forecast?: ForecastStats;
   textSummary?: TextSummary;
   period?: ComparisonPeriod;
+  resolvedWindows?: ResolvedWindow[];
+  mergedTimeWindow?: MergedTimeWindowConfig;
 }
 
 export interface ChartRendererConfig {
@@ -142,10 +223,22 @@ export interface ChartRendererConfig {
   precision: number;
   forecastLabel: string;
   showForecast: boolean;
+  /**
+   * When `false`, hides the reference comparison line. When omitted or `true`, the line is shown
+   * if reference values exist (non-null slots).
+   */
+  showReferenceComparison?: boolean;
   forecastTotal?: number;
   unit: string;
   periodLabel: string;
   /** Timestamp of reference period start (for aligning reference series on timeline). */
   referencePeriodStart?: number;
+  /**
+   * Start timestamps for each plotted window (current, reference, …context), used to align
+   * series on the shared timeline (same order as `ComparisonSeries` layers).
+   */
+  windowAlignStartsMs?: number[];
+  /** True when only one logical window — hides reference-only UI (FR-015). */
+  singleWindowMode?: boolean;
 }
 

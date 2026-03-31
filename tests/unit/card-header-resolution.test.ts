@@ -48,7 +48,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: "My Solar"
       };
 
@@ -76,7 +76,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -101,7 +101,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -113,7 +113,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, undefined);
@@ -140,7 +140,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -166,7 +166,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: "Explicit Title"
       };
 
@@ -178,7 +178,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_title: false
       };
 
@@ -205,7 +205,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: ""
       };
 
@@ -217,7 +217,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: "  My Title  "
       };
 
@@ -231,7 +231,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         icon: "mdi:flash"
       };
 
@@ -259,7 +259,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -281,7 +281,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -308,7 +308,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         icon: "mdi:flash"
       };
 
@@ -320,7 +320,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_icon: false
       };
 
@@ -332,7 +332,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         icon: "  mdi:flash  "
       };
 
@@ -346,7 +346,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: "My Title"
       };
 
@@ -358,7 +358,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         icon: "mdi:flash"
       };
 
@@ -383,7 +383,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_title: false
       };
 
@@ -396,7 +396,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         title: "My Title",
         icon: "mdi:flash"
       };
@@ -409,7 +409,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_title: false,
         show_icon: false
       };
@@ -435,7 +435,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year"
+        comparison_preset: "year_over_year"
       };
 
       const result = resolveTitleLogic(config, hass);
@@ -446,7 +446,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_title: false,
         icon: "mdi:flash"
       };
@@ -459,7 +459,7 @@ describe("Card Header Resolution (US1)", () => {
       const config: CardConfig = {
         type: "custom:energy-horizon-card",
         entity: "sensor.test",
-        comparison_mode: "year_over_year",
+        comparison_preset: "year_over_year",
         show_icon: false,
         title: "My Title"
       };

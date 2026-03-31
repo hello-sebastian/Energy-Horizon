@@ -96,7 +96,7 @@ export function buildFullTimeline(period: ComparisonPeriod): number[]
 - `year_over_year` (tryb karty): `fullEnd = new Date(current_start.getFullYear(), 11, 31)`
 - `month_over_year` (tryb karty): `fullEnd = new Date(current_start.getFullYear(), current_start.getMonth() + 1, 0)` (ostatni dzień miesiąca)
 
-Ponieważ `buildFullTimeline` nie zna `comparison_mode` bezpośrednio (ma tylko `ComparisonPeriod`), `ComparisonPeriod` nie zawiera trybu. **Rozwiązanie**: Przekazać `fullEnd: Date` jako drugi argument.
+Ponieważ `buildFullTimeline` nie zna presetu karty (`comparison_preset` / znormalizowanego trybu) bezpośrednio (ma tylko `ComparisonPeriod`), `ComparisonPeriod` nie zawiera trybu. **Rozwiązanie**: Przekazać `fullEnd: Date` jako drugi argument.
 
 **Zmieniona sygnatura**:
 ```typescript
@@ -233,7 +233,7 @@ const hash = JSON.stringify({ c: currentData, r: referenceData, cfg: rendererCon
 W metodzie `updated()` (gdzie inicializowany jest chart renderer):
 
 ```typescript
-// Oblicz fullEnd na podstawie comparison_mode i period
+// Oblicz fullEnd na podstawie comparison_preset (presetu) i period
 const fullEnd = this._computeFullEnd(this._state.period);
 const fullTimeline = buildFullTimeline(this._state.period, fullEnd);
 
@@ -253,7 +253,7 @@ this._chartRenderer.update(
 
 ```typescript
 private _computeFullEnd(period: ComparisonPeriod): Date {
-  if (this._config.comparison_mode === 'year_over_year') {
+  if (this._config.comparison_preset === 'year_over_year') {
     return new Date(period.current_start.getFullYear(), 11, 31);
   }
   // month_over_year
@@ -273,7 +273,7 @@ private _buildRendererConfig(): ChartRendererConfig {
   const period = this._state.period!;
   const lang = this._config.language ?? this.hass?.language ?? 'en';
 
-  const periodLabel = cfg.comparison_mode === 'year_over_year'
+  const periodLabel = cfg.comparison_preset === 'year_over_year'
     ? String(period.current_start.getFullYear())
     : new Intl.DateTimeFormat(lang, { month: 'long' }).format(period.current_start);
 
@@ -290,7 +290,7 @@ private _buildRendererConfig(): ChartRendererConfig {
     fillReference: cfg.fill_reference ?? false,
     fillCurrentOpacity,
     fillReferenceOpacity,
-    showForecast: cfg.show_forecast ?? false,
+    showForecast: cfg.show_forecast !== false,
     forecastTotal: this._state.forecast?.enabled
       ? this._state.forecast.forecast_total
       : undefined,
@@ -345,7 +345,7 @@ Dodać sekcję dokumentacji nowych opcji YAML (FR-022, FR-023). Przykład:
 | `fill_reference` | boolean | `false` | Wypełnienie pod serią referencyjną |
 | `fill_current_opacity` | number (0–100) | `30` | Krycie wypełnienia serii bieżącej (%) |
 | `fill_reference_opacity` | number (0–100) | `30` | Krycie wypełnienia serii referencyjnej (%) |
-| `show_forecast` | boolean | `false` | Linia prognozy na wykresie |
+| `show_forecast` | boolean | `true` | Linia prognozy na wykresie (`false` = ukryj) |
 ```
 
 ---
@@ -388,6 +388,6 @@ ChartRenderer.update(
 | `fill_reference_opacity` | Jak wyżej | 30 |
 | `fill_current` | Boolean; brak → `true` | `true` |
 | `fill_reference` | Boolean; brak → `false` | `false` |
-| `show_forecast` | Boolean; brak → `false` | `false` |
+| `show_forecast` | Boolean; brak → włączone (`!== false`) | `true` (wizualnie) |
 | Dzisiejszy dzień poza okresem | `_todaySlotIndex = -1` → plugin nic nie rysuje | brak marker/linii |
 | Brak danych dla dziś | `_todayCurrentY = undefined` → kropka pominięta | linia pionowa do chartArea.top |

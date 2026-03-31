@@ -30,7 +30,7 @@
   "editor": {
     "entity": "Entity",
     "title": "Title",
-    "comparison_mode": "Comparison Mode",
+    "comparison_preset": "Comparison Preset",
     "force_prefix": "Unit Prefix",
     "visual_mode": "Visual",
     "yaml_mode": "YAML",
@@ -43,7 +43,7 @@
   "editor": {
     "entity": "Encja",
     "title": "Tytuł",
-    "comparison_mode": "Tryb porównania",
+    "comparison_preset": "Preset porównania",
     "force_prefix": "Prefiks jednostki",
     "visual_mode": "Wizualny",
     "yaml_mode": "YAML",
@@ -56,7 +56,7 @@
   "editor": {
     "entity": "Entität",
     "title": "Titel",
-    "comparison_mode": "Vergleichsmodus",
+    "comparison_preset": "Vergleichs-Preset",
     "force_prefix": "Einheitenpräfix",
     "visual_mode": "Visuell",
     "yaml_mode": "YAML",
@@ -96,7 +96,7 @@
     { name: "entity", selector: { entity: { domain: "sensor" } } },
     { name: "title", selector: { text: {} } },
     {
-      name: "comparison_mode",
+      name: "comparison_preset",
       selector: {
         select: {
           options: [
@@ -135,7 +135,7 @@
 
   **`setConfig(config: CardConfig): void`** — contract: must not throw; args: `config: CardConfig`; returns: `void`; body: `this._config = { ...config }; this._editorMode = "visual"; this._yamlError = null;`
 
-  **`private _formData(): Partial<CardConfig>`** — args: none; returns: `{ entity: this._config?.entity ?? "", title: this._config?.title, comparison_mode: this._config?.comparison_mode, force_prefix: this._config?.force_prefix }`
+  **`private _formData(): Partial<CardConfig>`** — args: none; returns: `{ entity: this._config?.entity ?? "", title: this._config?.title, comparison_preset: …, force_prefix: this._config?.force_prefix }` where `comparison_preset` prefers the canonical field and falls back to legacy `comparison_mode` so older YAML still shows the correct select value
 
   **`private _computeLabel(schema: { name: string }): string`** — args: `schema: { name: string }`; returns: localized label string; body: `const lang = this.hass?.locale?.language ?? (this.hass as unknown as { language?: string })?.language ?? "en"; return createLocalize(lang)("editor." + schema.name);`
 
@@ -172,11 +172,11 @@
     }
 
     static getStubConfig(): Partial<CardConfig> {
-      return { entity: "", comparison_mode: "year_over_year" };
+      return { entity: "", comparison_preset: "year_over_year" };
     }
     ```
 
-**Checkpoint (US1 complete)**: After T005–T007, the card shows an editor panel with 4 labeled fields when the user clicks Edit. No crash when `hass` is undefined. Unknown `force_prefix`/`comparison_mode` values show as empty selection without error.
+**Checkpoint (US1 complete)**: After T005–T007, the card shows an editor panel with 4 labeled fields when the user clicks Edit. No crash when `hass` is undefined. Unknown `force_prefix`/`comparison_preset` values show as empty selection without error.
 
 ---
 
@@ -211,7 +211,7 @@
 
   Edge cases to handle in the same task:
   - `entity: ""` — emit immediately, no suppression (spec edge case)
-  - Unknown enum values in `comparison_mode`/`force_prefix` — shown as empty, no throw (no extra code needed; `ha-form` handles this)
+  - Unknown enum values in `comparison_preset`/`force_prefix` — shown as empty, no throw (no extra code needed; `ha-form` handles this)
 
 **Checkpoint (US2 complete)**: After T008, every form field change emits `config-changed` with the full `CardConfig` (including YAML-only fields). The card re-renders live. `npm run lint` passes.
 
@@ -301,7 +301,7 @@ HA's Lovelace infrastructure handles the actual persistence on "Save". Our contr
 
 - [x] T010 Modify `README.md` — add a "## Visual Editor" section (after the existing configuration section) with the following content:
   - One paragraph stating that the card supports a visual editor accessible via the card's 3-dot menu → Edit
-  - Bullet list of the 4 configurable fields: **Entity** (sensor domain), **Title** (optional display name), **Comparison Mode** (`year_over_year` / `month_over_year`), **Unit Prefix** (`auto` / `none` / `G` / `M` / `k` / base unit / `m` / `µ`)
+  - Bullet list of the 4 configurable fields: **Entity** (sensor domain), **Title** (optional display name), **Comparison Preset** (`year_over_year` / `month_over_year`), **Unit Prefix** (`auto` / `none` / `G` / `M` / `k` / base unit / `m` / `µ`)
   - Note that a YAML text mode toggle is available in the editor for editing the full config including advanced options (colors, opacities, etc.)
   - Note that YAML-only fields are preserved when editing through the visual form
 
@@ -329,7 +329,7 @@ HA's Lovelace infrastructure handles the actual persistence on "Save". Our contr
 
 - [ ] T014 Modify `src/card/energy-horizon-card-editor.ts` — in `force_prefix` options: remove `{ value: "", label: "— (base unit)" }`, add at **first** position `{ value: "", label: "" }`. Keep other options (auto, none, G, M, k, m, µ). Fixes misleading "— (base unit)" label.
 
-- [ ] T015 Modify `src/translations/en.json`, `pl.json`, `de.json` — add keys `editor.year_over_year` and `editor.month_over_year` (EN: "Year over year" / "Month over year"; PL: "Rok do roku" / "Miesiąc do miesiąca rok temu"; DE: "Jahr zu Jahr" / "Monat zum Vorjahr"). Replace static `EDITOR_SCHEMA` with `_buildSchema(lang)` that uses `createLocalize(lang)` for comparison_mode option labels; call `_buildSchema(this._editorLang())` in render. Fixes hardcoded English labels in Polish UI.
+- [ ] T015 Modify `src/translations/en.json`, `pl.json`, `de.json` — add keys `editor.year_over_year` and `editor.month_over_year` (EN: "Year over year" / "Month over year"; PL: "Rok do roku" / "Miesiąc do miesiąca rok temu"; DE: "Jahr zu Jahr" / "Monat zum Vorjahr"). Replace static `EDITOR_SCHEMA` with `_buildSchema(lang)` that uses `createLocalize(lang)` for comparison_preset option labels; call `_buildSchema(this._editorLang())` in render. Fixes hardcoded English labels in Polish UI.
 
 - [ ] T016 Modify `src/card/echarts-renderer.ts` — in `buildOption`, replace:
   ```ts
@@ -342,7 +342,7 @@ HA's Lovelace infrastructure handles the actual persistence on "Save". Our contr
   ```
   Remove hardcoded `1` so Y-axis scales correctly when `force_prefix` is G/M/k (e.g. 300 kWh → 0.0003 GWh, axis max stays data-driven, chart readable).
 
-**Checkpoint (Phase 8)**: Editor opens quickly; title shows "Energy Horizon"; Unit Prefix has empty option first; Comparison Mode labels localized; chart Y-axis does not flatten when changing prefix.
+**Checkpoint (Phase 8)**: Editor opens quickly; title shows "Energy Horizon"; Unit Prefix has empty option first; Comparison Preset labels localized; chart Y-axis does not flatten when changing prefix.
 
 ---
 

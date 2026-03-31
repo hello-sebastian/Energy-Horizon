@@ -87,7 +87,7 @@ class EnergyHorizonCardEditor extends LitElement {
     return {
       entity: this._config?.entity ?? "",
       title: this._config?.title,
-      comparison_mode: this._config?.comparison_mode,
+      comparison_preset: this._config?.comparison_preset,
       force_prefix: this._config?.force_prefix,
     };
   }
@@ -159,7 +159,7 @@ private _switchToYaml(): void {
 - [ ] Pre-existing YAML config values are pre-filled in form fields.
 - [ ] Change entity → card updates live.
 - [ ] Change title → card title updates live.
-- [ ] Change comparison_mode → chart re-renders.
+- [ ] Change comparison_preset → chart re-renders.
 - [ ] Change force_prefix → Y-axis unit updates.
 - [ ] Clear entity (select nothing) → no crash, config-changed emitted with `entity: ""`.
 - [ ] Close editor panel → re-open → form shows last saved values.

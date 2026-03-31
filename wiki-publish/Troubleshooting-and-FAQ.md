@@ -8,7 +8,7 @@ This page combines quick diagnostics, common questions, and current limitations.
 |---|---|---|
 | `Custom element doesn't exist` | Resource not loaded | Resource URL and browser console |
 | Empty chart | Entity has no statistics | Developer Tools -> Statistics |
-| No forecast line | `show_forecast` disabled or not enough data | Set `show_forecast: true` and verify data coverage |
+| No forecast line | `show_forecast: false`, insufficient data, or today outside window | Ensure `show_forecast` is not `false`; verify data coverage and window range |
 | Wrong units | Mixed unit history | Entity unit consistency |
 | Values too large/small | Auto scaling not desired | Use `force_prefix: none` |
 | Card error | Invalid config or entity typo | YAML keys and entity ID |

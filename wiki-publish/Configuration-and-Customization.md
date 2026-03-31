@@ -8,7 +8,7 @@ This page combines full option reference with practical customization notes.
 |---|---|---|---|
 | `type` | string | required | Must be `custom:energy-horizon-card` |
 | `entity` | string | required | Entity with long-term statistics |
-| `comparison_mode` | string | required | `year_over_year` or `month_over_year` |
+| `comparison_preset` | string | required | `year_over_year`, `month_over_year`, or `month_over_month` (in the visual editor this field is labeled **Comparison Preset**) |
 | `aggregation` | string | `day` | `day`, `week`, `month` |
 | `period_offset` | number | `-1` | Reference period shift |
 
@@ -21,7 +21,7 @@ This page combines full option reference with practical customization notes.
 | `icon` | string | entity icon | Custom icon |
 | `show_icon` | boolean | `true` | Show icon |
 | `show_legend` | boolean | `false` | Show ECharts legend |
-| `show_forecast` | boolean | `false` | Show forecast line when forecast is available |
+| `show_forecast` | boolean | `true` | Show forecast line when a forecast is available; set `false` to hide. Alias: `forecast` |
 
 ## Units, precision, language
 
@@ -45,10 +45,11 @@ Notes:
 
 ## Comparison behavior
 
-### `comparison_mode`
+### `comparison_preset` (comparison preset)
 
-- `year_over_year`: compares current period to same period last year
-- `month_over_year`: compares current month to same month in previous year
+- `year_over_year`: compares the current calendar year period to the previous year (same semantics as before the time-windows engine).
+- `month_over_year`: compares the current calendar month to the **same month in the previous year** (not the immediately preceding month).
+- `month_over_month`: compares the **current full calendar month** to the **previous full calendar month** (two consecutive months on the calendar).
 
 ### `aggregation`
 
@@ -59,6 +60,11 @@ Notes:
 ### `period_offset`
 
 Shifts reference period by N comparable periods (`-1` is previous comparable period).
+
+## Migration / Legacy
+
+- **Canonical YAML key**: `comparison_preset` (documented above).
+- **Deprecated**: `comparison_mode` — still accepted for existing dashboards. If both keys are set, **`comparison_preset` takes precedence**. Saving from the visual editor emits `comparison_preset`.
 
 ## Theming and Card-Mod
 
@@ -83,7 +89,7 @@ Card-Mod example:
 ```yaml
 type: custom:energy-horizon-card
 entity: sensor.energy_consumption_total
-comparison_mode: year_over_year
+comparison_preset: year_over_year
 card_mod:
   style: |
     .ehc-chart {

@@ -25,7 +25,7 @@ describe("EnergyHorizonCard localization", () => {
   const baseConfig: CardConfig = {
     type: "custom:energy-horizon-card",
     entity: "sensor.energy",
-    comparison_mode: "year_over_year"
+    comparison_preset: "year_over_year"
   };
 
   it("uses resolved locale language when localizing summary labels (en)", () => {

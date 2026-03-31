@@ -27,6 +27,10 @@ Forecast is available only when:
 - at least 5% of period elapsed,
 - aligned reference slice exists and has valid sum.
 
+### Time Windows (multi-window configs)
+
+The “period length” and elapsed fraction use the **current window** (index 0) bucket count. The chart X-axis may span a **longer** window (longest span among series), but that axis length is **not** used as the forecast denominator. This keeps `computeForecast` consistent with the current-vs-reference pair; see `specs/001-time-windows-engine` (FR-017).
+
 ## Confidence levels
 
 Confidence is derived from elapsed period fraction.

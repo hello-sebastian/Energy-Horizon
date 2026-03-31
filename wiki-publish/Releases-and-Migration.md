@@ -16,6 +16,18 @@ For each release, document:
 4. Required YAML updates
 5. Verification steps after upgrade
 
+## Notable behavior changes
+
+### Forecast line default (`show_forecast`)
+
+The chart forecast overlay is **shown by default** when a forecast can be computed. Users who preferred **no** dashed forecast line without setting any option should add:
+
+```yaml
+show_forecast: false
+```
+
+The boolean alias `forecast` is accepted and merged into `show_forecast` at load time.
+
 ## Practical upgrade flow
 
 1. Read release notes before updating.

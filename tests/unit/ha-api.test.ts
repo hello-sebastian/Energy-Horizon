@@ -394,7 +394,7 @@ describe("computeSummary", () => {
     expect(summary.differencePercent).toBeCloseTo(33.33, 1);
   });
 
-  it("does not set reference_cumulative when reference series is shorter", () => {
+  it("uses time-aligned reference cumulative when reference has fewer points than current", () => {
     const current = makeSeries([5, 10, 15]);
     const reference = makeSeries([4, 8]);
 
@@ -406,9 +406,9 @@ describe("computeSummary", () => {
     const summary = computeSummary(series);
 
     expect(summary.current_cumulative).toBe(15);
-    expect(summary.reference_cumulative).toBeUndefined();
-    expect(summary.difference).toBeUndefined();
-    expect(summary.differencePercent).toBeUndefined();
+    expect(summary.reference_cumulative).toBe(8);
+    expect(summary.difference).toBe(7);
+    expect(summary.differencePercent).toBeCloseTo(87.5, 1);
   });
 });
 

@@ -1,5 +1,7 @@
+import { DateTime } from "luxon";
 import type {
   CardConfig,
+  ComparisonMode,
   ComparisonPeriod,
   LtsStatisticPoint,
   LtsStatisticsQuery,
@@ -9,29 +11,57 @@ import type {
   ComparisonSeries,
   SummaryStats,
   ForecastStats,
-  TextSummary
+  TextSummary,
+  ResolvedWindow,
+  WindowAggregation,
+  MergedTimeWindowConfig
 } from "./types";
 
-export function buildFullTimeline(
-  period: ComparisonPeriod,
-  fullEnd: Date
+/** Timeline slot timestamps (ms) from `rangeStart` through `rangeEnd` for the given aggregation. */
+export function buildTimelineSlots(
+  rangeStart: Date,
+  rangeEnd: Date,
+  aggregation: WindowAggregation,
+  timeZone: string
 ): number[] {
   const timeline: number[] = [];
-  const cursor = new Date(period.current_start);
-  cursor.setHours(0, 0, 0, 0);
+  const zone = { zone: timeZone };
+  const endDt = DateTime.fromJSDate(rangeEnd, zone);
 
-  if (period.aggregation === "day") {
-    while (cursor.getTime() <= fullEnd.getTime()) {
-      timeline.push(cursor.getTime());
-      cursor.setDate(cursor.getDate() + 1);
+  if (aggregation === "hour") {
+    let cursor = DateTime.fromJSDate(rangeStart, zone).startOf("hour");
+    while (cursor.toMillis() <= endDt.toMillis()) {
+      timeline.push(cursor.toMillis());
+      cursor = cursor.plus({ hours: 1 });
     }
-  } else if (period.aggregation === "week") {
-    while (cursor.getTime() <= fullEnd.getTime()) {
-      timeline.push(cursor.getTime());
-      cursor.setDate(cursor.getDate() + 7);
+    return timeline;
+  }
+
+  if (aggregation === "day") {
+    let cursor = DateTime.fromJSDate(rangeStart, zone).startOf("day");
+    while (cursor.toMillis() <= endDt.toMillis()) {
+      timeline.push(cursor.toMillis());
+      cursor = cursor.plus({ days: 1 });
     }
-  } else if (period.aggregation === "month") {
+    return timeline;
+  }
+
+  if (aggregation === "week") {
+    let cursor = DateTime.fromJSDate(rangeStart, zone);
+    while (cursor.toMillis() <= endDt.toMillis()) {
+      timeline.push(cursor.toMillis());
+      cursor = cursor.plus({ weeks: 1 });
+    }
+    return timeline;
+  }
+
+  // Month slots: keep native `Date` calendar math to match legacy chart behavior
+  // (tests and card use `new Date(y, m, d)` local dates; mixing with Luxon+UTC shifts boundaries).
+  {
+    const cursor = new Date(rangeStart.getTime());
+    cursor.setHours(0, 0, 0, 0);
     cursor.setDate(1);
+    const fullEnd = new Date(rangeEnd.getTime());
     while (
       cursor.getFullYear() < fullEnd.getFullYear() ||
       (cursor.getFullYear() === fullEnd.getFullYear() &&
@@ -41,8 +71,160 @@ export function buildFullTimeline(
       cursor.setMonth(cursor.getMonth() + 1);
     }
   }
-
   return timeline;
+}
+
+/**
+ * Slot count for one resolved window — use as `periodTotalBuckets` for {@link computeForecast}.
+ * Chart X-axis may use a longer span (longest window, FR-009); forecast progress must use
+ * the current window (index 0) only.
+ */
+export function countBucketsForWindow(
+  window: ResolvedWindow,
+  timeZone: string
+): number {
+  return buildTimelineSlots(
+    window.start,
+    window.end,
+    window.aggregation,
+    timeZone
+  ).length;
+}
+
+export function buildFullTimeline(
+  period: ComparisonPeriod,
+  fullEnd: Date
+): number[] {
+  return buildTimelineSlots(
+    period.current_start,
+    fullEnd,
+    period.aggregation,
+    period.time_zone
+  );
+}
+
+/** Longest span (by wall-clock) drives slot count; aggregation follows window 0 (current). */
+export function buildFullTimelineForWindows(
+  windows: ResolvedWindow[],
+  timeZone: string
+): { timeline: number[]; alignStartsMs: number[] } {
+  if (windows.length === 0) {
+    return { timeline: [], alignStartsMs: [] };
+  }
+  const primaryAgg = windows[0]!.aggregation;
+  let bestIdx = 0;
+  let bestSpan = -1;
+  for (let i = 0; i < windows.length; i++) {
+    const w = windows[i]!;
+    const span = w.end.getTime() - w.start.getTime();
+    if (span > bestSpan) {
+      bestSpan = span;
+      bestIdx = i;
+    }
+  }
+  const longest = windows[bestIdx]!;
+  const timeline = buildTimelineSlots(
+    longest.start,
+    longest.end,
+    primaryAgg,
+    timeZone
+  );
+  return {
+    timeline,
+    alignStartsMs: windows.map((w) => w.start.getTime())
+  };
+}
+
+/** YoY/MoY preset keeps calendar axis on the current period; custom multi-window uses longest span (FR-009). */
+export function buildChartTimeline(
+  windows: ResolvedWindow[],
+  merged: MergedTimeWindowConfig,
+  timeZone: string,
+  comparisonMode: ComparisonMode
+): {
+  timeline: number[];
+  alignStartsMs: number[];
+  /** Denominator for `computeForecast` — full current-window bucket count, not always `timeline.length` when windows differ in length. */
+  forecastPeriodBuckets: number;
+} {
+  const alignStartsMs = windows.map((w) => w.start.getTime());
+  const legacyPreset =
+    !!merged.currentEndIsNow &&
+    !!merged.referenceFullPeriod &&
+    windows.length === 2;
+
+  if (legacyPreset) {
+    const period = comparisonPeriodFromResolvedWindows(
+      windows,
+      timeZone,
+      windows[0]!.aggregation
+    );
+    const startLuxon = DateTime.fromJSDate(period.current_start, {
+      zone: timeZone
+    });
+    const fullEnd =
+      comparisonMode === "year_over_year"
+        ? DateTime.fromObject(
+            { year: startLuxon.year, month: 12, day: 31 },
+            { zone: timeZone }
+          ).endOf("day")
+        : startLuxon.endOf("month");
+
+    const timeline = buildTimelineSlots(
+      period.current_start,
+      fullEnd.toJSDate(),
+      period.aggregation,
+      timeZone
+    );
+    return {
+      timeline,
+      alignStartsMs,
+      forecastPeriodBuckets: timeline.length
+    };
+  }
+
+  const { timeline, alignStartsMs: align } =
+    buildFullTimelineForWindows(windows, timeZone);
+  const forecastPeriodBuckets =
+    windows.length > 0 ? countBucketsForWindow(windows[0]!, timeZone) : 0;
+  return { timeline, alignStartsMs: align, forecastPeriodBuckets };
+}
+
+export function comparisonPeriodFromResolvedWindows(
+  windows: ResolvedWindow[],
+  timeZone: string,
+  aggregation: WindowAggregation
+): ComparisonPeriod {
+  const w0 = windows[0]!;
+  const w1 = windows[1];
+  return {
+    current_start: w0.start,
+    current_end: w0.end,
+    reference_start: w1?.start ?? w0.start,
+    reference_end: w1?.end ?? w0.end,
+    aggregation,
+    time_zone: timeZone
+  };
+}
+
+const LTS_PERIOD_MAP: Record<WindowAggregation, LtsStatisticsQuery["period"]> = {
+  day: "day",
+  week: "week",
+  month: "month",
+  hour: "hour"
+};
+
+export function buildLtsQueriesForWindows(
+  windows: ResolvedWindow[],
+  entityId: string
+): LtsStatisticsQuery[] {
+  return windows.map((w) => ({
+    type: "recorder/statistics_during_period",
+    start_time: w.start.toISOString(),
+    end_time: w.end.toISOString(),
+    statistic_ids: [entityId],
+    period: LTS_PERIOD_MAP[w.aggregation]
+  }));
 }
 
 export function buildComparisonPeriod(
@@ -58,7 +240,7 @@ export function buildComparisonPeriod(
   let reference_start: Date;
   let reference_end: Date;
 
-  if (config.comparison_mode === "year_over_year") {
+  if (config.comparison_preset === "year_over_year") {
     const year = current.getFullYear();
 
     current_start = new Date(year, 0, 1, 0, 0, 0, 0);
@@ -96,19 +278,12 @@ export function buildLtsQuery(
   period: ComparisonPeriod,
   entityId: string
 ): LtsStatisticsQuery {
-  const periodMap: Record<ComparisonPeriod["aggregation"], LtsStatisticsQuery["period"]> =
-    {
-      day: "day",
-      week: "week",
-      month: "month"
-    };
-
   return {
     type: "recorder/statistics_during_period",
     start_time: period.current_start.toISOString(),
     end_time: period.current_end.toISOString(),
     statistic_ids: [entityId],
-    period: periodMap[period.aggregation]
+    period: LTS_PERIOD_MAP[period.aggregation]
   };
 }
 
@@ -237,17 +412,45 @@ function toCumulativeSeries(
   };
 }
 
+/**
+ * Cumulative reference value at the same aligned time as the last current point
+ * (same periodAlignMs logic as {@link computeForecast} / chart).
+ */
+export function referenceCumulativeAtAlignedCurrentEnd(
+  currentPoints: TimeSeriesPoint[],
+  refPoints: TimeSeriesPoint[]
+): number | undefined {
+  if (currentPoints.length === 0 || refPoints.length === 0) {
+    return undefined;
+  }
+  const periodAlignMs =
+    currentPoints[0]!.timestamp - refPoints[0]!.timestamp;
+  const lastTs = currentPoints[currentPoints.length - 1]!.timestamp;
+  let bestIdx = -1;
+  for (let i = refPoints.length - 1; i >= 0; i--) {
+    const alignedTs = refPoints[i]!.timestamp + periodAlignMs;
+    if (alignedTs <= lastTs) {
+      bestIdx = i;
+      break;
+    }
+  }
+  if (bestIdx === -1) {
+    return undefined;
+  }
+  return refPoints[bestIdx]!.value;
+}
+
 export function computeSummary(series: ComparisonSeries): SummaryStats {
   const currentPoints = series.current.points;
   const current_cumulative =
     currentPoints[currentPoints.length - 1]?.value ?? 0;
 
   let reference_cumulative: number | undefined;
-  if (series.reference && series.reference.points.length >= currentPoints.length) {
-    const refPoints = series.reference.points;
-    reference_cumulative =
-      refPoints[currentPoints.length - 1]?.value ??
-      refPoints[refPoints.length - 1]?.value;
+  if (series.reference?.points?.length) {
+    reference_cumulative = referenceCumulativeAtAlignedCurrentEnd(
+      currentPoints,
+      series.reference.points
+    );
   }
 
   let difference: number | undefined;

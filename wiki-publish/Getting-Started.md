@@ -43,14 +43,21 @@ type: module
 ```yaml
 type: custom:energy-horizon-card
 entity: sensor.your_energy_statistic
-comparison_mode: year_over_year
+comparison_preset: year_over_year
 aggregation: day
 ```
 
-Optional forecast line:
+The forecast line on the chart is **on by default**. Set `show_forecast: false` only if you want to hide it.
+
+### Optional: compare consecutive months
+
+If you want **this calendar month** vs the **previous full month** (not “same month last year”), use:
 
 ```yaml
-show_forecast: true
+type: custom:energy-horizon-card
+entity: sensor.your_energy_statistic
+comparison_preset: month_over_month
+aggregation: day
 ```
 
 ## 4) Choose the right entity
@@ -82,3 +89,7 @@ After saving card config, verify:
 - unit is what you expect (for example `kWh`).
 
 If not, go to [Troubleshooting and FAQ](Troubleshooting-and-FAQ).
+
+## Migration / Legacy
+
+Older examples may use `comparison_mode` instead of `comparison_preset`. Both keys are still read; prefer **`comparison_preset`** in new YAML. If both are set, **`comparison_preset` wins**. See [Configuration and Customization](Configuration-and-Customization.md#migration--legacy).

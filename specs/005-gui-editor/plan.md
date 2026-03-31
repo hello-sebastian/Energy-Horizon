@@ -7,7 +7,7 @@
 
 ## Summary
 
-Implement a Lovelace card editor GUI for `EnergyHorizonCard` that exposes four configuration fields (`entity`, `title`, `comparison_mode`, `force_prefix`) via `<ha-form>`, with live preview, full YAML-only field preservation, a Visual/YAML toggle mode, and localized labels. Communication uses the standard HA `config-changed` CustomEvent (`bubbles: true, composed: true`). No HA-specific helper packages are added.
+Implement a Lovelace card editor GUI for `EnergyHorizonCard` that exposes four configuration fields (`entity`, `title`, `comparison_preset`, `force_prefix`) via `<ha-form>`, with live preview, full YAML-only field preservation, a Visual/YAML toggle mode, and localized labels. Communication uses the standard HA `config-changed` CustomEvent (`bubbles: true, composed: true`). No HA-specific helper packages are added.
 
 ---
 

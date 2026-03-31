@@ -16,8 +16,9 @@ type: "custom:energy-horizon-card"
 # Wymagane
 entity: sensor.energy_consumption   # string — ID encji HA (statistic_id)
 
-# Tryb porównania (wymagany)
-comparison_mode: year_over_year      # "year_over_year" | "month_over_year"
+# Preset porównania (wymagany po normalizacji; kanoniczny klucz YAML)
+comparison_preset: year_over_year      # "year_over_year" | "month_over_year" | "month_over_month"
+# Legacy (nadal wczytywany): comparison_mode — jeśli podano oba, wygrywa comparison_preset
 
 # --- Opcje ogólne ---
 title: "Moje zużycie"               # string? — tytuł karty; brak = friendly_name encji
@@ -31,7 +32,7 @@ period_offset: -1                    # number? — offset okresu referencyjnego 
 precision: 1                         # number? — miejsca po przecinku; domyślnie: 1
 
 # --- Opcje prognozy ---
-show_forecast: false                 # boolean? — linia prognozy na wykresie; domyślnie: false
+show_forecast: true                  # boolean? — linia prognozy na wykresie; domyślnie: true; false = ukryj. Alias: forecast
 
 # --- Opcje null gap (łączenie braków) ---
 connect_nulls: true                 # boolean? — rysuje przerywane interpolacje w lukach (sloty z brakami danych); domyślnie: true
@@ -61,7 +62,8 @@ debug: false                         # boolean? — logowanie diagnostyczne do k
 |---|---|---|---|---|
 | `type` | string | — | ✅ | Zawsze `"custom:energy-horizon-card"` |
 | `entity` | string | — | ✅ | ID encji HA (statistic_id) |
-| `comparison_mode` | `"year_over_year"` \| `"month_over_year"` | — | ✅ | Tryb porównania |
+| `comparison_preset` | `"year_over_year"` \| `"month_over_year"` \| `"month_over_month"` | — | ✅ | Preset porównania (kanoniczny klucz YAML) |
+| `comparison_mode` | (jak wyżej) | — | — | **Deprecated** — alias legacy; gdy oba klucze obecne, obowiązuje `comparison_preset` |
 | `title` | string | friendly_name encji | — | Tytuł wyświetlany na karcie |
 | `show_title` | boolean | `true` | — | Czy wyświetlać tytuł |
 | `icon` | string | ikona z encji | — | Ikona MDI (np. `mdi:lightning-bolt`) |
@@ -69,7 +71,7 @@ debug: false                         # boolean? — logowanie diagnostyczne do k
 | `aggregation` | `"day"` \| `"week"` \| `"month"` | `"day"` | — | Jednostka agregacji osi X |
 | `period_offset` | number | `-1` | — | Offset roku/okresu referencyjnego |
 | `precision` | number | `1` | — | Liczba miejsc dziesiętnych w wartościach |
-| `show_forecast` | boolean | `false` | — | **US5**: Linia prognozy na wykresie |
+| `show_forecast` | boolean | `true` | — | **US5**: Linia prognozy na wykresie (`false` = ukryj); alias: `forecast` |
 | `connect_nulls` | boolean | `true` | — | Włącza/wyłącza rysowanie przerywanej interpolacji w lukach dla `null` (brak danych) |
 | `primary_color` | string (CSS color) | `--accent-color` HA | — | **US4**: Kolor linii serii bieżącej |
 | `fill_current` | boolean | `true` | — | **US3**: Wypełnienie pod serią bieżącą |
@@ -88,9 +90,9 @@ Wszystkie nowe opcje mają wartości domyślne — **brak zmian łamiących komp
 Istniejące konfiguracje działają bez modyfikacji:
 - `fill_current: true` (domyślna) — wygląd nieznacznie zmieniony (pojawia się fill pod bieżącą serią)
 - `primary_color` (brak) — kolor akcentu HA jak poprzednio
-- `show_forecast: false` (domyślna) — bez zmian
+- `show_forecast` — domyślnie **włączone** (linia prognozy na wykresie, gdy prognoza jest dostępna); użytkownicy preferujący brak linii bez ustawiania opcji powinni dodać `show_forecast: false`
 
-**Jedyna widoczna różnica dla istniejących użytkowników**: Domyślne `fill_current: true` powoduje pojawienie się półprzezroczystego wypełnienia (30%) pod serią bieżącą po aktualizacji. Jeśli użytkownik tego nie chce, może ustawić `fill_current: false`.
+**Widoczne różnice dla istniejących użytkowników**: (1) Domyślne `fill_current: true` powoduje pojawienie się półprzezroczystego wypełnienia (30%) pod serią bieżącą po aktualizacji. Jeśli użytkownik tego nie chce, może ustawić `fill_current: false`. (2) Domyślnie włączona linia prognozy na wykresie — aby ją ukryć jak wcześniej (bez jawnej opcji), ustaw `show_forecast: false`.
 
 ---
 
@@ -101,7 +103,7 @@ Istniejące konfiguracje działają bez modyfikacji:
 ```yaml
 type: "custom:energy-horizon-card"
 entity: sensor.energy_consumption
-comparison_mode: year_over_year
+comparison_preset: year_over_year
 fill_current: false   # wyłącz nowe domyślne wypełnienie
 ```
 
@@ -110,7 +112,7 @@ fill_current: false   # wyłącz nowe domyślne wypełnienie
 ```yaml
 type: "custom:energy-horizon-card"
 entity: sensor.energy_consumption
-comparison_mode: year_over_year
+comparison_preset: year_over_year
 aggregation: day
 primary_color: "#E53935"
 fill_current: true
@@ -125,7 +127,7 @@ show_forecast: true
 ```yaml
 type: "custom:energy-horizon-card"
 entity: sensor.energy_consumption
-comparison_mode: month_over_year
+comparison_preset: month_over_year
 aggregation: day
 fill_current: true
 fill_reference: true
