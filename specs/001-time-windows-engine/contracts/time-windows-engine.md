@@ -20,7 +20,7 @@ W konfiguracji Lovelace kanoniczny klucz YAML to `comparison_preset` (legacy: `c
 - **Input**: scalona konfiguracja po `mergeTimeWindowConfig` + efektywne `aggregation` z poziomu karty (`CardConfig`).
 - **Output**: brak (void) albo **rzuca** `Error` z czytelnym komunikatem po angielsku (wzór kart Lovelace).
 - **Behavior**: **Gwarancja publiczna** — naruszenie twardych limitów **rekordera / LTS** (minimalna rozdzielczość **1 godzina**) powoduje **fail-fast** w `setConfig` zanim karta ustawi stan ładowania lub wywoła zapytania LTS:
-  - `anchor` spoza zbioru: `start_of_year`, `start_of_month`, `start_of_hour`, `now`;
+  - `anchor` spoza zbioru: `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`;
   - `duration` krótsza niż 1 h po parsowaniu;
   - jawna `aggregation` spoza `hour` \| `day` \| `week` \| `month` (wartość „brak” jest OK — wtedy domyślne `day` nie jest autokorektą błędnego tokenu).
 - **Brak autokorekty** — wyłącznie odrzucenie z wyjątkiem.

@@ -21,6 +21,9 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Fixed
 - **ECharts renderer refactors** (series layering and legend ordering).
 –  **5000** max timeline slots per series with localized error and optional `debug` console details.
+- **Auto-aggregation** for **one-hour** (or shorter) windows now selects **`hour`** for LTS instead of incorrectly preferring **`month`**, which could yield empty or wrong charts for hourly `time_window` configs.
+- **Summary period labels** for **custom** `time_window` (non-legacy multi-window YAML) now show each window’s **date range** instead of only the calendar year from the default `year_over_year` preset.
+- **LTS anchors**: `start_of_day` and `start_of_week` are **allowed** (`start_of_week` aligns to **Monday** / Luxon ISO week, same as `startOf("week")`).
 
 
 ## [0.3.1-beta] - First public beta release 

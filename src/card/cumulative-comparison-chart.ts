@@ -697,23 +697,42 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     if (this._state.status === "ready" && this._state.period) {
       const lang = this._config.language ?? this.hass?.language ?? "en";
-      let currentSuffix = buildPeriodSuffix(
-        this._state.period.current_start,
-        this._config.comparison_preset,
-        lang
-      );
-      let referenceSuffix = buildPeriodSuffix(
-        this._state.period.reference_start,
-        this._config.comparison_preset,
-        lang
-      );
+      const merged = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
       const rw = this._state.resolvedWindows;
-      if (!currentSuffix && rw?.[0]) {
+      const legacyTwoWindowPreset =
+        merged?.currentEndIsNow === true &&
+        merged?.referenceFullPeriod === true &&
+        rw?.length === 2;
+
+      let currentSuffix: string;
+      let referenceSuffix: string;
+
+      if (!legacyTwoWindowPreset && rw?.[0]) {
         currentSuffix = formatWindowRangeSuffix(rw[0], lang);
+      } else {
+        currentSuffix = buildPeriodSuffix(
+          this._state.period.current_start,
+          this._config.comparison_preset,
+          lang
+        );
+        if (!currentSuffix && rw?.[0]) {
+          currentSuffix = formatWindowRangeSuffix(rw[0], lang);
+        }
       }
-      if (!referenceSuffix && rw?.[1]) {
+
+      if (!legacyTwoWindowPreset && rw?.[1]) {
         referenceSuffix = formatWindowRangeSuffix(rw[1], lang);
+      } else {
+        referenceSuffix = buildPeriodSuffix(
+          this._state.period.reference_start,
+          this._config.comparison_preset,
+          lang
+        );
+        if (!referenceSuffix && rw?.[1]) {
+          referenceSuffix = formatWindowRangeSuffix(rw[1], lang);
+        }
       }
+
       currentPeriodLabel = `${currentPeriodLabel} (${currentSuffix})`;
       referencePeriodLabel = `${referencePeriodLabel} (${referenceSuffix})`;
     }

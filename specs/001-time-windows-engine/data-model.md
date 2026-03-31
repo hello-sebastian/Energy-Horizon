@@ -15,7 +15,7 @@
 
 Pola logiczne (nazwy dokładne do uzgodnienia w implementacji — spójne z wiki):
 
-- `anchor`: enum string, np. `start_of_year`, `start_of_month`, `start_of_hour`, `now`
+- `anchor`: enum string, np. `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`
 - `offset`: opcjonalny string duration, np. `+9M`
 - `duration`: string, np. `1y`, `1M`, `7d`, `1h`
 - `step`: string (dodatni krok wstecz), np. `1y`, `1M`, `1h`
@@ -46,7 +46,7 @@ Struktura **wewnętrzna** (nie eksponowana w YAML):
 | `count` ∈ [1, 24] | FR-016 |
 | `step` po parsowaniu > 0 (żadnych zerowych/ujemnych) | Edge cases + FR-003 |
 | Wymagane pola do wyliczenia okien obecne | FR-014 |
-| **`anchor`** (jeśli podany): wyłącznie `start_of_year`, `start_of_month`, `start_of_hour`, `now` (zgodnie z resolve); inne wartości → błąd (hard limits LTS) | [spec.md — Hard limits / LTS](./spec.md) |
+| **`anchor`** (jeśli podany): wyłącznie `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now` (zgodnie z resolve); inne wartości → błąd (hard limits LTS) | [spec.md — Hard limits / LTS](./spec.md) |
 | **`duration`**: po parsowaniu skuteczna długość ≥ **1 h** (≥ 3 600 000 ms); poniżej → błąd | Hard limits LTS |
 | **`aggregation`** (efektywna po merge z `CardConfig.aggregation`): dokładnie `hour` \| `day` \| `week` \| `month` albo brak (domyślne `day` tylko gdy pole nie podane); inny string z YAML → błąd | Hard limits LTS |
 | Błąd → `ValidationResult { ok: false, errorKey: string, params?: Record }` | Konstytucja + FR-014 |

@@ -7,6 +7,8 @@ const MIN_DURATION_MS = 60 * 60 * 1000;
 const LTS_ALLOWED_ANCHORS = new Set([
   "start_of_year",
   "start_of_month",
+  "start_of_week",
+  "start_of_day",
   "start_of_hour",
   "now"
 ]);
@@ -22,7 +24,7 @@ export function assertLtsHardLimits(merged: MergedTimeWindowConfig): void {
   const anchorRaw = merged.anchor?.trim();
   if (anchorRaw && !LTS_ALLOWED_ANCHORS.has(anchorRaw)) {
     throw new Error(
-      `Energy Horizon: invalid time anchor for LTS (long-term statistics). Allowed: start_of_year, start_of_month, start_of_hour, now. Got: "${anchorRaw}".`
+      `Energy Horizon: invalid time anchor for LTS (long-term statistics). Allowed: start_of_year, start_of_month, start_of_week, start_of_day, start_of_hour, now. Got: "${anchorRaw}".`
     );
   }
 

@@ -10,6 +10,8 @@ export type ComparisonMode =
 export type TimeAnchor =
   | "start_of_year"
   | "start_of_month"
+  | "start_of_week"
+  | "start_of_day"
   | "start_of_hour"
   | "now";
 

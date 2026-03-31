@@ -127,4 +127,57 @@ describe("resolveTimeWindows", () => {
     expect(w[0]!.start.getUTCHours()).toBe(14);
     expect(w[5]!.start.getUTCHours()).toBe(9);
   });
+
+  it("start_of_day: window 0 begins at local midnight", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_day",
+        duration: "1d",
+        step: "1d",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+
+    const now = DateTime.fromObject(
+      { year: 2026, month: 3, day: 31, hour: 15, minute: 30 },
+      { zone: TZ }
+    ).toJSDate();
+    const w = resolveTimeWindows(v.merged, now, TZ, 24, "day");
+    expect(w[0]!.start.getUTCHours()).toBe(0);
+    expect(w[0]!.start.getUTCMinutes()).toBe(0);
+    expect(w[0]!.start.getUTCDate()).toBe(31);
+    expect(w[0]!.start.getUTCMonth()).toBe(2);
+  });
+
+  it("start_of_week: window 0 begins Monday 00:00 UTC (Luxon ISO week)", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_week",
+        duration: "1w",
+        step: "1w",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "week" });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+
+    // Wednesday 2026-04-01 — week starts Monday 2026-03-30
+    const now = DateTime.fromObject(
+      { year: 2026, month: 4, day: 1, hour: 14 },
+      { zone: TZ }
+    ).toJSDate();
+    const w = resolveTimeWindows(v.merged, now, TZ, 24, "week");
+    expect(w[0]!.start.getUTCDay()).toBe(1);
+    expect(w[0]!.start.getUTCDate()).toBe(30);
+    expect(w[0]!.start.getUTCMonth()).toBe(2);
+    expect(w[0]!.start.getUTCHours()).toBe(0);
+  });
 });

@@ -37,11 +37,17 @@ function slotCount(aggregation: WindowAggregation, durationMs: number): number {
 
 /**
  * Picks an LTS aggregation from window duration so bucket count is ~20–100 when possible;
- * otherwise chooses the step whose bucket count is closest to 50 (tie → coarser).
+ * otherwise chooses the step whose bucket count is closest to 50 (tie → finest: hour).
  */
 export function pickAutoAggregation(durationMs: number): WindowAggregation {
   if (!Number.isFinite(durationMs) || durationMs <= 0) {
     return "day";
+  }
+
+  // LTS minimum bucket is 1h; a window of ≤1h must map to hourly statistics (all coarser
+  // slotCounts are 1 and would tie-break wrongly without this guard).
+  if (durationMs <= MS_HOUR) {
+    return "hour";
   }
 
   for (const agg of COARSE_TO_FINE) {
@@ -61,7 +67,7 @@ export function pickAutoAggregation(durationMs: number): WindowAggregation {
     const score = Math.abs(n - 50);
     if (
       score < bestScore ||
-      (score === bestScore && rank < bestRank)
+      (score === bestScore && rank > bestRank)
     ) {
       bestScore = score;
       best = agg;

@@ -17,7 +17,7 @@
 
 Dane karty pochodzą z **rekordera / statystyk HA (LTS)**. Minimalna rozdzielczość statystyk w tym modelu to **1 godzina** — karta nie wspiera ziarnistości krótszej niż godzina.
 
-- **Kotwice (`anchor`)**: dozwolone są wyłącznie wartości zgodne z silnikiem rozwiązywania okien: `start_of_year`, `start_of_month`, `start_of_hour`, `now`. Kotwice „sub-godzinowe” (np. `start_of_minute`) są **niedozwolone**.
+- **Kotwice (`anchor`)**: dozwolone są wyłącznie wartości zgodne z silnikiem rozwiązywania okien: `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`. `start_of_week` odpowiada **`startOf("week")` w Luxon** (tydzień ISO od poniedziałku). Kotwice „sub-godzinowe” (np. `start_of_minute`) są **niedozwolone**.
 - **`duration`**: po sparsowaniu musi odpowiadać co najmniej **1 godzinie** rzeczywistego trwania (np. `30m` — odrzucenie; `1h`, `90m` — OK).
 - **`aggregation` (efektywna po scaleniu z `time_window` i poziomem karty)**: musi być jednym z `hour`, `day`, `week`, `month` albo **brak** (wtedy dalsze domyślne `day` jest nadal brakiem jawnej wartości użytkownika, nie autokorektą błędnego tokena). Dowolna inna wartość z YAML (np. `5m`) jest **odrzucana**.
 - **Bez autokorekty**: błędnych wartości nie zaokrąglamy w górę — tylko odrzucenie z błędem.

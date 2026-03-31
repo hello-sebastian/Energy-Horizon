@@ -36,7 +36,7 @@ describe("assertLtsHardLimits", () => {
     const merged = mergeTimeWindowConfig({
       mode: "year_over_year",
       timeWindowPartial: {
-        anchor: "start_of_week" as unknown as "start_of_year",
+        anchor: "start_of_quarter" as unknown as "start_of_year",
         duration: "1h",
         step: "1h",
         count: 2
@@ -44,6 +44,32 @@ describe("assertLtsHardLimits", () => {
       periodOffset: -1
     });
     expect(() => assertLtsHardLimits(merged)).toThrow(/invalid time anchor/);
+  });
+
+  it("allows start_of_day and start_of_week anchors", () => {
+    const dayMerged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_day",
+        duration: "1d",
+        step: "1d",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    expect(() => assertLtsHardLimits(dayMerged)).not.toThrow();
+
+    const weekMerged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_week",
+        duration: "1w",
+        step: "1w",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    expect(() => assertLtsHardLimits(weekMerged)).not.toThrow();
   });
 
   it("throws for duration below 1 hour (e.g. 30m)", () => {

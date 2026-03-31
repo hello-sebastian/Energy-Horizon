@@ -20,6 +20,10 @@ describe("pickAutoAggregation", () => {
     expect(pickAutoAggregation(ms)).toBe("hour");
   });
 
+  it("chooses hour for exactly one hour window (LTS minimum bucket)", () => {
+    expect(pickAutoAggregation(MS_HOUR)).toBe("hour");
+  });
+
   it("returns day for non-finite or non-positive duration", () => {
     expect(pickAutoAggregation(Number.NaN)).toBe("day");
     expect(pickAutoAggregation(-1)).toBe("day");

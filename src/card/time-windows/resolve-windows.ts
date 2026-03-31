@@ -87,6 +87,10 @@ function resolveAnchorPoint(anchor: string, now: DateTime): DateTime {
       return now.startOf("year");
     case "start_of_month":
       return now.startOf("month");
+    case "start_of_week":
+      return now.startOf("week");
+    case "start_of_day":
+      return now.startOf("day");
     case "start_of_hour":
       return now.startOf("hour");
     case "now":

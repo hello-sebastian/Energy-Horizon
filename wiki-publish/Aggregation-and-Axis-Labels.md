@@ -4,7 +4,7 @@ This page summarizes **automatic aggregation**, **optional forced X-axis format*
 
 ## Automatic aggregation (`aggregation` omitted)
 
-After **preset → `time_window` → card `aggregation`** merge, if **`aggregation` is still unset**, the card chooses **`hour`**, **`day`**, **`week`**, or **`month`** from the merged window **`duration`** so the number of timeline slots is typically in a **~20–100** readability band (when possible with LTS-supported steps).
+After **preset → `time_window` → card `aggregation`** merge, if **`aggregation` is still unset**, the card chooses **`hour`**, **`day`**, **`week`**, or **`month`** from the merged window **`duration`** so the number of timeline slots is typically in a **~20–100** readability band (when possible with LTS-supported steps). **Merged window duration of one hour or less** always selects **`hour`** so hourly windows use LTS hourly statistics.
 
 If you set **`aggregation`** at card level or under `time_window`, that value wins per the merge rules and auto-selection is **not** applied.
 

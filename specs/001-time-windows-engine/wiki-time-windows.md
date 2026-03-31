@@ -25,7 +25,7 @@ Dane wykresu pochodzą z **statystyk długoterminowych (LTS) / rekordera** Home 
 
 Powiązanie z tabelą parametrów powyżej:
 
-- **Nie używaj** kotwic innych niż `start_of_year`, `start_of_month`, `start_of_hour`, `now` (np. **`start_of_minute`** — niedozwolone).
+- **Nie używaj** kotwic innych niż `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now` (np. **`start_of_minute`** — niedozwolone). **`start_of_week`**: pierwszy dzień tygodnia to **poniedziałek** (Luxon / ISO), nie niedziela.
 - **`duration`** musi po parsowaniu odpowiadać co najmniej **1 h** (np. `30m` — błąd; `1h`, `90m` — OK).
 - **`aggregation`** (także na poziomie karty, po scaleniu z `time_window`) musi być jednym z `hour`, `day`, `week`, `month` albo **pominięte** (wtedy domyślne `day` jest nadal „brak jawnej wartości”, nie naprawa złego tokenu). Wartości typu `5m` są **niedozwolone**.
 
