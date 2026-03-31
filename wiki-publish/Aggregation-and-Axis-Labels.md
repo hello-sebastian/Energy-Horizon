@@ -1,6 +1,8 @@
-# Aggregation and axis labels
+# Aggregation and Axis Labels
 
-This page summarizes **automatic aggregation**, **optional forced X-axis format**, **locale**, **mobile-friendly** axis layout, and the **point cap** — aligned with the implementation in the repository.
+**Explanation / Reference** — how the card picks LTS aggregation steps, formats axes and tooltips, and protects against oversized timelines. Aligned with the implementation in this repository.
+
+> For copy-paste `time_window` YAML and merge rules, see the maintained draft [Time Windows (advanced)](https://github.com/hello-sebastian/energy-horizon/blob/main/specs/001-time-windows-engine/wiki-time-windows.md) in the repo.
 
 ## Automatic aggregation (`aggregation` omitted)
 

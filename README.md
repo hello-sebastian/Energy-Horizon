@@ -263,14 +263,18 @@ The card can **infer the LTS aggregation step** from **merged `duration`** when 
 
 ## Advanced documentation (Wiki)
 
-README is intentionally beginner-focused. Full technical docs live in Wiki:
+README is intentionally beginner-focused. **Full technical docs** follow the [Diátaxis](https://diataxis.fr/) structure on GitHub Wiki (Tutorial, How-to, Reference, Explanation).
 
-- [Getting Started](https://github.com/hello-sebastian/energy-horizon/wiki/Getting-Started)
-- [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization)
-- [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals)
-- [Aggregation and Axis Labels](https://github.com/hello-sebastian/energy-horizon/wiki/Aggregation-and-Axis-Labels)
-- [Troubleshooting and FAQ](https://github.com/hello-sebastian/energy-horizon/wiki/Troubleshooting-and-FAQ)
-- [Releases and Migration](https://github.com/hello-sebastian/energy-horizon/wiki/Releases-and-Migration)
+**Canonical source (for edits and PR review):** the same Markdown files live in the repository under [`wiki-publish/`](./wiki-publish/). After each card release, maintainers upload that folder to the wiki; the **documentation version** line on the wiki home matches the released card semver.
+
+- [Wiki Home / map](https://github.com/hello-sebastian/energy-horizon/wiki) — documentation version and Diátaxis map  
+- [Getting Started](https://github.com/hello-sebastian/energy-horizon/wiki/Getting-Started)  
+- [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization)  
+- [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals)  
+- [Aggregation and Axis Labels](https://github.com/hello-sebastian/energy-horizon/wiki/Aggregation-and-Axis-Labels)  
+- [Troubleshooting and FAQ](https://github.com/hello-sebastian/energy-horizon/wiki/Troubleshooting-and-FAQ)  
+- [Releases and Migration](https://github.com/hello-sebastian/energy-horizon/wiki/Releases-and-Migration)  
+- [Documentation Maintenance](https://github.com/hello-sebastian/energy-horizon/wiki/Documentation-Maintenance) (maintainers: release process, terminology checks)
 
 ## Support and releases
 
