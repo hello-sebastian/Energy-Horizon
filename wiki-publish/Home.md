@@ -20,9 +20,9 @@ Use this map to pick the right kind of page:
 | Intent | You want to… | Start here |
 |--------|----------------|------------|
 | **Tutorial** | Learn by doing: install resource, first YAML, checkpoints | [Getting Started](Getting-Started) |
-| **How-to** | Fix a problem or complete a task (diagnostics, migration, YAML-only features) | [Troubleshooting and FAQ](Troubleshooting-and-FAQ), [Releases and Migration](Releases-and-Migration) |
-| **Reference** | Look up an option name, default, or dependency | [Configuration and Customization](Configuration-and-Customization) |
-| **Explanation** | Understand *why* the chart behaves as it does (statistics, forecast, aggregation, axes) | [Forecast and Data Internals](Forecast-and-Data-Internals), [Aggregation and Axis Labels](Aggregation-and-Axis-Labels) |
+| **How-to** | Complete a task or fix a problem (recipes, diagnostics, migration) | [Troubleshooting and FAQ](Troubleshooting-and-FAQ), [How-To: Time Windows](How-To-Time-Windows), [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance), [Releases and Migration](Releases-and-Migration) |
+| **Reference** | Look up exact keys, defaults, validation rules | [Configuration and Customization](Configuration-and-Customization), [Time Window Reference](Time-Window-Reference), [Luxon Formats Reference](Luxon-Formats-Reference) |
+| **Explanation** | Understand *why* the card behaves as it does (timelines, LTS, forecast) | [Mental Model: Comparisons and Timelines](Mental-Model-Comparisons-and-Timelines), [Forecast and Data Internals](Forecast-and-Data-Internals), [Aggregation and Axis Labels](Aggregation-and-Axis-Labels) |
 
 This wiki does **not** replace [official Home Assistant documentation](https://www.home-assistant.io/docs/) for generic HA concepts — it focuses on **this card** and links out where needed (FR-012).
 
@@ -33,6 +33,7 @@ This wiki does **not** replace [official Home Assistant documentation](https://w
 ### Start here
 
 1. [Getting Started](Getting-Started)
+2. [First Comparisons: Quick Recipes](First-Comparisons-Quick-Recipes)
 2. [Configuration and Customization](Configuration-and-Customization)
 3. [Troubleshooting and FAQ](Troubleshooting-and-FAQ)
 
@@ -41,16 +42,22 @@ This wiki does **not** replace [official Home Assistant documentation](https://w
 #### User guides
 
 - [Getting Started](Getting-Started)
+- [First Comparisons: Quick Recipes](First-Comparisons-Quick-Recipes)
 - [Configuration and Customization](Configuration-and-Customization)
 
 #### Advanced internals
 
+- [Mental Model: Comparisons and Timelines](Mental-Model-Comparisons-and-Timelines)
 - [Forecast and Data Internals](Forecast-and-Data-Internals)
 - [Aggregation and Axis Labels](Aggregation-and-Axis-Labels)
+- [Time Window Reference](Time-Window-Reference)
+- [Luxon Formats Reference](Luxon-Formats-Reference)
 
 #### Help and releases
 
 - [Troubleshooting and FAQ](Troubleshooting-and-FAQ)
+- [How-To: Time Windows](How-To-Time-Windows)
+- [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance)
 - [Releases and Migration](Releases-and-Migration)
 
 #### Maintainers

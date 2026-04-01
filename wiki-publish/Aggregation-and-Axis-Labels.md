@@ -43,7 +43,8 @@ The **first line** of the chart tooltip (above the value rows) is formatted for 
 
 - **Default**: Precision follows effective **`aggregation`**: **month** → month name only; **day** / **week** → day + month **without year**; **hour** → time (hour and minute). If the merged window **`duration`** is **longer than one day** while using **hour** buckets, a **short date** is added after the time so the same clock time on different days is not ambiguous.
 - **No redundant year**: In comparison charts, the default header **does not include the year**; which year a series refers to comes from the **legend** and series labels.
-- **Primary axis only**: The header always reflects **`fullTimeline[slot]`** for the shared X-axis (the current / primary window’s timeline), not each series’ physical calendar date at that slot—aligned with “same index = same position in the window” for comparisons.
+- **Shared timeline (important!)**: The header reflects the **shared chart timeline** (slot index on the comparison axis), not each series’ physical calendar date. This is intentional: the card compares “elapsed position in the window” across years/months.  
+  If you need a deeper explanation of why this is correct, read [Mental Model: Comparisons and Timelines](Mental-Model-Comparisons-and-Timelines).
 - **Locale**: Same cascade as X-axis labels (card `language` → HA → `en`).
 
 ### Optional `tooltip_format` (card-level)
@@ -54,6 +55,16 @@ The **first line** of the chart tooltip (above the value rows) is formatted for 
 ```yaml
 tooltip_format: dd LLL yyyy
 ```
+
+## “Real dates” vs comparison axis (advanced note)
+
+The card aligns windows by **window progress**. That alignment is what makes YoY/MoY/MoM comparisons meaningful. It also means:
+
+- The X-axis and tooltip header are about the **comparison axis**.
+- Each series still comes from real calendar timestamps inside its own window.
+- You should interpret rows as “same position in the period”, not “same absolute date across windows”.
+
+This is the same reason shorter months end earlier when compared on one axis.
 
 ## Mobile / narrow layout
 

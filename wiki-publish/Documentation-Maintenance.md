@@ -16,6 +16,34 @@
 5. **Upload** `wiki-publish/` contents to GitHub Wiki (manual copy/paste or your preferred sync — see repo `specs/001-github-wiki/quickstart.md`).  
 6. Confirm SC-006: from the wiki home, a reader sees the card version in **one step** (banner on Home).
 
+## Release checklist (practical, copy/paste)
+
+Use this checklist for every release that changes user-visible behavior.
+
+### 1) Version banner and navigation
+
+- [ ] Update **Documentation version** on [Home](Home) to the release semver.
+- [ ] Confirm `_Sidebar.md` links resolve to existing pages (no typos).
+
+### 2) Drift checks (docs vs code)
+
+- [ ] Scan `src/card/types.ts` for new/removed config keys and update [Configuration and Customization](Configuration-and-Customization).
+- [ ] Scan `src/translations/en.json` for new status keys (errors/warnings) and ensure troubleshooting/reference pages mention them.
+- [ ] If time windows changed: verify [Time Window Reference](Time-Window-Reference) and [How-To: Time Windows](How-To-Time-Windows) still match `src/card/time-windows/*`.
+- [ ] If forecast changed: verify [Forecast and Data Internals](Forecast-and-Data-Internals) matches `computeForecast` in `src/card/ha-api.ts`.
+- [ ] If axis/format validation changed: verify [Luxon Formats Reference](Luxon-Formats-Reference) and [Aggregation and Axis Labels](Aggregation-and-Axis-Labels).
+
+### 3) Changelog-driven updates
+
+- [ ] For every user-visible change in `changelog.md`, either:
+  - update a wiki page, or
+  - explicitly confirm “no documentation impact”.
+
+### 4) Publish step
+
+- [ ] Copy/sync updated `wiki-publish/*.md` into GitHub Wiki.
+- [ ] Re-check the Home page map and Sidebar ordering in the published wiki.
+
 ## Periodic review (suggested: quarterly)
 
 - Skim [Configuration and Customization](Configuration-and-Customization) against `src/card/types.ts` for new/removed YAML keys.  
@@ -31,6 +59,12 @@ Before closing a documentation-heavy release:
 - [ ] Run through **three how-to** paths in [Troubleshooting and FAQ](Troubleshooting-and-FAQ) mentally or in a test HA instance.
 
 If the card behavior and wiki disagree, **treat the implementation as primary**: inspect `src/card/` (FR-009). If the code is ambiguous, **maintainer decision**, then harmonize README and `wiki-publish/` (FR-007).
+
+## Spec anchors (where to look when something feels “magical”)
+
+- Time windows engine: `specs/001-time-windows-engine/`
+- Forecast math and gating: `specs/001-compute-forecast/`
+- Unit scaling: `specs/004-smart-unit-scaling/`
 
 ## Nomenclature conflicts (README vs wiki)
 

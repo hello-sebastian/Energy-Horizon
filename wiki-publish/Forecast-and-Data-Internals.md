@@ -1,59 +1,127 @@
 # Forecast and Data Internals
 
-**Explanation** — how the card uses Home Assistant data and what “forecast” means here. Most users can start with [Getting Started](Getting-Started); return here when you need the mental model.
+**Explanation** — how the card turns Home Assistant long-term statistics into a comparison chart, and what “forecast” means (and does not mean) in this context.
 
-## Long-term statistics (LTS) — what the card actually reads
+If you want the mental model of windows + timelines first, read:
 
-Energy Horizon does **not** plot raw entity state history for every minute. It requests **long-term statistics** through Home Assistant’s statistics/recorder APIs (the same family of data used by the Energy Dashboard).
+- [Mental Model: Comparisons and Timelines](Mental-Model-Comparisons-and-Timelines)
 
-**Implications for you:**
+If you came here from the project README and want to *do something specific*:
 
-- The **entity** you put in `entity:` must expose **long-term statistics**. Confirm in **Developer Tools → Statistics** (not just **States**).
-- If the entity is wrong (instant power, or no LTS), the chart is usually **empty** — see [Troubleshooting and FAQ](Troubleshooting-and-FAQ).
-- **Units** should be stable over time. If the entity changed units historically, comparisons and forecast quality can suffer.
+- Hide/show the dashed line: [`show_forecast`](Configuration-and-Customization#forecast)
+- Troubleshoot missing forecast: [Troubleshooting and FAQ](Troubleshooting-and-FAQ)
 
-## Comparison semantics (presets)
+---
 
-The card compares a **current** cumulative series to a **reference** series. Which calendar windows are used is driven by `comparison_preset` (YAML; the visual editor labels this **Comparison Preset**):
+## Data source: Long-term statistics (LTS)
 
-| `comparison_preset` | Meaning (user-facing) |
-|---------------------|-------------------------|
-| `year_over_year` | Current period vs the **same period one calendar year earlier** (year-over-year). |
-| `month_over_year` | Current **calendar month** vs the **same calendar month in the previous year**. |
-| `month_over_month` | **Current full calendar month** vs the **previous full calendar month** (two consecutive months). |
+Energy Horizon **does not** read raw history points (minute-by-minute state history). It requests **long-term statistics** via Home Assistant’s recorder/statistics APIs.
 
-Legacy YAML may still use `comparison_mode`; **`comparison_preset` wins** if both are set. See [Configuration and Customization](Configuration-and-Customization#migration--legacy).
+**What this implies for advanced users:**
 
-**Alignment:** Reference data is aligned to the current timeline so “elapsed vs elapsed” comparisons are fair (same point in the window, not mixed calendar shortcuts).
+- Your `entity:` must have statistics visible in **Developer Tools → Statistics**.
+- If your entity is instant power (W) without LTS, the card will usually show **empty/no data**.
+- Unit consistency matters: if your entity’s historical units changed, comparisons and forecast assumptions can degrade.
 
-## Forecast model (high level)
+---
 
-Forecast **estimates the end-of-period total** for the **current** series by comparing how far you are through the period now vs how the **reference** period behaved in the **same elapsed slice**, then projecting the remainder.
+## From LTS points to chart values (the pipeline)
 
-It is **not** a weather or tariff model — it is a **statistics-driven projection** from your history.
+### 1) Per-window LTS queries
 
-## When forecast is shown (enablement rules)
+For each resolved time window, the card builds one WebSocket request:
 
-Forecast is computed only when the data passes internal checks, including:
+- `recorder/statistics_during_period`
 
-- the comparison window length is valid for the preset,
-- enough **completed** buckets exist (minimum data rule),
-- enough of the current period has elapsed (not only a tiny slice),
-- a usable **reference** slice exists with a valid cumulative sum.
+### 2) “Which value is used?” (sum > change > state)
 
-If any check fails, the forecast line may be **hidden** even when `show_forecast` is true — this is expected when data is too sparse.
+Each returned point may carry multiple numeric fields. The card prefers:
 
-## Time windows (multi-window YAML)
+1. `sum` (converted into increments via delta between consecutive sums)
+2. else `change`
+3. else `state`
 
-If you use advanced **`time_window`** YAML (merged with the preset), the chart can show **more than two** series. The **forecast denominator** uses the **current** window (index **0**), not the longest window on the X-axis. That keeps forecast consistent with the primary current-vs-reference pair. Details: repository spec `specs/001-time-windows-engine`.
+This preference exists to keep cumulative energy math consistent when `sum` is available.
 
-## Confidence levels
+### 3) Cumulative series (running total)
 
-The card exposes a **confidence** tier (low / medium / high) derived from how much of the period has elapsed. Extreme year-over-year ratio anomalies can cap confidence to **low**.
+The plotted series is cumulative: each slot is the running total up to that point.
+
+---
+
+## Comparison semantics (presets in plain language)
+
+The card compares a **current** cumulative series to a **reference** series. The baseline windows come from:
+
+- `comparison_preset` (YAML key; editor label: **Comparison Preset**)
+
+| Preset | User-facing meaning |
+|--------|---------------------|
+| `year_over_year` | Current year **so far** vs a reference year (default: previous year) |
+| `month_over_year` | Current month **so far** vs the same calendar month in the reference year |
+| `month_over_month` | Current calendar month vs the previous full calendar month |
+
+Legacy `comparison_mode` may exist in old dashboards, but **`comparison_preset` wins** when both are set.
+
+---
+
+## Forecast: what it is (and what it is not)
+
+Forecast is a **statistics-driven end-of-period estimate** for the current series. It projects the remainder of the current period using the reference series profile.
+
+It is **not** a weather model, price model, or machine-learning predictor.
+
+---
+
+## When forecast is enabled (gating rules)
+
+Forecast requires a meaningful comparison context and a minimum amount of progress/data.
+
+### Required conditions (high signal)
+
+- There must be **at least two windows** (a reference series must exist).
+- The period must have a finite, positive bucket count (current period only).
+- You must have at least **3 completed buckets**.
+- You must be at least **5%** through the current period.
+
+If any condition fails, forecast is **disabled** even if `show_forecast: true`.
+
+### Confidence tiers
+
+When enabled, confidence is derived from period progress:
+
+- **low**: 5%–20%
+- **medium**: 20%–40%
+- **high**: ≥ 40%
+
+Additionally, the card can detect an **anomalous reference** year (extreme ratio vs reference) and cap confidence to **low**.
+
+---
+
+## Multi-window charts: what forecast uses as the denominator
+
+If you define multiple windows with different lengths, the X-axis can be longer than the current period.
+
+Forecast progress thresholds use **only window 0 (current)** bucket count as the denominator — not the longest axis.
+
+This keeps forecast semantics stable: it always answers “where will the **current period** end up?”.
+
+---
+
+## “Why is my forecast missing?” (fast diagnostics)
+
+1. Confirm you have **two windows** (count ≥ 2) and a reference series exists.
+2. Ensure you are far enough into the period (≥ 5%) and have ≥ 3 completed buckets.
+3. If data is sparse/inconsistent, forecast suppression can be normal.
+
+See also:
+
+- [Troubleshooting and FAQ](Troubleshooting-and-FAQ)
+
+---
 
 ## Specs (implementation references)
 
-For low-level formulas and unit scaling:
-
 - `specs/001-compute-forecast/`
+- `specs/001-time-windows-engine/`
 - `specs/004-smart-unit-scaling/`

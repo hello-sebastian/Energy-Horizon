@@ -1,96 +1,146 @@
 # Troubleshooting and FAQ
 
-**How-to** and diagnostics for the Energy Horizon card. For option names and defaults, use [Configuration and Customization](Configuration-and-Customization).
+**How-to** — diagnose failures with clear “done” criteria and common failure branches.
+
+For option names/defaults, use [Configuration and Customization](Configuration-and-Customization).
 
 ---
 
-## How-to: confirm the entity has long-term statistics
+## Quick triage (90 seconds)
 
-**Goal:** After adding the card, you see **two** series (current + reference) and non-empty summary numbers.
+1. **Card doesn’t load at all** → see *Resource / custom element*.
+2. **Card loads but chart is empty** → see *Entity has no LTS*.
+3. **Card errors after adding YAML** → see *Config validation errors*.
+4. **Forecast missing** → see *Forecast gating*.
+5. **“Too many timeline slots”** → see *Point cap exceeded*.
 
-**Prerequisites:** Home Assistant 2024.6+, recorder/LTS enabled.
+---
+
+## How-to: fix “Custom element doesn’t exist”
+
+**Goal:** Card loads without the “custom element doesn’t exist” banner.
+
+**Steps:**
+
+1. Confirm you installed the JS file via HACS or manual copy.
+2. Confirm the Lovelace **resource URL** is correct (HACS path vs `/local/`).
+3. Reload the dashboard (or clear cache / restart HA frontend).
+
+**Expected outcome:** The card renders a header and loads data (or shows a data-related message).
+
+**When it fails:** Check browser console for resource load errors (404 / MIME type / cache).
+
+Related: [Getting Started](Getting-Started).
+
+---
+
+## How-to: confirm the entity has long-term statistics (LTS)
+
+**Goal:** The chart shows at least the current series, and in comparison mode shows current + reference.
 
 **Steps:**
 
 1. Open **Developer Tools → Statistics** (not **States**).
-2. Find your energy entity. If it is **missing**, the card cannot plot — pick a different entity (e.g. utility meter with LTS).
-3. Add the card with minimal YAML (see [Getting Started](Getting-Started)).
-4. Save the dashboard and wait for data fetch.
+2. Search for your entity/statistic ID.
+3. If it’s missing, pick an entity that has LTS (utility meters, dashboard-backed statistics, cumulative energy sensors).
 
-**Expected outcome:** Chart renders; summary shows units consistent with the entity (e.g. kWh).
+**Expected outcome:** Your chosen `entity:` is visible under Statistics.
 
-### When something goes wrong
+**When it fails:**
 
-| Symptom | What to check |
-|---------|----------------|
-| Empty chart | Entity has no LTS; wrong `entity:` id; recorder disabled |
-| `Custom element doesn't exist` | Lovelace resource URL wrong — see [Getting Started](Getting-Started) |
-| Card shows `ha-alert` / config error | Invalid YAML key or `time_window` — enable `debug: true` and read browser console |
+- If recorder/statistics are disabled or misconfigured, no statistics will exist.
 
 ---
 
-## How-to: use YAML-only options (editor vs raw YAML)
+## How-to: fix an empty chart (card loads, no data)
 
-**Goal:** Use options that are **not** exposed in the visual editor (e.g. `time_window`, `debug`, `x_axis_format`) without breaking the card.
+**Goal:** The chart shows non-empty series.
 
-**Prerequisites:** You can open the dashboard **raw configuration** or the YAML tab for the card.
+**Checklist (most common to least):**
 
-**Steps:**
+1. **Wrong entity (no LTS)** — see above.
+2. **Unit changed historically** — comparisons can be rejected or look wrong.
+3. **Time window too narrow / too new** — there may be no buckets yet.
+4. **Overly strict config** — e.g. invalid `time_window` causing error state.
 
-1. Start from a working card created in the UI **or** from [Getting Started](Getting-Started).
-2. Switch to **YAML mode** for that card (or edit `ui-lovelace.yaml` if you use YAML mode dashboards).
-3. Add advanced keys documented in [Configuration and Customization](Configuration-and-Customization) under **Advanced and chart options**.
-4. Reload the dashboard.
-
-**Expected outcome:** Card loads; invalid keys show a **Lovelace configuration error** (not a silent ignore).
-
-### When something goes wrong
-
-- **Error on load:** Remove the last option you added; compare key names with [Configuration and Customization](Configuration-and-Customization) (must match `src` / types).
-- **Empty chart after `time_window`:** See [Time Windows (advanced)](https://github.com/hello-sebastian/energy-horizon/blob/main/specs/001-time-windows-engine/wiki-time-windows.md) and validation limits (duration, max windows).
-
----
-
-## How-to: diagnose missing forecast or wrong units
-
-**Goal:** Understand whether **forecast** is disabled by config or by data rules, and whether **units** come from scaling vs entity history.
-
-**Steps:**
-
-1. Confirm `show_forecast` is not `false` (alias `forecast` merges into it) — see [Releases and Migration](Releases-and-Migration).
-2. Read [Forecast and Data Internals](Forecast-and-Data-Internals) — forecast needs sufficient buckets and elapsed fraction.
-3. For unit display: check `force_prefix` (`auto` vs `none`) in [Configuration and Customization](Configuration-and-Customization).
-
-**Expected outcome:** Either a dashed forecast line (when rules pass) or a chart without forecast but with valid series — both can be valid.
-
-### When something goes wrong
-
-| Symptom | Likely cause |
-|---------|----------------|
-| No forecast line | Sparse data; period too young; reference slice invalid — not always a bug |
-| Values “wrong” by 1000× | `force_prefix` vs raw entity units; mixed historical units |
-
----
-
-## Troubleshooting matrix (quick)
-
-| Symptom | Likely cause | What to check |
-|---------|--------------|---------------|
-| `Custom element doesn't exist` | Resource not loaded | Resource URL and browser console |
-| Empty chart | Entity has no statistics | Developer Tools → Statistics |
-| No forecast line | `show_forecast: false`, insufficient data, or rules not met | [Forecast and Data Internals](Forecast-and-Data-Internals) |
-| Wrong units | Mixed unit history | Entity unit consistency |
-| Values too large/small | Auto scaling not desired | `force_prefix: none` |
-| Card error | Invalid config or entity typo | YAML keys and entity ID |
-| Timeline error / over cap | Too many LTS slots | Reduce windows or aggregation; see [Aggregation and Axis Labels](Aggregation-and-Axis-Labels) |
-
-## Debug mode
+**Pro move:** set `debug: true` and inspect the browser console for resolved windows and query diagnostics.
 
 ```yaml
 debug: true
 ```
 
-Inspect **browser console** for diagnostic messages (no secrets — still avoid sharing logs publicly if they contain entity names you consider private).
+---
+
+## How-to: use YAML-only options safely (editor vs YAML)
+
+**Goal:** Add advanced keys (`time_window`, formats, styling) without breaking the card.
+
+**Steps:**
+
+1. Start from a known-working minimal config.
+2. Add **one** advanced option at a time.
+3. Reload the dashboard after each change.
+4. If it breaks, remove the last change and compare key spelling to [Configuration and Customization](Configuration-and-Customization).
+
+**Expected outcome:** The card loads; invalid keys produce visible errors (not silent ignores).
+
+---
+
+## How-to: diagnose “missing forecast”
+
+**Goal:** Decide whether missing forecast is a bug or expected by rules.
+
+**Checklist:**
+
+1. Ensure you have a reference series (count ≥ 2).
+2. Ensure `show_forecast` is not `false` (remember alias `forecast`).
+3. Check gating rules: ≥ 3 completed buckets and ≥ 5% of the current period.
+4. If data is sparse or inconsistent, forecast suppression can be normal.
+
+**Expected outcome:** Either the forecast line appears, or you can explain why it is disabled.
+
+Related: [Forecast and Data Internals](Forecast-and-Data-Internals).
+
+---
+
+## How-to: fix values “off by 1000×” (units / scaling)
+
+**Goal:** Values look correct and unit labels match expectations.
+
+**Checklist:**
+
+1. Check the entity’s `unit_of_measurement` in HA.
+2. If you want raw values, disable scaling:
+
+```yaml
+force_prefix: none
+```
+
+3. If unit history changed (Wh ↔ kWh), comparisons can be misleading; fix the entity or accept limitations.
+
+---
+
+## How-to: fix `status.point_cap_exceeded` (too many slots)
+
+**Goal:** The card renders instead of showing the point cap error.
+
+Fix steps: [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance).
+
+---
+
+## Common config validation errors (fail-fast by design)
+
+These errors are expected behavior: the card prefers visible configuration errors over silent fallbacks.
+
+- Invalid `time_window` (bad token, `count > 24`, `duration < 1h`) → config error
+- Invalid `x_axis_format` / `tooltip_format` → config error
+
+References:
+
+- [Time Window Reference](Time-Window-Reference)
+- [Luxon Formats Reference](Luxon-Formats-Reference)
+
+---
 
 ## FAQ
 
@@ -98,25 +148,19 @@ Inspect **browser console** for diagnostic messages (no secrets — still avoid 
 
 No. It requires an entity with long-term statistics.
 
-### Why is chart empty?
+### Is forecast guaranteed to show?
 
-Most often: wrong entity (no statistics) or recorder/statistics unavailable.
+No. It’s gated by data coverage and requires a reference window.
 
-### Why is forecast missing?
+### Can I use minute-level granularity?
 
-Forecast appears only when data coverage and window rules allow it — see [Forecast and Data Internals](Forecast-and-Data-Internals).
+No. The card is built on long-term statistics with a hard minimum of 1 hour.
 
-### Should I force units?
+---
 
-Usually no. Keep `force_prefix: auto` unless you need fixed display scaling.
+## Known limitations (honest list)
 
-## Known limitations
-
-- Card depends on quality of Home Assistant long-term statistics
-- Forecast can be unavailable for sparse/inconsistent history
-- Unit changes in history can distort comparison
-- Card is not intended for real-time instant power visualization
-
-## Migration notes
-
-When new releases introduce breaking changes, see [Releases and Migration](Releases-and-Migration) and the project `changelog.md` in the repository.
+- Depends on the quality/availability of HA long-term statistics.
+- Forecast can be unavailable for sparse or inconsistent data.
+- Historical unit changes can distort comparisons.
+- Not designed for real-time instant power visualization.
