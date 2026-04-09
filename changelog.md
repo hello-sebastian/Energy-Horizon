@@ -19,7 +19,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Changed
 - **Clarified `comparison_preset`** semantics in docs (`year_over_year`, `month_over_year`, `month_over_month`, including “month over month” meaning two consecutive full calendar months).
 - **Forecast default behavior** and configuration (`show_forecast`, alias `forecast`).
-– **Github Wiki**: rewitten source of knowledge abour card dedicated more advanced users.
+– **Github Wiki**: rewitten source of knowledge abour card dedicated more advanced users [https://github.com/hello-sebastian/Energy-Horizon/wiki](https://github.com/hello-sebastian/Energy-Horizon/wiki)
 
 ### Fixed
 - **ECharts renderer refactors** (series layering and legend ordering).
