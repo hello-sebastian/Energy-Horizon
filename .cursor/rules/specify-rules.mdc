@@ -6,7 +6,7 @@ alwaysApply: true
 
 # Energy-Horizon Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-10
+Auto-generated from all feature plans. Last updated: 2026-04-09
 
 ## Active Technologies
 - TypeScript 5 (strict mode) + LitElement 4, Vite (bundler), Chart.js (002-i18n-localization)
@@ -27,6 +27,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-10
 - N/A (stan w pamięci komponentu / karta Lovelace) (001-aggregation-axis-labels)
 - Treść dokumentacji — **Markdown** (GitHub Flavored); repozytorium — **TypeScript** (karta) pozostaje bez zmian funkcjonalnych w ramach tej funkcji, poza ewentualną synchronizacją README. + GitHub Wiki (hosting publikacji); pliki w `wiki-publish/` (źródło); powiązanie z **Diátaxis** jako modelu informacji (brak biblioteki NPM — konwencja struktury). (001-github-wiki)
 - Pliki Markdown + zasoby statyczne (np. PNG) w `wiki-publish/`; historia w git; GitHub Wiki jako kopia publikowana ręcznie przy release. (001-github-wiki)
+- TypeScript 5.6+ (`strict`) + Lit 3.1, Apache ECharts 5.6, Luxon 3.7, date-fns 4.x, Vite 6, Vitest 2 (001-figma-ui-rollout)
+- N/A (in-browser; HA stores Lovelace config) (001-figma-ui-rollout)
 
 - TypeScript (ES2020+, `strict` enabled) + Lit (`lit`, `lit/decorators.js`), Chart.js (core + line/tooltip/legend/gradient plugins), Home Assistant Lovelace card API typings, Vite bundler (001-energy-horizon-card)
 
@@ -47,9 +49,9 @@ npm test && npm run lint
 TypeScript (ES2020+, `strict` enabled): Follow standard conventions
 
 ## Recent Changes
+- 001-figma-ui-rollout: Added TypeScript 5.6+ (`strict`) + Lit 3.1, Apache ECharts 5.6, Luxon 3.7, date-fns 4.x, Vite 6, Vitest 2
 - 001-github-wiki: Added Treść dokumentacji — **Markdown** (GitHub Flavored); repozytorium — **TypeScript** (karta) pozostaje bez zmian funkcjonalnych w ramach tej funkcji, poza ewentualną synchronizacją README. + GitHub Wiki (hosting publikacji); pliki w `wiki-publish/` (źródło); powiązanie z **Diátaxis** jako modelu informacji (brak biblioteki NPM — konwencja struktury).
 - 001-aggregation-axis-labels: Added TypeScript 5.6+, `strict` + Lit 3.1, Apache ECharts 5.6 (modular), **Luxon** (już w projekcie), Vite 6, Vitest 2
-- 001-time-windows-engine: Added TypeScript 5.6+, `strict` + Lit 3.1, Apache ECharts 5.6 (modular), **Luxon** (nowa — patrz [research.md](./research.md)), Vite 6, Vitest 2
 
 
 <!-- MANUAL ADDITIONS START -->
