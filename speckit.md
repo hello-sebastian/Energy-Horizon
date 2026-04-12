@@ -2,6 +2,10 @@
 
 Ten plik zbiera skrótową architekturę funkcji i powiązania ze Speckit (`specs/NNN-feature/`).
 
+## Indeks wszystkich funkcji (specs/)
+
+Tabela **wszystkich** katalogów `specs/*` z mapowaniem na kod i statusem: [specs/README.md](specs/README.md). Poniżej — rozwinięty opis wyłącznie **Time Windows** (główny moduł konfiguracji czasu).
+
 ## Silnik okien czasowych (Time Windows Engine) — `001-time-windows-engine`
 
 **Cel**: Zastąpić sztywne rozgałęzienia oparte na pojedynczym kluczu presetu (dziś kanonicznie `comparison_preset` w YAML; legacy: `comparison_mode`) generycznym silnikiem, który z konfiguracji (preset + nadpisania YAML) buduje listę okien `[0..N−1]`, wylicza `start`/`end` i zasila warstwę pobierania danych oraz wykres.

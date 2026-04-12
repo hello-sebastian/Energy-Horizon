@@ -1,0 +1,30 @@
+---
+description: Polityka numeracji gałęzi i folderów specs/ (Spec Kit) — źródło prawdy i rozszerzenia bez forkowania core
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Speckit — numeracja feature (Energy-Horizon)
+
+## Źródło prawdy w tym repozytorium
+
+- **[`.specify/init-options.json`](.specify/init-options.json)**: `branch_numbering` — `sequential` (prefiks `NNN`) lub po reinicjalizacji z Specify CLI możliwy tryb `timestamp` (zgodnie z upstream Spec Kit).
+- **Skrypt**: [`.specify/scripts/bash/create-new-feature.sh`](.specify/scripts/bash/create-new-feature.sh) — przy trybie sekwencyjnym kolejny numer to **globalne** maximum: wszystkie gałęzie pasujące do `###-*` (lokalne + opcjonalnie remote przez `ls-remote`) oraz wszystkie katalogi w `specs/`, potem **+1**. To **nie** jest osobny licznik per `short-name`.
+- **Komenda Cursor** [`speckit.specify`](.cursor/commands/speckit.specify.md) musi być zgodna z powyższym (katalog `specs/<prefix>-<short-name>` wg `init-options.json` i skanowania istniejących folderów).
+
+## Czego nie robić
+
+- **Nie zmieniaj** na stałe plików w `.specify/scripts/` (np. `create-new-feature.sh`) pod kątem polityki projektu — utrudnia to aktualizacje Spec Kit (`specify init`, upgrade CLI).
+
+## Rozszerzenia odpornie na aktualizacje upstream
+
+1. **Specify CLI** — `specify init … --branch-numbering sequential|timestamp` ([github/spec-kit](https://github.com/github/spec-kit)).
+2. **Overrides szablonów** — [`.specify/templates/overrides/`](.specify/templates/overrides/) (pierwszy priorytet w `resolve_template` w `common.sh`).
+3. **Rozszerzenie społeczności** [spec-kit-branch-convention](https://github.com/Quratulain-bilal/spec-kit-branch-convention) — konfiguracja w `.specify/branch-convention.yml`, hook `before_specify` opcjonalnie.
+4. **Własna logika poza `.specify/scripts/`** — np. [scripts/speckit-create-feature.sh](scripts/speckit-create-feature.sh) woła oficjalny skrypt z argumentami (`--number`, `--short-name`, `--timestamp`); ewentualny dodatkowy skrypt liczący numer tylko w `scripts/`, nie w core.
+
+## Skrót flag skryptu
+
+- `--number N` — wymusza numer (np. gdy orchestrujesz własny licznik).
+- `--timestamp` — nazwa gałęzi/folderu z prefiksem czasu (zgodne z trybem timestamp).
+- `--short-name <kebab>` — sufiks po prefiksie.

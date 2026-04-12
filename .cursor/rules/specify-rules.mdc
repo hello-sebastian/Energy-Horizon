@@ -35,9 +35,11 @@ Auto-generated from all feature plans. Last updated: 2026-04-09
 ## Project Structure
 
 ```text
-backend/
-frontend/
-tests/
+src/           # application code (Lovelace card: src/card/, translations, index.ts)
+tests/         # Vitest — unit/ and integration/
+config/        # vite.config.ts, eslint.config.js (see package.json scripts)
+wiki-publish/  # wiki source (Diátaxis) where applicable
+specs/         # Speckit feature specs (see specs/README.md)
 ```
 
 ## Commands
