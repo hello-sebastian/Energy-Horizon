@@ -7,7 +7,7 @@
 
 ## Summary
 
-Ujednolicić ścieżkę **merge → walidacja → resolve → timeline → mapowanie serii / prognoza / tooltip** tak, aby zachowanie odpowiadało **spec 006** (FR-A–FR-H): jeden przewidywalny model **efektywnego merge** (preset tylko jako domyślne pola; jawne nadpisania wygrywają — FR-F), **oś X** zgodna z **FR-B** (dokładnie dwa okna) lub **Longest-window axis span** (FR-C, liczba kroków przy ziarnie wykresu okna bieżącego, **nominalne** granice okien), **prognoza** z **okna bieżącego** (FR-D), **strefa czasowa HA** (FR-H), **carry-forward** serii bieżącej do znacznika „teraz” dla dnia/tygodnia/miesiąca (FR-G). Usunąć lub zredukować rozgałęzienie sterowane flagami `currentEndIsNow` / `referenceFullPeriod` + `buildChartTimeline` „legacy” tak, aby **to samo zamierzone zachowanie** wynikało z jednego opisu reguł (testowalnego), a nie z ukrytej ścieżki. Zsynchronizować dokumentację: `specs/001-*` (gdzie dotyczy), `wiki-publish/`, README / advanced README, `changelog.md`.
+Ujednolicić ścieżkę **merge → walidacja → resolve → timeline → mapowanie serii / prognoza / tooltip** tak, aby zachowanie odpowiadało **spec 006** (FR-A–FR-H): jeden przewidywalny model **efektywnego merge** (preset tylko jako domyślne pola; jawne nadpisania wygrywają — FR-F), **oś X** z **jedną** regułą liczby kroków dla **`windows.length >= 2`**: **Longest-window axis span** (FR-C — max nominalnych slotów przy ziarnie `windows[0].aggregation`), **etykiety i wyrównanie ordinalne** według **FR-B** (w tym tail-slot gdy najdłuższe okno ≠ bieżące), **prognoza** z **okna bieżącego** (FR-D; tolerancja `timeline.length > forecastPeriodBuckets`), **strefa czasowa HA** (FR-H), **carry-forward** serii bieżącej do znacznika „teraz” dla dnia/tygodnia/miesiąca (FR-G). Usunąć lub zredukować rozgałęzienie sterowane flagami `currentEndIsNow` / `referenceFullPeriod` + `buildChartTimeline` „legacy” tak, aby **to samo zamierzone zachowanie** wynikało z jednego opisu reguł (testowalnego), a nie z ukrytej ścieżki. Zsynchronizować dokumentację: `specs/001-*` (gdzie dotyczy), `wiki-publish/`, README / advanced README, `changelog.md`.
 
 ## Technical Context
 
@@ -19,7 +19,7 @@ Ujednolicić ścieżkę **merge → walidacja → resolve → timeline → mapow
 **Project Type**: Pojedynczy frontend (`src/`)  
 **Performance Goals**: Bez dodatkowych przebiegów O(n²) na slotach; liczba slotów ograniczona przez okna + agregację (jak dziś)  
 **Constraints**: Konstytucja — walidacja YAML, fail-fast (FR-E), brak cichego powrotu do presetu; timezone z kontekstu HA (`resolveLocale` / `hass`); brak zmian modelu LTS po stronie HA  
-**Scale/Scope**: Do 24 okien; faza 1 skupia się na **N=2** + dokumentacja; faza 2 na pełnym usunięciu rozgałęzień i **N>2** z **Longest-window axis span**
+**Scale/Scope**: Do 24 okien; faza 1 skupia się na **N=2** + dokumentacja (ta sama reguła **Longest-window axis span** co dla **N>2**); faza 2 na pełnym usunięciu rozgałęzień i kompletnych złotych scenariuszach **N≥3**
 
 ## Constitution Check
 

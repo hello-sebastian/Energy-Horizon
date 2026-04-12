@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Utrwalić **jedną** semantykę budowy osi czasu wykresu, wyrównania serii, mianownika prognozy oraz carry-forward przy „now”, zgodnie z FR-B, FR-C, FR-D, FR-G, FR-H.
+Utrwalić **jedną** semantykę budowy osi czasu wykresu, wyrównania serii, mianownika prognozy oraz carry-forward przy „now”, zgodnie z **FR-B** (etykiety, ziarno, wyrównanie ordinalne), **FR-C** (**Longest-window axis span** — liczba kroków osi dla `N ≥ 2`), **FR-D**, **FR-G**, **FR-H**.
 
 ## `buildChartTimeline` (lub następca)
 
@@ -14,7 +14,7 @@ Utrwalić **jedną** semantykę budowy osi czasu wykresu, wyrównania serii, mia
 - `windows: ResolvedWindow[]` (posortowane po `index`, length ≥ 1)
 - `merged: MergedTimeWindowConfig`
 - `timeZone: string` — strefa instancji HA (FR-H)
-- `comparisonMode: ComparisonMode` — używany wyłącznie tam, gdzie reguły kalendarzowe są **częścią opisu FR-B** (np. koniec roku/miesiąca dla etykiet); **nie** jako ukryty switch „legacy vs generic” bez testów złotych scenariuszy
+- `comparisonMode: ComparisonMode` — używany wyłącznie tam, gdzie reguły kalendarzowe są **częścią opisu etykiet (FR-B)** (np. koniec roku/miesiąca); **nie** jako ukryty switch „legacy vs generic” bez testów złotych scenariuszy
 
 **Output**:
 
@@ -28,9 +28,11 @@ Utrwalić **jedną** semantykę budowy osi czasu wykresu, wyrównania serii, mia
 
 **Behavior**:
 
-1. **Dokładnie dwa okna** (`windows.length === 2`): oś i znaczenie etykiet dat/slotów muszą być zgodne z **oknem bieżącym** (FR-B). Seria referencyjna wyrównana jedną udokumentowaną regułą (ordinal w okresie).
-2. **Więcej niż dwa okna**: **Longest-window axis span** (FR-C) — `timeline.length` = max po `windows` liczby slotów `buildTimelineSlots(w.start, w.end, primaryAgg, timeZone)` przy `primaryAgg = windows[0].aggregation`; granice `start`/`end` **nominalne** (clarify). Etykiety/siatka slotów: ziarno i numeracja jak dla okna bieżącego (FR-C w spec).
-3. **`forecastPeriodBuckets`**: `countBucketsForWindow(windows[0], timeZone)` (lub równoważnie) — **nie** `timeline.length`, gdy się różni (FR-D).
+1. **Jedno okno** (`windows.length === 1`): `timeline.length` = liczba slotów okna bieżącego przy `primaryAgg = windows[0].aggregation` i nominalnych `start`/`end`.
+2. **Dwa lub więcej okien** (`windows.length >= 2`): **Longest-window axis span** (**FR-C**) — `timeline.length` = **max** po `windows` liczby slotów `buildTimelineSlots(w.start, w.end, primaryAgg, timeZone)` przy `primaryAgg = windows[0].aggregation`; granice `start`/`end` każdego okna **nominalne** (jak w spec / clarify). Krótsze okna: brak wartości serii poza ich nominalnym zakresem (mapowanie jak w teście — null / przerwa), **bez** skracania osi do krótszego okna.
+3. **Etykiety osi (FR-B)**: ziarno i znaczenie etykiet dla slotów w zakresie nominalnej długości okna bieżącego — jak **okno bieżące** (index 0). **Tail** (indeksy ≥ liczby slotów okna bieżącego, gdy inne okno jest dłuższe): **ordinal continuation** przy tym samym ziarnie wykresu; bez wprowadzających w błąd etykiet kalendarzowych „tylko referencji” na wspólnej osi — szczegół copy/tooltip: **FR-F**; patrz sesja 2026-04-13 w [spec.md](../spec.md).
+4. **Wyrównanie serii**: jedna udokumentowana reguła ordinalna (np. ten sam indeks dnia w okresie) dla każdej serii względem `alignStartsMs[i]`.
+5. **`forecastPeriodBuckets`**: `countBucketsForWindow(windows[0], timeZone)` (lub równoważnie) — **nie** `timeline.length`, gdy się różni (**FR-D**); implementacja prognozy musi tolerować `timeline.length > forecastPeriodBuckets`.
 
 ## Carry-forward (FR-G)
 
@@ -47,7 +49,8 @@ Minimalny zestaw (do rozszerzenia w `tasks.md`):
 
 - Presety domyślne YoY, MoY, MoM — granice okien i długość osi vs `forecastPeriodBuckets` zgodnie z tą specyfikacją.
 - Merge z nadpisaniem tylko `duration` / `anchor` / `step` — brak „znikania” intencji osi.
-- N≥3 z seriami kontekstowymi — `timeline.length` = max slotów (Longest-window axis span), prognoza nadal z okna 0.
+- **N = 2** z **nierówną** nominalną liczbą slotów (przy tym samym `primaryAgg`) — `timeline.length` = **max** obu okien; seria krótszego okna kończy się wcześniej; `forecastPeriodBuckets` z okna 0.
+- **N ≥ 3** z seriami kontekstowymi — `timeline.length` = max slotów (**Longest-window axis span**), prognoza nadal z okna 0.
 - Slot „now” z brakiem punktu LTS w surowym mapowaniu — carry-forward serii bieżącej, bez regresji referencji/prognozy (SC-TODAY-2).
 
 ## Wersjonowanie

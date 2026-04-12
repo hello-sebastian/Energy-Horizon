@@ -18,14 +18,15 @@
 
 ## 3. Chart timeline (oś wykresu)
 
-- **Slot**: timestamp ms początku bucketa przy ziarnie **wykresu** (= `windows[0].aggregation` w obecnym kodzie — do utrwalenia w kontrakcie).
-- **N = 2 (FR-B)**:
-  - Oś i etykiety kalendarzowe = **okno bieżące** (index 0), w tym przypadki gdzie timeline obejmuje **pełny** miesiąc/rok kalendarzowy dla czytelności etykiet — musi być **jednoznacznie opisane** w kontrakcie i testach (parzystość z YoY/MoY).
-- **N > 2 (FR-C — Longest-window axis span)**:
-  - `timeline.length` = **max** po oknach: liczba slotów z `buildTimelineSlots(w.start, w.end, primaryAgg, timeZone)` (nominalne granice).
-  - `alignStartsMs[i]`: start wyrównania serii *i* (jak dziś).
+- **Slot**: timestamp ms początku bucketa przy ziarnie **wykresu** (= `windows[0].aggregation` w obecnym kodzie — utrwalone w kontrakcie).
+- **N = 1**: `timeline.length` = liczba slotów jednego okna (nominalne `start`/`end`).
+- **N ≥ 2 (FR-C — Longest-window axis span)**:
+  - `timeline.length` = **max** po oknach: liczba slotów z `buildTimelineSlots(w.start, w.end, primaryAgg, timeZone)` przy `primaryAgg = windows[0].aggregation` (nominalne granice).
+  - Krótsze okna: wartości serii tylko w swoim nominalnym zakresie indeksów; brak sztucznego skracania osi do krótszego okna.
+  - **Etykiety (FR-B)**: znaczenie etykiet dla slotów w obrębie nominalnej długości okna bieżącego — jak okno bieżące; **tail** (oś dłuższa niż okno bieżące) — ordinal continuation, bez mylących dat kalendarzowych „tylko referencji” na wspólnej osi (spec + kontrakt).
+  - `alignStartsMs[i]`: start wyrównania serii *i* (reguła ordinalna jedna dla wszystkich).
 - **Prognoza (FR-D)**:
-  - `forecastPeriodBuckets` = liczba slotów **tylko** dla okna bieżącego (`windows[0]`), **nie** `timeline.length` gdy się różni.
+  - `forecastPeriodBuckets` = liczba slotów **tylko** dla okna bieżącego (`windows[0]`), **nie** `timeline.length` gdy się różni; kod prognozy musi działać przy `timeline.length > forecastPeriodBuckets`.
 
 ## 4. Series point map (LTS → slot)
 

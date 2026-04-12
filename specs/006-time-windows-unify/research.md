@@ -2,7 +2,7 @@
 
 ## 1. Single timeline policy vs „legacy” branch in `buildChartTimeline`
 
-**Decision**: Zastąpić rozróżnienie implementacyjne „legacy preset” vs „generic” **jednym zestawiem reguł** widocznym w kodzie jako wywołania wspólnych funkcji (np. „oś dla N=2 zgodnie z oknem bieżącym”, „oś dla N>2 jako Longest-window axis span”), z testami, które utrwalają **zamierzone** zachowanie presetów YoY/MoY/MoM **bez** odwołania do flag w asercjach użytkownika końcowego.
+**Decision**: Zastąpić rozróżnienie implementacyjne „legacy preset” vs „generic” **jednym zestawiem reguł** widocznym w kodzie jako wywołania wspólnych funkcji: dla **`windows.length >= 2`** zawsze **Longest-window axis span** (max nominalnych slotów przy ziarnie `windows[0].aggregation`); **etykiety i wyrównanie ordinalne** według **FR-B**; krótsze serie kończą się wcześniej. Testy utrwalają **zamierzone** zachowanie presetów YoY/MoY/MoM **bez** odwołania do flag w asercjach użytkownika końcowego.
 
 **Rationale**: Spec FR-A wymaga wyjaśnialności bez „ścieżki legacy”. Flagi `currentEndIsNow` / `referenceFullPeriod` mogą pozostać wewnętrznym szczegółem preset template **tylko** jeśli nie zmieniają semantyki po merge (FR-F); docelowo redukcja rozgałęzień w `resolveTimeWindows` + `buildChartTimeline` zmniejsza ryzyko regresji przy `stripLegacyWhenGeneric`.
 
@@ -13,7 +13,7 @@
 
 ## 2. „Longest window” = liczba slotów przy ziarnie wykresu, nie tylko wall-clock
 
-**Decision**: Przy **FR-C** długość okna do porównania „najdłuższego” liczyć jako **`countBucketsForWindow(window, timeZone)`** (lub równoważne `buildTimelineSlots` od nominalnego `start`/`end` resolved) przy **ziarnie równym `windows[0].aggregation`**, a następnie wybrać **maksimum** po wszystkich oknach. Oś budować z **takiej** liczby slotów — spójnie z nominalnymi granicami (sesja clarify: nominal bounds).
+**Decision**: Przy **FR-C** (dla **każdego** `N ≥ 2`) długość okna do porównania „najdłuższego” liczyć jako **`countBucketsForWindow(window, timeZone)`** (lub równoważne `buildTimelineSlots` od nominalnego `start`/`end` resolved) przy **ziarnie równym `windows[0].aggregation`**, a następnie wybrać **maksimum** po wszystkich oknach. Oś budować z **takiej** liczby slotów — spójnie z nominalnymi granicami (sesja clarify: nominal bounds). Nie ma osobnej ścieżki „tylko dwa okna = długość z bieżącego”.
 
 **Rationale**: Czysty wall-clock (`end.getTime() - start.getTime()`) może wskazać inne „najdłuższe” okno niż liczba **kroków agregacji** (np. miesiące o różnej liczbie dni przy ziarnie „day”). Spec 006 definiuje długość w **krokach wyrównanych** przy ziarnie wykresu.
 

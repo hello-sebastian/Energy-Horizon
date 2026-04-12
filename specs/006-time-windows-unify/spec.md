@@ -15,6 +15,11 @@
 - Q: Default **FR-G** carry-forward for weekly/monthly aggregation vs daily? → A: **Apply carry-forward** for week and month **analogous to daily** when feasible; if a case cannot be supported, fall under **FR-F** (documented semantics or reject/guide)—not silent disable.
 - Q: When `comparison_preset` label disagrees with effective windows after overrides, default product stance? → A: **Explicit parameters unconditionally override** preset; effective merged windows are the behavioral truth; assume competent advanced users; **coherent unified rules** over preset-based exceptions; **FR-E** still for invalid merges. (User: preset bezwzględnie nadpisywany; spójność reguł ponad wyjątki.)
 
+### Session 2026-04-13
+
+- Q: Should horizontal axis **step count** for exactly **two** windows follow only the current window’s length, or the same **Longest-window axis span** rule as for more windows? → A: **Same rule for all** `windows.length >= 2`: axis step count = **max** nominal slot counts (**Longest-window axis span**); shorter window’s series ends earlier (no data / null past its nominal end); `count: 1` unchanged (single window = its own length).
+- Q: How should **axis tick labels** behave for slot indices **beyond** the current window’s nominal slot count when another window is longer? → A: **Ordinal continuation** at the **chart aggregation grain** (same step width as the current window’s grid)—ticks MUST NOT assert misleading **calendar** dates that belong only to a longer reference/contextual period on the shared axis; tooltips and legend/summary MUST still identify which window a value belongs to (**FR-F** for exact copy rules).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - One story for time, axis, summary, and tooltip (Priority: P1)
@@ -28,7 +33,7 @@ As someone comparing energy use across periods on the Energy Horizon card, I nee
 **Acceptance Scenarios**:
 
 1. **Given** a merged card configuration with a preset plus optional time window overrides, **When** the card renders, **Then** I can describe the result as an ordered list of windows with explicit start/end meaning without needing to know any internal “legacy vs generic” implementation path.
-2. **Given** exactly two comparison windows (current and reference), **When** I read the chart axis date labels, **Then** they follow the **current** window’s calendar structure and aggregation step, and the reference series is aligned by the single documented alignment rule (same ordinal position within each period, e.g. same day index within the month).
+2. **Given** two or more comparison windows, **When** I read the chart axis, **Then** the **number of steps** follows **Longest-window axis span** (FR-C), shorter series end without values past their window’s nominal end, **date/step label meaning** for slots within the current window follows the **current** window’s calendar structure and aggregation grain (FR-B), and each non-current series is aligned by the single documented ordinal rule; **tail** slots beyond the current window’s length use ordinal-consistent labeling per the Session 2026-04-13 clarification.
 
 ---
 
@@ -43,7 +48,7 @@ As a user of built-in comparison presets (`year_over_year`, `month_over_year`, `
 **Acceptance Scenarios**:
 
 1. **Given** each default preset without overrides, **When** the card renders, **Then** period boundaries and axis expectations match the golden scenarios in this initiative’s acceptance set.
-2. **Given** common overrides (e.g. only `duration`, or `anchor` / `step` changes), **When** the card renders, **Then** behavior matches the documented predictions for those scenarios—no surprise switch of “which period drives the axis.”
+2. **Given** common overrides (e.g. only `duration`, or `anchor` / `step` changes), **When** the card renders, **Then** behavior matches the documented predictions for those scenarios—axis **length** always follows **Longest-window axis span** for multi-window charts (no special shorter-axis path for exactly two windows), and label semantics remain driven by the **current** window plus the documented tail-slot rule.
 
 ---
 
@@ -82,7 +87,7 @@ As an advanced user editing time window settings, I need invalid combinations to
 - Partially finished current window (end anchored at “now”) compared to a full previous calendar period.
 - Months with different day counts and leap years affecting ordinal alignment.
 - `count: 1` (no reference period): metrics and tooltip behavior must not regress.
-- `count` greater than two with contextual series: draw order and tooltip emphasis (current + reference) remain aligned with product intent; horizontal axis uses **Longest-window axis span** (FR-C)—short series must not silently shrink the axis below the longest window’s step count at the chart grain; axis step count for “longest” uses **nominal** window ends (not clipped to “now”), while FR-G still governs how far the current series is drawn within the open window.
+- **Two or more** comparison windows (including contextual series): draw order and tooltip emphasis (current + reference) remain aligned with product intent; horizontal axis **always** uses **Longest-window axis span** (FR-C)—`timeline.length` = max nominal step count among participating windows at the chart grain; shorter windows’ series end earlier; the axis MUST NOT be shortened to match a shorter window alone; axis step count uses **nominal** window ends (not clipped to “now”), while FR-G still governs how far the **current** series is drawn within the open window; tail-slot labeling follows Session 2026-04-13.
 - Override only `duration` versus changing `anchor` or `step`: outcome must be predictable and documented.
 - Explicit `time_window` (and related) fields override preset defaults field-by-field; the preset’s marketing name may disagree with effective windows—behavior MUST still follow the merged model only (see **FR-F**).
 - Browser local time MUST NOT redefine bucket edges or calendar boundaries: window bounds, aggregation buckets, axis and tooltip calendar labels, and interpretation of “now” MUST follow the Home Assistant instance (reporting) time zone, consistent with entity statistics (see FR-H).
@@ -94,13 +99,13 @@ As an advanced user editing time window settings, I need invalid combinations to
 
 - **FR-A (Merged model clarity)**: After preset and optional time window settings are merged, the effective configuration MUST be explainable as an explicit ordered list of comparison windows with unambiguous roles (current, reference, contextual where applicable) and clear boundaries—without reference to internal legacy or parallel engine paths.
 
-- **FR-B (Two-window axis policy)**: When exactly **two** comparison windows are shown (current and reference), the chart’s horizontal axis and date/step labels MUST follow the **current** window’s calendar and aggregation grain. The reference series MUST align to the current axis using one documented alignment rule (same ordinal step within the comparison period, e.g. same day-in-period index).
+- **FR-B (Axis labeling, grain, and ordinal alignment)**: Whenever **two or more** comparison windows are shown, **date/step label meaning** and **calendar framing** for axis slots MUST follow the **current** window’s aggregation grain and numbering for all slots that fall within the **current** window’s **nominal** step span at the chart grain. For **tail** slots (indices at or beyond that span) when **Longest-window axis span** is longer than the current window, tick labels MUST follow **ordinal continuation** at the chart grain without misleading calendar dates tied only to a longer reference/contextual window on the shared axis (Session 2026-04-13); exact user-visible copy for tooltips and legends falls under **FR-F**. Each series MUST map to the shared axis using **one** documented ordinal alignment rule (same ordinal step within each window’s period, e.g. same day-in-period index).
 
-- **FR-C (Multi-window axis policy — “Longest-window axis span”)**: When **more than two** windows are shown (including contextual series), the chart MUST use the **Longest-window axis span** policy: the horizontal axis shows exactly as many **aligned comparison steps** at the **chart aggregation grain** as the **longest** of the participating windows. Each window’s length for this comparison MUST be computed from its **nominal** configured start and end (after merge)—including windows that are still open in real time—**without** shortening an open window’s end to “now” for the purpose of axis length. The maximum of those nominal step counts determines the axis length. Shorter windows occupy only their respective steps; the axis MUST NOT be shortened to match a shorter window alone. Partial data and the “now” marker within an open window MUST still follow **FR-G**; they MUST NOT change the nominal axis step count. Tick labels and calendar framing for those steps MUST follow the **current** window’s grain and numbering (consistent with the two-window story), while the **count** of steps comes from the longest window. If a merged configuration cannot express all windows on a single grain without contradiction, behavior MUST fall under **FR-F** (explicit documented semantics or reject/guide—no silent heuristic). Documentation and tests MUST use the name **Longest-window axis span**. This requirement does not override **FR-B** for the **exactly two**-window case.
+- **FR-C (Axis step count — “Longest-window axis span”)**: Whenever **two or more** comparison windows are shown, the chart MUST use the **Longest-window axis span** policy: the horizontal axis shows exactly as many **aligned comparison steps** at the **chart aggregation grain** as the **longest** of the participating windows. Each window’s length for this comparison MUST be computed from its **nominal** configured start and end (after merge)—including windows that are still open in real time—**without** shortening an open window’s end to “now” for the purpose of axis length. The **maximum** of those nominal step counts determines the axis length. Shorter windows occupy only their respective steps (no series values past nominal end except as governed by **FR-G** for the current window); the axis MUST NOT be shortened to match a shorter window alone. Partial data and the “now” marker within an open window MUST still follow **FR-G**; they MUST NOT change the nominal axis step count. **FR-B** governs how those steps are **labeled**; **FR-C** governs **how many** steps exist. If a merged configuration cannot express all windows on a single grain without contradiction, behavior MUST fall under **FR-F** (explicit documented semantics or reject/guide—no silent heuristic). Documentation and tests MUST use the name **Longest-window axis span**.
 
 - **FR-H (Time zone authority)**: Calendar-boundary calculations, aggregation bucket alignment, period labels on the axis and in tooltips, and the definition of “now” for markers and FR-G MUST use the Home Assistant instance time zone (the same basis used for entity statistics). The browser’s local time zone MUST NOT override those boundaries.
 
-- **FR-D (Forecast and progress basis)**: Forecast and any “period completion” or progress-style metrics MUST treat the **current** window (first / index zero in the comparison story) as the denominator for progress, independent of whether the shared axis spans a wider range for contextual series.
+- **FR-D (Forecast and progress basis)**: Forecast and any “period completion” or progress-style metrics MUST treat the **current** window (first / index zero in the comparison story) as the denominator for progress, independent of whether the shared axis spans a wider range (**Longest-window axis span** may exceed the current window’s bucket count). Implementations MUST **not** assume equal bucket counts between the shared timeline and the current window; forecast/progress logic MUST remain correct when `timeline.length` is greater than the current window’s nominal slot count.
 
 - **FR-E (Fail-fast validation)**: Invalid merged time window configuration MUST surface immediately with a clear, actionable error. The system MUST NOT silently fall back to preset defaults in a way that hides the mistake.
 
@@ -114,9 +119,9 @@ As an advanced user editing time window settings, I need invalid combinations to
 
 - **Merged card configuration**: The effective settings after combining comparison preset and optional time window block (`anchor`, `duration`, `step`, `count`, `offset`, etc.); explicit fields in the merge **win** over preset defaults; this object is the behavioral truth (see **FR-F**).
 
-- **Shared chart time axis**: The single horizontal scale used for all series on the main chart, subject to FR-B / FR-C policies.
+- **Shared chart time axis**: The single horizontal scale used for all series on the main chart: **step count** from **FR-C** whenever two or more windows; **label semantics** and ordinal alignment from **FR-B**.
 
-- **Longest-window axis span**: The named multi-window policy (FR-C): axis step count equals the longest participating window at the chart aggregation grain, using **nominal** window bounds; labels follow the current window’s grain.
+- **Longest-window axis span**: The named policy (**FR-C**) for `windows.length >= 2`: axis step count equals the **maximum** nominal slot count among participating windows at the chart aggregation grain; **FR-B** governs labels (including tail slots when the longest window exceeds the current window’s length).
 
 - **Aligned comparison step**: An ordinal position along the comparison timeline (e.g. day index within the aligned periods) used to place current and reference values consistently.
 
@@ -132,7 +137,7 @@ As an advanced user editing time window settings, I need invalid combinations to
 
 - **SC-2**: All automated tests that guard time windows, axis behavior, forecast progress, and tooltip consistency either still pass or are deliberately replaced with equivalent scenarios tied to the unified model; no unexplained loss of coverage.
 
-- **SC-3**: Speckit specifications (`001-time-windows-engine`, `001-aggregation-axis-labels`, `001-compute-forecast`, related contracts) and wiki source pages present **one** non-contradictory story for horizontal axis rules (including **Longest-window axis span** for multi-window), tooltip period naming, and forecast progress (current window as progress basis vs axis span).
+- **SC-3**: Speckit specifications (`001-time-windows-engine`, `001-aggregation-axis-labels`, `001-compute-forecast`, related contracts) and wiki source pages present **one** non-contradictory story for horizontal axis rules (**Longest-window axis span** for every chart with **two or more** windows; **FR-B** labeling), tooltip period naming, and forecast progress (current window as progress basis vs axis span, **FR-D**).
 
 - **SC-4**: An external reviewer, using only published wiki guidance, can construct configurations for “this month vs previous,” month-over-year, and year-over-year comparisons without needing to guess internal engine paths.
 
@@ -142,9 +147,9 @@ As an advanced user editing time window settings, I need invalid combinations to
 
 ### Phased deliverables *(planning hook)*
 
-- **Phase 1 (minimal viable unification)**: Deliver FR-B, FR-D, FR-E, FR-G, and FR-H for the primary two-window cases; publish the single-source documentation corrections; establish the initial golden scenario set. Completion: SC-1 satisfied for two-window scenarios, SC-3 free of contradictions on axis vs forecast, SC-TODAY-1/2 met at minimum for **daily** aggregation and, where feasible, **weekly and monthly** per FR-G (any grain-specific exception documented under **FR-F**).
+- **Phase 1 (minimal viable unification)**: Deliver unified **FR-B** / **FR-C** (single **Longest-window axis span** rule for all `N >= 2`), **FR-D**, **FR-E**, **FR-G**, and **FR-H** for the primary two-window cases; publish the single-source documentation corrections; establish the initial golden scenario set (including **N=2** with **unequal** nominal window lengths where applicable). Completion: SC-1 satisfied for two-window scenarios, SC-3 free of contradictions on axis vs forecast, SC-TODAY-1/2 met at minimum for **daily** aggregation and, where feasible, **weekly and monthly** per FR-G (any grain-specific exception documented under **FR-F**).
 
-- **Phase 2 (full de-branching)**: Remove dependence on undocumented parallel calculation paths; fully satisfy FR-A and FR-C with named multi-window behavior and complete golden coverage. Completion: SC-1–SC-4 fully met, including multi-window and contextual cases.
+- **Phase 2 (full de-branching)**: Remove dependence on undocumented parallel calculation paths; fully satisfy **FR-A** and **FR-C** with complete golden coverage for **N≥2** and contextual series. Completion: SC-1–SC-4 fully met, including multi-window and contextual cases.
 
 ## Assumptions
 
