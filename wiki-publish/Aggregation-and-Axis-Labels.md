@@ -29,6 +29,12 @@ Without `x_axis_format`, tick text is built with **`Intl.DateTimeFormat`** in th
 
 Order: card **`language`** → **`hass.locale.language`** → **`en`**.
 
+## Comparison panel period captions (current / reference)
+
+The **short labels** next to the coloured swatches in the comparison panel (and the parenthetical part of the accessible period names) are **not** the same strings as the X-axis or tooltip header. They are built with **`formatCompactPeriodCaption`** in the repo (`src/card/labels/compact-period-caption.ts`): **abbreviated months**, **Home Assistant time zone** (`ComparisonPeriod.time_zone` / `hass.config.time_zone`), and **compressed ranges** (for example a full calendar month may show as `Mar 2026` instead of `1 Mar – 31 Mar 2026`). When the current and reference windows fall in **different calendar years**, the caption adds a **year** so the two columns stay distinguishable. For **`hour`** aggregation, clock times follow HA **`locale.time_format`** when set (`12` / `24` / `language`). Tooltip rules above (no redundant year on the shared timeline) are unchanged.
+
+For **default presets** where the current LTS window ends at **“now”** (`currentEndIsNow` in merged `time_window`), the **current** caption still names the **full nominal** calendar month or year (via `expandCurrentWindowForCaption`) so it matches the reference column (e.g. `Apr 2026` vs `Apr 2025`) while the chart and summary values remain **year-to-date / month-to-date**. Custom `time_window` configs without that flag keep captions aligned to the actual resolved `start`–`end`.
+
 ## Time zone
 
 Axis timestamps always use **Home Assistant’s configured time zone** (`hass.config.time_zone`), not the browser’s local zone.

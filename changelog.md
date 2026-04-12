@@ -7,21 +7,15 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ## [0.5.0]
 
 ### Added
-- **Figma-aligned layout (v0.5.0)**: semantic regions (header, comparison, forecast/total, chart, comment, warning) with `role="region"` and localized `aria-label` keys (`section.*`).
-- **`trend-visual`**: shared MDI icon + tone class mapping for `Trend` (chart delta segment + intelligent comment).
-- **`ChartThemeResolved`** and host-driven chart colors: card reads HA CSS variables into `chartTheme`; ECharts uses them for series, grid, today guide, delta segment, and reference dot border.
-- **Translations**: `forecast.panel_forecast`, `forecast.panel_total`, and section labels in `en` / `pl` / `de`.
+– **New GUI** 
+– **Delta line on chart**
 
 ### Changed
-- **Comparison panel**: two-column grid with captions, single always-visible delta chip (`|` separator; `---` placeholders when values missing).
-- **Forecast | Total panel**: surface-style block; **Total** uses full reference-window raw sum via `fullReferenceWindowRawTotal` (documented on `ForecastStats.reference_total`).
-- **Intelligent comment**: narrative + trend `ha-icon` panel (replaces heading-only line).
-- **Incomplete reference**: full message only in **warning** strip at bottom (not duplicated in comparison).
-- **Chart**: full-height dashed “today” guide; vertical delta segment at today colored by trend; adaptive X-axis shows up to **three** labels when current series has data (legacy tick density when not); Y-axis shows **three** value labels (0, mid, max) over five split lines; reference “today” dot with border.
-- **Header**: 42px icon circle, title + `entity_id` subtitle when `show_title` is enabled.
+– Current label on x axis
+– **Period captions** in the comparison panel use a single **compact** formatter (`formatCompactPeriodCaption`): short month names, HA time zone, optional `time_format` for hourly windows, and compressed ranges (e.g. full month → `Mar 2026`).
 
 ### Fixed
-- **`getComputedStyle`**: safe when undefined (tests / non-DOM) in `_resolveChartTheme`.
+– Comparison panel **current** period caption again shows the **full nominal** month/year for preset `currentEndIsNow` windows (`expandCurrentWindowForCaption`), not a partial range to today (e.g. `Apr 2026` vs `1 Apr – 12 Apr 2026`).
 
 ## [0.4.0-beta]
 

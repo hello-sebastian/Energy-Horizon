@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, type TemplateResult } from "lit";
 import type { HomeAssistant, LovelaceCard } from "../ha-types";
 import {
   resolveComparisonPreset,
@@ -7,10 +7,8 @@ import {
   type CardState,
   type ChartRendererConfig,
   type ChartThemeResolved,
-  type ComparisonMode,
   type ComparisonSeries,
   type MergedTimeWindowConfig,
-  type ResolvedWindow,
   type TimeSeriesPoint
 } from "./types";
 import { trendMdiIcon, trendToneClass } from "./trend-visual";
@@ -30,6 +28,7 @@ import {
   resolveTimeWindows
 } from "./time-windows";
 import { EChartsRenderer } from "./echarts-renderer";
+import { resolveSeriesCurrentColor } from "./series-color";
 import {
   assertPointCountWithinCap,
   MAX_POINTS_PER_SERIES,
@@ -41,12 +40,19 @@ import {
 import {
   resolveLocale,
   createLocalize,
+  getRawTemplate,
   numberFormatToLocale,
   MISSING_TRANSLATION_KEY
 } from "./localize";
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
 import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
+import {
+  expandCurrentWindowForCaption,
+  formatCompactPeriodCaption,
+  hour12FromHaTimeFormat,
+  resolvedWindowForCaption
+} from "./labels/compact-period-caption";
 import "./energy-horizon-card-editor.js";
 
 export function formatSigned(
@@ -63,28 +69,31 @@ export function formatSigned(
   return `${formatter.format(0)} ${unit}`;
 }
 
-export function buildPeriodSuffix(
-  date: Date,
-  mode: ComparisonMode | string,
-  language: string
-): string {
-  if (mode === "year_over_year") {
-    return String(date.getFullYear());
-  }
-  if (mode === "month_over_year" || mode === "month_over_month") {
-    return new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(date);
-  }
-  return "";
-}
+const TEXT_SUMMARY_PLACEHOLDER = /\{\{(\w+)\}\}/g;
 
-/** Suffix for summary labels when preset suffix is empty (custom `time_window`). */
-export function formatWindowRangeSuffix(w: ResolvedWindow, language: string): string {
-  const fmt = new Intl.DateTimeFormat(language, {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
-  return `${fmt.format(w.start)} – ${fmt.format(w.end)}`;
+/**
+ * Renders a `text_summary.higher*` / `text_summary.lower*` template with
+ * `ebc-comment-emphasis` on each `{{varName}}` value.
+ */
+export function textSummaryNarrativeWithEmphasis(
+  template: string,
+  vars: Record<string, string>
+): TemplateResult {
+  const segments: (string | TemplateResult)[] = [];
+  let lastIndex = 0;
+  const re = new RegExp(TEXT_SUMMARY_PLACEHOLDER.source, "g");
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(template)) !== null) {
+    if (m.index > lastIndex) {
+      segments.push(template.slice(lastIndex, m.index));
+    }
+    const varName = m[1]!;
+    const display = vars[varName] ?? m[0];
+    segments.push(html`<span class="ebc-comment-emphasis">${display}</span>`);
+    lastIndex = m.index + m[0].length;
+  }
+  segments.push(template.slice(lastIndex));
+  return html`<div class="ebc-comment-text">${segments}</div>`;
 }
 
 /** Chart forecast line: on unless explicitly `show_forecast: false` (alias `forecast` merged in setConfig). */
@@ -519,19 +528,18 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       typeof globalThis.getComputedStyle === "function"
         ? globalThis.getComputedStyle(host).getPropertyValue(prop).trim()
         : "";
-    const fromConfig = (this._config.primary_color ?? "").trim();
-    const seriesCurrent =
-      fromConfig ||
-      readVar("--eh-series-current") ||
-      readVar("--accent-color") ||
-      readVar("--primary-color") ||
-      "#03a9f4";
+    const seriesCurrent = resolveSeriesCurrentColor(
+      host,
+      this._config.primary_color
+    );
     const seriesReference =
       readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
     const grid =
       readVar("--divider-color") || "rgba(127, 127, 127, 0.3)";
     const primaryText =
       readVar("--primary-text-color") || "rgba(0, 0, 0, 0.87)";
+    const secondaryText =
+      readVar("--secondary-text-color") || primaryText;
     const tooltipBackground =
       readVar("--ha-card-background") ||
       readVar("--card-background-color") ||
@@ -550,6 +558,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       referenceDotBorder,
       grid,
       primaryText,
+      secondaryText,
       tooltipBackground,
       tooltipBorder: grid,
       todayFullHeightLine,
@@ -745,70 +754,67 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const displayUnit = summary?.unit || fallbackUnit;
 
-    let currentPeriodLabel = this._localizeOrError(localize, "summary.current_period");
-    let referencePeriodLabel = this._localizeOrError(localize, "summary.reference_period");
+    const currentPeriodBase = this._localizeOrError(localize, "summary.current_period");
+    const referencePeriodBase = this._localizeOrError(localize, "summary.reference_period");
+
+    let currentPeriodSuffix = "";
+    let referencePeriodSuffix = "";
 
     if (this._state.status === "ready" && this._state.period) {
-      const lang = this._config.language ?? this.hass?.language ?? "en";
-      const merged = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+      const period = this._state.period;
       const rw = this._state.resolvedWindows;
-      const legacyTwoWindowPreset =
-        merged?.currentEndIsNow === true &&
-        merged?.referenceFullPeriod === true &&
-        rw?.length === 2;
+      const captionLocale = resolveLabelLocale(this.hass, this._config);
+      const captionZone =
+        period.time_zone || this.hass?.config?.time_zone || "UTC";
+      const hour12 = hour12FromHaTimeFormat(this.hass?.locale?.time_format);
 
-      let currentSuffix: string;
-      let referenceSuffix: string;
+      const w0 = resolvedWindowForCaption(rw, period, 0);
+      const w1 = resolvedWindowForCaption(rw, period, 1);
+      const mergedTw =
+        this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+      const w0Caption = expandCurrentWindowForCaption(
+        w0,
+        mergedTw,
+        this._config.comparison_preset,
+        captionZone
+      );
+      const captionOpts = {
+        zone: captionZone,
+        locale: captionLocale,
+        hour12
+      };
 
-      if (!legacyTwoWindowPreset && rw?.[0]) {
-        currentSuffix = formatWindowRangeSuffix(rw[0], lang);
-      } else {
-        currentSuffix = buildPeriodSuffix(
-          this._state.period.current_start,
-          this._config.comparison_preset,
-          lang
-        );
-        if (!currentSuffix && rw?.[0]) {
-          currentSuffix = formatWindowRangeSuffix(rw[0], lang);
-        }
-      }
-
-      if (!legacyTwoWindowPreset && rw?.[1]) {
-        referenceSuffix = formatWindowRangeSuffix(rw[1], lang);
-      } else {
-        referenceSuffix = buildPeriodSuffix(
-          this._state.period.reference_start,
-          this._config.comparison_preset,
-          lang
-        );
-        if (!referenceSuffix && rw?.[1]) {
-          referenceSuffix = formatWindowRangeSuffix(rw[1], lang);
-        }
-      }
-
-      currentPeriodLabel = `${currentPeriodLabel} (${currentSuffix})`;
-      referencePeriodLabel = `${referencePeriodLabel} (${referenceSuffix})`;
+      currentPeriodSuffix = formatCompactPeriodCaption(w0Caption, w1, captionOpts);
+      referencePeriodSuffix = formatCompactPeriodCaption(w1, w0, captionOpts);
     }
 
-    const currentSummaryValue =
-      summary != null
-        ? `${numberFormatter.format(summary.current_cumulative)} ${
-            displayUnit
-          }`
-        : "";
+    const currentPeriodLabelFull =
+      currentPeriodSuffix !== ""
+        ? `${currentPeriodBase} (${currentPeriodSuffix})`
+        : currentPeriodBase;
+    const referencePeriodLabelFull =
+      referencePeriodSuffix !== ""
+        ? `${referencePeriodBase} (${referencePeriodSuffix})`
+        : referencePeriodBase;
+
+    const currentCaptionText =
+      currentPeriodSuffix !== "" ? currentPeriodSuffix : currentPeriodBase;
+    const referenceCaptionText =
+      referencePeriodSuffix !== "" ? referencePeriodSuffix : referencePeriodBase;
+
+    const currentSummaryNumber =
+      summary != null ? numberFormatter.format(summary.current_cumulative) : "";
 
     const singleWindow =
       this._state.status === "ready" &&
       this._state.resolvedWindows &&
       this._state.resolvedWindows.length < 2;
 
-    const referenceSummaryValue =
+    const referenceSummaryNumber =
       !singleWindow &&
       summary != null &&
       summary.reference_cumulative != null
-        ? `${numberFormatter.format(summary.reference_cumulative)} ${
-            displayUnit
-          }`
+        ? numberFormatter.format(summary.reference_cumulative)
         : null;
 
     const shouldShowForecast =
@@ -821,40 +827,65 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const isMom = this._config.comparison_preset === "month_over_month";
 
-    let narrativeText: string | null = null;
+    let narrativeBody: TemplateResult | null = null;
     if (textSummary && !singleWindow) {
-      const diffText =
+      const deltaUnitStr =
         textSummary.diffValue != null
           ? `${numberFormatter.format(textSummary.diffValue)} ${displayUnit}`
-          : undefined;
+          : `— ${displayUnit}`;
+      const deltaPercentStr =
+        summary?.differencePercent != null
+          ? `${percentFormatter.format(Math.abs(summary.differencePercent))}%`
+          : "—";
 
       switch (textSummary.trend) {
-        case "higher":
-          narrativeText = this._localizeOrError(
-            localize,
-            isMom ? "text_summary.higher_mom" : "text_summary.higher",
-            diffText ? { diff: diffText } : undefined
-          );
+        case "higher": {
+          const summaryKey = isMom
+            ? "text_summary.higher_mom"
+            : "text_summary.higher";
+          const template = getRawTemplate(resolved.language, summaryKey);
+          if (template === undefined) {
+            narrativeBody = html`<div class="ebc-comment-text">
+              ${this._localizeOrError(localize, summaryKey)}
+            </div>`;
+          } else {
+            narrativeBody = textSummaryNarrativeWithEmphasis(template, {
+              deltaUnit: deltaUnitStr,
+              deltaPercent: deltaPercentStr
+            });
+          }
           break;
-        case "lower":
-          narrativeText = this._localizeOrError(
-            localize,
-            isMom ? "text_summary.lower_mom" : "text_summary.lower",
-            diffText ? { diff: diffText } : undefined
-          );
+        }
+        case "lower": {
+          const summaryKey = isMom
+            ? "text_summary.lower_mom"
+            : "text_summary.lower";
+          const template = getRawTemplate(resolved.language, summaryKey);
+          if (template === undefined) {
+            narrativeBody = html`<div class="ebc-comment-text">
+              ${this._localizeOrError(localize, summaryKey)}
+            </div>`;
+          } else {
+            narrativeBody = textSummaryNarrativeWithEmphasis(template, {
+              deltaUnit: deltaUnitStr,
+              deltaPercent: deltaPercentStr
+            });
+          }
           break;
+        }
         case "similar":
-          narrativeText = this._localizeOrError(
-            localize,
-            isMom ? "text_summary.similar_mom" : "text_summary.similar"
-          );
+          narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
+            ${this._localizeOrError(
+              localize,
+              isMom ? "text_summary.similar_mom" : "text_summary.similar"
+            )}
+          </div>`;
           break;
         case "unknown":
         default:
-          narrativeText = this._localizeOrError(
-            localize,
-            "text_summary.no_reference"
-          );
+          narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
+            ${this._localizeOrError(localize, "text_summary.no_reference")}
+          </div>`;
           break;
       }
     }
@@ -898,14 +929,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                           : null}
                     </div>`
                   : null}
-                ${showTitle
-                  ? html`<div class="ebc-header-text">
-                      ${effectiveTitle
-                        ? html`<div class="ebc-header-title">${effectiveTitle}</div>`
-                        : null}
-                      <div class="ebc-header-entity">${this._config.entity}</div>
-                    </div>`
-                  : null}
+                <div class="ebc-header-text">
+                  ${showTitle && effectiveTitle
+                    ? html`<div class="ebc-header-title">${effectiveTitle}</div>`
+                    : null}
+                  <div class="ebc-header-entity">${this._config.entity}</div>
+                </div>
               </div>
             </div>`
           : null}
@@ -917,33 +946,64 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               aria-label=${this._localizeOrError(localize, "section.comparison")}
             >
               <div class="ebc-comparison-grid">
-                <div class="ebc-comparison-col">
-                  <div class="ebc-caption">${currentPeriodLabel}</div>
-                  <div class="ebc-value ebc-value--current">
-                    ${currentSummaryValue}
+                <div
+                  class="ebc-comparison-col"
+                  aria-label=${currentPeriodLabelFull}
+                >
+                  <div class="ebc-series-caption">
+                    <span
+                      class="ebc-series-swatch ebc-series-swatch--current"
+                      aria-hidden="true"
+                    ></span>
+                    <span class="ebc-series-caption-text">${currentCaptionText}</span>
                   </div>
+                  <div class="ebc-caption">
+                    ${this._localizeOrError(localize, "summary.to_this_day")}
+                  </div>
+                  <div class="ebc-value-row">
+                    <span class="ebc-value-num--current">${currentSummaryNumber}</span>
+                    <span class="ebc-value-unit">${displayUnit}</span>
+                  </div>
+                  ${!singleWindow
+                    ? html`<div
+                        class="ebc-delta-chip ${trendToneClass(trendUi)}"
+                        aria-label=${this._localizeOrError(
+                          localize,
+                          "summary.difference"
+                        )}
+                      >
+                        <span class="ebc-delta-abs">${deltaChipAbs}</span>
+                        <span class="ebc-delta-sep" aria-hidden="true">|</span>
+                        <span class="ebc-delta-pct">${deltaChipPct}</span>
+                      </div>`
+                    : null}
                 </div>
                 <div class="ebc-comparison-divider" aria-hidden="true"></div>
-                <div class="ebc-comparison-col">
-                  <div class="ebc-caption">${referencePeriodLabel}</div>
-                  <div class="ebc-value ebc-value--reference">
-                    ${referenceSummaryValue ?? `--- ${displayUnit}`}
+                <div
+                  class="ebc-comparison-col"
+                  aria-label=${referencePeriodLabelFull}
+                >
+                  <div class="ebc-series-caption">
+                    <span
+                      class="ebc-series-swatch ebc-series-swatch--reference"
+                      aria-hidden="true"
+                    ></span>
+                    <span class="ebc-series-caption-text">${referenceCaptionText}</span>
+                  </div>
+                  <div class="ebc-caption">
+                    ${this._localizeOrError(localize, "summary.to_this_day")}
+                  </div>
+                  <div class="ebc-value-row">
+                    ${referenceSummaryNumber != null
+                      ? html`<span class="ebc-value-num--reference"
+                            >${referenceSummaryNumber}</span
+                          >
+                          <span class="ebc-value-unit">${displayUnit}</span>`
+                      : html`<span class="ebc-value-num--reference">—</span>
+                          <span class="ebc-value-unit">${displayUnit}</span>`}
                   </div>
                 </div>
               </div>
-              ${!singleWindow
-                ? html`<div
-                    class="ebc-delta-chip ${trendToneClass(trendUi)}"
-                    aria-label=${this._localizeOrError(
-                      localize,
-                      "summary.difference"
-                    )}
-                  >
-                    <span class="ebc-delta-abs">${deltaChipAbs}</span>
-                    <span class="ebc-delta-sep" aria-hidden="true">|</span>
-                    <span class="ebc-delta-pct">${deltaChipPct}</span>
-                  </div>`
-                : null}
             </div>`
           : null}
 
@@ -961,9 +1021,16 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   <div class="ebc-caption ebc-caption--strong">
                     ${this._localizeOrError(localize, "forecast.panel_forecast")}
                   </div>
-                  <div class="ebc-value ebc-value--current">
-                    ${numberFormatter.format(forecast.forecast_total ?? 0)}
-                    ${forecastUnit}
+                  <div class="ebc-surface-value-row">
+                    <span class="ebc-surface-value-num"
+                      >${numberFormatter.format(forecast.forecast_total ?? 0)}</span
+                    >
+                    <span class="ebc-surface-value-unit">${forecastUnit}</span>
+                  </div>
+                  <div class="ebc-forecast-confidence">
+                    ${this._localizeOrError(localize, "forecast.confidence", {
+                      confidence: forecast.confidence
+                    })}
                   </div>
                 </div>
                 <div class="ebc-comparison-divider" aria-hidden="true"></div>
@@ -971,19 +1038,18 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   <div class="ebc-caption ebc-caption--strong">
                     ${this._localizeOrError(localize, "forecast.panel_total")}
                   </div>
-                  <div class="ebc-value ebc-value--reference">
+                  <div class="ebc-surface-value-row">
                     ${forecast.reference_total != null
-                      ? html`${numberFormatter.format(
-                          forecast.reference_total
-                        )} ${forecastUnit}`
-                      : html`--- ${forecastUnit}`}
+                      ? html`<span class="ebc-surface-value-num"
+                            >${numberFormatter.format(forecast.reference_total)}</span
+                          >
+                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`
+                      : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                            >---</span
+                          >
+                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`}
                   </div>
                 </div>
-              </div>
-              <div class="ebc-forecast-confidence">
-                ${this._localizeOrError(localize, "forecast.confidence", {
-                  confidence: forecast.confidence
-                })}
               </div>
             </div>`
           : null}
@@ -996,17 +1062,21 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           <div class="chart-container ebc-chart"></div>
         </div>
 
-        ${narrativeText
+        ${narrativeBody
           ? html`<div
               class="ebc-section ebc-section--comment"
               role="region"
               aria-label=${this._localizeOrError(localize, "section.comment")}
             >
-              <ha-icon
-                class="ebc-comment-icon ${trendToneClass(trendUi)}"
-                .icon=${trendMdiIcon(trendUi)}
-              ></ha-icon>
-              <div class="ebc-comment-text">${narrativeText}</div>
+              <div
+                class="ebc-comment-icon-wrap ${trendToneClass(trendUi)}"
+              >
+                <ha-icon
+                  class="ebc-comment-icon ${trendToneClass(trendUi)}"
+                  .icon=${trendMdiIcon(trendUi)}
+                ></ha-icon>
+              </div>
+              ${narrativeBody}
             </div>`
           : null}
 
@@ -1016,7 +1086,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               role="region"
               aria-label=${this._localizeOrError(localize, "section.warning")}
             >
-              ${this._localizeOrError(localize, "summary.incomplete_reference")}
+              <ha-icon
+                class="ebc-warning-icon"
+                .icon=${"mdi:alert-outline"}
+              ></ha-icon>
+              <span>${this._localizeOrError(localize, "summary.incomplete_reference")}</span>
             </div>`
           : null}
       </div>

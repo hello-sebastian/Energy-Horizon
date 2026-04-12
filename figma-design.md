@@ -48,7 +48,7 @@ Poniżej kolejność **od góry do dołu** (zgodna z pionowym stackiem w eksporc
 | **Card Header** | **Tytuł** (przyjazna nazwa / `title` / `friendly_name`) + **podtytuł** *Entity unfriendly title* — **kodowa nazwa encji** (`entity_id`, np. `sensor.ac_consumption`) + ikona w **kółku 42×42 px** | `show_title`, `show_icon`, `title`, `hass.states[entity].entity_id` (lub `config.entity`) na drugiej linii; styl podtytułu jak `colors/context` w Figmie; ikona: `ha-icon` / `ha-state-icon` (**MDI 24 px**) — **bez** assetów z Figmy |
 | **Data series info - Container** + **Data series info - Grid** | Pierwszy „panel”: dwa szeregi czasowe obok siebie | Okno bieżące vs referencyjne: skumulowane „do dziś”, różnica |
 | **Current series** / **Refference series** | Kolumny porównania | `summary.current_cumulative`, `summary.reference_cumulative`, etykiety okien czasu |
-| **Data series caption** | Pasek koloru + etykieta okresu (np. „2026, April”) | W kodzie: sufiks okresu z `formatWindowRangeSuffix` / `buildPeriodSuffix` — **prezentacja** może przejść z formatu „wiersz podsumowania” na format „caption jak legenda” |
+| **Data series caption** | Pasek koloru + etykieta okresu (np. „2026”, „Mar 2026”, zakres kompaktowy) | W kodzie: `formatCompactPeriodCaption` w [`src/card/labels/compact-period-caption.ts`](src/card/labels/compact-period-caption.ts) (Luxon, strefa HA, skrócone miesiące) |
 | **Data status** (warianty) | Etykieta CAPS + wartość + jednostka | `DataStatus`: *Default* (mniejsza typografia), *Current* (duża wartość), *Refference* (inna waga koloru — secondary) |
 | **Delta status** | Różnica bezwzględna i względna w jednym chipie (`kWh` \| `%`) | `summary.difference`, `summary.differencePercent` — dziś są to **dwa wiersze** w `.summary`; w Figmie **jeden zespół** z separatorem |
 | **Surface Container** (drugi panel) | **Forecast** vs **Total** | Zob. **§1.3** — `forecast` = prognoza na **cały** bieżący okres; `total` = **całkowite** zużycie w **całym** okresie referencyjnym. W kodzie: upewnić się, że `Total` ma dane z pełnego okna referencyjnego (LTS); obecny blok `.forecast` wymaga dopasowania pól/etykiet |
@@ -144,7 +144,7 @@ Komponenty to **reusable UI**; warianty opisują **stan semantyczny**, nie tylko
 | `colors/primary` | `#ffffff` | Tekst główny | `var(--primary-text-color)` |
 | `colors/secondary` | `#a1a1a1` | Tekst drugorzędny, jednostki | `var(--secondary-text-color)` |
 | `colors/context` | `#696969` | Podtytuł (`entity_id`) | `var(--secondary-text-color)` lub `--disabled-text-color` — do wglądu w docelowym motywie |
-| `colors/accent/ehorizon` | `#119894` | Seria bieżąca / akcent marki | Brak bezpośredniego odpowiednika HA → **lokalny** token `--eh-*` z fallbackiem; opcjonalnie powiązać z `--primary-color` jeśli celowo |
+| `colors/accent/ehorizon` | `#119894` | Seria bieżąca / akcent marki | **`--eh-series-current`** na `:host` (domyślnie `#119894`); YAML `primary_color` lub Card Mod; motyw HA: `ha-primary`, `ha-accent`, `var(--primary-color)` itd. |
 | `colors/error/bg` | `#f443360d` | Tło chipa (negatywny trend) | `color-mix(in srgb, var(--error-color) 8%, transparent)` lub analogicznie — unikać na sztywno `#f443360d` |
 | `color/ha-default/error` | `#f44336` | Kolor błędu / alertu | `var(--error-color)` |
 | `Color` (delta w makiecie) | `#fa4d4d` | Tekst różnicy „negatywnej” | `var(--error-color)` (lub spójnie z `ha-alert`) |

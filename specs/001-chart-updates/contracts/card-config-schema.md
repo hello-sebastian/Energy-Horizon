@@ -73,7 +73,7 @@ debug: false                         # boolean? — logowanie diagnostyczne do k
 | `precision` | number | `1` | — | Liczba miejsc dziesiętnych w wartościach |
 | `show_forecast` | boolean | `true` | — | **US5**: Linia prognozy na wykresie (`false` = ukryj); alias: `forecast` |
 | `connect_nulls` | boolean | `true` | — | Włącza/wyłącza rysowanie przerywanej interpolacji w lukach dla `null` (brak danych) |
-| `primary_color` | string (CSS color) | `--accent-color` HA | — | **US4**: Kolor linii serii bieżącej |
+| `primary_color` | string (CSS color, `var(--…)`, lub `ha-accent` / `ha-primary-accent` / `ha-primary`) | token `--eh-series-current` (`#119894`) | — | **US4**: Kolor serii bieżącej (linia, wypełnienie, swatch); motyw HA przez `var(--accent-color)` lub aliasy |
 | `fill_current` | boolean | `true` | — | **US3**: Wypełnienie pod serią bieżącą |
 | `fill_reference` | boolean | `false` | — | **US3**: Wypełnienie pod serią referencyjną |
 | `fill_current_opacity` | number (0–100) | `30` | — | **US3**: Krycie (%) wypełnienia serii bieżącej |
@@ -89,10 +89,10 @@ debug: false                         # boolean? — logowanie diagnostyczne do k
 Wszystkie nowe opcje mają wartości domyślne — **brak zmian łamiących kompatybilność**.  
 Istniejące konfiguracje działają bez modyfikacji:
 - `fill_current: true` (domyślna) — wygląd nieznacznie zmieniony (pojawia się fill pod bieżącą serią)
-- `primary_color` (brak) — kolor akcentu HA jak poprzednio
+- `primary_color` (brak) — domyślnie karta używa teal marki (`#119894` / `--eh-series-current`), nie `--primary-color` HA; przywrócenie koloru motywu: `primary_color: ha-primary` lub `var(--primary-color)`
 - `show_forecast` — domyślnie **włączone** (linia prognozy na wykresie, gdy prognoza jest dostępna); użytkownicy preferujący brak linii bez ustawiania opcji powinni dodać `show_forecast: false`
 
-**Widoczne różnice dla istniejących użytkowników**: (1) Domyślne `fill_current: true` powoduje pojawienie się półprzezroczystego wypełnienia (30%) pod serią bieżącą po aktualizacji. Jeśli użytkownik tego nie chce, może ustawić `fill_current: false`. (2) Domyślnie włączona linia prognozy na wykresie — aby ją ukryć jak wcześniej (bez jawnej opcji), ustaw `show_forecast: false`.
+**Widoczne różnice dla istniejących użytkowników**: (1) Domyślne `fill_current: true` powoduje pojawienie się półprzezroczystego wypełnienia (30%) pod serią bieżącą po aktualizacji. Jeśli użytkownik tego nie chce, może ustawić `fill_current: false`. (2) Domyślnie włączona linia prognozy na wykresie — aby ją ukryć jak wcześniej (bez jawnej opcji), ustaw `show_forecast: false`. (3) Domyślny kolor serii bieżącej bez `primary_color` to teal z makiet (`#119894`), a nie kolor primary z motywu HA — migracja: `primary_color: ha-primary` lub `var(--primary-color)`.
 
 ---
 
@@ -143,7 +143,7 @@ Karta musi tolerować niepoprawne wartości pól opcjonalnych bez crash-u:
 
 | Pole | Niepoprawna wartość | Zachowanie |
 |---|---|---|
-| `primary_color: "not-a-color"` | Niepoprawny CSS kolor | CSS ignoruje; fallback do `--accent-color` |
+| `primary_color: "not-a-color"` | Niepoprawny / nierozwiązany kolor | Pusty wynik resolucji → `--eh-series-current` / `#119894` |
 | `fill_current_opacity: -5` | Poza zakresem 0–100 | Clamp do 30 (domyślna) |
 | `fill_current_opacity: 150` | Poza zakresem 0–100 | Clamp do 30 (domyślna) |
 | `fill_current_opacity: "abc"` | Nie-liczba | Clamp do 30 (domyślna) |

@@ -65,6 +65,7 @@ These are the options most people adjust first. Everything else is in the Wiki a
 | `show_forecast` | Show/hide the dashed forecast line. | [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals) |
 | `precision` | Decimal places for UI numbers. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 | `force_prefix` | Unit scaling (`auto`, `none`, `k`, `M`, …). | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
+| `primary_color` | Current series line/fill color; default is the card’s brand teal (`#119894`). Use `ha-primary` or `var(--primary-color)` to follow your HA theme. | [`README.advanced.md`](./README.advanced.md) |
 | `title`, `icon` | Card header customization. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 
 ## Key features (in plain words)
@@ -119,6 +120,8 @@ If this card saves you time, you can support development:
 ## Development
 
 Stack: **TypeScript** (strict), **Lit** 3, **Apache ECharts** 5, **Luxon** 3 (time windows), **Vite** 6, **Vitest** 2.
+
+User-visible strings live in [`src/translations/`](./src/translations/) (`en.json` is the key reference). Use **one full sentence per message** with `{{camelCase}}` placeholders for injected values — see [`specs/002-i18n-localization/`](./specs/002-i18n-localization/).
 
 ```bash
 npm install

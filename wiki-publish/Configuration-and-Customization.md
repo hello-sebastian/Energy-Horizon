@@ -32,7 +32,7 @@ If you came here from the project README:
 | `comparison_preset` | `year_over_year \| month_over_year \| month_over_month` | `year_over_year` | Chooses a preset window template (then YAML can override) | Confusing MoY vs MoM | [First Comparisons](First-Comparisons-Quick-Recipes) |
 | `comparison_mode` | same as above | — | **Deprecated** legacy name | If both set, it is ignored in favor of `comparison_preset` | [Releases and Migration](Releases-and-Migration) |
 | `time_window` | object | — | Advanced override of window template (deep merge) | Invalid window → fail-fast config error | [How-To: Time Windows](How-To-Time-Windows) / [Time Window Reference](Time-Window-Reference) |
-| `aggregation` | `hour \| day \| week \| month` | auto/derived | LTS bucket size used for *all* windows | Too fine + long window → point cap error | [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance) |
+| `aggregation` | `hour \| day \| week \| month` | auto/derived | LTS bucket size used for *all* windows | Too fine + long window → point cap error; the chart “now” marker targets the **bucket that contains the current moment**, not only a matching calendar midnight tick | [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance) |
 | `period_offset` | number | `-1` | Shifts **reference year** in legacy YoY/MoY presets | Only meaningful for YoY/MoY legacy semantics | [Mental Model](Mental-Model-Comparisons-and-Timelines) |
 
 ---
@@ -62,12 +62,14 @@ If you came here from the project README:
 
 | Key | Type | Default | Mental model | Common failure / gotcha | Related |
 |-----|------|---------|--------------|-------------------------|---------|
-| `primary_color` | string | HA accent | Current line color | Invalid CSS color may be ignored by the browser | — |
+| `primary_color` | string | `#119894` (`--eh-series-current`) | Current series line, fill, caption swatch | `var(--accent-color)`, aliases `ha-accent` / `ha-primary-accent` / `ha-primary`; invalid/unresolved → token / `#119894` | [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
 | `fill_current` | boolean | `true` | Fill under current series | — | — |
 | `fill_reference` | boolean | `false` | Fill under reference series | — | — |
 | `fill_current_opacity` | number (0–100) | `30` | Percent opacity for current fill | Out of range resets to default | — |
 | `fill_reference_opacity` | number (0–100) | `30` | Percent opacity for reference fill | Out of range resets to default | — |
 | `connect_nulls` | boolean | `true` | Adds a **dashed overlay** bridging null gaps (solid line still breaks) | Visual interpolation only | [Aggregation and Axis Labels](Aggregation-and-Axis-Labels) |
+
+**Migration (default series color):** If you preferred the old look where the current series followed Home Assistant **`--primary-color`** without setting YAML, add e.g. `primary_color: ha-primary` or `primary_color: var(--primary-color)`.
 
 ---
 
@@ -84,7 +86,7 @@ If you came here from the project README:
 
 | Key | Type | Default | Mental model | Common failure / gotcha |
 |-----|------|---------|--------------|-------------------------|
-| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English |
+| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English. The consumption summary uses full-sentence templates with `{{deltaUnit}}` and `{{deltaPercent}}` (see `src/translations/en.json`). |
 | `number_format` | `comma \| decimal \| language \| system` | HA/system | Controls which locale `Intl` uses for numbers | Use `decimal` for “always English-style decimals” |
 
 Time zone is taken from **`hass.config.time_zone`** (fallback UTC).
@@ -110,7 +112,7 @@ Time zone is taken from **`hass.config.time_zone`** (fallback UTC).
 
 ## Theming and Card-Mod
 
-The card follows Home Assistant theme variables (e.g. `--primary-color`). If you use Card-Mod, these CSS classes are useful:
+The card follows Home Assistant theme variables for text, grid, and reference series. The **current** series defaults to `--eh-series-current` (`#119894`); override that variable or use `primary_color` / `ha-primary` / `var(--primary-color)` to tie it to the theme. If you use Card-Mod, these CSS classes are useful:
 
 - `.ehc-card`
 - `.ehc-content`

@@ -52,7 +52,7 @@
 
 **Why this priority**: Główna wartość karty to porównanie okresów — layout bezpośrednio wpływa na czytelność.
 
-**Independent Test**: Widok karty z danymi `summary.*`; układ odpowiada panelowi *Data series info* z `figma-design.md` §2 (Current / Reference, Data status, Delta status); **sens biznesowy** skumulowanych „do dziś” bez zmiany względem obecnej logiki, o ile nie wymuszono doprecyzowania **Total**; **chip delty** — zgodnie z **Clarifications** (zawsze widoczny, zasady zera i braku danych).
+**Independent Test**: Widok karty z danymi `summary.*`; układ odpowiada panelowi *Data series info* z `figma-design.md` §2 (Current / Reference, Data status, Delta status); **sens biznesowy** skumulowanych „do dziś” bez zmiany względem obecnej logiki, o ile nie wymuszono doprecyzowania **Total**; **chip delty** — zgodnie z **Clarifications** (zawsze widoczny, zasady zera i braku danych). Teksty *Data series caption* są generowane przez `formatCompactPeriodCaption` (skrócone miesiące, strefa HA, opcjonalnie `time_format`) — patrz `src/card/labels/compact-period-caption.ts`.
 
 **Acceptance Scenarios**:
 

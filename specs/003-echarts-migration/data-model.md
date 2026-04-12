@@ -42,6 +42,7 @@ class EChartsRenderer {
     referenceStart?: Date
   ): (number | null)[]
 
+  /** Deleguje do `resolveSeriesCurrentColor(getThemeHost(), primaryColorConfig)`. */
   private resolveColor(primaryColorConfig: string): string
 
   private getThemeHost(): HTMLElement
@@ -101,6 +102,12 @@ destroy()
   → instance.dispose()
   → instance = undefined
 ```
+
+### 1b. Indeks markera „teraz” na osi (`fullTimeline`)
+
+- **Moduł**: [`src/card/axis/now-marker-slot.ts`](../../src/card/axis/now-marker-slot.ts) — `findTimelineSlotContainingInstant(timeline, nowMs)` (spec: **FR-003a**).
+- **Użycie**: `EChartsRenderer.buildOption` (oraz spójnie zastąpione w deprecated `chart-renderer.ts`) zamiast `indexOf` na północy doby w strefie przeglądarki.
+- **Testy**: `tests/unit/now-marker-slot.test.ts`; regresja wizualna opcji: `tests/unit/echarts-renderer.test.ts` → describe „Now marker: markLine uses slot containing current instant”.
 
 ---
 
@@ -191,7 +198,7 @@ Kolejność w **legendzie** jest niezależna: `legend.data` ustawiane jest w kol
   connectNulls: false,                 // FR-002
   showSymbol: false,
   smooth: false,
-  markLine: MarkLineOption,            // FR-003/FR-004: marker "dziś"
+  markLine: MarkLineOption,            // FR-003/FR-003a/FR-004: marker „teraz” (slot zawierający instant)
   markPoint: MarkPointOption           // FR-003: kropka na current Y
 }
 ```
@@ -355,7 +362,7 @@ cumulative-comparison-chart.ts
 | `--primary-text-color` | Etykiety osi X/Y, legenda, tekst tooltipa |
 | `--ha-card-background` / `--card-background-color` | Tło tooltipa |
 
-Kolor serii bieżącej: `primary_color` z konfiguracji lub `--accent-color` / `--primary-color` (`resolveColor`).
+Kolor serii bieżącej: `resolveSeriesCurrentColor(host, primary_color)` w [`src/card/series-color.ts`](../../src/card/series-color.ts) — niepusty YAML (w tym `var(--accent-color)`, aliasy `ha-accent` / `ha-primary-accent` / `ha-primary`); gdy brak: `getComputedStyle(host).getPropertyValue('--eh-series-current')` (domyślnie `#119894` na `:host`) lub fallback `#119894`.
 
 ### 10. Synchronizacja legendy (nachodzenie na wykres)
 

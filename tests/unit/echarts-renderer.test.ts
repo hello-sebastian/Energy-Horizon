@@ -1,5 +1,5 @@
 import "../helpers/setup-dom";
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import type { ComparisonSeries, ChartRendererConfig } from "../../src/card/types";
 
 // Mock ECharts init() so tests can capture ECOption passed to setOption.
@@ -782,18 +782,31 @@ describe('EChartsRenderer', () => {
         }
       });
 
-      const xAxis = option.xAxis as { axisLabel?: { color?: string } };
+      const xAxis = option.xAxis as {
+        axisLabel?: {
+          color?: string;
+          hideOverlap?: boolean;
+          rich?: { edge?: { color?: string }; today?: { color?: string } };
+        };
+      };
       const yAxis = option.yAxis as {
         splitLine?: { show?: boolean; lineStyle?: { color?: string; width?: number } };
         axisLabel?: { color?: string };
       };
 
-      expect(xAxis.axisLabel?.color).toBe("#aabbcc");
+      expect(xAxis.axisLabel?.hideOverlap).toBe(false);
+      expect(xAxis.axisLabel?.rich?.edge?.color).toBe("#ddeeff");
+      expect(xAxis.axisLabel?.rich?.today?.color).toBe("#aabbcc");
       expect(yAxis.axisLabel?.color).toBe("#aabbcc");
       expect(yAxis.splitLine).toEqual({
         show: true,
         lineStyle: { color: "#334455", width: 1 }
       });
+
+      const seriesWithMark = (
+        option.series as Array<{ markLine?: { label?: { show?: boolean } } }>
+      ).find((s) => s.markLine);
+      expect(seriesWithMark?.markLine?.label?.show).toBe(false);
 
       gcsSpy.mockRestore();
       renderer.destroy();
@@ -1384,6 +1397,78 @@ describe('EChartsRenderer', () => {
       const xMax = 9;
       const expectedLegacy = Math.max(1, Math.round(xMax / 4));
       expect((option.xAxis as { interval?: number }).interval).toBe(expectedLegacy);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
+  describe("Now marker: markLine uses slot containing current instant", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("hourly timeline: markLine xAxis is current hour index, not midnight slot 0", () => {
+      vi.useFakeTimers();
+      const hourMs = 3600000;
+      const day0 = Date.UTC(2026, 3, 11, 0, 0, 0, 0);
+      const fullTimeline = Array.from({ length: 24 }, (_, i) => day0 + i * hourMs);
+      vi.setSystemTime(day0 + 14 * hourMs + 15 * 60 * 1000);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: fullTimeline.map((ts, i) => ({
+            timestamp: ts + 100,
+            value: i + 1
+          })),
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 24
+        },
+        reference: undefined,
+        aggregation: "hour",
+        time_zone: "UTC"
+      };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        {
+          primaryColor: "#00ADEF",
+          fillCurrent: true,
+          fillReference: false,
+          fillCurrentOpacity: 40,
+          fillReferenceOpacity: 40,
+          connectNulls: false,
+          comparisonMode: "year_over_year",
+          language: "en-US",
+          numberLocale: "en-US",
+          precision: 1,
+          forecastLabel: "Forecast",
+          showForecast: false,
+          showLegend: false,
+          unit: "kWh",
+          periodLabel: "",
+          haTimeZone: "UTC",
+          primaryAggregation: "hour",
+          mergedDurationMs: 86400000,
+          showReferenceComparison: false,
+          windowAlignStartsMs: [day0]
+        },
+        { current: "Current", reference: "Reference" }
+      );
+
+      const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      const series = (option.series ?? []) as Array<{
+        name?: string;
+        markLine?: { data?: Array<{ xAxis?: number }> };
+      }>;
+      const current = series.find((s) => s.name === "Current");
+      expect(current?.markLine?.data?.[0]).toMatchObject({ xAxis: 14 });
 
       renderer.destroy();
       document.body.removeChild(container);

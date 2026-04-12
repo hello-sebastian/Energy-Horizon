@@ -16,6 +16,7 @@
 // } from "chart.js";
 // import "chartjs-adapter-date-fns";
 import type { ComparisonSeries, ChartRendererConfig, TimeSeriesPoint } from "./types";
+import { findTimelineSlotContainingInstant } from "./axis/now-marker-slot";
 
 /** Labels must be pre-localized by the card; this module does not use translation files. */
 
@@ -180,11 +181,11 @@ export class ChartRenderer {
         )
       : new Array(fullTimeline.length).fill(null);
 
-    // Compute today's slot index and Y values for today marker (T014)
-    const todayMs = new Date();
-    todayMs.setHours(0, 0, 0, 0);
-    const ts = todayMs.getTime();
-    this._todaySlotIndex = fullTimeline.indexOf(ts);
+    // Current-instant slot for today marker (same semantics as EChartsRenderer)
+    this._todaySlotIndex = findTimelineSlotContainingInstant(
+      fullTimeline,
+      Date.now()
+    );
     this._todayCurrentY =
       this._todaySlotIndex >= 0
         ? currentValues[this._todaySlotIndex] ?? undefined

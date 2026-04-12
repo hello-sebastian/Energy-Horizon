@@ -57,6 +57,14 @@ function createLocalize(language: string): LocalizeFunction
 
 ---
 
+## 2a. `getRawTemplate(language: string, key: string): string | undefined`
+
+Returns the **uninterpolated** string for `key` using the same dictionary lookup as `createLocalize(language)` (active language, then `en` fallback per key).
+
+Used when the UI must parse `{{variableName}}` segments before substitution — for example, wrapping formatted numbers in emphasis spans while keeping **one full sentence per translation key** (`text_summary.higher`, etc.).
+
+---
+
 ## 3. Missing key error state
 
 When a key is absent from both the active language and `en`:
@@ -76,19 +84,25 @@ When a key is absent from both the active language and `en`:
 
 Syntax: `{{variableName}}` inside the translated string value.
 
-**Example translation entry** (`pl.json`):
+**Example translation entries** (`pl.json`):
 ```json
-"text_summary.higher": "Twoje zużycie jest o {{diff}} wyższe niż w tym samym okresie w poprzednim roku."
+"text_summary.higher": "Zużycie jest o {{deltaUnit}} ({{deltaPercent}}) wyższe niż w tym samym okresie w poprzednim roku.",
+"text_summary.higher_mom": "Zużycie jest o {{deltaUnit}} ({{deltaPercent}}) wyższe niż w poprzednim miesiącu."
 ```
 
 **Usage in code**:
 ```typescript
-// Translate dynamic summary heading with variable substitution
-localize("text_summary.higher", { diff: formattedDiff })
+// Plain interpolation (no per-segment markup)
+localize("text_summary.higher", {
+  deltaUnit: formattedAbsWithUnit,
+  deltaPercent: formattedPercent
+})
 ```
 
+For the consumption summary comment, the card uses `getRawTemplate` plus `textSummaryNarrativeWithEmphasis()` in `cumulative-comparison-chart.ts` so `{{deltaUnit}}` and `{{deltaPercent}}` render inside `ebc-comment-emphasis` spans.
+
 **Rules**:
-- Variables not provided in `vars` are replaced with their key name (e.g., `{{diff}}` stays as `{{diff}}` if `diff` not passed).
+- Variables not provided in `vars` are left unchanged in the output (the `{{name}}` token remains visible).
 - Variables provided in `vars` but not present in the string are silently ignored.
 - No escaping mechanism is needed (variables are formatted values, not raw user input).
 
@@ -133,8 +147,11 @@ forecast.historical_value
 forecast.confidence            ← must contain {{confidence}}
 text_summary.no_reference
 text_summary.similar
-text_summary.higher            ← must contain {{diff}}
-text_summary.lower             ← must contain {{diff}}
+text_summary.similar_mom
+text_summary.higher             ← must contain {{deltaUnit}} and {{deltaPercent}}
+text_summary.lower              ← must contain {{deltaUnit}} and {{deltaPercent}}
+text_summary.higher_mom         ← month-over-month higher; same placeholders
+text_summary.lower_mom          ← month-over-month lower; same placeholders
 error.missing_translation      ← must contain {{key}}
 ```
 

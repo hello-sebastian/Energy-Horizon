@@ -37,8 +37,11 @@ src/translations/
   "forecast.confidence": "string (may contain {{confidence}})",
   "text_summary.no_reference": "string",
   "text_summary.similar": "string",
-  "text_summary.higher": "string (contains {{diff}})",
-  "text_summary.lower": "string (contains {{diff}})",
+  "text_summary.similar_mom": "string",
+  "text_summary.higher": "string (contains {{deltaUnit}} and {{deltaPercent}})",
+  "text_summary.lower": "string (contains {{deltaUnit}} and {{deltaPercent}})",
+  "text_summary.higher_mom": "string (contains {{deltaUnit}} and {{deltaPercent}})",
+  "text_summary.lower_mom": "string (contains {{deltaUnit}} and {{deltaPercent}})",
   "error.missing_translation": "string (contains {{key}})"
 }
 ```

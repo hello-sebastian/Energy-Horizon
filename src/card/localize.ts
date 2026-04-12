@@ -150,6 +150,26 @@ export function numberFormatToLocale(
   }
 }
 
+/**
+ * Returns the untranslated template string for a key (same lookup order as
+ * {@link createLocalize}). Used when UI must split on `{{placeholders}}` before
+ * interpolating (e.g. wrapping values in emphasis spans).
+ */
+export function getRawTemplate(
+  language: string,
+  key: string
+): string | undefined {
+  const active =
+    DICTIONARIES[language] ?? DICTIONARIES[FALLBACK_LANGUAGE] ?? {};
+  const fallback = DICTIONARIES[FALLBACK_LANGUAGE] ?? {};
+
+  let template = active[key];
+  if (template === undefined) {
+    template = fallback[key];
+  }
+  return template;
+}
+
 export function createLocalize(language: string): LocalizeFunction {
   const active =
     DICTIONARIES[language] ?? DICTIONARIES[FALLBACK_LANGUAGE] ?? {};

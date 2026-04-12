@@ -74,6 +74,11 @@ export interface CardConfig {
   fill_reference?: boolean;
   fill_current_opacity?: number;
   fill_reference_opacity?: number;
+  /**
+   * Current-series paint color (line, fill, swatch). Hex/rgb/names; `var(--accent-color)` etc.
+   * (resolved on the card host); aliases `ha-accent`, `ha-primary-accent`, `ha-primary`.
+   * When omitted: CSS `--eh-series-current` (default `#119894`, Figma brand) on `:host`.
+   */
   primary_color?: string;
   /**
    * If true, missing (null) slots are "visually connected" using an interpolated dashed
@@ -229,6 +234,8 @@ export interface ChartThemeResolved {
   referenceDotBorder: string;
   grid: string;
   primaryText: string;
+  /** Secondary axis / caption text (e.g. X-axis edge ticks per Figma). */
+  secondaryText: string;
   tooltipBackground: string;
   tooltipBorder: string;
   /** Full-height “today” guide line (subtle; not the delta segment). */

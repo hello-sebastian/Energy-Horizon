@@ -151,7 +151,7 @@ Sprawdź w output:
 | Tooltip axis mode | `tooltip.trigger: 'axis'` | FR-010 |
 | Shadow DOM tooltip fix | `tooltip.appendTo: container` | FR-010 |
 | Legenda (opcjonalna) | `legend.show` ← `rendererConfig.showLegend === true` (YAML `show_legend: true`); inne wartości ukrywają legendę | FR-011 |
-| Motyw HA (schematy kolorystyczne) | `getHaThemeTokens()` + `resolveColor()` — `getComputedStyle` na `.ebc-card`/`ha-card`: `--secondary-text-color`, `--divider-color`, `--primary-text-color`, tło karty; seria bieżąca: `primary_color` lub `--accent-color` / `--primary-color` | FR-013a |
+| Motyw HA (schematy kolorystyczne) | `resolveChartTheme()` / `resolveSeriesCurrentColor()` — `getComputedStyle` na hoście karty: `--secondary-text-color`, `--divider-color`, `--primary-text-color`, tło karty; seria bieżąca: `primary_color` lub `--eh-series-current` (domyślnie `#119894`) lub aliasy `ha-accent` / `ha-primary` | FR-013a |
 | Legenda vs obszar wykresu | `instance.on('finished', …)` → `syncLegendLayoutAfterPaint()` — pomiar wysokości legendy, `grid.top`, ewent. `min-height` kontenera, `resize()` | FR-013b |
 | Animacje wyłączone | `animation: false` | FR-012 |
 | Marker dziś — linia | `markLine` na serii current | FR-003, FR-004 |

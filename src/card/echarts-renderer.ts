@@ -18,6 +18,8 @@ import {
 } from './axis/axis-label-format';
 import { trendResolvedLineColor } from './trend-visual';
 import { formatTooltipHeader } from './axis/tooltip-format';
+import { findTimelineSlotContainingInstant } from './axis/now-marker-slot';
+import { resolveSeriesCurrentColor } from './series-color';
 
 // Register modular ECharts components at module level (FR-016)
 echartsUse([
@@ -219,16 +221,10 @@ export class EChartsRenderer {
   }
 
   /**
-   * Resolve primary color from config or theme CSS variables (T005).
+   * Resolve primary color from config, Figma token `--eh-series-current`, or HA aliases (`ha-accent`, …).
    */
   private resolveColor(primaryColorConfig: string): string {
-    if (primaryColorConfig.trim()) return primaryColorConfig;
-    const styles = getComputedStyle(this.getThemeHost());
-    const accentColor = styles.getPropertyValue('--accent-color').trim();
-    if (accentColor) return accentColor;
-    const primaryColor = styles.getPropertyValue('--primary-color').trim();
-    if (primaryColor) return primaryColor;
-    return '#03a9f4';
+    return resolveSeriesCurrentColor(this.getThemeHost(), primaryColorConfig);
   }
 
   /**
@@ -247,6 +243,8 @@ export class EChartsRenderer {
       styles.getPropertyValue('--divider-color').trim() || 'rgba(127, 127, 127, 0.3)';
     const primaryText =
       styles.getPropertyValue('--primary-text-color').trim() || 'rgba(0, 0, 0, 0.87)';
+    const secondaryText =
+      styles.getPropertyValue('--secondary-text-color').trim() || primaryText;
 
     const tooltipBackground =
       styles.getPropertyValue('--ha-card-background').trim() ||
@@ -273,6 +271,7 @@ export class EChartsRenderer {
       referenceDotBorder,
       grid,
       primaryText,
+      secondaryText,
       tooltipBackground,
       tooltipBorder,
       todayFullHeightLine,
@@ -395,10 +394,11 @@ export class EChartsRenderer {
     const currentSeriesVisible = currentValues.some((v) => v !== null);
     const mode = rendererConfig.xAxisMode ?? "adaptive";
 
-    const todayMs = new Date();
-    todayMs.setHours(0, 0, 0, 0);
-    const todayTimestamp = todayMs.getTime();
-    const todaySlotIndex = fullTimeline.indexOf(todayTimestamp);
+    // “Today” pointer = slot on fullTimeline that contains the current instant (hour/day/week/month buckets).
+    const todaySlotIndex = findTimelineSlotContainingInstant(
+      fullTimeline,
+      Date.now()
+    );
 
     const xLabelStops = (() => {
       if (mode === "forced") {
@@ -463,6 +463,49 @@ export class EChartsRenderer {
         agg
       );
     };
+
+    /** Figma: edge ticks 11px secondary; “today” tick 14px bold primary (when in range). */
+    const xAxisRichAdaptive = mode === 'adaptive' && currentSeriesVisible;
+    const xAxisAxisLabel = xAxisRichAdaptive
+      ? {
+          formatter: (value: number) => {
+            const text = formatXAxisLabel(value);
+            if (!text) return '';
+            const tick = Math.round(value);
+            if (todaySlotIndex >= 0 && tick === todaySlotIndex) {
+              return `{today|${text}}`;
+            }
+            return `{edge|${text}}`;
+          },
+          margin: tickLabelGapPx,
+          rotate: 0,
+          hideOverlap: false,
+          alignMinLabel: 'left' as const,
+          alignMaxLabel: 'right' as const,
+          rich: {
+            edge: {
+              color: theme.secondaryText,
+              fontSize: 11,
+              fontWeight: 'normal' as const,
+              lineHeight: 14
+            },
+            today: {
+              color: theme.primaryText,
+              fontSize: 14,
+              fontWeight: 'bold' as const,
+              lineHeight: 18
+            }
+          }
+        }
+      : {
+          color: theme.primaryText,
+          formatter: (value: number) => formatXAxisLabel(value),
+          margin: tickLabelGapPx,
+          rotate: 0,
+          hideOverlap: true,
+          alignMinLabel: 'left' as const,
+          alignMaxLabel: 'right' as const
+        };
 
     const fillCurrentOpacity = Math.min(
       Math.max(rendererConfig.fillCurrentOpacity, 0),
@@ -644,14 +687,19 @@ export class EChartsRenderer {
         markPointData.push({
           coord: [todaySlotIndex, todayCurrentY],
           symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: primaryColor }
+          symbolSize: 8,
+          itemStyle: {
+            color: primaryColor,
+            borderColor: theme.referenceDotBorder,
+            borderWidth: 2
+          }
         });
       }
 
       (series[solidCurrentSeriesIndex] as any).markLine = {
         silent: true,
         symbol: ['none', 'none'],
+        label: { show: false },
         data: markLineData,
         lineStyle: { type: 'dashed', color: theme.todayFullHeightLine, width: 1 }
       };
@@ -710,7 +758,13 @@ export class EChartsRenderer {
     } else {
       // No today marker - add empty mark point arrays
       (series[solidCurrentSeriesIndex] as any).markPoint = { silent: true, data: [] };
-      (series[solidCurrentSeriesIndex] as any).markLine = { silent: true, symbol: ['none', 'none'], data: [], lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 } };
+      (series[solidCurrentSeriesIndex] as any).markLine = {
+        silent: true,
+        symbol: ['none', 'none'],
+        label: { show: false },
+        data: [],
+        lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 }
+      };
       if (solidReferenceSeriesIndex !== undefined) {
         (series[solidReferenceSeriesIndex] as any).markPoint = { silent: true, data: [] };
       }
@@ -856,18 +910,7 @@ export class EChartsRenderer {
         // Show only a few readable labels (avoid overlapping text).
         axisTick: { show: false },
         axisLine: { show: false },
-        axisLabel: {
-          color: theme.primaryText,
-          formatter: (value: number) => formatXAxisLabel(value),
-          margin: tickLabelGapPx,
-          rotate: 0,
-          hideOverlap: true,
-          // Keep both edge labels inside the grid area.
-          alignMinLabel: 'left',
-          // Keeps the last (max) label within the grid by aligning its right edge to the right-side tick.
-          // This prevents cases where the last label gets clipped/shifted (e.g. `30` vs `3` / `365` not visible).
-          alignMaxLabel: 'right'
-        }
+        axisLabel: xAxisAxisLabel
       },
       yAxis: {
         type: 'value',

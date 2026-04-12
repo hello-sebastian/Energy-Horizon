@@ -12,6 +12,7 @@ const mockTheme: ChartThemeResolved = {
   referenceDotBorder: "#3",
   grid: "#4",
   primaryText: "#5",
+  secondaryText: "#5b",
   tooltipBackground: "#6",
   tooltipBorder: "#7",
   todayFullHeightLine: "#8",

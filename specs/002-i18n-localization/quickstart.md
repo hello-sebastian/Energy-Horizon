@@ -73,11 +73,14 @@ Valid values for `number_format`: `comma`, `decimal`, `language`, `system` (same
 localize("chart.section_title")
 ```
 
-4. For dynamic strings with variables, use `{{variableName}}` in the JSON value and pass the variable at call time:
+4. For dynamic strings with variables, use `{{variableName}}` (camelCase) in the JSON value and pass the variable at call time. Prefer **one complete sentence per key** — do not split a phrase into `*_before` / `*_after` keys around a variable.
 
 ```typescript
-// Displays "Your consumption is X kWh higher than last year"
-localize("text_summary.higher", { diff: formattedDiff })
+// Example: consumption summary (values are pre-formatted strings)
+localize("text_summary.higher", {
+  deltaUnit: "12 kWh",
+  deltaPercent: "5.2%"
+})
 ```
 
 ---

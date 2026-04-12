@@ -43,6 +43,8 @@ There are two different “time” ideas in the UI:
 
 **Practical implication:** When you hover, you’re comparing values that correspond to the **same position in the window**, even if their absolute calendar dates differ (e.g., 2026 vs 2025).
 
+**Chart “now” pointer (vertical guide, dots, delta segment, highlighted X tick):** The card places these on the **timeline slot whose time range contains the current instant** (`Date.now()`), using consecutive slot boundaries from `fullTimeline`. With **week** or **month** LTS aggregation there is no separate “today” day column on the axis—the pointer sits on the bucket that **covers today**, which matches what the tooltip shows for that bucket. With **hour** aggregation over a single day, the pointer follows the **current hour**, not midnight.
+
 > If you force `x_axis_format` / `tooltip_format`, you are formatting the shared timeline ticks/headers. That’s intentional: it keeps the mental model “same slot = same elapsed position”.
 
 ---

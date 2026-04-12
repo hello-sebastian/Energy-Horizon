@@ -83,7 +83,7 @@
 
 **Key architectural change**: `computeTextSummary` in `ha-api.ts` currently produces hardcoded Polish heading strings. To keep logic code free of UI strings:
 - `computeTextSummary` is refactored to return only `{ trend: Trend; diffValue?: number; unit: string }` (no `heading` string).
-- The component (`cumulative-comparison-chart.ts`) constructs the displayed heading using `localize("text_summary.higher", { diff: formattedDiff })` based on the returned `trend`.
+- The component (`cumulative-comparison-chart.ts`) builds the summary line from keys `text_summary.higher` / `text_summary.lower` (and `*_mom` for month-over-month), each a **single sentence** with `{{deltaUnit}}` and `{{deltaPercent}}`. It uses `getRawTemplate` and `textSummaryNarrativeWithEmphasis()` so those segments keep `ebc-comment-emphasis` styling.
 - `TextSummary.heading` is removed from the type; the component computes it at render time.
 
 **Rationale**: Logic modules should remain free of UI strings (Constitution §III; feature FR-010). This also makes `ha-api.ts` fully testable without locale concerns.
@@ -118,8 +118,8 @@ All strings to be migrated to the dictionary:
 | `ha-api.ts` | `"Bieżący okres"` (periodLabel arg) | `period.current` |
 | `ha-api.ts` | `"Brak wystarczających danych…"` | `text_summary.no_reference` |
 | `ha-api.ts` | `"Twoje zużycie jest na podobnym poziomie…"` | `text_summary.similar` |
-| `ha-api.ts` | `"Twoje zużycie jest o ${diffText} wyższe…"` | `text_summary.higher` (with `{{diff}}`) |
-| `ha-api.ts` | `"Twoje zużycie jest o ${diffText} niższe…"` | `text_summary.lower` (with `{{diff}}`) |
+| `ha-api.ts` | `"Twoje zużycie jest o ${diffText} wyższe…"` | `text_summary.higher` (with `{{deltaUnit}}`, `{{deltaPercent}}`; MoM: `text_summary.higher_mom`) |
+| `ha-api.ts` | `"Twoje zużycie jest o ${diffText} niższe…"` | `text_summary.lower` (same placeholders; MoM: `text_summary.lower_mom`) |
 | `chart-renderer.ts` | `"Bieżący okres"` (dataset label) | `period.current` |
 | `chart-renderer.ts` | `"Okres referencyjny"` (dataset label) | `period.reference` |
 

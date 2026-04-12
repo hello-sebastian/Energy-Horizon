@@ -81,7 +81,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
 | `fill_current_opacity` | number 0–100 | `30` | Invalid / out of range → `30`. |
 | `fill_reference_opacity` | number 0–100 | `30` | Same as above. |
-| `primary_color` | string (CSS color) | empty → HA accent | Current series line color; invalid CSS may be ignored by the browser. |
+| `primary_color` | string | empty → card token `#119894` | Current series line, fill, and caption swatch. Use `var(--accent-color)`, `ha-accent` / `ha-primary-accent`, or `ha-primary` to follow HA theme; override `--eh-series-current` with Card Mod if needed. |
 | `connect_nulls` | boolean | `true` | Dashed visual interpolation across `null` gaps; `false` = gaps on the chart. |
 | `show_legend` | boolean | `false` | Legend **only** with explicit `show_legend: true`. |
 | `x_axis_format` | string | — | Luxon pattern for X-axis labels; disables adaptive label mode. |
@@ -233,7 +233,7 @@ Full Luxon token table: [Luxon — formatting tokens](https://moment.github.io/l
 
 ## Chart: colors, fills, legend, gaps
 
-- **`primary_color`**: current series line; empty string → theme default (accent).
+- **`primary_color`**: current series line, area fill, and the small caption swatch. When omitted, the card uses the Figma brand teal (`#119894`) from CSS `--eh-series-current` on `:host` (not Home Assistant `--primary-color`). To match the HA theme again, set e.g. `primary_color: ha-primary` or `primary_color: var(--primary-color)`, or `ha-accent` / `var(--accent-color)` for accent-first. Values are resolved on the card host so `var(--…)` works in YAML.
 - **`fill_*` / `fill_*_opacity`**: fills under lines; invalid opacity → 30%.
 - **`connect_nulls`**: adds an auxiliary series with dashed interpolation across gaps; the solid line still breaks on `null`.
 - **`show_legend`**: no legend by default; explicit `true` shows it.

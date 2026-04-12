@@ -111,28 +111,29 @@ function formatSigned(
 
 ---
 
-## New Period Label Computation
+## Period caption (compact qualifier)
 
-### `buildPeriodSuffix` — co-located in `src/card/cumulative-comparison-chart.ts`
+### `formatCompactPeriodCaption` — `src/card/labels/compact-period-caption.ts`
 
 ```typescript
-function buildPeriodSuffix(
-  date: Date,
-  mode: ComparisonMode,
-  language: string
+function formatCompactPeriodCaption(
+  window: ResolvedWindow,
+  peerWindow: ResolvedWindow | undefined,
+  opts: { zone: string; locale: string; hour12?: boolean }
 ): string
 ```
 
-**Arguments**:
-- `date` — `period.current_start` or `period.reference_start`
-- `mode` — `"year_over_year"` | `"month_over_year"`
-- `language` — resolved locale language string (e.g., `"en"`, `"pl"`)
+**Inputs**:
+- `window` / `peerWindow` — from `CardState.resolvedWindows` (or synthesized from `ComparisonPeriod` via `resolvedWindowForCaption` when a row has no second window)
+- `zone` — `ComparisonPeriod.time_zone` or `hass.config.time_zone`
+- `locale` — same cascade as X-axis labels (`resolveLabelLocale`)
+- `hour12` — from `hour12FromHaTimeFormat(hass.locale?.time_format)` when set
 
-**Returns**:
-- `year_over_year`: `"2026"` (year as string)
-- `month_over_year`: `"March 2026"` or locale-equivalent (via `Intl.DateTimeFormat`)
+**Behaviour** (summary): full calendar year → `yyyy`; full calendar month → abbreviated month + year; same-day / in-month ranges; cross-month/year ranges; hourly windows with `time_format`-aware times. Peer window drives optional year suffix when comparing across calendar years.
 
-**Used by**: current period and reference period label rows in `render()`.
+**`expandCurrentWindowForCaption`**: when `MergedTimeWindowConfig.currentEndIsNow` and the window is `role: 'current'`, replaces `end` with `endOf('month')` or `endOf('year')` (by `comparison_preset`) for **caption input only** — not for LTS. Skipped for `aggregation: 'hour'`.
+
+**Used by**: comparison panel captions and parenthetical text in `cumulative-comparison-chart.ts` `render()` (current column: `expandCurrentWindowForCaption` then `formatCompactPeriodCaption`; reference column peer stays the real current `ResolvedWindow` for year logic).
 
 ---
 
@@ -144,7 +145,7 @@ function buildPeriodSuffix(
 | `src/translations/de.json` | `forecast.historical_value` | Duplicate row eliminated (FR-014) |
 | `src/translations/pl.json` | `forecast.historical_value` | Duplicate row eliminated (FR-014) |
 
-No new translation keys are added: title and icon content come from HA config/entity attributes (not translated); period suffixes are generated via `Intl.DateTimeFormat` (locale-native, not translation-file-dependent).
+No new translation keys are added: title and icon content come from HA config/entity attributes (not translated); period suffixes are generated via Luxon (`formatCompactPeriodCaption`, locale-native, not translation-file-dependent).
 
 ---
 

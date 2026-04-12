@@ -3,6 +3,8 @@ export interface HomeAssistant {
   locale?: {
     language: string;
     number_format?: "comma" | "decimal" | "language" | "system";
+    /** Home Assistant user setting: `"12"` | `"24"` | `"language"` */
+    time_format?: string;
   };
   config?: {
     time_zone?: string;

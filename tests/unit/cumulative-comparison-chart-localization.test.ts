@@ -118,6 +118,26 @@ describe("EnergyHorizonCard localization", () => {
     // When hass is missing, render() returns empty template
     expect(fragment?.strings?.join("")).toBe("");
   });
+
+  it("text_summary higher/lower use full sentences with deltaUnit and deltaPercent", () => {
+    const localize = createLocalize("en");
+    const higher = localize("text_summary.higher", {
+      deltaUnit: "12 kWh",
+      deltaPercent: "5%"
+    });
+    expect(higher).toContain("12 kWh");
+    expect(higher).toContain("5%");
+    expect(higher).toContain("higher");
+    expect(higher).toContain("same period last year");
+
+    const lowerMom = localize("text_summary.lower_mom", {
+      deltaUnit: "3 kWh",
+      deltaPercent: "2%"
+    });
+    expect(lowerMom).toContain("previous month");
+    expect(lowerMom).toContain("3 kWh");
+    expect(lowerMom).toContain("lower");
+  });
 });
 
 

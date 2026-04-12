@@ -75,12 +75,12 @@ A user reviewing the forecast section of the card notices two statistics labelle
 
 ### User Story 5 - Time Period Context in Statistic Labels (Priority: P5)
 
-A user reading the summary statistics ("Current period", "Reference period") on the card cannot tell which specific year or month the statistics correspond to without cross-referencing external information. Each period label is enriched with a parenthetical date qualifier that reflects the actual time window displayed:
+A user reading the summary statistics ("Current period", "Reference period") on the card cannot tell which specific year or month the statistics correspond to without cross-referencing external information. Each period label is enriched with a parenthetical **compact** date qualifier derived from the resolved time window in **Home Assistant’s time zone** (see `formatCompactPeriodCaption` in `src/card/labels/compact-period-caption.ts`): abbreviated month names, compressed ranges (e.g. full calendar month → `Mar 2026`), and year disambiguation when the paired reference/current window falls in a different calendar year. Examples for typical presets:
 
-- For year-over-year comparison: labels show the year in parentheses, e.g., `Current period (2026)`, `Reference period (2025)`.
-- For month-over-year comparison: labels show the month and year in parentheses, e.g., `Current period (March 2026)`, `Reference period (March 2025)`.
+- Year-over-year, full reference calendar year: `Reference period (2025)`; **current** caption uses the **nominal calendar year** `2026` when the preset ends the LTS window at “now” (`expandCurrentWindowForCaption` + `currentEndIsNow`), not a day-range to today.
+- Month-over-year, full calendar month: `Current period (Mar 2026)`, `Reference period (Mar 2025)` (locale-specific short month) — same nominal-month rule for the current side when data are month-to-date.
 
-Date formatting follows the card's active locale setting (consistent with existing date/number formatting conventions).
+Clock times in hourly windows respect HA `locale.time_format` when present (`12` / `24` / `language`). Qualifiers still follow the card label locale (`language` YAML → `hass.locale.language` → `en`).
 
 **Why this priority**: This is a readability enhancement that requires knowledge of the time window currently in view. It is independently implementable and testable but relies on the existing comparison period logic.
 
@@ -88,10 +88,10 @@ Date formatting follows the card's active locale setting (consistent with existi
 
 **Acceptance Scenarios**:
 
-1. **Given** the card is in `year_over_year` mode for 2026, **When** the summary statistics render, **Then** labels show `Current period (2026)` and `Reference period (2025)`.
-2. **Given** the card is in `month_over_year` mode for March 2026, **When** the summary statistics render, **Then** labels show `Current period (March 2026)` and `Reference period (March 2025)`.
-3. **Given** the card's locale is set to Polish, **When** the month name is displayed, **Then** the month is rendered in Polish (e.g., `Marzec 2026`), consistent with locale-based formatting.
-4. **Given** `period_offset` is set to `-2` (comparing against two years ago), **When** the summary statistics render, **Then** the years in the labels correctly reflect the offset (e.g., `Current period (2026)`, `Reference period (2024)`).
+1. **Given** the card is in `year_over_year` mode for 2026, **When** the summary statistics render, **Then** parenthetical qualifiers include the correct calendar years for current vs reference (e.g. `2026` and `2025` where the windows are full calendar years or year-to-date as resolved).
+2. **Given** the card is in `month_over_year` mode for March 2026, **When** the summary statistics render, **Then** qualifiers include the correct short month and year for each window (e.g. English `Mar 2026` / `Mar 2025`).
+3. **Given** the card's locale is set to Polish, **When** the month name is displayed, **Then** the month uses Polish abbreviations from Luxon/ICU for that locale (e.g. `mar` / `mar.` variants — exact glyph depends on environment).
+4. **Given** `period_offset` is set to `-2` (comparing against two years ago), **When** the summary statistics render, **Then** the years in the qualifiers correctly reflect the offset (e.g. reference year two years below current).
 
 ---
 
@@ -122,15 +122,15 @@ Date formatting follows the card's active locale setting (consistent with existi
 - **FR-012**: The `Historical value` row MUST be removed from the forecast statistics section.
 - **FR-013**: The `Consumption in reference period` row MUST remain in the forecast statistics section and continue to display the reference total value.
 - **FR-014**: The `forecast.historical_value` translation key MUST be removed from all translation files (all supported languages).
-- **FR-015**: In `year_over_year` comparison mode, the "Current period" and "Reference period" summary labels MUST include the corresponding year in parentheses (e.g., `Current period (2026)`).
-- **FR-016**: In `month_over_year` comparison mode, the "Current period" and "Reference period" summary labels MUST include the corresponding month and year in parentheses (e.g., `Current period (March 2026)`).
-- **FR-017**: Period label date formatting (month names, year format) MUST follow the card's active locale setting, consistent with existing number and date formatting conventions.
-- **FR-018**: The period qualifier in labels MUST correctly reflect the `period_offset` configuration value.
+- **FR-015**: In `year_over_year` comparison mode, the "Current period" and "Reference period" summary labels MUST include a parenthetical qualifier that unambiguously identifies the resolved window (typically the calendar year or a compact in-year range); MUST NOT use browser-local `Date.getFullYear()` alone without HA time zone — computation uses `ResolvedWindow` bounds and `ComparisonPeriod.time_zone` / `hass.config.time_zone`.
+- **FR-016**: In `month_over_year` (and analogous month-scoped) modes, qualifiers MUST include the correct month and year using **short** month forms (`LLL` / ICU abbreviated month) unless the window compresses to a full calendar month or year per compact rules.
+- **FR-017**: Period qualifier formatting MUST follow the card’s label locale and HA time zone; optional HA `locale.time_format` applies to clock portions of hourly-window qualifiers.
+- **FR-018**: The period qualifier MUST correctly reflect the `period_offset` configuration value (shifted reference window).
 
 ### Key Entities
 
 - **CardConfig**: The user-defined configuration object for the card. Gains optional fields: `show_title` (boolean), `icon` (string), `show_icon` (boolean). Existing `title` field behaviour is clarified: empty string treated as absent.
-- **SummaryStats / ComparisonSeries**: Existing data structures — no structural changes needed; the period date information required for labels (FR-015, FR-016) is derivable from the existing `ComparisonPeriod` data already computed during data fetching.
+- **SummaryStats / ComparisonSeries**: Existing data structures — no structural changes needed; qualifiers are derived from `resolvedWindows` (or `ComparisonPeriod` fallback) plus HA time zone (`formatCompactPeriodCaption`).
 
 ## Success Criteria *(mandatory)*
 

@@ -111,22 +111,18 @@
 
 ## Phase 7: User Story 5 – Time Period Context in Statistic Labels (Priority: P5)
 
-**Goal**: Summary period labels include a parenthetical date qualifier: year in `year_over_year` mode, month+year in `month_over_year` mode, locale-aware via `Intl.DateTimeFormat`.
+**Goal**: Summary period labels include a parenthetical **compact** date qualifier derived from resolved windows and HA time zone (`formatCompactPeriodCaption`). Supersedes the original T023–T025 `buildPeriodSuffix` / `Intl` long-month approach (2026-04+).
 
-**Independent Test**: Render in `year_over_year` mode (2026) and `month_over_year` mode (March 2026, locale `en` and `pl`) — verify parenthetical suffix on both current and reference period labels; verify `period_offset: -2` produces the correct years.
+**Independent Test**: `tests/unit/period-label.test.ts` covers full year, full month, ranges, peer-year disambiguation, hourly captions; card render still shows parenthetical qualifiers on current/reference.
 
 ### Implementation for User Story 5
 
 - [x] T022 [US5] In `src/card/cumulative-comparison-chart.ts`, in the `_loadData()` success path, set `this._state.period = comparisonPeriod` (the `ComparisonPeriod` returned from `buildComparisonPeriod()`). Use the `CardState.period` field added in T007.
-- [x] T023 [US5] Implement pure helper function `buildPeriodSuffix` in `src/card/cumulative-comparison-chart.ts` (module-level). Signature: `function buildPeriodSuffix(date: Date, mode: ComparisonMode, language: string): string`. Logic: `year_over_year` → `String(date.getFullYear())`; `month_over_year` → `new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' }).format(date)`.
-- [x] T024 [US5] In `src/card/cumulative-comparison-chart.ts`, in `render()`, when `_state.status === 'ready' && _state.period` is set, compute:
-  - `const lang = this._config.language ?? this.hass?.language ?? 'en';`
-  - `const currentSuffix = buildPeriodSuffix(_state.period.current_start, _config.comparison_mode, lang);`
-  - `const referenceSuffix = buildPeriodSuffix(_state.period.reference_start, _config.comparison_mode, lang);`
-  - Append ` (${currentSuffix})` / ` (${referenceSuffix})` to the respective period label strings for "Current period" and "Reference period" rows.
-- [x] T025 [P] [US5] Write unit tests for `buildPeriodSuffix` in `tests/unit/period-label.test.ts` (new file). Cover: `year_over_year` with date `2026-01-01` → `"2026"`; `month_over_year` with date `2026-03-01`, language `"en"` → `"March 2026"`; `month_over_year` with date `2026-03-01`, language `"pl"` → `"marzec 2026"`; `year_over_year` with `period_offset: -2` (date `2024-01-01`) → `"2024"`.
+- [x] T023 [US5] ~~`buildPeriodSuffix`~~ **Replaced**: implement `formatCompactPeriodCaption` (+ `resolvedWindowForCaption`, `hour12FromHaTimeFormat`) in `src/card/labels/compact-period-caption.ts` (Luxon, HA `time_zone`, label locale).
+- [x] T024 [US5] In `render()`, when `_state.status === 'ready' && _state.period`, compute suffixes via `formatCompactPeriodCaption(wCurrent, wReference, opts)` and swapped peer for the reference column; append ` (${suffix})` to accessible labels / captions as before.
+- [x] T025 [P] [US5] Unit tests in `tests/unit/period-label.test.ts` target `formatCompactPeriodCaption` (and `isForecastLineVisible`).
 
-**Checkpoint**: `npm test` passes; period labels render as `Current period (2026)` / `Reference period (2025)` in year mode, and `Current period (March 2026)` / `Reference period (March 2025)` in month mode.
+**Checkpoint**: `npm test` passes; qualifiers remain unambiguous and locale-aware; narrow layouts use short months and compressed ranges.
 
 ---
 

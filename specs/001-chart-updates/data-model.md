@@ -26,7 +26,7 @@ fill_current_opacity?: number;    // default: 30    — krycie wypełnienia seri
 fill_reference_opacity?: number;  // default: 30    — krycie wypełnienia serii referencyjnej, zakres 0–100
 
 // --- Nowe pola (US4: Primary color) ---
-primary_color?: string;           // kolor w notacji webowej (hex, rgb, rgba, nazwa CSS); brak = --accent-color
+primary_color?: string;           // hex/rgb/var(--…)/aliasy ha-*; brak = --eh-series-current (domyślnie #119894)
 ```
 
 **Uwaga**: `show_forecast` już istnieje w `CardConfig` — nie trzeba dodawać ponownie.
@@ -194,7 +194,7 @@ private alignSeriesOnTimeline(
 private resolveColor(primaryColorConfig?: string): string
 ```
 
-**Opis**: Zwraca resolved kolor. Priorytet: `primaryColorConfig` → CSS `--accent-color` → CSS `--primary-color` → `'#03a9f4'`.
+**Opis (aktualny produkt — ECharts)**: Patrz `resolveSeriesCurrentColor` w `series-color.ts`: niepusty YAML / aliasy HA / `var()`; gdy brak — `--eh-series-current` → `#119894`.
 
 ### 3e. Prywatna funkcja `colorWithOpacity`
 
@@ -340,7 +340,7 @@ Dodać sekcję dokumentacji nowych opcji YAML (FR-022, FR-023). Przykład:
 
 | Opcja | Typ | Domyślna | Opis |
 |---|---|---|---|
-| `primary_color` | string | (kolor akcentu HA) | Kolor linii serii bieżącej (hex, rgb, rgba, CSS name) |
+| `primary_color` | string | teal marki `#119894` (`--eh-series-current`) | Kolor serii bieżącej: hex/rgb, `var(--accent-color)`, `ha-accent` / `ha-primary` |
 | `fill_current` | boolean | `true` | Wypełnienie pod serią bieżącą |
 | `fill_reference` | boolean | `false` | Wypełnienie pod serią referencyjną |
 | `fill_current_opacity` | number (0–100) | `30` | Krycie wypełnienia serii bieżącej (%) |
@@ -383,7 +383,7 @@ ChartRenderer.update(
 
 | Pole | Walidacja | Fallback |
 |---|---|---|
-| `primary_color` | Dowolny string CSS; niepoprawny → CSS ignoruje, `colorWithOpacity` zwraca rgba(0,0,0,alpha) | `--accent-color` lub `#03a9f4` |
+| `primary_color` | Dowolny string (CSS / `var()` / alias); nierozwiązany → fallback token karty | `--eh-series-current` / `#119894` |
 | `fill_current_opacity` | `clampOpacity()`: liczba 0–100; poza zakresem/NaN → 30 | 30 |
 | `fill_reference_opacity` | Jak wyżej | 30 |
 | `fill_current` | Boolean; brak → `true` | `true` |

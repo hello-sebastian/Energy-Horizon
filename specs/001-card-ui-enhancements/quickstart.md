@@ -109,5 +109,5 @@ The forecast section shows **only** "Consumption in reference period". The "Hist
 | `src/translations/de.json` | Remove `forecast.historical_value` |
 | `src/translations/pl.json` | Remove `forecast.historical_value` |
 | `tests/unit/card-header-resolution.test.ts` | NEW: unit tests for title/icon resolution logic |
-| `tests/unit/period-label.test.ts` | NEW: unit tests for `buildPeriodSuffix` |
+| `tests/unit/period-label.test.ts` | Unit tests for `formatCompactPeriodCaption` (`src/card/labels/compact-period-caption.ts`) |
 | `tests/integration/card-render.test.ts` | Update: assert header present; assert no historical_value row |
