@@ -24,6 +24,7 @@
 | **G7** | **MoM (same year, different months)** | **2** | **day** | Window starts differ by month, same year → default axis/tooltip **day-of-month only** for `day` aggregation (**SC-LABEL-1**). **Example (30 vs 31 days):** current = April, reference = March → `timeline.length` = **31**; slots **0–29** = April 1…30 (prefix); slot **30** = ordinal tail (calendar “May 1” at daily grain). Tooltip header for column *i* must match **`timeline[i]`** (same slot semantics as the axis), including the tail. |
 | **G8** | **“Now” with longer reference** | **2** | **day** | Partial current + full reference (nominal FR-C longer axis): vertical “now” index = bucket of today **inside window 0** in HA TZ, not last slot of reference calendar (**SC-NOW-1**). Covered by `findNowSlotIndexOnComparisonAxis` + renderer wiring. |
 | **G9** | **MoY / any preset + `aggregation: day`, LTS `sum`** | **2** | **day** | After `mapLtsResponseToCumulativeSeries`, the **first** point’s `timestamp` MUST equal **`buildTimelineSlots(window0.start, …, "day", HA_TZ)[0]`** (same ms as first axis slot). Prevents “series starts on day 2” when ticks show day 1. |
+| **G10** | **Adaptive axis — “now” on first or last tick** | **1+** | **day** (typ.) | When the “now” slot index equals **0** or **last** on the adaptive three-tick axis, the implementation MUST stack the **edge** calendar line and a short **“now”** caption on two lines and reserve vertical space (**SC-AXIS-NOW-EDGE-1**). See `tests/unit/echarts-renderer.test.ts` (“X-axis: now label stacks below edge when colliding”). |
 
 ## SC-4 — Reader checklist (wiki / YAML mental model)
 
@@ -44,3 +45,4 @@ After updating `wiki-publish/Mental-Model-Comparisons-and-Timelines.md`, confirm
 | G8 | `tests/unit/ha-api.test.ts` (`findNowSlotIndexOnComparisonAxis`) + `src/card/echarts-renderer.ts` |
 | G7 tooltip parity | `tests/unit/echarts-renderer.test.ts` (`resolveTimelineSlotIndexFromAxisParams`, axis tooltip formatter) + `tests/unit/tooltip-format.test.ts` / `tests/unit/axis-label-format.test.ts` (FR-H `Intl.timeZone`) |
 | **G9** | **`tests/unit/ha-api.test.ts`** (`mapLtsResponseToSeries` timestamps + `places sum-delta timestamps on period start…`) |
+| **G10** | **`tests/unit/echarts-renderer.test.ts`** (describe “X-axis: now label stacks below edge when colliding”) |

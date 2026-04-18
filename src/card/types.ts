@@ -343,5 +343,9 @@ export interface ChartRendererConfig {
    * Multi-window comparison: show day-of-month only for `day` aggregation (MoM).
    */
   comparisonAxisDayOfMonthOnly?: boolean;
+  /**
+   * Short label for the X-axis “now” tick when it stacks below the edge bucket (adaptive axis).
+   */
+  xAxisNowStackCaption?: string;
 }
 

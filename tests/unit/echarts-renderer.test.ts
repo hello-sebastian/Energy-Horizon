@@ -118,7 +118,7 @@ describe('EChartsRenderer', () => {
     expect(getModelMock).toHaveBeenCalled();
     expect(getViewOfComponentModelMock).toHaveBeenCalled();
     expect(setOptionMock).toHaveBeenCalledWith(
-      { grid: { top: expectedGridTop } },
+      { grid: { top: expectedGridTop, bottom: 0 } },
       { notMerge: false, lazyUpdate: false }
     );
     expect(container.style.minHeight).toBe(`${expectedMinHeightTotal}px`);
@@ -1676,6 +1676,244 @@ describe('EChartsRenderer', () => {
       }>;
       const current = series.find((s) => s.name === "Current");
       expect(current?.markLine?.data?.[0]).toMatchObject({ xAxis: 14 });
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
+  describe("X-axis: now label stacks below edge when colliding", () => {
+    let escapeEchartsRichAxisPiece: (s: string) => string;
+    let stackExtraPx: number;
+
+    beforeAll(async () => {
+      const mod = await import("../../src/card/echarts-renderer");
+      escapeEchartsRichAxisPiece = mod.escapeEchartsRichAxisPiece;
+      stackExtraPx = mod._X_AXIS_NOW_STACK_EXTRA_PX;
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function edgeCollisionBaseConfig(
+      overrides: Partial<ChartRendererConfig> = {}
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: false,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: false,
+        unit: "kWh",
+        periodLabel: "",
+        haTimeZone: "UTC",
+        primaryAggregation: "day",
+        mergedDurationMs: 86400000 * 7,
+        showReferenceComparison: false,
+        windowAlignStartsMs: [],
+        xAxisNowStackCaption: "Now",
+        xAxisLabelLocale: "en-US",
+        ...overrides
+      };
+    }
+
+    it("escapes characters that would break ECharts rich syntax", () => {
+      expect(escapeEchartsRichAxisPiece("a|b{c}")).not.toMatch(/\|/);
+      expect(escapeEchartsRichAxisPiece("a|b{c}")).not.toMatch(/[{}]/);
+    });
+
+    it("when now is first bucket: stacked rich label, grid.bottom bump, minHeight after finished", () => {
+      vi.useFakeTimers();
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = Array.from(
+        { length: 7 },
+        (_, i) => day0 + i * 86400000
+      );
+      vi.setSystemTime(day0 + 60 * 60 * 1000);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: fullTimeline.map((ts, i) => ({
+            timestamp: ts + 100,
+            value: i + 1
+          })),
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 1
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const w0Start = day0;
+      const w0End = day0 + 7 * 86400000;
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        edgeCollisionBaseConfig({
+          windowAlignStartsMs: [w0Start],
+          currentWindowStartMs: w0Start,
+          currentWindowEndMs: w0End
+        }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      const xAxis = option.xAxis as {
+        axisLabel?: { formatter?: (v: number) => string };
+      };
+      const fmt = xAxis.axisLabel?.formatter!;
+      const at0 = fmt(0);
+      expect(at0).toContain("\n");
+      expect(at0).toContain("{edge|");
+      expect(at0).toContain("{today|");
+      expect(at0).toContain("Now");
+
+      const tickGap = 8;
+      expect((option.grid as { bottom?: number }).bottom).toBe(
+        tickGap + stackExtraPx
+      );
+
+      setOptionMock.mockClear();
+      const finishedHandler = onMock.mock.calls.find((c) => c[0] === "finished")?.[1] as () => void;
+      finishedHandler();
+
+      expect(setOptionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          grid: expect.objectContaining({
+            bottom: tickGap + stackExtraPx
+          })
+        }),
+        expect.any(Object)
+      );
+
+      const legendHeight = mockLegendBoundingHeightPx;
+      const extraLegend = Math.max(0, legendHeight - 32);
+      const expectedMin = 240 + extraLegend + stackExtraPx;
+      expect(container.style.minHeight).toBe(`${expectedMin}px`);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("when now is last bucket: stacked label at xMax", () => {
+      vi.useFakeTimers();
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = Array.from(
+        { length: 7 },
+        (_, i) => day0 + i * 86400000
+      );
+      vi.setSystemTime(day0 + 6 * 86400000 + 12 * 3600000);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: fullTimeline.map((ts, i) => ({
+            timestamp: ts + 100,
+            value: i + 1
+          })),
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 1
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const w0Start = day0;
+      const w0End = day0 + 7 * 86400000;
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        edgeCollisionBaseConfig({
+          windowAlignStartsMs: [w0Start],
+          currentWindowStartMs: w0Start,
+          currentWindowEndMs: w0End
+        }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      const fmt = (option.xAxis as { axisLabel?: { formatter?: (v: number) => string } }).axisLabel
+        ?.formatter!;
+      const xMax = 6;
+      const atLast = fmt(xMax);
+      expect(atLast).toContain("\n");
+      expect(atLast).toContain("{today|");
+      expect(atLast).toContain("Now");
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("when now is in the middle: single-line today tick and grid.bottom 0", () => {
+      vi.useFakeTimers();
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = Array.from(
+        { length: 7 },
+        (_, i) => day0 + i * 86400000
+      );
+      vi.setSystemTime(day0 + 3 * 86400000 + 12 * 3600000);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const comparisonSeries: ComparisonSeries = {
+        current: {
+          points: fullTimeline.map((ts, i) => ({
+            timestamp: ts + 100,
+            value: i + 1
+          })),
+          unit: "kWh",
+          periodLabel: "Cur",
+          total: 1
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const w0Start = day0;
+      const w0End = day0 + 7 * 86400000;
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        comparisonSeries,
+        fullTimeline,
+        edgeCollisionBaseConfig({
+          windowAlignStartsMs: [w0Start],
+          currentWindowStartMs: w0Start,
+          currentWindowEndMs: w0End
+        }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      const fmt = (option.xAxis as { axisLabel?: { formatter?: (v: number) => string } }).axisLabel
+        ?.formatter!;
+      expect(fmt(3)).not.toContain("\n");
+      expect(fmt(3)).toMatch(/\{today\|/);
+      expect((option.grid as { bottom?: number }).bottom).toBe(0);
 
       renderer.destroy();
       document.body.removeChild(container);

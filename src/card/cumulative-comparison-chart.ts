@@ -607,6 +607,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       localize,
       "forecast.current_forecast"
     );
+    const xAxisNowStackCaption = this._localizeOrError(
+      localize,
+      "chart.axis_now_marker"
+    );
     const xAxisLabelLocale = resolveLabelLocale(this.hass, this._config);
     const xf = this._config.x_axis_format?.trim();
     const xAxisMode = xf ? ("forced" as const) : ("adaptive" as const);
@@ -632,6 +636,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         numberLocale,
         precision: this._config.precision ?? 2,
         forecastLabel,
+        xAxisNowStackCaption,
         singleWindowMode: true,
         xAxisMode,
         xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,
@@ -695,6 +700,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       numberLocale,
       precision,
       forecastLabel,
+      xAxisNowStackCaption,
       singleWindowMode: singleWindow,
       xAxisMode,
       xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,

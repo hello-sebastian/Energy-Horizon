@@ -53,6 +53,26 @@ const LEGEND_BELOW_GAP_PX = 8;
 const GRID_TOP_FALLBACK_PX = LEGEND_BASELINE_PX;
 
 /**
+ * Extra `grid.bottom` when the adaptive “now” tick shares an index with the first or last bucket:
+ * second label row (edge + “now” caption) needs vertical budget beyond a single-line axis.
+ */
+const X_AXIS_NOW_STACK_EXTRA_PX = 22;
+
+/**
+ * Escape `{`, `}`, `|` in user/locale strings embedded in ECharts `rich` `{style|text}` pieces
+ * (fullwidth substitutes — stable across ECharts versions).
+ */
+export function escapeEchartsRichAxisPiece(text: string): string {
+  return text
+    .replace(/\|/g, '\uFF5C')
+    .replace(/\{/g, '\uFF5B')
+    .replace(/\}/g, '\uFF5D');
+}
+
+/** @internal exported for unit tests */
+export const _X_AXIS_NOW_STACK_EXTRA_PX = X_AXIS_NOW_STACK_EXTRA_PX;
+
+/**
  * Map ECharts `trigger: 'axis'` tooltip params to a `fullTimeline` slot index (006).
  * Do not trust `dataIndex` from the first series: e.g. forecast has only two points and
  * `dataIndex` is 0 or 1 for most pointer positions.
@@ -180,6 +200,10 @@ export class EChartsRenderer {
   /** Last applied values to avoid `finished` ↔ `setOption` feedback loops. */
   private lastSyncedGridTop: number | undefined;
   private lastSyncedMinHeightTotalPx: number | undefined;
+  /** Extra container min-height when X-axis stacks “now” under edge tick (006 UX). */
+  private lastXAxisStackExtraPx = 0;
+  /** Last `grid.bottom` from buildOption — reapplied on legend sync so merge does not drop it. */
+  private lastGridBottomPx = 0;
   private readonly onLegendLayoutFinished: () => void;
 
   constructor(container: HTMLElement) {
@@ -205,6 +229,8 @@ export class EChartsRenderer {
     this.instance?.off('finished', this.onLegendLayoutFinished);
     this.instance?.dispose();
     this.instance = undefined;
+    this.lastXAxisStackExtraPx = 0;
+    this.lastGridBottomPx = 0;
   }
 
   /**
@@ -240,7 +266,9 @@ export class EChartsRenderer {
     const extraMinHeightPx = hasLegendLayout
       ? Math.max(0, legendHeightPx - LEGEND_BASELINE_PX)
       : 0;
-    const minHeightTotalPx = CHART_MIN_HEIGHT_BASE_PX + extraMinHeightPx;
+    const xAxisStackExtraPx = this.lastXAxisStackExtraPx;
+    const minHeightTotalPx =
+      CHART_MIN_HEIGHT_BASE_PX + extraMinHeightPx + xAxisStackExtraPx;
 
     const topDelta =
       this.lastSyncedGridTop === undefined
@@ -255,7 +283,7 @@ export class EChartsRenderer {
       return;
     }
 
-    if (hasLegendLayout && extraMinHeightPx > 0) {
+    if ((hasLegendLayout && extraMinHeightPx > 0) || xAxisStackExtraPx > 0) {
       this.container.style.minHeight = `${minHeightTotalPx}px`;
     } else {
       this.container.style.minHeight = '';
@@ -264,7 +292,8 @@ export class EChartsRenderer {
     inst.setOption(
       {
         grid: {
-          top: gridTopPx
+          top: gridTopPx,
+          bottom: this.lastGridBottomPx
         }
       },
       { notMerge: false, lazyUpdate: false }
@@ -615,6 +644,18 @@ export class EChartsRenderer {
 
     /** Figma: edge ticks 11px secondary; “today” tick 14px bold primary (when in range). */
     const xAxisRichAdaptive = mode === 'adaptive' && currentSeriesVisible;
+    const xAxisNowCollidesWithEdge =
+      xAxisRichAdaptive &&
+      todaySlotIndex >= 0 &&
+      (todaySlotIndex === 0 || todaySlotIndex === xMax);
+    const xAxisStackExtraPx = xAxisNowCollidesWithEdge ? X_AXIS_NOW_STACK_EXTRA_PX : 0;
+    const gridBottomPx = xAxisStackExtraPx > 0 ? tickLabelGapPx + xAxisStackExtraPx : 0;
+    this.lastXAxisStackExtraPx = xAxisStackExtraPx;
+    this.lastGridBottomPx = gridBottomPx;
+
+    const nowStackCaption =
+      (rendererConfig.xAxisNowStackCaption ?? '').trim() || 'Now';
+
     const xAxisAxisLabel = xAxisRichAdaptive
       ? {
           formatter: (value: number) => {
@@ -622,9 +663,14 @@ export class EChartsRenderer {
             if (!text) return '';
             const tick = Math.round(value);
             if (todaySlotIndex >= 0 && tick === todaySlotIndex) {
-              return `{today|${text}}`;
+              if (xAxisNowCollidesWithEdge) {
+                const edgePiece = escapeEchartsRichAxisPiece(text);
+                const nowPiece = escapeEchartsRichAxisPiece(nowStackCaption);
+                return `{edge|${edgePiece}}\n{today|${nowPiece}}`;
+              }
+              return `{today|${escapeEchartsRichAxisPiece(text)}}`;
             }
-            return `{edge|${text}}`;
+            return `{edge|${escapeEchartsRichAxisPiece(text)}}`;
           },
           margin: tickLabelGapPx,
           rotate: 0,
@@ -945,7 +991,7 @@ export class EChartsRenderer {
         left: tickLabelGapPx,
         right: tickLabelGapPx,
         top: GRID_TOP_FALLBACK_PX,
-        bottom: 0
+        bottom: gridBottomPx
       },
       legend: {
         show: rendererConfig.showLegend === true,

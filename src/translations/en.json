@@ -20,6 +20,7 @@
   "section.comparison": "Period comparison",
   "section.forecast_total": "Forecast and reference period total",
   "section.chart": "Consumption chart",
+  "chart.axis_now_marker": "Now",
   "section.comment": "Consumption summary",
   "section.warning": "Data quality notice",
   "forecast.panel_forecast": "Forecast",

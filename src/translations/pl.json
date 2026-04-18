@@ -20,6 +20,7 @@
   "section.comparison": "Porównanie okresów",
   "section.forecast_total": "Prognoza i suma okresu referencyjnego",
   "section.chart": "Wykres zużycia",
+  "chart.axis_now_marker": "Teraz",
   "section.comment": "Podsumowanie zużycia",
   "section.warning": "Informacja o jakości danych",
   "forecast.panel_forecast": "Prognoza",

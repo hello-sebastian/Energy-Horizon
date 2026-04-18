@@ -1,6 +1,6 @@
 ### Energy Horizon Wiki
 
-**Docs for card `0.4.0-beta`** · [Home](Home)
+**Docs for card `1.0.1-beta`** · [Home](Home)
 
 #### Learn & configure
 

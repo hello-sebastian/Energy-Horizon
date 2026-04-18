@@ -34,6 +34,10 @@
 
 - **FR-DATA-1:** For LTS rows using **`sum`** (monotonic total), each computed increment MUST be assigned the timestamp of the **previous row’s `start`** (start of the aggregation period that increment represents), so values map to the same nominal slot index as the shared `timeline[]` built in FR-H (first day/hour of the window is not skipped on the chart while the axis still labels that bucket). **`change`** / **`state`** rows keep the current row’s `start`. **G9** in [golden-scenarios.md](./golden-scenarios.md).
 
+### Session 2026-04-17 (adaptive X-axis — “now” at edge tick)
+
+- When the **adaptive** X-axis shows the **current** series and the **“now”** slot index equals the **first** or **last** axis index (`0` or `timeline.length - 1`), the tick MUST **not** collapse the edge bucket label and the “now” emphasis into a single ambiguous line: the **calendar edge label** (same semantics as other edge ticks) MUST appear on the **first** line, and a short **current-instant caption** (localized, e.g. “Now”) MUST appear on a **second** line below it. The chart layout MUST reserve **additional vertical space** for that second line so the plot area and container `min-height` do not clip the axis. **Forced** `x_axis_format` / non-adaptive tick strategies are unchanged unless extended later. No new YAML keys.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - One story for time, axis, summary, and tooltip (Priority: P1)
@@ -79,6 +83,7 @@ As a user viewing a long current window (e.g. a shifted fiscal year), I need the
 
 1. **Given** a partial current bucket (e.g. today inside a daily or coarser aggregation), **When** the “now” marker is shown, **Then** the current series extends to that marker with a value consistent with the summary’s cumulative logic, or any intentional difference is explicitly documented—not an unexplained gap.
 2. **Given** aggregation coarser than a day (week, month), **When** the “now” marker falls inside an open bucket, **Then** carry-forward MUST apply **analogous to the daily case** (latest known cumulative value for the current window carried to the slot containing “now”), unless a grain-specific limitation makes that impossible—in which case **FR-F** applies (explicit documented semantics or reject/guide), not an undocumented gap.
+3. **Given** the adaptive X-axis with the current series visible and the **“now”** tick on the **same index** as the **first or last** bucket, **When** the chart renders, **Then** the axis shows a **two-line** tick (edge date on the first line, short “now” caption on the second) and the card reserves enough **vertical** space that those labels are not clipped or overlapped by the default layout.
 
 ---
 
@@ -165,6 +170,8 @@ As an advanced user editing time window settings, I need invalid combinations to
 - **SC-NOW-1**: With a partial current window and a longer reference window (e.g. MoM / YoY / MoY presets), the “now” marker index matches the day (or bucket) of “today” inside window 0 in the HA time zone, not the last slot of the reference calendar.
 
 - **SC-LABEL-1**: For two windows with different start years, default axis/tooltip headers do not show a misleading single year on every tick; for same-year different-month daily comparisons, default axis/tooltip use day-of-month unless the user forces Luxon formats.
+
+- **SC-AXIS-NOW-EDGE-1**: When the adaptive axis places “now” on the first or last slot, Vitest (`echarts-renderer`) asserts a stacked axis label and extra bottom/grid + `min-height` budget (Session 2026-04-17).
 
 ### Phased deliverables *(planning hook)*
 

@@ -20,6 +20,7 @@
   "section.comparison": "Zeitraumvergleich",
   "section.forecast_total": "Prognose und Referenzzeitraum-Gesamt",
   "section.chart": "Verbrauchsdiagramm",
+  "chart.axis_now_marker": "Jetzt",
   "section.comment": "Verbrauchszusammenfassung",
   "section.warning": "Hinweis zur Datenqualität",
   "forecast.panel_forecast": "Prognose",
