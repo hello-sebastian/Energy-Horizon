@@ -25,6 +25,12 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 - Updated `README.md`, `README.advanced.md`, `wiki-publish/Luxon-Formats-Reference.md`, and `wiki-publish/Forecast-and-Data-Internals.md` for timeline prefix/tail, “now”, and label policy.
 - **`sum` → axis alignment:** `wiki-publish/Forecast-and-Data-Internals.md`, `README.advanced.md`, and `README.md` describe how LTS `sum` increments map to bucket starts; `specs/006-time-windows-unify/` adds **G9** / **FR-DATA-1**.
 
+## [1.0.2]
+
+### Fixed
+
+- **LTS measurement buckets (#45):** charts could stay **blank** when Home Assistant returned only **`mean` / `min` / `max`** (no `sum`, `change`, or `state`)—typical for `state_class: measurement` entities such as a **template sensor** summing cumulative sources without `state_class: total_increasing`. The card now derives a per-bucket increment from **`max - min`** when those three fields are absent, and skips buckets with a negative range. For true cumulative meters, prefer declaring **`total_increasing`** in HA so LTS exposes **`sum`**.
+
 ## [0.5.1]
 
 ### Added

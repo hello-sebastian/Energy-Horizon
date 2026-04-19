@@ -31,6 +31,7 @@
 ## 4. Series point map (LTS → slot)
 
 - Mapowanie statystyk do indeksu slotu na timeline.
+- **Wartość przyrostu z LTS** (normalizacja przed skumulowaniem): preferencja **`sum`** → **`change`** → **`state`**; gdy brak tych pól, **FR-DATA-2** — **`max - min`** na wierszu (pomijane przy `max - min < 0`). Timestamp przyrostu: **FR-DATA-1** dla delt z **`sum`** (start **poprzedniego** wiersza); dla **`change`** / **`state`** / **FR-DATA-2** — **`start` bieżącego** wiersza. Szczegóły: [spec.md — FR-DATA-1 / FR-DATA-2](./spec.md), implementacja `normalizePoints` w `src/card/ha-api.ts`.
 - **Carry-forward (FR-G)**: dla serii bieżącej, w slocie „now”, uzupełnienie wartością ostatniej znanej skumulacji w oknie, w granicach okna i timeline.
 
 ## 5. Walidacja i błędy

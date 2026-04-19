@@ -182,8 +182,8 @@ An empty or invalid `x_axis_format` after trim does not run the validator (empty
 ### LTS → series mapping
 
 - Points for `entity` are taken from the HA response; if `results` has a single key, it is used as fallback.
-- Value preference: increments from **`sum`** (difference of consecutive sums), else **`change`**, else **`state`**.
-- For **`sum`**, each increment is timestamped at the **previous row’s period start** (the bucket that increment covers), so daily/hourly chart columns align with axis ticks. **`change`** / **`state`** keep the current row’s `start`.
+- Value preference: increments from **`sum`** (difference of consecutive sums), else **`change`**, else **`state`**, else—when those three are absent but both are finite numbers—**`max - min`** per LTS row (buckets with `max - min < 0` are skipped). That last path is a **heuristic** for `state_class: measurement` entities whose underlying signal is still a monotonic cumulative-style counter (e.g. a template summing `total_increasing` sources without being declared `total_increasing`); for real meters, prefer **`state_class: total_increasing`** in Home Assistant so LTS exposes **`sum`**.
+- For **`sum`**, each increment is timestamped at the **previous row’s period start** (the bucket that increment covers), so daily/hourly chart columns align with axis ticks. **`change`**, **`state`**, and **`max - min`** increments use the **current row’s `start`** (same slot semantics as non-`sum` fields; distinct from **FR-DATA-1** for `sum` in spec 006).
 - The plotted series is **cumulative** (running total over time).
 - Inconsistent `unit_of_measurement` across points → series may be rejected (empty result).
 
