@@ -7,14 +7,12 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ## [1.0.2]
 
 ### Added
-- French language (by [joebar38](https://github.com/joebar38))
+- French language fr.json (by [joebar38](https://github.com/joebar38))
 
 ### Fixed
 
 - **LTS measurement buckets (#45):** charts could stay **blank** when Home Assistant returned only **`mean` / `min` / `max`** (no `sum`, `change`, or `state`)—typical for `state_class: measurement` entities such as a **template sensor** summing cumulative sources without `state_class: total_increasing`. The card now derives a per-bucket increment from **`max - min`** when those three fields are absent, and skips buckets with a negative range. For true cumulative meters, prefer declaring **`total_increasing`** in HA so LTS exposes **`sum`**. (by [lukpep](https://github.com/lukpep))
 - **Chart grid height consistency:** The chart plot area now maintains a stable, identical height across all axis modes (adaptive rich / standard) and “today” positions. `containLabel: false` with an always-fixed `grid.bottom = GRID_BOTTOM_PX` (38 px) eliminates the ~20 px height drift that occurred when `grid.bottom` switched between `0` and `42` depending on whether “today” was in range. The axis-tick-to-label gap (`AXIS_TICK_LABEL_GAP_PX`) is reduced from 8 → 4 px, tightening the visible bottom margin. Y-axis label space is now an explicit `GRID_LEFT_PX = 56 px` constant instead of relying on ECharts `containLabel` auto-expansion. All grid layout values are exported constants in `src/card/axis/x-axis-rich-styles.ts` and `src/card/echarts-renderer.ts`.
-- **Adaptive X-axis — “today” tick never clipped:** The emphasized **current-day** tick (larger rich text than edge labels) reserves **explicit** vertical space via `grid.bottom` and chart `min-height` at **any** axis index—including **between** Jan 1 and Dec 31 on year-over-year—so labels are never cut off. Layout reserve is **derived from the same typography metrics** as `axisLabel.rich` (`src/card/axis/x-axis-rich-styles.ts`); changing those values updates both style and spacing.
-- **Adaptive X-axis when “today” is the first or last tick:** The bucket date stays on the **first** label line and a short **“Now”** line (localized) appears **below** it; the chart gains a little extra **vertical** room so the text stays clear next to the vertical guide.
 - **Adaptive X-axis — “now” tick label:** The highlighted tick for the current instant always uses a **two-line** layout so the substantive label (adaptive date/time) sits **below** other tick captions. The short localized **“Now”** line and collision-only branching are **removed**; spacing uses one **full** two-line budget whenever “now” is shown (`src/card/axis/x-axis-rich-styles.ts`, `src/card/echarts-renderer.ts`).
 
 
