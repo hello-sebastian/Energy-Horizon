@@ -1,4 +1,5 @@
 # Validates repository against HACS default-store requirements (same checks as HACS).
+# Default branch for this repo: main (see .github/hacs-submission.json).
 # See https://hacs.xyz/docs/publish/action/
 name: Validate HACS
 
@@ -18,6 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Log branch and commit (submission context)
+        run: |
+          echo "ref=${{ github.ref }} sha=${{ github.sha }}"
+          echo "See .github/hacs-submission.json for default_branch and merge snapshot reference_commit."
 
       - name: HACS validation
         uses: hacs/action@main

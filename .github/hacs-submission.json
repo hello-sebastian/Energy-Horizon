@@ -1,0 +1,7 @@
+{
+  "_comment": "default_branch is what GitHub Actions and HACS workflows use. reference_commit is the tip of main after merging feature work (parent of the HACS metadata commit); the current tip of main is always github.sha in CI or git rev-parse origin/main locally.",
+  "repository": "hello-sebastian/Energy-Horizon",
+  "default_branch": "main",
+  "reference_commit": "1d7142bf33b059b800cc2b82e1ba956c8865c22a",
+  "reference_updated": "2026-04-20"
+}

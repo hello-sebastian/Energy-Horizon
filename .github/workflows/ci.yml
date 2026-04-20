@@ -1,3 +1,4 @@
+# CI for default branch `main` (HACS submission snapshot: .github/hacs-submission.json).
 name: CI
 
 on:

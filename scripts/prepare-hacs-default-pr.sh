@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Prepares a branch on a local clone of hacs/default with the Energy Horizon plugin entry.
+# Energy Horizon’s default branch is main (see .github/hacs-submission.json).
 # After review, push to your fork and open a PR: https://github.com/hacs/default
 #
 # Usage:
@@ -9,7 +10,7 @@
 #   git add plugin && git commit -m "Adds Energy Horizon card for default"
 #   git remote add mine https://github.com/YOUR_USER/default.git
 #   git push mine add-energy-horizon-card
-# Then open a PR against hacs/default master using the repository PR template.
+# Then open a PR against hacs/default default branch (master) using the repository PR template.
 
 set -euo pipefail
 
@@ -17,7 +18,7 @@ ENTRY="hello-sebastian/Energy-Horizon"
 UPSTREAM="https://github.com/hacs/default.git"
 
 WORKDIR="$(mktemp -d /tmp/hacs-default-XXXXXX)"
-git clone --depth 1 "$UPSTREAM" "$WORKDIR/hacs-default"
+git clone --depth 1 -b master "$UPSTREAM" "$WORKDIR/hacs-default"
 
 python3 <<PY
 import bisect
