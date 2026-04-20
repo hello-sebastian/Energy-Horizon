@@ -493,6 +493,52 @@ describe("mapLtsResponseToSeries", () => {
     expect(cum!.points[0]!.timestamp).toBe(timeline[0]!);
   });
 
+  it("derives per-bucket delta from max - min when only mean/min/max are returned (issue #45)", () => {
+    // Real-world response shape for a template sensor that sums cumulative sources but was
+    // not declared as `state_class: total_increasing`. HA's recorder keeps it as
+    // measurement-class, so only mean/min/max are stored. The readings are monotonically
+    // increasing (cumulative meter), and each bucket's `min` equals the previous `max`, so
+    // `max - min` is the period delta.
+    const response: LtsStatisticsResponse = {
+      results: {
+        "sensor.energy_sum": [
+          { start: 1774994400000, mean: 4018.44, min: 4012.5, max: 4025.85 } as any,
+          { start: 1775080800000, mean: 4031.9, min: 4025.85, max: 4039.05 } as any,
+          { start: 1775167200000, mean: 4047.53, min: 4039.05, max: 4062.77 } as any
+        ]
+      }
+    };
+    const cum = mapLtsResponseToCumulativeSeries(
+      response,
+      "sensor.energy_sum",
+      "Current"
+    );
+    expect(cum).toBeDefined();
+    expect(cum!.points).toHaveLength(3);
+    expect(cum!.points[0]!.rawValue).toBeCloseTo(13.35, 2);
+    expect(cum!.points[1]!.rawValue).toBeCloseTo(13.2, 2);
+    expect(cum!.points[2]!.rawValue).toBeCloseTo(23.72, 2);
+    expect(cum!.points[0]!.value).toBeCloseTo(13.35, 2);
+    expect(cum!.points[1]!.value).toBeCloseTo(26.55, 2);
+    expect(cum!.points[2]!.value).toBeCloseTo(50.27, 2);
+    expect(cum!.points[0]!.timestamp).toBe(1774994400000);
+  });
+
+  it("skips measurement buckets where max < min (non-cumulative sensor)", () => {
+    const response: LtsStatisticsResponse = {
+      results: {
+        "sensor.weird": [
+          { start: 1000, mean: 10, min: 10, max: 5 } as any,
+          { start: 2000, mean: 20, min: 5, max: 25 } as any
+        ]
+      }
+    };
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.weird", "Current");
+    expect(cum).toBeDefined();
+    expect(cum!.points).toHaveLength(1);
+    expect(cum!.points[0]!.rawValue).toBe(20);
+  });
+
   it("produces empty series when units are inconsistent", () => {
     const response: LtsStatisticsResponse = {
       results: {

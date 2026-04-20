@@ -86,7 +86,7 @@ Use entities that:
 
 Good candidates: utility meters with statistics, Energy Dashboard statistics, cumulative energy sensors.
 
-**Common mistakes:** no LTS history, changing units over time, picking an **instant power** sensor instead of **cumulative energy**.
+**Common mistakes:** no LTS history, changing units over time, picking an **instant power** sensor instead of **cumulative energy**. A **template** (or similar) that sums cumulative sources but stays `state_class: measurement` may yield LTS without **`sum`**—the card can still chart using **`max - min`**, but the robust fix is to set **`state_class: total_increasing`** (or an appropriate class) on the entity in Home Assistant.
 
 ---
 

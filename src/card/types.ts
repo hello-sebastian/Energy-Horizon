@@ -163,8 +163,13 @@ export interface LtsStatisticsQuery {
 }
 
 export interface LtsStatisticPoint {
-  start: string;
+  /** ISO-8601 string or epoch milliseconds — HA has returned both across versions. */
+  start: string | number;
   mean?: number;
+  /** Minimum reading observed in the bucket (state_class: measurement). */
+  min?: number;
+  /** Maximum reading observed in the bucket (state_class: measurement). */
+  max?: number;
   sum?: number;
   state?: number;
   change?: number;

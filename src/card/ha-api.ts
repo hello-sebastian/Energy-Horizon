@@ -495,6 +495,20 @@ function normalizePoints(points: LtsStatisticPoint[]): {
       rawValue = p.change;
     } else if (typeof p.state === "number") {
       rawValue = p.state;
+    } else if (
+      typeof p.max === "number" &&
+      Number.isFinite(p.max) &&
+      typeof p.min === "number" &&
+      Number.isFinite(p.min)
+    ) {
+      // `state_class: measurement` sensors only record mean/min/max. When the underlying
+      // reading is a monotonically increasing counter (e.g. a template sensor that sums
+      // cumulative sensors but was not declared as `total_increasing`), `max - min` is
+      // the per-bucket delta — see issue #45. Negative values would indicate a decreasing
+      // reading (not a cumulative counter), so skip rather than pollute the chart.
+      const delta = p.max - p.min;
+      if (!Number.isFinite(delta) || delta < 0) continue;
+      rawValue = delta;
     }
 
     if (rawValue == null || !Number.isFinite(rawValue)) continue;

@@ -34,6 +34,10 @@
 
 - **FR-DATA-1:** For LTS rows using **`sum`** (monotonic total), each computed increment MUST be assigned the timestamp of the **previous row’s `start`** (start of the aggregation period that increment represents), so values map to the same nominal slot index as the shared `timeline[]` built in FR-H (first day/hour of the window is not skipped on the chart while the axis still labels that bucket). **`change`** / **`state`** rows keep the current row’s `start`. **G9** in [golden-scenarios.md](./golden-scenarios.md).
 
+### Session 2026-04-19 (LTS measurement min/max — issue #45)
+
+- **FR-DATA-2:** When a returned LTS row has **no** usable numeric **`sum`**, **`change`**, or **`state`**, but **`min`** and **`max`** are finite numbers, the card MAY derive the per-bucket increment as **`max - min`**. Rows where **`max - min < 0`** MUST be skipped (non-cumulative measurement behavior). The increment’s timestamp MUST be the **current row’s `start`** (same rule as **`change`** / **`state`**, not FR-DATA-1). This path is a compatibility heuristic for `state_class: measurement` entities that behave like monotonic cumulative counters (e.g. templates); it does **not** replace correct Home Assistant semantics—entities that are true cumulative meters SHOULD use **`state_class: total_increasing`** so LTS exposes **`sum`**. Covered by unit tests in `tests/unit/ha-api.test.ts` (issue #45 fixtures).
+
 ### Session 2026-04-20 (chart grid bottom — constant reserve & reduced gap)
 
 - **Chart height MUST be stable** across all X-axis modes (adaptive rich / standard) and all “today” positions. The `grid.bottom` reservation MUST be a **fixed constant** derived from the full two-line typography budget (`AXIS_TICK_LABEL_GAP_PX + edge lineHeight + today lineHeight + descender buffer`), regardless of whether “today” is currently in range or whether adaptive rich labels are active. Dynamic switching between `0` and the two-line value causes ~20 px height drift.
@@ -70,6 +74,7 @@ As someone comparing energy use across periods on the Energy Horizon card, I nee
 1. **Given** a merged card configuration with a preset plus optional time window overrides, **When** the card renders, **Then** I can describe the result as an ordered list of windows with explicit start/end meaning without needing to know any internal “legacy vs generic” implementation path.
 2. **Given** two or more comparison windows, **When** I read the chart axis, **Then** the **number of steps** follows **Longest-window axis span** (FR-C), shorter series end without values past their window’s nominal end, **date/step label meaning** for slots within the current window follows the **current** window’s calendar structure and aggregation grain (FR-B), and each non-current series is aligned by the single documented ordinal rule; **tail** slots beyond the current window’s length use ordinal-consistent labeling per the Session 2026-04-13 clarification.
 3. **Given** LTS data with **`sum`** and daily (or hourly) aggregation, **When** the chart renders, **Then** the first non-null cumulative sample for the current window aligns with the **first** timeline slot for that window (**FR-DATA-1**, scenario **G9**)—the series does not appear shifted by one bucket relative to axis ticks.
+4. **Given** LTS rows with only **`mean` / `min` / `max`** (no **`sum`**, **`change`**, or **`state`**) for a monotonic cumulative-style entity, **When** the chart renders, **Then** the series is **not empty** and per-bucket increments follow **FR-DATA-2** (see `tests/unit/ha-api.test.ts`, issue #45).
 
 ---
 
