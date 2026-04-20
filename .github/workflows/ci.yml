@@ -26,3 +26,27 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+  verify-dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Ensure committed dist matches build
+        run: |
+          if ! git diff --exit-code -- dist/; then
+            echo "::error::dist/ is out of sync with source. Run npm run build and commit dist/ outputs."
+            exit 1
+          fi

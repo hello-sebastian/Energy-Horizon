@@ -1,0 +1,25 @@
+# Validates repository against HACS default-store requirements (same checks as HACS).
+# See https://hacs.xyz/docs/publish/action/
+name: Validate HACS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions: {}
+
+jobs:
+  validate-hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: plugin
