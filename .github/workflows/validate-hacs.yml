@@ -23,7 +23,7 @@ jobs:
       - name: Log branch and commit (submission context)
         run: |
           echo "ref=${{ github.ref }} sha=${{ github.sha }}"
-          echo "See .github/hacs-submission.json for default_branch and merge snapshot reference_commit."
+          echo "HACS submission context: latest commit on default branch (see .github/hacs-submission.json)."
 
       - name: HACS validation
         uses: hacs/action@main
