@@ -50,7 +50,7 @@ comparison_preset: year_over_year
 | **Chart** | Apache ECharts: current series (window 0), reference (window 1), optional background for windows ≥ 2. |
 | **X-axis** | Shared axis length = **max nominal bucket count** across windows at the chart aggregation (window 0’s grain), not wall‑clock span alone; shorter series end earlier on that axis. |
 | **Numeric summary** | Cumulative values at the end of the current timeline vs reference, using the same alignment as the chart. |
-| **Trend text** | Higher / lower / similar vs reference (“similar” threshold: difference &lt; 0.01 in display units). |
+| **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_interpretation`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
 | **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode or with `show_forecast: false`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
 
@@ -78,6 +78,8 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `precision` | number | **`2`** | Decimal places in UI numbers (implementation: `?? 2`). |
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
 | `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. |
+| `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
+| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
@@ -275,9 +277,9 @@ For **`count` ≥ 3**:
 
 `EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`.
 
-**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
+**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, **`interpretation`** (consumption vs production), `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
 
-**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config.
+**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config — including **`neutral_interpretation`** (YAML-only in v1; shallow merge preserves it when editing other fields in Visual mode).
 
 ---
 
@@ -301,6 +303,16 @@ type: custom:energy-horizon-card
 entity: sensor.energy_total
 comparison_preset: month_over_month
 aggregation: day
+```
+
+### Solar / production entity (higher generation = success semantics)
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.solar_production_month
+comparison_preset: year_over_year
+interpretation: production
+# optional: neutral_interpretation: 2
 ```
 
 ### Window width override (e.g. year / year) — merge with YoY preset

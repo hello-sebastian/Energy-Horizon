@@ -91,7 +91,7 @@ function baseYoYReadyState(): CardState {
       differencePercent: 11.11,
       unit: "kWh"
     },
-    textSummary: { trend: "similar", unit: "kWh" },
+    textSummary: { trend: "higher", diffValue: 10, unit: "kWh" },
     forecast: {
       enabled: true,
       forecast_total: 120,
@@ -455,6 +455,26 @@ describe("energy-horizon-card integration", () => {
     expect(root.querySelector(".ebc-section--comparison")).not.toBeNull();
     expect(root.querySelector(".ebc-section--forecast-total")).not.toBeNull();
     expect(root.querySelector(".ebc-section--comment")).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("ready: interpretation production flips delta chip to success tone when current > ref", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      interpretation: "production"
+    });
+    el.hass = energyCardHass();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+
+    const chip = el.shadowRoot?.querySelector(".ebc-delta-chip");
+    expect(chip?.className).toContain("ebc-trend--positive");
     document.body.removeChild(el);
   });
 

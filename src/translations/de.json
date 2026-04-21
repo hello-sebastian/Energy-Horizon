@@ -28,6 +28,13 @@
   "forecast.reference_consumption": "Verbrauch im Referenzzeitraum",
   "forecast.confidence": "Prognose-Konfidenz: {{confidence}}.",
   "text_summary.no_reference": "Es gibt noch nicht genug Referenzdaten, um Ihren Verbrauch zu vergleichen.",
+  "text_summary.neutral_band": "Innerhalb einer kleinen Bandbreite ({{deltaPercent}}) ist Ihr Verbrauch in etwa wie im gleichen Zeitraum des Vorjahres ({{deltaUnit}}).",
+  "text_summary.neutral_band_mom": "Innerhalb einer kleinen Bandbreite ({{deltaPercent}}) ist Ihr Verbrauch in etwa wie im Vormonat ({{deltaUnit}}).",
+  "text_summary.insufficient_comparison": "Zu wenig Daten, um diesen Zeitraum mit der Referenz zu vergleichen.",
+  "text_summary.production.higher": "Ihre Energieproduktion ist um {{deltaUnit}} ({{deltaPercent}}) höher als im gleichen Zeitraum des Vorjahres.",
+  "text_summary.production.lower": "Ihre Energieproduktion ist um {{deltaUnit}} ({{deltaPercent}}) niedriger als im gleichen Zeitraum des Vorjahres.",
+  "text_summary.production.higher_mom": "Ihre Energieproduktion ist um {{deltaUnit}} ({{deltaPercent}}) höher als im Vormonat.",
+  "text_summary.production.lower_mom": "Ihre Energieproduktion ist um {{deltaUnit}} ({{deltaPercent}}) niedriger als im Vormonat.",
   "text_summary.similar": "Ihr Energieverbrauch entspricht in etwa dem gleichen Zeitraum des Vorjahres.",
   "text_summary.higher": "Ihr Energieverbrauch ist um {{deltaUnit}} ({{deltaPercent}}) höher als im gleichen Zeitraum des Vorjahres.",
   "text_summary.lower": "Ihr Energieverbrauch ist um {{deltaUnit}} ({{deltaPercent}}) niedriger als im gleichen Zeitraum des Vorjahres.",
@@ -47,5 +54,8 @@
   "editor.yaml_error": "Ungültiges YAML",
   "editor.show_comparison_summary": "Vergleich „bis heute“ anzeigen (Data series info)",
   "editor.show_forecast_total_panel": "Prognose- und Referenz-Gesamtpanel anzeigen (Surface Container)",
-  "editor.show_narrative_comment": "Narrativen Kommentar anzeigen (Inteligent comment)"
+  "editor.show_narrative_comment": "Narrativen Kommentar anzeigen (Inteligent comment)",
+  "editor.interpretation": "Interpretation",
+  "editor.interpretation_consumption": "Verbrauch (weniger ist besser)",
+  "editor.interpretation_production": "Produktion (mehr ist besser)"
 }

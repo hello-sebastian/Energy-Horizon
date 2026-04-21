@@ -12,7 +12,16 @@ import {
   type ResolvedWindow,
   type TimeSeriesPoint
 } from "./types";
-import { trendMdiIcon, trendToneClass } from "./trend-visual";
+import {
+  semanticMdiIcon,
+  semanticToneClass
+} from "./trend-visual";
+import {
+  computeInterpretationSemantics,
+  parseInterpretationMode,
+  parseNeutralInterpretationT,
+  type InterpretationSemanticsResult
+} from "./interpretation-semantics";
 import { DateTime } from "luxon";
 import {
   mapLtsResponseToCumulativeSeries,
@@ -186,9 +195,20 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? raw.forecast
           : undefined;
     void _legacyComparisonMode;
+    const interpretation = parseInterpretationMode(rest.interpretation, {
+      debug: Boolean(rest.debug),
+      log: (message) => {
+        console.warn(message);
+      }
+    });
+    const neutral_interpretation = parseNeutralInterpretationT(
+      rest.neutral_interpretation
+    );
     this._config = {
       ...rest,
       comparison_preset,
+      interpretation,
+      neutral_interpretation,
       ...(show_forecast !== undefined ? { show_forecast } : {})
     } as CardConfig;
 
@@ -550,6 +570,21 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return dur ? durationToMillis(dur) : 0;
   }
 
+  private _interpretationSemantics(): InterpretationSemanticsResult {
+    const summary = this._state.summary;
+    if (this._state.status !== "ready" || !summary) {
+      return { outcome: "insufficient_data" };
+    }
+    return computeInterpretationSemantics({
+      current_cumulative: summary.current_cumulative,
+      reference_cumulative: summary.reference_cumulative,
+      difference: summary.difference,
+      p: summary.differencePercent,
+      interpretation: this._config.interpretation ?? "consumption",
+      T: this._config.neutral_interpretation ?? 2
+    });
+  }
+
   /** Theme tokens for ECharts — read from `:host` CSS variables (US-7 / T020). */
   private _resolveChartTheme(): ChartThemeResolved {
     const host = this as unknown as HTMLElement;
@@ -578,6 +613,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const trendSimilar =
       readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.55)";
     const trendUnknown = readVar("--disabled-text-color") || trendSimilar;
+    const trendMuted = readVar("--disabled-text-color") || trendSimilar;
     const todayFullHeightLine = grid || "rgba(127, 127, 127, 0.35)";
     const referenceDotBorder = tooltipBackground || "#ffffff";
 
@@ -594,7 +630,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       trendHigher,
       trendLower,
       trendSimilar,
-      trendUnknown
+      trendUnknown,
+      trendMuted
     };
   }
 
@@ -642,7 +679,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         mergedDurationMs,
         tooltipFormatPattern: tf || undefined,
         chartTheme: this._resolveChartTheme(),
-        chartTrend: "unknown"
+        chartTrend: "unknown",
+        chartSemanticOutcome: "insufficient_data"
       };
     }
 
@@ -650,6 +688,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const series = this._state.comparisonSeries;
     const windows = this._state.resolvedWindows;
     const singleWindow = !windows || windows.length < 2;
+    const interpretationSemantics = this._interpretationSemantics();
     const ct = this._state.chartTime;
     const w0 = windows?.[0];
     const cs = w0?.start ?? period.current_start;
@@ -706,6 +745,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       tooltipFormatPattern: tf || undefined,
       chartTheme: this._resolveChartTheme(),
       chartTrend: this._state.textSummary?.trend ?? "unknown",
+      chartSemanticOutcome: singleWindow
+        ? "neutral"
+        : interpretationSemantics.outcome,
       comparisonAxisOmitYear: axisHints.omitYearOnAxis,
       comparisonAxisDayOfMonthOnly: axisHints.dayOfMonthOnlyOnAxis
     };
@@ -876,6 +918,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     );
 
     let narrativeBody: TemplateResult | null = null;
+    const interpretationSemantics = this._interpretationSemantics();
+    const semTone = semanticToneClass(interpretationSemantics.outcome);
+    const semIcon = semanticMdiIcon(
+      interpretationSemantics.outcome,
+      summary?.difference ?? null
+    );
+
     if (textSummary && !singleWindow) {
       const deltaUnitStr =
         textSummary.diffValue != null
@@ -886,59 +935,68 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? `${percentFormatter.format(Math.abs(summary.differencePercent))}%`
           : "—";
 
-      switch (textSummary.trend) {
-        case "higher": {
-          const summaryKey = isMom
-            ? "text_summary.higher_mom"
-            : "text_summary.higher";
-          const template = getRawTemplate(resolved.language, summaryKey);
-          if (template === undefined) {
-            narrativeBody = html`<div class="ebc-comment-text">
-              ${this._localizeOrError(localize, summaryKey)}
-            </div>`;
-          } else {
-            narrativeBody = textSummaryNarrativeWithEmphasis(template, {
-              deltaUnit: deltaUnitStr,
-              deltaPercent: deltaPercentStr
-            });
-          }
-          break;
-        }
-        case "lower": {
-          const summaryKey = isMom
-            ? "text_summary.lower_mom"
-            : "text_summary.lower";
-          const template = getRawTemplate(resolved.language, summaryKey);
-          if (template === undefined) {
-            narrativeBody = html`<div class="ebc-comment-text">
-              ${this._localizeOrError(localize, summaryKey)}
-            </div>`;
-          } else {
-            narrativeBody = textSummaryNarrativeWithEmphasis(template, {
-              deltaUnit: deltaUnitStr,
-              deltaPercent: deltaPercentStr
-            });
-          }
-          break;
-        }
-        case "similar":
-          narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-            ${this._localizeOrError(
-              localize,
-              isMom ? "text_summary.similar_mom" : "text_summary.similar"
-            )}
+      if (interpretationSemantics.outcome === "insufficient_data") {
+        narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
+          ${this._localizeOrError(localize, "text_summary.no_reference")}
+        </div>`;
+      } else if (
+        interpretationSemantics.outcome === "neutral" &&
+        interpretationSemantics.neutralKind === "percent_band"
+      ) {
+        const summaryKey = isMom
+          ? "text_summary.neutral_band_mom"
+          : "text_summary.neutral_band";
+        const template = getRawTemplate(resolved.language, summaryKey);
+        if (template === undefined) {
+          narrativeBody = html`<div class="ebc-comment-text">
+            ${this._localizeOrError(localize, summaryKey)}
           </div>`;
-          break;
-        case "unknown":
-        default:
-          narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-            ${this._localizeOrError(localize, "text_summary.no_reference")}
+        } else {
+          narrativeBody = textSummaryNarrativeWithEmphasis(template, {
+            deltaUnit: deltaUnitStr,
+            deltaPercent: deltaPercentStr
+          });
+        }
+      } else if (interpretationSemantics.outcome === "neutral") {
+        narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
+          ${this._localizeOrError(
+            localize,
+            isMom ? "text_summary.similar_mom" : "text_summary.similar"
+          )}
+        </div>`;
+      } else {
+        const mode = this._config.interpretation ?? "consumption";
+        const diff = summary?.difference ?? 0;
+        const higherKey =
+          mode === "production"
+            ? isMom
+              ? "text_summary.production.higher_mom"
+              : "text_summary.production.higher"
+            : isMom
+              ? "text_summary.higher_mom"
+              : "text_summary.higher";
+        const lowerKey =
+          mode === "production"
+            ? isMom
+              ? "text_summary.production.lower_mom"
+              : "text_summary.production.lower"
+            : isMom
+              ? "text_summary.lower_mom"
+              : "text_summary.lower";
+        const summaryKey = diff > 0 ? higherKey : lowerKey;
+        const template = getRawTemplate(resolved.language, summaryKey);
+        if (template === undefined) {
+          narrativeBody = html`<div class="ebc-comment-text">
+            ${this._localizeOrError(localize, summaryKey)}
           </div>`;
-          break;
+        } else {
+          narrativeBody = textSummaryNarrativeWithEmphasis(template, {
+            deltaUnit: deltaUnitStr,
+            deltaPercent: deltaPercentStr
+          });
+        }
       }
     }
-
-    const trendUi = textSummary?.trend ?? "unknown";
     const deltaChipAbs =
       !singleWindow && summary != null && summary.difference != null
         ? formatSigned(summary.difference, numberFormatter, displayUnit)
@@ -1014,7 +1072,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   </div>
                   ${!singleWindow
                     ? html`<div
-                        class="ebc-delta-chip ${trendToneClass(trendUi)}"
+                        class="ebc-delta-chip ${semTone}"
                         aria-label=${this._localizeOrError(
                           localize,
                           "summary.difference"
@@ -1116,12 +1174,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               role="region"
               aria-label=${this._localizeOrError(localize, "section.comment")}
             >
-              <div
-                class="ebc-comment-icon-wrap ${trendToneClass(trendUi)}"
-              >
+              <div class="ebc-comment-icon-wrap ${semTone}">
                 <ha-icon
-                  class="ebc-comment-icon ${trendToneClass(trendUi)}"
-                  .icon=${trendMdiIcon(trendUi)}
+                  class="ebc-comment-icon ${semTone}"
+                  .icon=${semIcon}
                 ></ha-icon>
               </div>
               ${narrativeBody}
@@ -1150,7 +1206,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   }
 
   static getStubConfig(): Partial<CardConfig> {
-    return { entity: "", comparison_preset: "year_over_year" };
+    return {
+      entity: "",
+      comparison_preset: "year_over_year",
+      interpretation: "consumption",
+      neutral_interpretation: 2
+    };
   }
 }
 

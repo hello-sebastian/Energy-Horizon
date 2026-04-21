@@ -28,6 +28,13 @@
   "forecast.reference_consumption": "Zużycie w okresie referencyjnym",
   "forecast.confidence": "Pewność prognozy: {{confidence}}.",
   "text_summary.no_reference": "Brak wystarczających danych, aby porównać zużycie energii.",
+  "text_summary.neutral_band": "W małej tolerancji ({{deltaPercent}}) zużycie jest zbliżone do tego z tego samego okresu rok temu ({{deltaUnit}}).",
+  "text_summary.neutral_band_mom": "W małej tolerancji ({{deltaPercent}}) zużycie jest zbliżone do poprzedniego miesiąca ({{deltaUnit}}).",
+  "text_summary.insufficient_comparison": "Za mało danych, aby porównać ten okres z referencją.",
+  "text_summary.production.higher": "Produkcja energii jest o {{deltaUnit}} ({{deltaPercent}}) wyższa niż w tym samym okresie w poprzednim roku.",
+  "text_summary.production.lower": "Produkcja energii jest o {{deltaUnit}} ({{deltaPercent}}) niższa niż w tym samym okresie w poprzednim roku.",
+  "text_summary.production.higher_mom": "Produkcja energii jest o {{deltaUnit}} ({{deltaPercent}}) wyższa niż w poprzednim miesiącu.",
+  "text_summary.production.lower_mom": "Produkcja energii jest o {{deltaUnit}} ({{deltaPercent}}) niższa niż w poprzednim miesiącu.",
   "text_summary.similar": "Zużycie jest na podobnym poziomie jak w tym samym okresie w poprzednim roku.",
   "text_summary.higher": "Zużycie jest o {{deltaUnit}} ({{deltaPercent}}) wyższe niż w tym samym okresie w poprzednim roku.",
   "text_summary.lower": "Zużycie jest o {{deltaUnit}} ({{deltaPercent}}) niższe niż w tym samym okresie w poprzednim roku.",
@@ -47,6 +54,9 @@
   "editor.yaml_error": "Nieprawidłowy YAML",
   "editor.show_comparison_summary": "Panel porównania „do dziś” (Data series info — aktualne zużycie)",
   "editor.show_forecast_total_panel": "Panel prognozy i sumy okresu (Surface Container — zużycie w całym okresie)",
-  "editor.show_narrative_comment": "Komentarz z ikoną trendu (Inteligent comment)"
+  "editor.show_narrative_comment": "Komentarz z ikoną trendu (Inteligent comment)",
+  "editor.interpretation": "Interpretacja",
+  "editor.interpretation_consumption": "Zużycie (mniej jest lepiej)",
+  "editor.interpretation_production": "Produkcja (więcej jest lepiej)"
 }
 

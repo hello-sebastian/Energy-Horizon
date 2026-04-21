@@ -28,6 +28,13 @@
   "forecast.reference_consumption": "Consommation sur la période de référence",
   "forecast.confidence": "Niveau de confiance de la prévision : {{confidence}}.",
   "text_summary.no_reference": "Il n'y a pas encore assez de données de référence pour comparer votre consommation.",
+  "text_summary.neutral_band": "Dans une marge étroite ({{deltaPercent}}), votre consommation est proche de celle de la même période l'an dernier ({{deltaUnit}}).",
+  "text_summary.neutral_band_mom": "Dans une marge étroite ({{deltaPercent}}), votre consommation est proche de celle du mois précédent ({{deltaUnit}}).",
+  "text_summary.insufficient_comparison": "Pas assez de données pour comparer cette période à la référence.",
+  "text_summary.production.higher": "Votre production d'énergie est supérieure de {{deltaUnit}} ({{deltaPercent}}) à celle de la même période l'année dernière.",
+  "text_summary.production.lower": "Votre production d'énergie est inférieure de {{deltaUnit}} ({{deltaPercent}}) à celle de la même période l'année dernière.",
+  "text_summary.production.higher_mom": "Votre production d'énergie est supérieure de {{deltaUnit}} ({{deltaPercent}}) à celle du mois précédent.",
+  "text_summary.production.lower_mom": "Votre production d'énergie est inférieure de {{deltaUnit}} ({{deltaPercent}}) à celle du mois précédent.",
   "text_summary.similar": "Votre consommation d'énergie est similaire à celle de la même période l'année dernière.",
   "text_summary.higher": "Votre consommation d'énergie est supérieure de {{deltaUnit}} ({{deltaPercent}}) à celle de la même période l'année dernière.",
   "text_summary.lower": "Votre consommation d'énergie est inférieure de {{deltaUnit}} ({{deltaPercent}}) à celle de la même période l'année dernière.",
@@ -47,5 +54,8 @@
   "editor.yaml_error": "YAML invalide",
   "editor.show_comparison_summary": "Afficher le résumé de comparaison (infos des séries de données)",
   "editor.show_forecast_total_panel": "Afficher le panneau prévision & total de référence (conteneur principal)",
-  "editor.show_narrative_comment": "Afficher le commentaire narratif (commentaire intelligent)"
+  "editor.show_narrative_comment": "Afficher le commentaire narratif (commentaire intelligent)",
+  "editor.interpretation": "Interprétation",
+  "editor.interpretation_consumption": "Consommation (moins est mieux)",
+  "editor.interpretation_production": "Production (plus est mieux)"
 }

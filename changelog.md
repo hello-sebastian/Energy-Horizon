@@ -4,6 +4,15 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 
 
+## [1.1.0]
+
+### Added
+
+- **`interpretation`** (`consumption` \| `production`, default consumption): aligns the **comparison narrative**, **trend icon**, and **chart delta** segment with whether the entity represents **usage** (less is better) or **generation** (more is better). Delta chip **numeric signs** stay arithmetic; Forecast \| Total copy is unchanged.
+- **`neutral_interpretation`**: optional non-negative percent **T** (default **2**). When the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative and chart delta use **neutral** “similar” styling. YAML-only in this release; the visual editor preserves the key via shallow merge.
+- **Visual editor** control for **`interpretation`** (Consumption / Production).
+- Translations (`en`, `pl`, `de`, `fr`) for production-oriented narrative, neutral-band text, and editor labels.
+
 ## [1.0.2]
 
 ### Added

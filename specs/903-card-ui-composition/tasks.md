@@ -8,7 +8,7 @@
 
 ## Format
 
-`- [ ] TNNN [P?] [USn?] Description with file path`
+`- [x] TNNN [P?] [USn?] Description with file path`
 
 ---
 
@@ -16,7 +16,7 @@
 
 **Purpose**: Confirm the existing Energy Horizon toolchain before changing behavior.
 
-- [ ] T001 Run `npm test && npm run lint` from `/Users/admin/Projekty Local/Energy-Horizon` and fix any **pre-existing** failures before feature work (establish baseline).
+- [x] T001 Run `npm test && npm run lint` from `/Users/admin/Projekty Local/Energy-Horizon` and fix any **pre-existing** failures before feature work (establish baseline).
 
 ---
 
@@ -26,9 +26,9 @@
 
 **Checkpoint**: Helper passes all unit tests; no narrative/UI dependency yet.
 
-- [ ] T002 Extend `CardConfig` / `CardConfigInput` and config normalization in `/Users/admin/Projekty Local/Energy-Horizon/src/card/types.ts` and `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` (and `/Users/admin/Projekty Local/Energy-Horizon/src/card/time-windows/merge-config.ts` if defaults merge there) with **`interpretation`** and **`neutral_interpretation`** per **FR-903-P** and **FR-903-V**.
-- [ ] T003 Implement `computeInterpretationSemantics` (or equivalent) in `/Users/admin/Projekty Local/Energy-Horizon/src/card/interpretation-semantics.ts` per `/Users/admin/Projekty Local/Energy-Horizon/specs/903-card-ui-composition/data-model.md` (outcomes: `positive` \| `negative` \| `neutral` \| `insufficient_data`; neutral when **`|p| ≤ T`**; reference-zero and placeholder rules from **spec.md** Edge Cases 15–17).
-- [ ] T004 Add `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-semantics.test.ts` covering consumption, production, neutral band, `T` default/invalid, reference = 0, missing **`p`**, and case-insensitive `interpretation` parse.
+- [x] T002 Extend `CardConfig` / `CardConfigInput` and config normalization in `/Users/admin/Projekty Local/Energy-Horizon/src/card/types.ts` and `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` (and `/Users/admin/Projekty Local/Energy-Horizon/src/card/time-windows/merge-config.ts` if defaults merge there) with **`interpretation`** and **`neutral_interpretation`** per **FR-903-P** and **FR-903-V**.
+- [x] T003 Implement `computeInterpretationSemantics` (or equivalent) in `/Users/admin/Projekty Local/Energy-Horizon/src/card/interpretation-semantics.ts` per `/Users/admin/Projekty Local/Energy-Horizon/specs/903-card-ui-composition/data-model.md` (outcomes: `positive` \| `negative` \| `neutral` \| `insufficient_data`; neutral when **`|p| ≤ T`**; reference-zero and placeholder rules from **spec.md** Edge Cases 15–17).
+- [x] T004 Add `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-semantics.test.ts` covering consumption, production, neutral band, `T` default/invalid, reference = 0, missing **`p`**, and case-insensitive `interpretation` parse.
 
 ---
 
@@ -38,9 +38,9 @@
 
 **Independent test**: Set `interpretation: production` in YAML or editor → config emits correct value; change another field in Visual mode → `interpretation` unchanged unless edited.
 
-- [ ] T005 [US7] Add `interpretation` field to `SCHEMA` and form wiring in `/Users/admin/Projekty Local/Energy-Horizon/src/card/energy-horizon-card-editor.ts` (select: `consumption` \| `production`, default **consumption**, radio-style UX per **904** / **FR-903-T**).
-- [ ] T006 [P] [US7] Add `editor.interpretation` (and option labels if split) to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json`.
-- [ ] T007 [US7] Ensure `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` **`getStubConfig()`** / defaults expose safe defaults for **`interpretation`** (consumption) and that **`neutral_interpretation`** is preserved on editor **`config-changed`** (shallow merge).
+- [x] T005 [US7] Add `interpretation` field to `SCHEMA` and form wiring in `/Users/admin/Projekty Local/Energy-Horizon/src/card/energy-horizon-card-editor.ts` (select: `consumption` \| `production`, default **consumption**, radio-style UX per **904** / **FR-903-T**).
+- [x] T006 [P] [US7] Add `editor.interpretation` (and option labels if split) to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json`.
+- [x] T007 [US7] Ensure `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` **`getStubConfig()`** / defaults expose safe defaults for **`interpretation`** (consumption) and that **`neutral_interpretation`** is preserved on editor **`config-changed`** (shallow merge).
 
 ---
 
@@ -50,9 +50,9 @@
 
 **Independent test**: Production entity, current > ref → production **`localize()`** strings + success styling on icon and delta line.
 
-- [ ] T008 [P] [US8] Add production-oriented narrative **`localize()`** keys to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json` per **FR-903-S** (outside neutral band).
-- [ ] T009 [US8] Wire narrative / summary row in `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` to **`interpretation-semantics`** + **`localize()`** for production vs consumption vs neutral vs **insufficient_data** (**FR-903-Q**, **FR-903-W**).
-- [ ] T010 [US8] Pass semantic outcome (or color role) into `/Users/admin/Projekty Local/Energy-Horizon/src/card/echarts-renderer.ts` and extend `/Users/admin/Projekty Local/Energy-Horizon/src/card/types.ts` **`ChartRendererConfig`** (or equivalent) so **delta segment** styling matches narrative (**902** / **FR-903-R**).
+- [x] T008 [P] [US8] Add production-oriented narrative **`localize()`** keys to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json` per **FR-903-S** (outside neutral band).
+- [x] T009 [US8] Wire narrative / summary row in `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts` to **`interpretation-semantics`** + **`localize()`** for production vs consumption vs neutral vs **insufficient_data** (**FR-903-Q**, **FR-903-W**).
+- [x] T010 [US8] Pass semantic outcome (or color role) into `/Users/admin/Projekty Local/Energy-Horizon/src/card/echarts-renderer.ts` and extend `/Users/admin/Projekty Local/Energy-Horizon/src/card/types.ts` **`ChartRendererConfig`** (or equivalent) so **delta segment** styling matches narrative (**902** / **FR-903-R**).
 
 ---
 
@@ -62,8 +62,8 @@
 
 **Independent test**: Same data as pre-1.1.0 consumption cards → same semantic colors/copy class as baseline (per **SC-903-7**).
 
-- [ ] T011 [US9] Extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-semantics.test.ts` (or add `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-consumption-legacy.test.ts`) asserting consumption mapping matches legacy polarity for representative totals and **`p`**.
-- [ ] T012 [US9] Update or extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/trend-visual.test.ts` (and/or `/Users/admin/Projekty Local/Energy-Horizon/tests/integration/card-render.test.ts`) if they assert narrative/chart trend semantics — align expectations with **`interpretation`** default **consumption**.
+- [x] T011 [US9] Extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-semantics.test.ts` (or add `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/interpretation-consumption-legacy.test.ts`) asserting consumption mapping matches legacy polarity for representative totals and **`p`**.
+- [x] T012 [US9] Update or extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/trend-visual.test.ts` (and/or `/Users/admin/Projekty Local/Energy-Horizon/tests/integration/card-render.test.ts`) if they assert narrative/chart trend semantics — align expectations with **`interpretation`** default **consumption**.
 
 ---
 
@@ -71,12 +71,12 @@
 
 **Purpose**: Neutral-band copy, insufficient-data styling, documentation, **1.1.0** changelog.
 
-- [ ] T013 [P] Add neutral-band and **insufficient-data** narrative keys to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json` (**FR-903-S**, **FR-903-W**).
-- [ ] T014 Add or adjust semantic classes / HA token usage for neutral vs insufficient-data in `/Users/admin/Projekty Local/Energy-Horizon/src/card/energy-horizon-card-styles.ts` (muted ≠ neutral-band “similar”).
-- [ ] T015 [P] Update `/Users/admin/Projekty Local/Energy-Horizon/README.md` and `/Users/admin/Projekty Local/Energy-Horizon/README-advanced.md` with **`interpretation`** and **`neutral_interpretation`** (see [quickstart.md](./quickstart.md)).
-- [ ] T016 [P] Update `/Users/admin/Projekty Local/Energy-Horizon/wiki-publish/` and `/Users/admin/Projekty Local/Energy-Horizon/CHANGELOG.md` **[1.1.0]** per **907** and [plan.md](./plan.md).
-- [ ] T017 [P] Reconcile `/Users/admin/Projekty Local/Energy-Horizon/specs/903-card-ui-composition/contracts/card-interpretation.yaml` with final YAML property names and comments if implementation differs.
-- [ ] T018 Run `npm test && npm run lint` from `/Users/admin/Projekty Local/Energy-Horizon`; fix regressions; validate [quickstart.md](./quickstart.md) examples manually if possible.
+- [x] T013 [P] Add neutral-band and **insufficient-data** narrative keys to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/pl.json`, `/Users/admin/Projekty Local/Energy-Horizon/src/translations/de.json` (**FR-903-S**, **FR-903-W**).
+- [x] T014 Add or adjust semantic classes / HA token usage for neutral vs insufficient-data in `/Users/admin/Projekty Local/Energy-Horizon/src/card/energy-horizon-card-styles.ts` (muted ≠ neutral-band “similar”).
+- [x] T015 [P] Update `/Users/admin/Projekty Local/Energy-Horizon/README.md` and `/Users/admin/Projekty Local/Energy-Horizon/README-advanced.md` with **`interpretation`** and **`neutral_interpretation`** (see [quickstart.md](./quickstart.md)).
+- [x] T016 [P] Update `/Users/admin/Projekty Local/Energy-Horizon/wiki-publish/` and `/Users/admin/Projekty Local/Energy-Horizon/CHANGELOG.md` **[1.1.0]** per **907** and [plan.md](./plan.md).
+- [x] T017 [P] Reconcile `/Users/admin/Projekty Local/Energy-Horizon/specs/903-card-ui-composition/contracts/card-interpretation.yaml` with final YAML property names and comments if implementation differs.
+- [x] T018 Run `npm test && npm run lint` from `/Users/admin/Projekty Local/Energy-Horizon`; fix regressions; validate [quickstart.md](./quickstart.md) examples manually if possible.
 
 ---
 

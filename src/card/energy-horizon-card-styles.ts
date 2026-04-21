@@ -264,6 +264,15 @@ export const energyHorizonCardStyles = css`
     );
   }
 
+  .ebc-trend--insufficient {
+    color: var(--disabled-text-color);
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 25%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
   .ebc-section--forecast-total {
     padding: 16px;
     border-radius: 16px;
@@ -382,6 +391,14 @@ export const energyHorizonCardStyles = css`
     );
   }
 
+  .ebc-comment-icon-wrap.ebc-trend--insufficient {
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 22%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
   .ebc-comment-icon {
     flex-shrink: 0;
     display: flex;
@@ -406,6 +423,10 @@ export const energyHorizonCardStyles = css`
   .ebc-comment-icon.ebc-trend--neutral,
   .ebc-comment-icon.ebc-trend--unknown {
     color: var(--secondary-text-color);
+  }
+
+  .ebc-comment-icon.ebc-trend--insufficient {
+    color: var(--disabled-text-color);
   }
 
   .ebc-comment-text {
