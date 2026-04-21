@@ -6,6 +6,15 @@
 **Primary code**: `src/card/cumulative-comparison-chart.ts`, `src/card/energy-horizon-card-styles.ts`  
 **Last updated**: 2026-04-21  
 
+## Clarifications
+
+### Session 2026-04-21
+
+- Q: How should invalid or non-canonical `interpretation` YAML values be handled? → A: **Case-insensitive** match to `consumption` \| `production`; if still not recognized, effective mode is **`consumption`** (same as omitting the key); optional diagnostic **console** message when card `debug: true`.
+- Q: Should `interpretation: production` change user-visible wording in the Forecast \| Total panel? → A: **No** — Forecast \| Total strings stay **unchanged**; `interpretation` applies to **comparison narrative + chart delta** only (Option A).
+- Q: (User) Neutral semantic band — A: Optional YAML **`neutral_interpretation`** (non-negative **percent**). **Default `2`** when omitted (i.e. ±**2** percentage points relative to reference for deciding **neutral** vs better/worse). Narrative **icon** and **chart delta line** semantic colors follow this band; delta chip **numeric** values unchanged.
+- Q: When the delta chip shows **missing data** (no reliable percent `p`), what semantic path for narrative + chart delta? → A: **Separate “no data” path** (Option B): dedicated **`localize()`** strings + styling **distinct** from neutral-band “similar” (and from success/warning).
+
 ---
 
 <!-- NORMATIVE -->
@@ -40,11 +49,37 @@ Two-column layout: **Current period** column (left) and **Reference period** col
 - **Explicit sign**: absolute difference and percentage difference always carry `+` when positive and `−` (U+2212) when negative; zero values show no sign prefix.
 - **Period qualifiers**: each column heading includes a compact caption from `formatCompactPeriodCaption` (abbreviated month names, HA time zone, `locale.time_format` for hourly-window clock portions). Locale follows: card `language` → HA user language → `en`.
 
+### Narrative interpretation (summary row) and chart delta semantics
+
+The card compares **current-period** cumulative total to **reference-period** cumulative total and surfaces the result in:
+
+- A **narrative interpretation row** (text + trend icon) when enabled by visibility settings.
+- The **delta segment** drawn on the chart between the two series at the relevant aggregation step.
+
+**Interpretation mode** (`interpretation` in YAML; see Public Contract) selects whether the entity is treated as **consumption** or **production** for **semantic** evaluation only (what counts as “better” vs “worse”) in the **comparison narrative row** and **chart delta** affordances. It does **not** change user-visible text or labels in the **Forecast \| Total** panel (those remain governed by existing forecast / LTS copy per `901`). Numeric delta signs (`+/−` on the chip) remain mathematically correct in all modes; only **polarity of meaning** (positive vs negative vs **neutral** outcome), **semantic colors**, **trend icon choice**, and **wording** in the scoped areas follow the mode and the **neutral band** below.
+
+**Neutral band (`neutral_interpretation`)**: Optional YAML (see Public Contract). Value is a non-negative **percentage** `T` (e.g. `2` means **2%**). **Default `T = 2`** when the key is omitted. Let `p` be the **same signed percentage** already used for the delta chip’s percent column (percent change of current vs reference, identical sign convention as today’s chip). **Semantic outcome is neutral** when **`|p| ≤ T`** — “similar” / flat trend, **neutral** styling on the interpretation icon and chart delta segment. When **`|p| > T`**, apply the consumption/production table using the **sign** of `(current − reference)` (or equivalently the sign of `p`) as usual.
+
+When **reference cumulative is zero** (or undefined for division), **neutral** applies only when **current** is also zero (or both missing); otherwise use signed comparison without a percentage band (see Edge Cases).
+
+**Insufficient comparison data (no `p`)**: When the delta chip is in the **placeholder** state (no reliable signed percent **`p`** — e.g. `--- <unit> | -- %` / `--- | -- %`), the card MUST **not** treat the situation as **neutral-band** “similar” (`|p| ≤ T`). Instead, use a **separate insufficient-data path**: **dedicated** `localize()` strings for “cannot compare” / missing-data messaging and **muted or non-judgment** icon and chart delta styling that is **visually and semantically distinct** from success, warning, and neutral-band outcomes (see **FR-903-W**).
+
+| Mode | Outside neutral band: `current > reference` | Outside neutral band: `current < reference` |
+|---|---|---|
+| **Consumption** (default when key omitted) | **Negative** outcome: warning semantics (e.g. higher usage vs reference) | **Positive** outcome: success semantics (e.g. lower usage) |
+| **Production** | **Positive** outcome: success semantics (e.g. higher production) | **Negative** outcome: warning semantics (e.g. lower production) |
+
+**Consistency requirement**: For a given mode and `T`, when **`p`** is available (or the reference-zero rule applies), the narrative interpretation icon, its semantic coloring, and the chart delta line MUST use the **same** mapping from **neutral vs sign of `(current − reference)`** to neutral vs success vs warning styling. When **`p`** is unavailable, narrative and chart delta MUST follow the **insufficient-data** path consistently with each other (**FR-903-W**).
+
+All user-visible phrases for these rows MUST go through `localize()` with keys maintained per `905-localization-formatting` (including `en`, `pl`, `de`).
+
 ### Forecast | Total panel
 
 Shown only when `show_forecast: true` (or the alias `forecast: true`). Displays:
 - **Forecast**: projected consumption for the full current period (end-of-period estimate from `computeForecast`).
 - **Total**: total consumption for the **full** reference period (entire LTS window of the reference series, not "to-date").
+
+**Independence from `interpretation`**: User-visible labels and copy in this panel do **not** switch to “production” wording when `interpretation: production`; panel text remains as specified above and in `FR-903-I`.
 
 The panel is completely absent from the DOM when `show_forecast: false`.
 
@@ -75,6 +110,8 @@ icon: "mdi:flash"              # optional; default: entity icon attribute
 show_icon: true                # optional; default true
 show_forecast: true            # optional; default true (alias: forecast)
 language: "pl"                 # optional; card-level locale override
+interpretation: consumption    # optional; consumption | production (case-insensitive); omit or invalid → consumption
+neutral_interpretation: 2      # optional; non-negative percent; neutral semantic band when |Δ%| ≤ this; omit → 2
 ```
 
 CSS class contract (stable for Card-Mod and external style overrides):
@@ -100,22 +137,26 @@ function formatCompactPeriodCaption(window: ComparisonWindow, options: CaptionOp
 **Consumes from**:
 - `900-time-model-windows`: `ComparisonWindow[]` for period qualifiers and window role labels.
 - `901-data-pipeline-forecasting`: `ForecastStats` (`enabled`, `confidence`, `forecast_total`), reference series total for the **full** reference period.
-- `902-chart-rendering-interaction`: chart container element ownership; `min-height` adjustments from renderer.
-- `904-configuration-surface`: raw YAML fields listed in Public Contract.
-- `905-localization-formatting`: resolved locale string, HA `time_format`, entity friendly name and icon from `hass` state.
+- `902-chart-rendering-interaction`: chart container element ownership; `min-height` adjustments from renderer; delta segment styling aligned with interpretation semantics (see `902-chart-rendering-interaction`).
+- `904-configuration-surface`: raw YAML fields listed in Public Contract, including `interpretation` and `neutral_interpretation`; visual editor for `interpretation` (see `904-configuration-surface`); `neutral_interpretation` may remain **YAML-only** (still preserved on merge).
+- `905-localization-formatting`: resolved locale string, HA `time_format`, entity friendly name and icon from `hass` state; `localize()` keys for consumption- vs production-oriented narrative strings.
 
 **Publishes to**:
-- `902-chart-rendering-interaction`: chart container DOM element (Shadow DOM); HA theme CSS tokens from host element.
+- `902-chart-rendering-interaction`: chart container DOM element (Shadow DOM); HA theme CSS tokens from host element; semantic expectations for delta-line success/warning coloring tied to `interpretation`.
+- `907-docs-product-knowledge`: user-facing documentation updates for the new option (README, README-advanced, wiki) and changelog entry targeting release **1.1.0**.
 
 ---
 
 ## Non-Goals
 
 - Changing the HA data model or LTS API.
+- Inverting or altering the **numeric** sign rules on the delta chip (`+/−` absolute and percent): those remain pure arithmetic comparisons; only semantic labeling, colors, icons, and narrative copy follow `interpretation`.
 - Rebranding other Lovelace cards or dashboard elements.
 - Mandatory Code Connect / Figma file editing.
 - Providing hardcoded light/dark color palettes independent of HA theme tokens.
 - Introducing additional chart element types beyond the current ECharts implementation (covered by domain 902).
+- Rewording the **Forecast \| Total** panel (headings, labels, or forecast-related translation keys) based on `interpretation: production` — interpretation affects **comparison narrative + chart delta** only.
+- Requiring a **visual editor** control for `neutral_interpretation` in the first release (YAML is sufficient; editor may follow later).
 
 ---
 
@@ -215,6 +256,49 @@ As a developer making visual changes, I need all CSS rules to live in `energy-ho
 
 ---
 
+### US-903-7 — Choose consumption vs production interpretation (P1)
+
+As a user monitoring either energy use or on-site generation, I need to set whether the entity represents **consumption** or **production** so the card’s narrative, interpretation icon, and chart delta use the correct “better / worse” meaning for my context.
+
+**Independent test**: Set `interpretation: production` in YAML (or choose Production in the editor), render with current > reference → success styling and production-oriented copy; set `interpretation: consumption` (or omit key) → legacy consumption semantics. Verify editor shallow-merge preserves other keys.
+
+**Acceptance Scenarios**:
+
+1. **Given** no `interpretation` key in YAML, **When** the card evaluates semantics for the narrative row and chart delta, **Then** behavior matches **consumption** mode (legacy: current > reference → negative outcome styling).
+2. **Given** `interpretation: consumption`, **When** current cumulative is greater than reference, **Then** the narrative and delta use **negative-outcome** semantics (warning-style interpretation icon and delta styling); when current is less than reference, **positive-outcome** semantics apply.
+3. **Given** `interpretation: production`, **When** current cumulative is greater than reference, **Then** the narrative and delta use **positive-outcome** semantics (success-style icon and delta styling); when current is less than reference, **negative-outcome** semantics apply.
+4. **Given** the Lovelace editor is open, **When** the user selects **Consumption** or **Production** for interpretation, **Then** the value is shallow-merged into `_config` like other form fields and the card updates immediately (live preview).
+5. **Given** YAML sets `interpretation: production` and the user edits another field in Visual mode, **When** config is saved, **Then** `interpretation` remains `production` unless explicitly changed.
+
+---
+
+### US-903-8 — Production mode: “more is better” copy and visuals (P1)
+
+As a user analyzing **production**, I need higher current-period energy than the reference period to read as **positive**, with **trend-up** and **success** coloring on the interpretation icon and chart delta line, so the dashboard matches my mental model.
+
+**Independent test**: `interpretation: production`, current > reference → localized strings describe greater production; icon is trend-up; interpretation icon and delta use success semantic colors. current < reference → localized strings describe lower production; trend-down; warning semantic colors.
+
+**Acceptance Scenarios**:
+
+1. **Given** `interpretation: production` and current > reference, **When** the narrative row renders, **Then** copy uses production-appropriate wording via `localize()` and the interpretation icon reflects an **up** trend with **success** semantic coloring.
+2. **Given** `interpretation: production` and current < reference, **When** the narrative row renders, **Then** copy uses production-appropriate wording and the interpretation icon reflects a **down** trend with **warning** semantic coloring.
+3. **Given** `interpretation: production`, **When** the chart draws the delta segment between series at the active step, **Then** its semantic color matches the same success vs warning mapping as the narrative row for that sign of `(current − reference)`.
+
+---
+
+### US-903-9 — Consumption mode preserves legacy behavior (P1)
+
+As a user analyzing **consumption**, I need the card to behave **as today** when I use consumption mode or leave the default: higher current than reference should remain **negative** in meaning and **warning** in styling.
+
+**Independent test**: `interpretation: consumption` or omitted key; compare to pre-feature baseline screenshots or golden expectations for current>ref vs current<ref narrative and delta colors.
+
+**Acceptance Scenarios**:
+
+1. **Given** `interpretation: consumption` (or omitted) and current > reference, **When** the narrative and delta render, **Then** the outcome is **negative** for meaning and uses **warning** styling for the interpretation icon and delta line (consistent with prior release behavior).
+2. **Given** `interpretation: consumption` (or omitted) and current < reference, **When** the narrative and delta render, **Then** the outcome is **positive** for meaning and uses **success** styling for the interpretation icon and delta line.
+
+---
+
 ## Edge Cases
 
 1. **Entity no longer exists in HA**: card must not crash; title falls back to entity ID string; icon is omitted gracefully.
@@ -228,6 +312,12 @@ As a developer making visual changes, I need all CSS rules to live in `energy-ho
 9. **Forecast enabled but not yet available** (`ForecastStats.enabled = false`): forecast value shown as placeholder; Total column still visible.
 10. **Theme switch mid-session**: the card responds to the next Lit render cycle triggered by HA's `hass` update propagation; no manual intervention required.
 11. **Custom HA theme with extreme low-contrast colors**: the card is not responsible for correcting the overall theme; it must not use hardcoded colors that contradict the HA token system.
+12. **`interpretation` missing, invalid, or differently cased in YAML**: parse **case-insensitively** against `consumption` and `production`. If the value does not match either after normalization, effective mode is **`consumption`**; the card must not crash. When `debug: true`, the card MAY log a diagnostic for unrecognized values.
+13. **Neutral band**: When the delta chip’s **percentage** magnitude **`|p|`** is **≤** effective **`neutral_interpretation`** (default **2**), semantic outcome is **neutral** for narrative icon and chart delta styling. When **`|p| > T`**, use consumption/production success vs warning per sign. **Delta chip text** still reflects actual values (no hiding of real +/−%).
+14. **`neutral_interpretation` invalid or negative in YAML**: treat as **default `2`**; do not crash. Extremely large values (e.g. ≥ 100) effectively make **neutral** always (document in tests).
+15. **Reference cumulative is zero** (or percent undefined): **neutral** only when **current** is also zero (or both missing); otherwise classify by sign of `(current − reference)` without applying the percent band.
+16. **Narrative row hidden** (`show_narrative_comment: false` or equivalent): interpretation mode and **neutral band** MUST still apply to **chart delta** coloring and any other visible interpretation affordances.
+17. **Delta chip placeholder (missing comparison / no `p`)**: Use the **insufficient-data** path (**dedicated** `localize()` copy + **muted / non-judgment** styling); MUST **not** reuse neutral-band “similar” styling. Chart delta segment follows the same non-judgment semantics.
 
 ---
 
@@ -263,11 +353,29 @@ As a developer making visual changes, I need all CSS rules to live in `energy-ho
 
 - **FR-903-O (Style/logic separation)**: All CSS rules MUST be defined in `src/card/energy-horizon-card-styles.ts`. The main component imports this module; it does not define computation-adjacent inline styles. Computation logic files MUST have zero imports from the styles module. Style absence MUST degrade only visual appearance, not data or logic.
 
+- **FR-903-P (Interpretation YAML)**: The card MUST accept `interpretation` with allowed values **`consumption`** and **`production`**, matched **case-insensitively**. When the key is **omitted** or the value is **not** `consumption` or `production` after that parse, the effective mode MUST be **`consumption`**. When `debug: true`, an unrecognized value MAY produce a **console** diagnostic; the card MUST NOT enter a configuration-error render state solely due to an invalid `interpretation` string.
+
+- **FR-903-V (Neutral band YAML)**: The card MUST accept optional **`neutral_interpretation`**: a **non-negative** number interpreted as **percent** `T` for the neutral semantic band. When **omitted**, **`T` MUST default to `2`**. When the value is **negative**, **non-numeric**, or otherwise invalid, **`T` MUST default to `2`**; the card MUST NOT crash. Semantic **neutral** (icon + chart delta styling) applies when **`|p| ≤ T`** per the normative definition in “Narrative interpretation…”, where `p` is the same chip percentage **when available**; **reference = 0** follows Edge Case 15. When **`p`** is **not** available, **FR-903-W** applies instead of this band.
+
+- **FR-903-Q (Semantic mapping)**: **When `p` is available** (or the reference-zero rule applies without placeholder chip): **After** applying **FR-903-V** (including neutral when **`|p| ≤ T`** or the reference-zero rule): for **`consumption`**, when outside the neutral band, `current > reference` MUST map to **negative** semantic outcome (warning styling); `current < reference` MUST map to **positive** semantic outcome (success styling). For **`production`**, when outside the neutral band, the mapping MUST be **inverted**: `current > reference` → **positive** outcome; `current < reference` → **negative** outcome.
+
+- **FR-903-R (Cross-UI consistency)**: The narrative interpretation row (when visible) and the chart delta segment MUST use the **same** semantic color and trend meaning for the same **neutral vs positive vs negative** outcome derived from **`interpretation`**, **`neutral_interpretation`**, and `(current − reference)` / `p`, **or** the **insufficient-data** outcome when **`p`** is unavailable (**FR-903-W**).
+
+- **FR-903-W (Missing delta data — interpretation)**: When the comparison delta is in the **placeholder** state (no reliable signed percent **`p`** for semantics), the narrative row (when visible) MUST use **dedicated** `localize()` keys for **insufficient comparison data** — **not** success, warning, or neutral-band strings. Icon and chart delta styling MUST be **muted / non-judgment** and MUST **not** match neutral-band (“similar”) styling. Narrative and chart MUST remain **mutually consistent** on this path.
+
+- **FR-903-S (Localization)**: All new or revised user-visible strings for interpretation (including production-specific copy, **neutral-band** copy, and **insufficient-data** copy for the **comparison narrative** and chart delta affordances) MUST be implemented via `localize()` with keys in **`en`**, **`pl`**, and **`de`** per `905-localization-formatting`.
+
+- **FR-903-T (Editor parity)**: The visual editor MUST expose interpretation as **two options** (Consumption / Production), defaulting to **Consumption**, with shallow-merge behavior consistent with `904-configuration-surface`.
+
+- **FR-903-U (Forecast panel — interpretation)**: The Forecast \| Total panel MUST **not** alter user-visible strings, headings, or translation keys based on `interpretation`; forecast and total presentation remain as in `FR-903-I` regardless of mode.
+
 ---
 
 ## Key Entities
 
-- **`CardConfig`**: YAML configuration object. UI-relevant fields: `title`, `show_title`, `icon`, `show_icon`, `show_forecast` (alias `forecast`), `language`.
+- **`CardConfig`**: YAML configuration object. UI-relevant fields: `title`, `show_title`, `icon`, `show_icon`, `show_forecast` (alias `forecast`), `language`, `interpretation` (`consumption` | `production`; omit → `consumption`), `neutral_interpretation` (optional percent `T` for neutral band; omit → `2`).
+- **`Interpretation` mode**: Selects consumption vs production **semantic** polarity for the **comparison narrative row** and **chart delta** (outside the neutral band); does not change arithmetic delta signs on the chip; does not change Forecast \| Total copy.
+- **`neutral_interpretation`**: Percent threshold `T` such that **`|p| ≤ T`** yields **neutral** styling for narrative icon and chart delta; independent of delta chip numeric display.
 - **Header section** (`.ebc-header`): Contains icon container (42×42 px), title line (friendly name or configured string), and entity subtitle line (`entity_id`).
 - **Comparison panel** (`.ebc-stats`): Two-column current/reference cumulative values, compact period captions, single delta chip (`+/−absolute | +/−percentage`).
 - **Forecast | Total panel** (`.ebc-forecast`): Shows `ForecastStats.forecast_total` (Forecast) and the full reference period total (Total). Absent when `show_forecast: false`.
@@ -285,6 +393,10 @@ As a developer making visual changes, I need all CSS rules to live in `energy-ho
 - **SC-903-3**: An advanced user using only CSS rules targeting semantic `.ebc-*` class names can hide or resize any major card section within 10 minutes, without consulting implementation files.
 - **SC-903-4**: Switching HA themes (light/dark) with at least 5 standard HA themes produces no critical contrast failures on key card elements.
 - **SC-903-5**: Removing the styles import from the main component causes only visual degradation; all data fetching, statistics computation, and forecast remain functional.
+- **SC-903-6**: With `interpretation: production`, users correctly identify “better” vs “worse” outcomes in **90%+** of moderated test cases where current and reference differ, without referring to raw numbers alone.
+- **SC-903-7**: With default or explicit `interpretation: consumption`, side-by-side comparison with the prior release shows **no** unintended change to semantic colors or consumption-oriented wording for the same data.
+- **SC-903-8**: Automated or manual test suites cover both interpretation modes for at least: current > reference, current < reference, and missing key / explicit consumption.
+- **SC-903-9**: With default **`neutral_interpretation`** (or explicit `2`), cases where **`|p| ≤ 2`** show **neutral** narrative + chart delta styling; with **`neutral_interpretation: 0`**, neutral applies only when **`p`** is exactly zero (strict band).
 
 ---
 
@@ -295,4 +407,6 @@ As a developer making visual changes, I need all CSS rules to live in `energy-ho
 - `period_offset` configuration correctly shifts the reference period's `start`/`end` dates; `formatCompactPeriodCaption` reuses the already-computed `ComparisonWindow` bounds.
 - The `−` sign for negative differences is U+2212 (minus sign) or a regular hyphen-minus (`-`), following existing project formatting conventions.
 - `anomalousReference` from `ForecastStats` may optionally be surfaced in the UI (e.g. a confidence indicator); the specific presentation is an implementation detail not normatively specified here.
-- Documentation changes (README, wiki, changelog) reflecting this domain's configuration options are covered by domain `907-docs-product-knowledge`.
+- **Interpretation** generalizes “entity semantics” beyond electricity; wording may say “energy” or be generic per copy review, but behavior is the same for any cumulative statistic exposed by the card.
+- **`neutral_interpretation`** defaults to **2** percent when omitted, matching a common “close enough” band; power users may set **`0`** for strict neutrality only at exact balance (per **SC-903-9**).
+- Automated tests, changelog entry **1.1.0**, and README / README-advanced / wiki updates for this feature are tracked under `907-docs-product-knowledge` and `tasks.md` for this feature.

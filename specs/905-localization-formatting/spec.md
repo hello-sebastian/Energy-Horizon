@@ -33,6 +33,10 @@ The card resolves all user-visible text, number formats, and time zone from a th
 
 `localize(key: string, variables?: Record<string, unknown>): string` — returns the translated string with optional variable interpolation (e.g., `localize("summary.higher", { percent: 15 })`). All calls in rendering code use descriptive key names; no raw string literals for UI text exist outside translation files.
 
+### Interpretation copy (consumption vs production)
+
+User-visible strings that depend on **`interpretation`** (`consumption` \| `production` from card YAML; default consumption) — including **production-specific** narrative lines and **editor** labels for the interpretation control — MUST have parallel keys in **`en`**, **`pl`**, and **`de`**. When `interpretation` is omitted, runtime behavior uses **consumption** strings per `903-card-ui-composition`.
+
 ### Re-render on locale change
 
 The card re-renders automatically when `hass.locale` changes (e.g., the user changes HA language in Settings), without a page reload.
@@ -80,7 +84,7 @@ interface ResolvedLocale {
 - `900-time-model-windows`: HA IANA time zone for all calendar boundary calculations and "now" resolution.
 - `901-data-pipeline-forecasting`: HA IANA time zone for timestamp interpretation in `buildChartTimeline`.
 - `902-chart-rendering-interaction`: resolved locale string and HA time zone for `Intl.DateTimeFormat` axis/tooltip label formatting.
-- `903-card-ui-composition`: resolved locale for `formatCompactPeriodCaption`; HA `locale.time_format` for clock portions of hourly-window captions; entity friendly name and icon from `hass.states`.
+- `903-card-ui-composition`: resolved locale for `formatCompactPeriodCaption`; HA `locale.time_format` for clock portions of hourly-window captions; entity friendly name and icon from `hass.states`; localized strings for narrative interpretation **consumption vs production** wording.
 - `904-configuration-surface`: `localize()` function for editor label translation.
 
 **Consumes from**:

@@ -66,6 +66,10 @@ The chart maps the pointer column to `fullTimeline[i]` using `axisValue` (rounde
 
 When no manual `aggregation` is configured, the card derives a step from the window's `duration` using a threshold table targeting 20–100 buckets. The maximum per-series point count is **5000**; configurations exceeding this trigger a config error (same class as invalid `time_window`). Sub-hour auto-selection is excluded until LTS supports it.
 
+### Delta segment and interpretation semantics
+
+The chart draws a **delta segment** between the current and reference series at the active aggregation step (see implementation). The **semantic color** of that segment (success vs warning styling — aligned with HA theme tokens) MUST follow the card’s **`interpretation`** setting (`consumption` vs `production`) exactly as defined in `903-card-ui-composition`: consumption mode preserves legacy “higher current = warning” meaning for visuals; production mode inverts semantic polarity for visuals while leaving numeric series values unchanged.
+
 ---
 
 ## Public Contract
@@ -99,12 +103,12 @@ interface ChartRenderer {
 
 **Consumes from**:
 - `900-time-model-windows`: `ComparisonSeries[]`, `timeline[]` (slot timestamps), "now" marker index, window role assignments, `ComparisonWindow[].aggregation`.
-- `903-card-ui-composition`: chart container element (Shadow DOM), HA theme CSS tokens from host element.
-- `904-configuration-surface`: raw YAML fields listed in Public Contract above.
+- `903-card-ui-composition`: chart container element (Shadow DOM), HA theme CSS tokens from host element; **interpretation** semantics for delta segment styling (success vs warning) tied to `interpretation` / effective consumption default.
+- `904-configuration-surface`: raw YAML fields listed in Public Contract above; full `CardConfig` including `interpretation` on `config-changed`.
 - `905-localization-formatting`: resolved locale string for `Intl`-based label formatting; HA instance IANA time zone.
 
 **Publishes to**:
-- `903-card-ui-composition`: rendered ECharts instance occupying the chart container; `min-height` adjustments.
+- `903-card-ui-composition`: rendered ECharts instance occupying the chart container; `min-height` adjustments; delta segment with semantic colors consistent with the narrative interpretation row.
 
 ---
 

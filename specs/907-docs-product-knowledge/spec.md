@@ -72,7 +72,7 @@ Version tagging requirement:
 - `900-time-model-windows`: window model rules, preset merge semantics, LTS limits.
 - `901-data-pipeline-forecasting`: forecast activation thresholds, confidence levels, anomaly detection.
 - `902-chart-rendering-interaction`: axis options (`x_axis_format`, `tooltip_format`, `aggregation`), fill/color/forecast YAML keys.
-- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language` options; card section CSS classes.
+- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`, `interpretation` (`consumption` \| `production`; omit → consumption) options; card section CSS classes; interpretation semantics for narrative and chart delta (cross-ref other domains).
 - `904-configuration-surface`: editor field descriptions, `getStubConfig()` defaults, YAML-only vs editor-exposed fields.
 - `905-localization-formatting`: `language`, `number_format`, `debug` YAML keys; translation file conventions.
 - `906-units-numeric-scaling`: `force_prefix`, `precision` options; SI prefix behavior; excluded units.

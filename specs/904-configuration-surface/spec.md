@@ -22,6 +22,7 @@ The card exposes a Lovelace visual configuration editor via `getConfigElement()`
 | Title | Free text | `title` |
 | Comparison preset | Dropdown | `comparison_preset` |
 | Force prefix | Dropdown | `force_prefix` |
+| Interpretation | Two-option control (Consumption / Production) | `interpretation` |
 
 Deprecated `comparison_mode` is still accepted by the card for backward compatibility but the editor always uses `comparison_preset`.
 
@@ -68,8 +69,11 @@ const SCHEMA = [
   { name: 'title',              selector: { text: {} } },
   { name: 'comparison_preset',  selector: { select: { options: ['year_over_year', 'month_over_year', 'month_over_month'] } } },
   { name: 'force_prefix',       selector: { select: { options: ['auto', 'none', 'G', 'M', 'k', '', 'm', 'µ'] } } },
+  { name: 'interpretation',     selector: { select: { options: ['consumption', 'production'] } } },
 ];
 ```
+
+Editor presentation: the `interpretation` field MUST be shown as **two radio-style mutually exclusive options** (labels localized), default **Consumption**, matching shallow-merge semantics in “Config preservation”.
 
 ---
 
@@ -78,7 +82,7 @@ const SCHEMA = [
 **Publishes to**:
 - `900-time-model-windows`: `comparison_preset` + `time_window` YAML block.
 - `902-chart-rendering-interaction`: `primary_color`, `fill_*`, `show_forecast`, `x_axis_format`, `tooltip_format`, `aggregation`.
-- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`.
+- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`, `interpretation` (`consumption` \| `production`; omit → consumption per `903-card-ui-composition`), `neutral_interpretation` (optional; YAML-only in v1 per `903-card-ui-composition`).
 - `906-units-numeric-scaling`: `force_prefix`.
 - All domains: the full `CardConfig` object on every `config-changed` event.
 
@@ -103,15 +107,16 @@ const SCHEMA = [
 
 ### US-904-1 — Open card editor and see pre-filled fields (P1)
 
-As a HA user who has added the Energy Horizon card, I need to click "Edit" and see a side panel with labeled fields for entity, title, comparison preset, and force prefix — pre-filled with the current values — so I can understand and change the configuration without editing YAML.
+As a HA user who has added the Energy Horizon card, I need to click "Edit" and see a side panel with labeled fields for entity, title, comparison preset, force prefix, and interpretation (consumption vs production) — pre-filled with the current values — so I can understand and change the configuration without editing YAML.
 
 **Independent test**: Add card to dashboard, click "Edit" → panel opens with labeled fields; all current config values are pre-populated in their respective fields; optional fields show empty when not configured.
 
 **Acceptance Scenarios**:
 
-1. **Given** the Energy Horizon card is on the dashboard, **When** the user clicks "Edit", **Then** a side panel opens showing labeled fields for entity, title, comparison preset, and force prefix.
+1. **Given** the Energy Horizon card is on the dashboard, **When** the user clicks "Edit", **Then** a side panel opens showing labeled fields for entity, title, comparison preset, force prefix, and interpretation.
 2. **Given** the editor panel is open and the card has a current config, **When** the form renders, **Then** each field shows its current configured value.
 3. **Given** the editor panel is open and optional fields (title, force_prefix) are not configured, **When** the form renders, **Then** those fields appear empty (no placeholder errors).
+4. **Given** `interpretation` is omitted in YAML, **When** the form renders, **Then** interpretation shows **Consumption** as the effective selection (aligned with `903-card-ui-composition` default).
 
 ---
 
@@ -119,7 +124,7 @@ As a HA user who has added the Energy Horizon card, I need to click "Edit" and s
 
 As a user configuring the card, I need every change I make in the editor form to immediately update the card's visual output without any save or reload step, so I can see the effect of each change as I make it.
 
-**Independent test**: Change entity, title, comparison preset, and force prefix in the editor — card updates within 500 ms for each change.
+**Independent test**: Change entity, title, comparison preset, force prefix, and interpretation in the editor — card updates within 500 ms for each change.
 
 **Acceptance Scenarios**:
 
@@ -127,6 +132,7 @@ As a user configuring the card, I need every change I make in the editor form to
 2. **Given** the editor is open, **When** the user types a new title, **Then** the card title updates in real time as the user types.
 3. **Given** the editor is open, **When** the user changes `comparison_preset`, **Then** the card re-renders with the appropriate comparison period.
 4. **Given** the editor is open, **When** the user changes `force_prefix`, **Then** the Y-axis unit notation updates immediately.
+5. **Given** the editor is open, **When** the user switches `interpretation` between Consumption and Production, **Then** the narrative interpretation semantics and chart delta styling update immediately per `903-card-ui-composition`.
 
 ---
 
@@ -154,7 +160,7 @@ As a user with a Polish-language HA instance, I need all editor field labels and
 
 **Acceptance Scenarios**:
 
-1. **Given** HA frontend language is Polish, **When** the editor opens, **Then** all field labels (entity, title, comparison preset, force prefix) are displayed in Polish.
+1. **Given** HA frontend language is Polish, **When** the editor opens, **Then** all field labels (entity, title, comparison preset, force prefix, interpretation) are displayed in Polish.
 2. **Given** HA frontend language is English, **When** the editor opens, **Then** all labels are in English.
 
 ---
@@ -191,7 +197,7 @@ As a user opening the editor in edge conditions (missing `hass` object during in
 
 - **FR-904-A (getConfigElement)**: The main card class MUST expose a static `getConfigElement()` method returning a custom element registered as `energy-horizon-card-editor`, compliant with the HA Lovelace card editor API.
 
-- **FR-904-B (ha-form schema)**: The editor MUST render using `<ha-form>` driven by a static schema including: `entity` (entity selector, sensor domain), `title` (text), `comparison_preset` (select: `year_over_year`, `month_over_year`, `month_over_month`), `force_prefix` (select: `auto`, `none`, `G`, `M`, `k`, `""`, `m`, `µ`).
+- **FR-904-B (ha-form schema)**: The editor MUST render using `<ha-form>` driven by a static schema including: `entity` (entity selector, sensor domain), `title` (text), `comparison_preset` (select: `year_over_year`, `month_over_year`, `month_over_month`), `force_prefix` (select: `auto`, `none`, `G`, `M`, `k`, `""`, `m`, `µ`), `interpretation` (select: `consumption`, `production`; presented as two radio-style options, default `consumption`).
 
 - **FR-904-C (config-changed event)**: The editor MUST emit a `config-changed` CustomEvent with `detail.config` equal to the full merged `CardConfig` object on every field change.
 
@@ -233,11 +239,11 @@ As a user opening the editor in edge conditions (missing `hass` object during in
 
 ## Success Criteria
 
-- **SC-904-1**: A user who has never edited YAML can fully configure all four editor fields (entity, title, comparison preset, force prefix) within 60 seconds of opening the editor for the first time.
+- **SC-904-1**: A user who has never edited YAML can fully configure all editor fields (entity, title, comparison preset, force prefix, interpretation) within 60 seconds of opening the editor for the first time.
 - **SC-904-2**: Every change made in the editor is reflected in the card's visual output within 500 ms (live preview).
 - **SC-904-3**: Zero YAML-only config fields are lost when the user opens the editor, changes any form field, and saves — verified by diff of the saved YAML before and after the edit session.
 - **SC-904-4**: A user can switch from Visual mode to YAML text mode and back at least once without data loss or JavaScript error.
-- **SC-904-5**: All four editor fields have localized labels in English and Polish; German labels are present in `de.json`.
+- **SC-904-5**: All editor fields (including interpretation) have localized labels in English and Polish; German labels are present in `de.json`.
 
 ---
 
