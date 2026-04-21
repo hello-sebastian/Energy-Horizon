@@ -28,7 +28,7 @@ npm run build
 ## Design references
 
 - **Spec**: `specs/001-figma-ui-rollout/spec.md`
-- **Figma mapping**: `figma-design.md` (§1–§8)
+- **Figma mapping**: `specs/001-figma-ui-rollout/figma-ui-project-source.md` (§1–§8)
 - **Figma file**: [Energy Horizon Card](https://www.figma.com/design/AbPnTcmRe6WhVGpJt8U6Xj/Energy-Horizon-Card?node-id=113-437) — node `113:437`
 
 ## Manual acceptance (short)

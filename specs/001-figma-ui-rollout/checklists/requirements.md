@@ -34,12 +34,12 @@
 | Checklist item | Wynik | Uwagi |
 |----------------|-------|--------|
 | Brak szczegółów implementacji | **Pass** | Usunięto nazwę warstwy techniczną z AC; brak nazw frameworków testowych / wykresu w treści |
-| Wartość użytkownika | **Pass** | US-1–US-9 mapują `figma-specify-prompt.md` i `figma-design.md` |
+| Wartość użytkownika | **Pass** | US-1–US-9 mapują `specs/001-figma-ui-rollout/figma-ui-project-source.md` i `specs/001-figma-ui-rollout/figma-ui-project-source.md` |
 | Stakeholderzy | **Pass** | Terminologia HA (Lovelace, LTS) to domena produktu karty, nie stos techniczny |
 | Sekcje obowiązkowe | **Pass** | User Scenarios, Requirements, Success Criteria, Key Entities |
 | Kryteria sukcesu | **Pass** | SC-001–SC-005 mierzalne i bez nazw bibliotek |
 
 ## Notes
 
-- Specyfikacja odnosi się do `figma-design.md` jako **kontraktu projektowego** w repozytorium — zgodnie z poleceniem użytkownika i `figma-specify-prompt.md`.
+- Specyfikacja odnosi się do `specs/001-figma-ui-rollout/figma-ui-project-source.md` jako **kontraktu projektowego** w repozytorium — zgodnie z poleceniem użytkownika i `specs/001-figma-ui-rollout/figma-ui-project-source.md`.
 - Przed `/speckit.plan` warto rozwinąć tabelę faz w `plan.md` / `tasks.md` z zależnościami technicznymi (plan może używać nazw modułów z repozytorium).

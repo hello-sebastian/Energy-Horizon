@@ -60,7 +60,7 @@ If you came here from the project README:
 
 ## Layout sections (Figma-aligned)
 
-Optional **visibility** flags (default **on**: omit the key or use any value other than `false`). Map to layers in [`figma-design.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/figma-design.md) §2.
+Optional **visibility** flags (default **on**: omit the key or use any value other than `false`). Map to layers in [`specs/001-figma-ui-rollout/figma-ui-project-source.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/specs/001-figma-ui-rollout/figma-ui-project-source.md) §2.
 
 | Key | Figma layer (reference) | Effect |
 |-----|-------------------------|--------|

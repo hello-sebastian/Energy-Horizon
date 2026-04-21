@@ -46,4 +46,4 @@ The rendered card **SHOULD** expose stable, testable regions (class names or rol
 
 ## 7. Theming
 
-- Colors **SHOULD** resolve through HA theme CSS variables where semantically possible; brand accent may use `--eh-*` with fallback (US-7, `figma-design.md` §4).
+- Colors **SHOULD** resolve through HA theme CSS variables where semantically possible; brand accent may use `--eh-*` with fallback (US-7, `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4).

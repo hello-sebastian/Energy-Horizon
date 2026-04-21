@@ -3,7 +3,7 @@
 **Branch**: `001-figma-ui-rollout` | **Date**: 2026-04-09 | **Spec**: [spec.md](./spec.md)  
 **Input**: Feature specification from `/specs/001-figma-ui-rollout/spec.md`
 
-**Note**: Filled by `/speckit.plan`. Related context: [figma-design.md](../../figma-design.md), [figma-specify-prompt.md](../../figma-specify-prompt.md). Figma MCP `get_design_context` on node `113:437` was used to confirm alignment with `figma-design.md`.
+**Note**: Filled by `/speckit.plan`. Related context: [specs/001-figma-ui-rollout/figma-ui-project-source.md](../../specs/001-figma-ui-rollout/figma-ui-project-source.md), [specs/001-figma-ui-rollout/figma-ui-project-source.md](../../specs/001-figma-ui-rollout/figma-ui-project-source.md). Figma MCP `get_design_context` on node `113:437` was used to confirm alignment with `specs/001-figma-ui-rollout/figma-ui-project-source.md`.
 
 ## Summary
 

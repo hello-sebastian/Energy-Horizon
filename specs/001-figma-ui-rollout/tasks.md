@@ -6,7 +6,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 
 **Input**: Design documents from `/Users/admin/Projekty Local/Energy-Horizon/specs/001-figma-ui-rollout/`  
 **Prerequisites**: [plan.md](./plan.md), [spec.md](./spec.md), [research.md](./research.md), [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)  
-**Design reference (Figma mapping)**: [figma-design.md](../../figma-design.md), [figma-specify-prompt.md](../../figma-specify-prompt.md) — file `AbPnTcmRe6WhVGpJt8U6Xj`, node `113:437` (optional MCP verify; do not edit Figma)
+**Design reference (Figma mapping)**: [figma-ui-project-source.md](./figma-ui-project-source.md) — file `AbPnTcmRe6WhVGpJt8U6Xj`, node `113:437` (optional MCP verify; do not edit Figma)
 
 **Tests**: **Included** — US-9 / FR-010 require automated coverage (`npm test`, Vitest).
 
@@ -23,7 +23,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 **Purpose**: Confirm baseline and design references before code changes.
 
 - [x] T001 Verify baseline passes `npm test` and `npm run lint` per `package.json` scripts at repository root
-- [x] T002 [P] Skim `figma-design.md` §2–§4 and `figma-specify-prompt.md` for layer names (Card Header, Data series info, Surface, Chart, Warning) — no Figma file edits
+- [x] T002 [P] Skim `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2–§4 and `specs/001-figma-ui-rollout/figma-ui-project-source.md` for layer names (Card Header, Data series info, Surface, Chart, Warning) — no Figma file edits
 
 ---
 
@@ -33,7 +33,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 
 **⚠️ CRITICAL**: Complete before user-story UI work.
 
-- [x] T003 Add HA-themed CSS custom properties (e.g. `--eh-series-current`, surface/spacing aligned to `figma-design.md` §4) in `src/card/energy-horizon-card-styles.ts`
+- [x] T003 Add HA-themed CSS custom properties (e.g. `--eh-series-current`, surface/spacing aligned to `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4) in `src/card/energy-horizon-card-styles.ts`
 - [x] T004 Refactor `render` structure in `src/card/cumulative-comparison-chart.ts` to wrap future sections in `.ebc-section--header`, `.ebc-section--comparison`, `.ebc-section--forecast-total`, `.ebc-chart` container parent, `.ebc-section--comment`, `.ebc-section--warning` (preserve existing data bindings temporarily inside wrappers)
 - [x] T005 [P] Create `src/card/trend-visual.ts` exporting MDI icon id and semantic color tokens for `Trend` from `src/card/types.ts` (`higher` \| `lower` \| `similar` \| `unknown`) for chart + comment reuse
 - [x] T006 [P] Add `role="region"` and localized `aria-label` attributes for each `.ebc-section--*` in `src/card/cumulative-comparison-chart.ts` per `specs/001-figma-ui-rollout/contracts/lovelace-card-contract.md`
@@ -51,7 +51,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 ### Implementation
 
 - [x] T007 [US1] Implement Card Header markup in `src/card/cumulative-comparison-chart.ts`: 42×24 icon wrapper with `ha-icon` / `ha-state-icon`; `entity_id` subtitle only when `show_title !== false`
-- [x] T008 [P] [US1] Add header typography and icon circle styles in `src/card/energy-horizon-card-styles.ts` per `figma-design.md` §2 Card Header and §4.3
+- [x] T008 [P] [US1] Add header typography and icon circle styles in `src/card/energy-horizon-card-styles.ts` per `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 Card Header and §4.3
 
 ---
 
@@ -63,7 +63,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 
 ### Implementation
 
-- [x] T009 [US2] Replace list-style `.summary` rows in `src/card/cumulative-comparison-chart.ts` with two-column comparison grid + period captions (current vs reference) per `figma-design.md` §2 Data series info
+- [x] T009 [US2] Replace list-style `.summary` rows in `src/card/cumulative-comparison-chart.ts` with two-column comparison grid + period captions (current vs reference) per `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 Data series info
 - [x] T010 [US2] Implement single delta chip in `src/card/cumulative-comparison-chart.ts` (absolute + percent, theme semantic colors); enforce always-visible chip and placeholder rules from spec Clarifications
 - [x] T011 [P] [US2] Add comparison panel, divider, and delta chip styles in `src/card/energy-horizon-card-styles.ts`
 
@@ -79,7 +79,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 
 - [x] T012 [US3] Implement full **reference-window** cumulative for **Total** in `src/card/ha-api.ts`; align `ForecastStats` / comments in `src/card/types.ts` if `reference_total` semantics change
 - [x] T013 [US3] Render Forecast \| Total panel in `src/card/cumulative-comparison-chart.ts` only when existing forecast visibility gate passes (`isForecastLineVisible` from `src/card/cumulative-comparison-chart.ts` + `forecast.enabled`); remove duplicate legacy rows from old forecast block as needed
-- [x] T014 [P] [US3] Add second-panel (surface + grid) styles in `src/card/energy-horizon-card-styles.ts` per `figma-design.md` Surface Container
+- [x] T014 [P] [US3] Add second-panel (surface + grid) styles in `src/card/energy-horizon-card-styles.ts` per `specs/001-figma-ui-rollout/figma-ui-project-source.md` Surface Container
 
 ---
 
@@ -109,7 +109,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 ### Implementation
 
 - [x] T021 [US4] Replace heading-only narrative in `src/card/cumulative-comparison-chart.ts` with panel: `ha-icon` + existing localized strings from `textSummary` flow
-- [x] T022 [P] [US4] Add intelligent-comment panel styles in `src/card/energy-horizon-card-styles.ts` per `figma-design.md` §2 Inteligent comment
+- [x] T022 [P] [US4] Add intelligent-comment panel styles in `src/card/energy-horizon-card-styles.ts` per `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 Inteligent comment
 
 ---
 
@@ -134,7 +134,7 @@ description: "Task list — Figma-aligned Energy Horizon Card UI v0.5.0"
 
 ### Implementation
 
-- [x] T025 [P] [US7] Audit and replace remaining primary-path hex/rgb in `src/card/energy-horizon-card-styles.ts` with HA CSS variables or `color-mix` per `figma-design.md` §4.0
+- [x] T025 [P] [US7] Audit and replace remaining primary-path hex/rgb in `src/card/energy-horizon-card-styles.ts` with HA CSS variables or `color-mix` per `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4.0
 - [x] T026 [US7] Audit `src/card/echarts-renderer.ts` for hardcoded colors; prefer computed theme tokens from host for series, grid, and labels
 
 ---
@@ -246,7 +246,7 @@ tests/unit/echarts-renderer.test.ts  # T031
 - [x] T038 [US10] [P] Extend `HaFormSchema` boolean variant in `src/ha-types.ts`; add fields to `_formData` / `_buildSchema` in `src/card/energy-horizon-card-editor.ts`
 - [x] T039 [P] [US10] Add `editor.show_*` strings to `src/translations/en.json`, `pl.json`, `de.json`
 - [x] T040 [US10] Vitest: `tests/integration/card-render.test.ts` — sections present by default; each `show_*: false`; `show_forecast: false` + `show_forecast_total_panel: true` → no forecast panel
-- [x] T041 [P] [US10] Docs: `changelog.md`, `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md`, `figma-design.md`; update `specs/001-figma-ui-rollout/*` (this rollout spec)
+- [x] T041 [P] [US10] Docs: `changelog.md`, `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md`, `specs/001-figma-ui-rollout/figma-ui-project-source.md`; update `specs/001-figma-ui-rollout/*` (this rollout spec)
 
 ---
 

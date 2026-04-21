@@ -126,7 +126,7 @@ export const energyHorizonCardStyles = css`
     opacity: 0.85;
   }
 
-  /* Figma: Series label — Medium 12, ~5% tracking (§4.3 figma-design.md) */
+  /* Figma: Series label — Medium 12, ~5% tracking (§4.3 specs/001-figma-ui-rollout/figma-ui-project-source.md) */
   .ebc-series-caption {
     display: flex;
     align-items: center;
@@ -337,7 +337,7 @@ export const energyHorizonCardStyles = css`
     );
   }
 
-  /* Figma Inteligent comment — 40px icon hit area, MDI 24px (§3 figma-design.md) */
+  /* Figma Inteligent comment — 40px icon hit area, MDI 24px (§3 specs/001-figma-ui-rollout/figma-ui-project-source.md) */
   .ebc-comment-icon-wrap {
     flex-shrink: 0;
     width: 40px;

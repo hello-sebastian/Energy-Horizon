@@ -3,12 +3,12 @@
 **Feature Branch**: `001-figma-ui-rollout`  
 **Created**: 2026-04-09  
 **Status**: Draft  
-**Input**: User description: "Zaplanuj wdrożenie nowego UI według projektu z Figmy." (rozszerzone wytycznymi `figma-specify-prompt.md` oraz interpretacją `figma-design.md`)
+**Input**: User description: "Zaplanuj wdrożenie nowego UI według projektu z Figmy." (rozszerzone wytycznymi `specs/001-figma-ui-rollout/figma-ui-project-source.md` oraz interpretacją `specs/001-figma-ui-rollout/figma-ui-project-source.md`)
 
 ## Design authority & scope
 
-- **Wzorzec wizualny i semantyka pól** muszą być zgodne z dokumentem repozytorium **`figma-design.md`** (sekcje §1–§8: hierarchia warstw, reguły wykresu §2.1–2.2, komponenty §3, tokeny §4, backlog różnic §5, podział pracy §6, decyzje §7).  
-- **Źródło w Figmie (referencja):** plik `AbPnTcmRe6WhVGpJt8U6Xj`, węzeł ramki `113:437` — *Energy Horizon Card v0.5.0* (URL w `figma-design.md`).  
+- **Wzorzec wizualny i semantyka pól** muszą być zgodne z dokumentem repozytorium **`specs/001-figma-ui-rollout/figma-ui-project-source.md`** (sekcje §1–§8: hierarchia warstw, reguły wykresu §2.1–2.2, komponenty §3, tokeny §4, backlog różnic §5, podział pracy §6, decyzje §7).  
+- **Źródło w Figmie (referencja):** plik `AbPnTcmRe6WhVGpJt8U6Xj`, węzeł ramki `113:437` — *Energy Horizon Card v0.5.0* (URL w `specs/001-figma-ui-rollout/figma-ui-project-source.md`).  
 - **Zakres produktu:** karta **Energy Horizon** w wariancie Lovelace `custom:energy-horizon-card` — **bez zmiany kontraktu** identyfikatora karty i **bez zmiany sposobu pobierania danych** z Home Assistant (Long-Term Statistics), o ile niniejsza specyfikacja nie uzasadni wyjątku (brak wyjątków w wersji v0.5.0 poza doprecyzowaniem pola **Total** wg §1.3).  
 - **Poza zakresem:** rebranding innych kart dashboardu, edycja pliku Figma, obowiązkowy Code Connect (ew. przyszła praca procesowa).
 
@@ -37,8 +37,8 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** włączony tytuł oraz encja z przyjazną nazwą i `entity_id`, **When** karta wyświetla nagłówek, **Then** pierwszy wiersz pokazuje przyjazny tytuł (jak dotychczas), a drugi — **wyłącznie** kodową nazwę encji, stylistycznie jak podtytuł kontekstowy w makiecie (`figma-design.md` §2 Card Header, §4 kolory kontekstowe / motyw HA).  
-2. **Given** konfiguracja z włączoną ikoną, **When** render nagłówka, **Then** ikona jest w **kółku 42×42 px** z ikoną **24 px** (`ha-icon` / `ha-state-icon`), zgodnie z §7 `figma-design.md`.  
+1. **Given** włączony tytuł oraz encja z przyjazną nazwą i `entity_id`, **When** karta wyświetla nagłówek, **Then** pierwszy wiersz pokazuje przyjazny tytuł (jak dotychczas), a drugi — **wyłącznie** kodową nazwę encji, stylistycznie jak podtytuł kontekstowy w makiecie (`specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 Card Header, §4 kolory kontekstowe / motyw HA).  
+2. **Given** konfiguracja z włączoną ikoną, **When** render nagłówka, **Then** ikona jest w **kółku 42×42 px** z ikoną **24 px** (`ha-icon` / `ha-state-icon`), zgodnie z §7 `specs/001-figma-ui-rollout/figma-ui-project-source.md`.  
 3. **Given** włączony tytuł i wymaganie projektowe **1** (nagłówek), **When** weryfikacja, **Then** spełnione jest: tytuł + podtytuł `entity_id` + kontener ikony jak wyżej.  
 4. **Given** tytuł karty **wyłączony** w konfiguracji (odpowiednik `show_title: false` / aktualnego przełącznika karty), **When** render nagłówka, **Then** **ani** przyjazny tytuł, **ani** podtytuł z `entity_id` **nie** są wyświetlane; zachowanie ikony — zgodnie z istniejącą opcją pokazywania ikony, **bez** narzucania zmiany tego kontraktu w ramach tej decyzji.
 
@@ -52,11 +52,11 @@
 
 **Why this priority**: Główna wartość karty to porównanie okresów — layout bezpośrednio wpływa na czytelność.
 
-**Independent Test**: Widok karty z danymi `summary.*`; układ odpowiada panelowi *Data series info* z `figma-design.md` §2 (Current / Reference, Data status, Delta status); **sens biznesowy** skumulowanych „do dziś” bez zmiany względem obecnej logiki, o ile nie wymuszono doprecyzowania **Total**; **chip delty** — zgodnie z **Clarifications** (zawsze widoczny, zasady zera i braku danych). Teksty *Data series caption* są generowane przez `formatCompactPeriodCaption` (skrócone miesiące, strefa HA, opcjonalnie `time_format`) — patrz `src/card/labels/compact-period-caption.ts`.
+**Independent Test**: Widok karty z danymi `summary.*`; układ odpowiada panelowi *Data series info* z `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 (Current / Reference, Data status, Delta status); **sens biznesowy** skumulowanych „do dziś” bez zmiany względem obecnej logiki, o ile nie wymuszono doprecyzowania **Total**; **chip delty** — zgodnie z **Clarifications** (zawsze widoczny, zasady zera i braku danych). Teksty *Data series caption* są generowane przez `formatCompactPeriodCaption` (skrócone miesiące, strefa HA, opcjonalnie `time_format`) — patrz `src/card/labels/compact-period-caption.ts`.
 
 **Acceptance Scenarios**:
 
-1. **Given** aktywne okno bieżące i referencyjne, **When** użytkownik patrzy na pierwszy panel, **Then** widzi dwie kolumny z wartościami i podpisami okresów oraz **jeden** element delty z separatorem (np. kWh | %), kolory semantyczne z **motywu** Home Assistant (nie sztywne kolory z pikseli makiet — `figma-design.md` §4.0, §5 pkt 1).  
+1. **Given** aktywne okno bieżące i referencyjne, **When** użytkownik patrzy na pierwszy panel, **Then** widzi dwie kolumny z wartościami i podpisami okresów oraz **jeden** element delty z separatorem (np. kWh | %), kolory semantyczne z **motywu** Home Assistant (nie sztywne kolory z pikseli makiet — `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4.0, §5 pkt 1).  
 2. **Given** znana różnica **zerowa**, **When** render pierwszego panelu, **Then** chip delty **pozostaje widoczny** i pokazuje **zero** jako wartość merytoryczną w **jednostce i formacie** zgodnym z formatterem karty (oraz **0%**), bez ukrywania chipa.  
 3. **Given** brak danych do wyświetlenia delty (niedostępne `summary.difference` / `summary.differencePercent` lub równoważnik), **When** render, **Then** chip delty **nadal widoczny**: lewy segment **`---`** plus **jednostka z formattera / konfiguracji** (jak wartości w panelu), separator, prawy segment **`-- %`**; **Given** jednostka niedostępna, **Then** lewy segment to wyłącznie **`---`** (bez sufiksu), potem **`| -- %`** (**Clarifications**).
 
@@ -70,11 +70,11 @@
 
 **Why this priority**: Błędna semantyka Total podważa zaufanie do prognozy i porównań.
 
-**Independent Test**: Przy **włączonej** prognozie i presecie typu „month over year” **Total** = suma zużycia za **cały** miesiąc referencyjny z danych statystyk długoterminowych; **Forecast** = prognoza na **cały** bieżący okres (`figma-design.md` §1.3, §5 pkt 2, §7). Przy **wyłączonej** prognozie drugi panel **nie** jest renderowany (**Clarifications**).
+**Independent Test**: Przy **włączonej** prognozie i presecie typu „month over year” **Total** = suma zużycia za **cały** miesiąc referencyjny z danych statystyk długoterminowych; **Forecast** = prognoza na **cały** bieżący okres (`specs/001-figma-ui-rollout/figma-ui-project-source.md` §1.3, §5 pkt 2, §7). Przy **wyłączonej** prognozie drugi panel **nie** jest renderowany (**Clarifications**).
 
 **Acceptance Scenarios**:
 
-1. **Given** włączona prognoza (`show_forecast` nie jest `false`) oraz §1.3 (`figma-design.md`), **When** wyświetlany jest drugi panel, **Then** etykiety i liczby odpowiadają: **Forecast** → pełny bieżący okres; **Total** → pełny okres referencyjny (nie „do dziś” ani skrót z pierwszego panelu).  
+1. **Given** włączona prognoza (`show_forecast` nie jest `false`) oraz §1.3 (`specs/001-figma-ui-rollout/figma-ui-project-source.md`), **When** wyświetlany jest drugi panel, **Then** etykiety i liczby odpowiadają: **Forecast** → pełny bieżący okres; **Total** → pełny okres referencyjny (nie „do dziś” ani skrót z pierwszego panelu).  
 2. **Given** brak pełnych danych referencyjnych, **When** Total nie może być wiarygodnie wyliczone, **Then** karta stosuje istniejące reguły braków / ostrzeżeń (spójnie z US-5).  
 3. **Given** prognoza **wyłączona** (`show_forecast: false` lub równoważnik), **When** render karty, **Then** **cały** blok drugiego panelu (**Forecast \| Total**) **nie** występuje w UI (**Clarifications**).
 
@@ -92,7 +92,7 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** znany trend porównania, **When** render panelu komentarza, **Then** ikona i kolorystyka są spójne z **linią delty „dziś”** na wykresie (wymaganie szczegółowe **3** poniżej; `figma-design.md` §2 Inteligent comment, §3 Comment icon, §7).  
+1. **Given** znany trend porównania, **When** render panelu komentarza, **Then** ikona i kolorystyka są spójne z **linią delty „dziś”** na wykresie (wymaganie szczegółowe **3** poniżej; `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2 Inteligent comment, §3 Comment icon, §7).  
 2. **Given** wymaganie szczegółowe **3**, **When** weryfikacja, **Then** mapowanie kolorów/stanów: wyższe / niższe / podobne odpowiada trzem stanom wizualnym ikony i delty.
 
 ---
@@ -105,7 +105,7 @@
 
 **Why this priority**: Widoczność problemów jakości danych.
 
-**Independent Test**: Gdy `summary` sygnalizuje niepełną referencję, **pełny** komunikat pojawia się **wyłącznie** w sekcji **Warning status** u dołu karty (`figma-design.md` §2, §5 pkt 4) — **bez** duplikatu (tego samego pełnego tekstu) w panelu podsumowań.
+**Independent Test**: Gdy `summary` sygnalizuje niepełną referencję, **pełny** komunikat pojawia się **wyłącznie** w sekcji **Warning status** u dołu karty (`specs/001-figma-ui-rollout/figma-ui-project-source.md` §2, §5 pkt 4) — **bez** duplikatu (tego samego pełnego tekstu) w panelu podsumowań.
 
 **Acceptance Scenarios**:
 
@@ -122,11 +122,11 @@
 
 **Why this priority**: Wykres jest centralnym miejscem eksploracji w czasie.
 
-**Independent Test**: Wizualna i behawioralna zgodność z `figma-design.md` §2.1–2.2 oraz wymaganiami szczegółowymi **2–6** poniżej; reguła **3 etykiet osi X** (wymaganie **5**) dotyczy wyłącznie sytuacji, gdy **seria bieżąca jest wyświetlana** na wykresie — w przeciwnym razie patrz **Clarifications** (baseline etykiet).
+**Independent Test**: Wizualna i behawioralna zgodność z `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2.1–2.2 oraz wymaganiami szczegółowymi **2–6** poniżej; reguła **3 etykiet osi X** (wymaganie **5**) dotyczy wyłącznie sytuacji, gdy **seria bieżąca jest wyświetlana** na wykresie — w przeciwnym razie patrz **Clarifications** (baseline etykiet).
 
 **Acceptance Scenarios**:
 
-1. **Given** wyświetlany jest wykres z oznaczeniem dnia bieżącego, **When** użytkownik ocenia pion „dziś”, **Then** linia biegnie od **podstawy** wykresu (zero) do **górnej krawędzi** obszaru rysowania — **nie** kończy się na poziomie wyższego z punktów serii tego dnia (wymaganie **2**; `figma-design.md` §2.1, warstwa pionu „dziś”).  
+1. **Given** wyświetlany jest wykres z oznaczeniem dnia bieżącego, **When** użytkownik ocenia pion „dziś”, **Then** linia biegnie od **podstawy** wykresu (zero) do **górnej krawędzi** obszaru rysowania — **nie** kończy się na poziomie wyższego z punktów serii tego dnia (wymaganie **2**; `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2.1, warstwa pionu „dziś”).  
 2. **Given** obie serie w bieżącym agregacie, **When** render delty, **Then** widoczny jest pionowy odcinek **między** wartością bieżącą a referencyjną w agregacie „dziś”, w **trzech stanach kolorystycznych** zgodnych z US-4 (wymaganie **3**; `DeltaLineToday`).  
 3. **Given** seria referencyjna z punktem „dziś”, **When** render, **Then** kropka referencyjna jest **wizualnie zgodna z bieżącą makietą** w Figmie, nie ze starym zrzutem eksportu (wymaganie **4**).  
 4. **Given** seria bieżąca **jest wyświetlana** na wykresie, **When** etykiety osi poziomej, **Then** widoczne są **tylko trzy** etykiety tekstowe: pierwszy agregat, bieżący agregat (dziś, możliwe wyróżnienie typograficzne), ostatni agregat; pozostałe bez etykiet (wymaganie **5**).  
@@ -143,12 +143,12 @@
 
 **Why this priority**: Spójność z resztą interfejsu i dostępność percepcyjna w różnych motywach.
 
-**Independent Test**: Brak wymuszania sztywnych kolorów `#…` tam, gdzie motyw dostarcza semantyczny odpowiednik; typografia: wagi, rozmiary, kapitaliki jak w makiecie, **bez** wymuszania konkretnej nazwy kroju z Figmy (`figma-design.md` §4.0–4.4, §7).
+**Independent Test**: Brak wymuszania sztywnych kolorów `#…` tam, gdzie motyw dostarcza semantyczny odpowiednik; typografia: wagi, rozmiary, kapitaliki jak w makiecie, **bez** wymuszania konkretnej nazwy kroju z Figmy (`specs/001-figma-ui-rollout/figma-ui-project-source.md` §4.0–4.4, §7).
 
 **Acceptance Scenarios**:
 
 1. **Given** zmiana motywu globalnego HA, **When** przełączenie jasny/ciemny, **Then** karta (łącznie z elementami wykresu wymagającymi odczytu kolorów z motywu) pozostaje czytelna i spójna z tokenami motywu.  
-2. **Given** dokumentacja tokenów §4, **When** akcent marki karty (np. seria bieżąca) nie ma odpowiednika w motywie, **Then** dopuszczalna jest **pojedyncza** zmienna lokalna marki z sensownym fallbackiem (za `figma-design.md` §4.0).
+2. **Given** dokumentacja tokenów §4, **When** akcent marki karty (np. seria bieżąca) nie ma odpowiednika w motywie, **Then** dopuszczalna jest **pojedyncza** zmienna lokalna marki z sensownym fallbackiem (za `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4.0).
 
 ---
 
@@ -221,11 +221,11 @@
 - **FR-001**: Karta **MUSI** zachować identyfikator Lovelace `custom:energy-horizon-card` i istniejący sposób pobierania **statystyk długoterminowych** encji, z wyjątkiem doprecyzowania wyliczenia/wystawienia **Total** dla pełnego okna referencyjnego zgodnie z US-3. **Wystawienie** wartości **Total** w UI dotyczy wyłącznie przypadku, gdy drugi panel jest widoczny (prognoza **włączona**; **Clarifications**).  
 - **FR-002**: Nagłówek **MUSI** spełniać US-1 oraz wymaganie szczegółowe **1** (sekcja poniżej), w tym: przy wyłączonym tytule **brak** podtytułu `entity_id` (**Clarifications**).  
 - **FR-003**: Pierwszy panel podsumowania **MUSI** spełniać US-2 (layout, jeden chip delty, dane `summary.*`); chip delty **MUSI** być **zawsze** widoczny — **zero** bezwzględne i **0%** jako pełna informacja, w **jednostce i formacie** z formattera; przy braku danych — **`---` + jednostka z formattera** + **`| -- %`**, a gdy jednostka niedostępna — **`---` bez sufiksu** + **`| -- %`** (**Clarifications**).  
-- **FR-004**: Gdy prognoza jest **włączona** (`show_forecast` nie jest `false`), drugi panel **MUSI** spełniać US-3 (Forecast | Total wg §1.3 `figma-design.md`). Gdy prognoza jest **wyłączona**, **cały** drugi panel **MUSI** być **ukryty** (**Clarifications**).  
+- **FR-004**: Gdy prognoza jest **włączona** (`show_forecast` nie jest `false`), drugi panel **MUSI** spełniać US-3 (Forecast | Total wg §1.3 `specs/001-figma-ui-rollout/figma-ui-project-source.md`). Gdy prognoza jest **wyłączona**, **cały** drugi panel **MUSI** być **ukryty** (**Clarifications**).  
 - **FR-005**: Sekcja komentarza narracyjnego **MUSI** spełniać US-4 (tekst + ikona trendu, spójność z deltą).  
 - **FR-006**: Ostrzeżenia **MUSY** być prezentowane zgodnie z US-5; komunikat o niepełnej serii referencyjnej — **jedno** miejsce prezentacji pełnego tekstu (strip na dole), **bez** równoległego pełnego komunikatu w panelu podsumowań.  
 - **FR-007**: Wykres **MUSI** spełniać US-6 oraz wymagania szczegółowe **2–6**.  
-- **FR-008**: Kolorystyka i typografia **MUSZĄ** respektować US-7 i mapowanie tokenów z `figma-design.md` §4.  
+- **FR-008**: Kolorystyka i typografia **MUSZĄ** respektować US-7 i mapowanie tokenów z `specs/001-figma-ui-rollout/figma-ui-project-source.md` §4.  
 - **FR-009**: Tłumaczenia i edytor **MUSZĄ** spełniać US-8.  
 - **FR-010**: Pokrycie testami **MUSI** spełniać US-9 na poziomie uzgodnionym w planie implementacji.
 - **FR-011**: Karta **MUSI** akceptować opcjonalne pola `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` w `CardConfig`; domyślnie sekcje są **widoczne**, gdy klucz jest pominięty lub wartość nie jest `false` (spójnie z `show_title` / `show_icon`).  
@@ -234,7 +234,7 @@
 
 ### Wymagania szczegółowe — nagłówek i wykres (kryteria akceptacji)
 
-Te punkty **MUSZĄ** być zweryfikowane przy odbiorze; odniesienie projektowe: `figma-design.md` §2.1–2.2, §7.
+Te punkty **MUSZĄ** być zweryfikowane przy odbiorze; odniesienie projektowe: `specs/001-figma-ui-rollout/figma-ui-project-source.md` §2.1–2.2, §7.
 
 1. **Nagłówek:** Gdy **tytuł jest włączony** — oprócz **tytułu** wyświetlany jest **podtytuł** z **kodową nazwą encji** (`entity_id`), odrębnie od przyjaznej nazwy; styl podtytułu zgodny z semantyką „kontekst” w makiecie, przez zmienne motywu HA. Gdy tytuł **jest wyłączony** — **nie** wyświetlaj podtytułu `entity_id` (**Clarifications**, opcja B).  
 2. **Pion „dziś”:** Od zera (podstawa wykresu) do **górnej krawędzi** obszaru wykresu; **nie** kończy się na poziomie wyższego z punktów serii w dniu bieżącym.  
@@ -265,7 +265,7 @@ Te punkty **MUSZĄ** być zweryfikowane przy odbiorze; odniesienie projektowe: `
 - **Kanał ostrzeżenia o niepełnej referencji:** potwierdzone w **Clarifications** — pełny tekst **tylko** w sekcji Warning na dole (nie duplikować w `.summary` / panelu podsumowań).  
 - W v0.5.0 **wielokrotne ostrzeżenia** — tylko jeśli już występują w logice; priorytety kolejności dla wielu komunikatów poza minimalnym przypadkiem niepełnej referencji są **poza** zakresem MVP i zostaną dopisane przy kolejnej iteracji produktowej.  
 - Ikony: wyłącznie **MDI** przez standardowe komponenty ikon Home Assistant — bez assetów z Figmy.  
-- Modyfikacja pliku Figma **nie** jest częścią dostawy — weryfikacja wizualna przez link i dokument `figma-design.md`.  
+- Modyfikacja pliku Figma **nie** jest częścią dostawy — weryfikacja wizualna przez link i dokument `specs/001-figma-ui-rollout/figma-ui-project-source.md`.  
 - **Oś X bez serii bieżącej:** potwierdzone w **Clarifications** — zachowanie etykiet jak przed v0.5.0; plan implementacji może wskazać konkretny tag/commit baseline do testów regresji.  
 - **`entity_id` przy wyłączonym tytule:** potwierdzone w **Clarifications** — ukryty razem z blokiem tytułu (opcja B).  
 - **Chip delty:** potwierdzone w **Clarifications** — zawsze widoczny; zero w jednostce z formattera + **0%**; brak danych → **`---` + jednostka z formattera** lub samo **`---`** jeśli jednostki brak, potem **`| -- %`**.  
@@ -282,7 +282,7 @@ Te punkty **MUSZĄ** być zweryfikowane przy odbiorze; odniesienie projektowe: `
 
 ### Measurable Outcomes
 
-- **SC-001**: W testach akceptacyjnych z **co najmniej trzema** presetyami okien czasu (np. miesiąc do roku, tydzień, rok), przy **włączonej** prognozie, **100%** przypadków spełnia semantykę **Forecast** i **Total** zgodnie z §1.3 (`figma-design.md`) — bez zgłoszeń „Total to nie pełny referencyjny okres”. Przy wyłączonej prognozie drugi panel nie występuje (**Clarifications**).  
+- **SC-001**: W testach akceptacyjnych z **co najmniej trzema** presetyami okien czasu (np. miesiąc do roku, tydzień, rok), przy **włączonej** prognozie, **100%** przypadków spełnia semantykę **Forecast** i **Total** zgodnie z §1.3 (`specs/001-figma-ui-rollout/figma-ui-project-source.md`) — bez zgłoszeń „Total to nie pełny referencyjny okres”. Przy wyłączonej prognozie drugi panel nie występuje (**Clarifications**).  
 - **SC-002**: W recenzji wizualnej (jasny + ciemny motyw) **wszystkie** sekcje z US-1–US-7 są obecne i czytelne; **zero** krytycznych kontrastów poniżej subiektywnej progi „nie do zaakceptowania” przez recenzenta produktu.  
 - **SC-003**: **100%** nowych lub zmienionych stringów UI posiada tłumaczenia we **wszystkich** językach, które karta deklaruje w repozytorium (US-8).  
 - **SC-004**: Checklista wykresu (wymagania szczegółowe **2–6**) jest **w pełni** odhaczona w protokole testów przed oznaczeniem feature jako gotowej do wydania v0.5.0.  
@@ -294,7 +294,7 @@ Kolejność dla `/speckit.plan` / `/speckit.implement` (atomowe kawałki; dostos
 
 | Faza | Cel | Zadania (skrót) |
 |------|-----|-----------------|
-| **F1** | Fundament wizualny | Zmienne motywu Home Assistant i minimalny zestaw zmiennych marki karty wg §4; refaktor markupu na sekcje semantyczne (nagłówek, panele, wykres, komentarz, ostrzeżenie) z `figma-design.md` §6 pkt 1–2. |
+| **F1** | Fundament wizualny | Zmienne motywu Home Assistant i minimalny zestaw zmiennych marki karty wg §4; refaktor markupu na sekcje semantyczne (nagłówek, panele, wykres, komentarz, ostrzeżenie) z `specs/001-figma-ui-rollout/figma-ui-project-source.md` §6 pkt 1–2. |
 | **F2** | Nagłówek i panele danych | US-1, US-2; typografia etykiet CAPS / caption wg §4.3; chip delty i Data status. |
 | **F3** | Forecast / Total | US-3; warstwa danych: pełne LTS dla okna referencyjnego; spójność z edytorem jeśli potrzebne nowe pola. |
 | **F4** | Komentarz i ostrzeżenia | US-4, US-5; mapowanie trend → ikona MDI; sekcja Warning na dole. |
