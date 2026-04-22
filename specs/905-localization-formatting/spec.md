@@ -220,3 +220,70 @@ As a community contributor, I need to add a new language by editing only the tra
 - `number_format` values match the HA enum exactly (`comma`, `decimal`, `language`, `system`); no additional values are supported.
 - The card uses Luxon for date/time arithmetic internally; Luxon's `setLocale` / `toLocaleString` follows the resolved `ResolvedLocale.language` for formatted output.
 - Documentation changes (README, wiki, changelog) for localization options are covered by domain `907-docs-product-knowledge`.
+
+---
+
+## Narrative Key Schema (Amendment — v1.1.0)
+
+> **Required by `903-card-ui-composition` Narrative Engine Refactor.** Replaces flat `text_summary.*_mom` / `text_summary.*` keys with a three-layer hierarchy.
+
+### Key structure
+
+```
+text_summary.{entityKind}.{trend}   ← full sentences; supports {{referencePeriod}} variable
+text_summary.period.{stepKind}       ← period phrases placed after a comparative; 0 variables
+text_summary.no_reference            ← shared; no reference data available
+text_summary.insufficient_data       ← shared; no reliable comparison percent (FR-903-W path)
+```
+
+| Dimension | Values |
+|---|---|
+| `entityKind` | `consumption`, `production`, `generic` |
+| `trend` | `higher`, `lower`, `similar`, `neutral_band` (percent-band neutral; same fallback chain) |
+| `stepKind` | `day`, `week`, `month`, `year`, `reference` |
+
+### Mandatory keys (every language file)
+
+Every language JSON in `src/translations/` MUST contain:
+
+- `text_summary.generic.higher`
+- `text_summary.generic.lower`
+- `text_summary.generic.similar`
+- `text_summary.generic.neutral_band`
+- `text_summary.period.day`
+- `text_summary.period.week`
+- `text_summary.period.month`
+- `text_summary.period.year`
+- `text_summary.period.reference`
+- `text_summary.no_reference`
+- `text_summary.insufficient_data`
+
+`consumption.*` and `production.*` are optional per language; the fallback chain (see FR-905-K) handles their absence.
+
+### Fallback chain
+
+```
+text_summary.{entityKind}.{trend}
+    ↓ key absent
+text_summary.generic.{trend}
+    ↓ key absent (must not occur — generic is mandatory)
+error state per FR-905-F
+```
+
+### Migration from flat keys
+
+Keys removed: `text_summary.*_mom`, `text_summary.higher`, `text_summary.lower`, `text_summary.similar` (flat, non-entity-kind forms). All are superseded by the three-layer structure. Full before/after mapping is documented in `specs/903-card-ui-composition/data-model.md`.
+
+### Grammar context
+
+`text_summary.period.{stepKind}` phrases are placed **after a comparative** in the rendered sentence (e.g. "higher than **in the previous month**"). Translators MUST produce phrases that are grammatically correct in this position, with correct case and prepositions for the target language. This positional contract MUST be documented in a `CONTEXT.md` file in `src/translations/` or as inline comments in each JSON file.
+
+### New functional requirements
+
+- **FR-905-J (Three-layer narrative key schema)**: All language JSON files MUST implement the `text_summary` key hierarchy defined above. Keys matching `text_summary.*_mom` MUST be removed.
+
+- **FR-905-K (Entity-kind fallback chain)**: The `localize()` system MUST support key-existence checking (`hasTranslationKey()` or equivalent guard in `getRawTemplate`) so the caller at the narrative rendering layer can attempt `text_summary.{entityKind}.{trend}` before falling back to `text_summary.generic.{trend}` without triggering an error state on the first attempt.
+
+- **FR-905-L (Mandatory key validation)**: An automated test or build-time check MUST assert that the 11 mandatory keys listed above are present in every language JSON file at `npm test` time.
+
+- **FR-905-M (Grammar context documentation)**: A `CONTEXT.md` file MUST exist in `src/translations/` (or equivalent inline JSON comments) documenting the positional context for `text_summary.period.*` phrases before any new language file is merged.

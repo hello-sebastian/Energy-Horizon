@@ -1,10 +1,10 @@
 # 900-time-model-windows
 > **Domain Reference** (layers 1 & 2 — source of truth for contracts and implementation)
 
-**Domain**: Time Model & Windows  
-**Replaces**: `001-time-windows-engine`, `006-time-windows-unify`  
-**Primary code**: `src/card/time-windows/`, `src/card/ha-api.ts`  
-**Last updated**: 2026-04-21  
+**Domain**: Time Model & Windows
+**Replaces**: `001-time-windows-engine`, `006-time-windows-unify`
+**Primary code**: `src/card/time-windows/`, `src/card/ha-api.ts` 
+**Last updated**: 2026-04-21
 
 ---
 
@@ -83,7 +83,7 @@ interface ComparisonWindow {
 **Publishes to**:
 - `902-chart-rendering-interaction`: `ComparisonWindow[]`, `timeline[]` (slot timestamps anchored to window 0 for the prefix + ordinal continuation for tail), axis step count (Longest-window axis span), "now" marker index.
 - `901-data-pipeline-forecasting`: `ComparisonWindow[0]` boundaries and slot count as the **sole forecast denominator** (`periodTotalBuckets`).
-- `903-card-ui-composition`: resolved window labels, period names, effective preset name.
+- `903-card-ui-composition`: resolved window labels, period names, effective preset name; `mergedTimeWindow.step` string consumed by `classifyComparisonStep` (Narrative Engine Refactor — v1.2.0) to determine `StepKind` for narrative period copy.
 
 **Consumes from**:
 - `904-configuration-surface`: raw YAML `comparison_preset` + `time_window` block.

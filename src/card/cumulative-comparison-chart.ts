@@ -9,7 +9,6 @@ import {
   type ChartThemeResolved,
   type ComparisonSeries,
   type MergedTimeWindowConfig,
-  type ResolvedWindow,
   type TimeSeriesPoint
 } from "./types";
 import {
@@ -56,6 +55,9 @@ import {
   numberFormatToLocale,
   MISSING_TRANSLATION_KEY
 } from "./localize";
+import { classifyComparisonStep } from "./narrative/classify-comparison-step";
+import { interpretationToEntityKind } from "./narrative/interpretation-to-entity-kind";
+import { resolveTextSummarySentenceKey } from "./narrative/resolve-text-summary-sentence-key";
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
 import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
@@ -85,7 +87,7 @@ export function formatSigned(
 const TEXT_SUMMARY_PLACEHOLDER = /\{\{(\w+)\}\}/g;
 
 /**
- * Renders a `text_summary.higher*` / `text_summary.lower*` template with
+ * Renders a `text_summary.*.{higher|lower|neutral_band}` sentence template with
  * `ebc-comment-emphasis` on each `{{varName}}` value.
  */
 export function textSummaryNarrativeWithEmphasis(
@@ -112,20 +114,6 @@ export function textSummaryNarrativeWithEmphasis(
 /** Chart forecast line: on unless explicitly `show_forecast: false` (alias `forecast` merged in setConfig). */
 export function isForecastLineVisible(config: CardConfig): boolean {
   return config.show_forecast !== false;
-}
-
-/** Use MoM-specific copy only when resolved geometry is two consecutive calendar months (FR-F). */
-function resolvedWindowsAreConsecutiveCalendarMonths(
-  windows: ResolvedWindow[] | undefined,
-  timeZone: string
-): boolean {
-  if (!windows || windows.length !== 2) {
-    return false;
-  }
-  const w0s = DateTime.fromJSDate(windows[0]!.start, { zone: timeZone }).startOf("day");
-  const w1s = DateTime.fromJSDate(windows[1]!.start, { zone: timeZone }).startOf("day");
-  const expectedPrev = w0s.minus({ months: 1 }).startOf("month");
-  return w1s.equals(expectedPrev);
 }
 
 function clampOpacity(value: unknown): number {
@@ -908,14 +896,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const forecastUnit = forecast?.unit || displayUnit;
 
-    const captionZoneForNarrative =
-      this._state.period?.time_zone ||
-      this.hass?.config?.time_zone ||
-      "UTC";
-    const isMom = resolvedWindowsAreConsecutiveCalendarMonths(
-      this._state.resolvedWindows,
-      captionZoneForNarrative
-    );
+    const mergedTw = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+    const stepKind = classifyComparisonStep(mergedTw?.step);
+    const periodPhraseKey = `text_summary.period.${stepKind}`;
+    const referencePeriod = this._localizeOrError(localize, periodPhraseKey);
+    const entityKind = interpretationToEntityKind(this._config.interpretation);
 
     let narrativeBody: TemplateResult | null = null;
     const interpretationSemantics = this._interpretationSemantics();
@@ -937,15 +922,17 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       if (interpretationSemantics.outcome === "insufficient_data") {
         narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-          ${this._localizeOrError(localize, "text_summary.no_reference")}
+          ${this._localizeOrError(localize, "text_summary.insufficient_data")}
         </div>`;
       } else if (
         interpretationSemantics.outcome === "neutral" &&
         interpretationSemantics.neutralKind === "percent_band"
       ) {
-        const summaryKey = isMom
-          ? "text_summary.neutral_band_mom"
-          : "text_summary.neutral_band";
+        const summaryKey = resolveTextSummarySentenceKey(
+          resolved.language,
+          entityKind,
+          "neutral_band"
+        );
         const template = getRawTemplate(resolved.language, summaryKey);
         if (template === undefined) {
           narrativeBody = html`<div class="ebc-comment-text">
@@ -954,36 +941,27 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         } else {
           narrativeBody = textSummaryNarrativeWithEmphasis(template, {
             deltaUnit: deltaUnitStr,
-            deltaPercent: deltaPercentStr
+            deltaPercent: deltaPercentStr,
+            referencePeriod
           });
         }
       } else if (interpretationSemantics.outcome === "neutral") {
+        const summaryKey = resolveTextSummarySentenceKey(
+          resolved.language,
+          entityKind,
+          "similar"
+        );
         narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-          ${this._localizeOrError(
-            localize,
-            isMom ? "text_summary.similar_mom" : "text_summary.similar"
-          )}
+          ${this._localizeOrError(localize, summaryKey, { referencePeriod })}
         </div>`;
       } else {
-        const mode = this._config.interpretation ?? "consumption";
         const diff = summary?.difference ?? 0;
-        const higherKey =
-          mode === "production"
-            ? isMom
-              ? "text_summary.production.higher_mom"
-              : "text_summary.production.higher"
-            : isMom
-              ? "text_summary.higher_mom"
-              : "text_summary.higher";
-        const lowerKey =
-          mode === "production"
-            ? isMom
-              ? "text_summary.production.lower_mom"
-              : "text_summary.production.lower"
-            : isMom
-              ? "text_summary.lower_mom"
-              : "text_summary.lower";
-        const summaryKey = diff > 0 ? higherKey : lowerKey;
+        const trend = diff > 0 ? "higher" : "lower";
+        const summaryKey = resolveTextSummarySentenceKey(
+          resolved.language,
+          entityKind,
+          trend
+        );
         const template = getRawTemplate(resolved.language, summaryKey);
         if (template === undefined) {
           narrativeBody = html`<div class="ebc-comment-text">
@@ -992,7 +970,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         } else {
           narrativeBody = textSummaryNarrativeWithEmphasis(template, {
             deltaUnit: deltaUnitStr,
-            deltaPercent: deltaPercentStr
+            deltaPercent: deltaPercentStr,
+            referencePeriod
           });
         }
       }

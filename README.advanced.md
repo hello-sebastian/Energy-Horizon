@@ -257,6 +257,7 @@ Full Luxon token table: [Luxon — formatting tokens](https://moment.github.io/l
 ## Localization and numbers
 
 - **`language`**: must match `src/translations/<lang>.json`; otherwise the card uses **English** (warning when `debug`).
+- **Comparison narrative (`text_summary.*`):** full sentences live under `text_summary.{consumption|production|generic}.{higher|lower|similar|neutral_band}` with `{{deltaUnit}}`, `{{deltaPercent}}`, and `{{referencePeriod}}`. The period fragment comes from `text_summary.period.{day|week|month|year|reference}`, chosen from merged **`time_window.step`** (intent), not from window geometry. Shared states: `text_summary.no_reference`, `text_summary.insufficient_data`. New languages can ship with only the **11** mandatory keys documented in domain spec **FR-903-NG** / **FR-905-L**; see `src/translations/CONTEXT.md` for how `period.*` must read after comparatives in each language.
 - **`number_format`**: maps to `Intl` locale (`comma` → `de`, `decimal` → `en`, `language` → selected language, `system` → `navigator.language` or card language).
 
 Time zone always from **`hass.config.time_zone`** (fallback `UTC`).

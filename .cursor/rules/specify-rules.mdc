@@ -9,9 +9,6 @@ alwaysApply: true
 Auto-generated from domain specs. Last updated: 2026-04-21
 
 ## Active Technologies
-- TypeScript 5.6+ (strict), ES modules + Lit 3, Apache ECharts 5.x, Luxon 3.x, Home Assistant Lovelace APIs (`hass`, `hui-*` / `ha-*` elements) (903-card-ui-composition)
-- N/A (in-browser; config via Lovelace YAML / UI) (903-card-ui-composition)
-
 - TypeScript 5.6+ (`strict` enabled) + Lit 3.1 (LitElement, `html`, `css`, decorators) — core card stack (903-card-ui-composition)
 - Apache ECharts 5.6.0 (modular: `echarts/core`, `echarts/charts`, `echarts/components`, `echarts/renderers`) — chart rendering (902-chart-rendering-interaction)
 - Luxon 3.7 — date/time arithmetic and calendar calculations for time windows (900-time-model-windows)
@@ -55,4 +52,4 @@ TypeScript (ES2020+, `strict` enabled): Follow standard conventions
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
-- 903-card-ui-composition: Added TypeScript 5.6+ (strict), ES modules + Lit 3, Apache ECharts 5.x, Luxon 3.x, Home Assistant Lovelace APIs (`hass`, `hui-*` / `ha-*` elements)
+- 903-card-ui-composition: Speckit plan — Narrative Engine Refactor (`classifyComparisonStep`, three-layer `text_summary.*` i18n); see `specs/903-card-ui-composition/plan.md`

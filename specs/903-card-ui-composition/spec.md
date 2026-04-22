@@ -410,3 +410,203 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 - **Interpretation** generalizes “entity semantics” beyond electricity; wording may say “energy” or be generic per copy review, but behavior is the same for any cumulative statistic exposed by the card.
 - **`neutral_interpretation`** defaults to **2** percent when omitted, matching a common “close enough” band; power users may set **`0`** for strict neutrality only at exact balance (per **SC-903-9**).
 - Automated tests, changelog entry **1.1.0**, and README / README-advanced / wiki updates for this feature are tracked under `907-docs-product-knowledge` and `tasks.md` for this feature.
+
+---
+
+## Narrative Engine Refactor
+
+> **Update targeting v1.1.0** — Cross-domain: `900-time-model-windows` (step classifier input), `905-localization-formatting` (key schema migration).
+
+### Background
+
+The comparison narrative currently classifies the comparison step by examining the *geometry* of resolved date windows (`resolvedWindowsAreConsecutiveCalendarMonths`). This produces incorrect copy for users with non-standard billing cycles (e.g. `offset: +15d`) and for YoY/MoY presets with a custom `offset` — all fall through to "last year" phrasing regardless of the declared step. Additionally, the flat translation key structure is entity-kind-unaware, making production-oriented copy fragile.
+
+### Current behavior (bugs)
+
+- `resolvedWindowsAreConsecutiveCalendarMonths()` compares `startOf("month")` boundaries — windows with `offset` (e.g. `+15d`) are not recognized as month-over-month.
+- The boolean flag `isMom` drives key selection between `text_summary.*_mom` and `text_summary.*` (worded as "last year").
+- Any non-standard cycle (`16d`, `1w`, `3M`) and any YoY/MoY preset with a custom `offset` falls to "last year" templates — **incorrect narrative**.
+- `interpretation` (from this spec) is not considered by `isMom` — production entities can receive "last year" copy.
+
+### Target behavior — Step classifier (`classifyComparisonStep`)
+
+A pure function based solely on `mergedTimeWindow.step`:
+
+| `step` value | `StepKind` |
+|---|---|
+| `1d` | `"day"` |
+| `1w` | `"week"` |
+| `1M` | `"month"` |
+| `1y` | `"year"` |
+| anything else (e.g. `16d`, `3M`, `2w`, `undefined`) | `"reference"` |
+
+**Key property**: classification comes from declared intent (`step: 1M`), not from the geometry of computed dates. Windows with `offset: +15d` and `step: 1M` correctly receive `StepKind = "month"`.
+
+### Target behavior — Translation key structure (three-layer)
+
+Full schema documented in `905-localization-formatting`. Summary:
+
+```
+text_summary.{entityKind}.{trend}   ← full sentences; variable {{referencePeriod}}
+text_summary.period.{stepKind}       ← period phrases; 0 variables
+text_summary.no_reference            ← shared; no reference data state
+text_summary.insufficient_data       ← shared; no reliable p (FR-903-W path)
+```
+
+- `entityKind` ∈ `{ consumption, production, generic }`
+- `trend` ∈ `{ higher, lower, similar }`
+- `stepKind` ∈ `{ day, week, month, year, reference }`
+
+**Fallback chain** (order of key lookup):
+
+```
+text_summary.{entityKind}.{trend}
+    ↓ missing
+text_summary.generic.{trend}
+    ↓ missing (must not occur — generic is the mandatory baseline)
+error state (as today per FR-905-F)
+```
+
+`text_summary.insufficient_data` and `text_summary.no_reference` are **shared** — no `{entityKind}` segment.
+
+### Target behavior — Entity kind mapping
+
+`interpretationToEntityKind(interpretation: string | undefined): EntityKind` maps:
+- `"consumption"` → `"consumption"`
+- `"production"` → `"production"`
+- any other value including `undefined` → `"consumption"`
+
+`CardConfig` gains **no new field**. The existing `interpretation` YAML key is the sole input.
+
+### User Stories (Narrative Engine)
+
+#### US-903-N1 — Custom billing cycle renders correct period copy (P1)
+
+As a user with `offset: +15d` and `duration: 1M` (billing cycle starting on the 15th), I want the narrative to say "higher than in the previous month" — not the incorrect "in the same period last year" — so the copy matches my actual billing context.
+
+**Independent Test**: Configure `step: 1M`, `offset: +15d`, current > reference. Verify narrative contains `text_summary.period.month` phrase, not `text_summary.period.year`.
+
+**Acceptance Scenarios**:
+
+1. **Given** `step: 1M` and `offset: +15d`, **When** the narrative renders with `trend: higher`, **Then** it uses `text_summary.period.month` regardless of window date geometry.
+2. **Given** `step: 1M` spanning a year boundary (e.g. w0=Feb 2026, w1=Dec 2025), **When** `classifyComparisonStep("1M")` is called, **Then** it returns `"month"`, not `"year"`.
+
+---
+
+#### US-903-N2 — Weekly report uses week-specific period phrase (P1)
+
+As a user with `step: 1w`, I want the narrative to say "higher than in the previous week" — not a phrase mentioning a year — so the copy is meaningful for my reporting cadence.
+
+**Acceptance Scenarios**:
+
+1. **Given** `step: 1w`, **When** `classifyComparisonStep("1w")` is called, **Then** it returns `"week"`.
+2. **Given** `step: 1w` and `trend: lower`, **When** the narrative renders, **Then** it includes the `text_summary.period.week` phrase.
+
+---
+
+#### US-903-N3 — Non-standard 16-day window shows neutral reference phrase (P1)
+
+As a user with `step: 16d`, I want the narrative to say "higher than in the reference period" — a neutral phrase that makes no false claim — rather than incorrectly referencing a week or a year.
+
+**Acceptance Scenarios**:
+
+1. **Given** `step: 16d`, **When** `classifyComparisonStep("16d")` is called, **Then** it returns `"reference"`.
+2. **Given** `step: undefined`, **When** `classifyComparisonStep(undefined)` is called, **Then** it returns `"reference"` as a safe fallback.
+
+---
+
+#### US-903-N4 — Translator adds a new language with minimal key set (P2)
+
+As a translator adding Czech (`cs`), I want to provide only the 11 mandatory keys (`generic.higher`, `generic.lower`, `generic.similar`, `generic.neutral_band`, `period.day`, `period.week`, `period.month`, `period.year`, `period.reference`, `no_reference`, `insufficient_data`) and have a fully functional card without needing to translate `consumption.*` and `production.*` immediately.
+
+**Acceptance Scenarios**:
+
+1. **Given** a language file with only `generic.*`, `period.*`, `no_reference`, and `insufficient_data`, **When** the card renders with `interpretation: production`, **Then** it resolves via `text_summary.generic.{trend}` fallback with no error state.
+
+---
+
+#### US-903-N5 — Developer adds a new entity kind without touching render logic (P2)
+
+As a developer adding `export` (grid export) entity kind, I want to add 3 translation keys per language and one line in `interpretationToEntityKind()`, without modifying narrative rendering templates or logic.
+
+**Acceptance Scenarios**:
+
+1. **Given** `export.*` keys present, **When** the narrative renders with the `export` entity kind, **Then** `text_summary.export.{trend}` is used.
+2. **Given** `export.*` keys absent, **When** the narrative renders, **Then** automatic fallback to `text_summary.generic.{trend}` requires zero render-logic changes.
+
+---
+
+### Edge Cases (Narrative Engine)
+
+| ID | Scenario | Input | Expected `StepKind` | Expected narrative |
+|---|---|---|---|---|
+| EC-N1 | MoM + offset | `step: 1M`, `offset: +15d` | `month` | "previous month" phrase |
+| EC-N2 | Month-end boundary | `step: 1M`, w0=2026-05-31, w1=2026-04-30 | `month` | "previous month" phrase |
+| EC-N3 | February (non-leap) | `step: 1M`, w0=2025-03-30, w1=2025-02-28 | `month` | "previous month" phrase |
+| EC-N4 | February (leap) | `step: 1M`, w0=2024-03-29, w1=2024-02-29 | `month` | "previous month" phrase |
+| EC-N5 | Year boundary in 1M | `step: 1M`, w0=2026-02-15, w1=2025-12-15 | `month` | "previous month" (NOT "year") |
+| EC-N6 | YoY proper | `step: 1y` | `year` | "same period last year" phrase |
+| EC-N7 | MoY (year step, month duration) | `step: 1y`, `duration: 1M` | `year` | "same period last year" phrase |
+| EC-N8 | Week | `step: 1w` | `week` | "previous week" phrase |
+| EC-N9 | Day | `step: 1d` | `day` | "previous day" phrase |
+| EC-N10 | 16-day window | `step: 16d` | `reference` | "reference period" phrase |
+| EC-N11 | Quarter | `step: 3M` | `reference` | "reference period" (no `quarter` StepKind in this iteration) |
+| EC-N12 | `step` undefined | `step: undefined` | `reference` | "reference period" (safe fallback) |
+| EC-N13 | Missing `production.*` in language | `interpretation: production`, lang=`cs` | — | Fallback to `generic.*` |
+| EC-N14 | `insufficient_data` path | No reliable `p` (FR-903-W) | n/a | `text_summary.insufficient_data` — no `{{referencePeriod}}` |
+| EC-N15 | `no_reference` | No reference data | n/a | `text_summary.no_reference` — no `{{referencePeriod}}` |
+| EC-N16 | Period phrase grammar | `step: 1M`, lang=`pl` | — | `period.month` = "w poprzednim miesiącu" (correct case/preposition after comparative) |
+
+### Functional Requirements (Narrative Engine)
+
+- **FR-903-NA**: `classifyComparisonStep(step: string | undefined): StepKind` MUST be a pure function with zero side-effects, no access to `ResolvedWindow` date geometry, and a deterministic mapping from step string to `StepKind` per the normative table above.
+
+- **FR-903-NB**: `resolvedWindowsAreConsecutiveCalendarMonths()` and the `isMom` flag MUST be removed from `cumulative-comparison-chart.ts` and any file where they are defined or consumed.
+
+- **FR-903-NC**: Translation keys matching the pattern `text_summary.*_mom` MUST be removed from all language JSON files (`en`, `pl`, `de`, and any others present).
+
+- **FR-903-ND**: The three-layer key structure (`text_summary.{entityKind}.{trend}`, `text_summary.period.{stepKind}`, `text_summary.no_reference`, `text_summary.insufficient_data`) MUST be present in all supported language files. The `generic.*` subset is mandatory for every language; `consumption.*` and `production.*` are optional per language (see `905-localization-formatting`).
+
+- **FR-903-NE**: The fallback chain MUST be implemented in the narrative rendering path: attempt `text_summary.{entityKind}.{trend}` → on missing, attempt `text_summary.generic.{trend}` → on missing, enter the existing error state. Implementation MUST use a key-existence check (`hasTranslationKey()` or equivalent guard in `getRawTemplate`), not try/catch on the error state.
+
+- **FR-903-NF**: `interpretationToEntityKind(interpretation: string | undefined): EntityKind` MUST map `"consumption"` → `"consumption"`, `"production"` → `"production"`, and any other value (including `undefined`) → `"consumption"`. `CardConfig` MUST NOT gain a new field.
+
+- **FR-903-NG**: An automated test or build-time validation MUST assert that the 11 mandatory keys (`generic.higher`, `generic.lower`, `generic.similar`, `generic.neutral_band`, `period.day`, `period.week`, `period.month`, `period.year`, `period.reference`, `no_reference`, `insufficient_data`) are present in every language JSON file in `src/translations/`.
+
+- **FR-903-NH**: Integration with `SemanticOutcome` (FR-903-W / FR-903-Q): `insufficient_data` outcome MUST map to `text_summary.insufficient_data`; `neutral`/`similar` MUST map to `text_summary.{entityKind}.similar` (with `generic` fallback); `positive`/`negative` MUST map to `higher`/`lower` per entity kind polarity consistent with FR-903-Q.
+
+- **FR-903-NI**: `text_summary.period.{stepKind}` phrases MUST be grammatically correct when placed after a comparative word (e.g. "higher than…"). Translators MUST be informed of this positional context via a `CONTEXT.md` file or inline comments in the JSON translation files (see `905-localization-formatting`).
+
+- **FR-903-NJ (Release documentation)**: For this feature set, user-visible narrative and i18n changes MUST be recorded in **`CHANGELOG.md`** under the release semver that matches the **published git tag** (see **Documentation & release** above). Because **`CardConfig`** and YAML surface are unchanged, **`README.md`**, **`README-advanced.md`**, and **`wiki-publish/`** MUST be updated only where existing prose describes comparison narrative, presets/`time_window.step`, billing offsets, or translator workflows — so user expectations stay aligned with the new step-based copy and key schema (domain **`907-docs-product-knowledge`**).
+
+### Risks (Narrative Engine)
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| R-N1 | Incomplete translation migration — missing `generic.*` blocks render | High | High | Unit test asserting mandatory keys for every language JSON at `npm test` (FR-903-NG) |
+| R-N2 | Conflict with 903 v1.1.0 keys in different structure than new schema | Medium | Medium | Audit JSON files before implementation; before/after mapping in `data-model.md` |
+| R-N3 | Missing `hasTranslationKey()` utility — fallback chain requires key-existence check | Medium | Low | Verify `getRawTemplate()` in `localize.ts`; add utility if absent before FR-903-NE |
+| R-N4 | Grammatical regression — `period.*` phrases without positional context | Low (EN/PL/DE known) | High for new languages | Document positional context in `CONTEXT.md` or JSON comments (FR-903-NI) |
+| R-N5 | Tests asserting on `*_mom` keys break when keys are removed | High | Low | Update `cumulative-comparison-chart-localization.test.ts` and `localize-dictionary-loading.test.ts` before key removal |
+| R-N6 | `SemanticOutcome → trend` mapping error for `positive`/`negative` per entity kind | Medium | High | Explicit mapping table in `computeNarrativeKey()`, covered by integration tests |
+
+### Documentation & release (`907-docs-product-knowledge`)
+
+- **CHANGELOG (`CHANGELOG.md`)**: Any change that is **user-visible** (copy, narrative, icons, chart semantics, i18n keys, error states) MUST ship with a **changelog entry** under the release section whose heading matches the **semver git tag** published for that release (e.g. continuation under **`[1.1.0]`** if the change is included in that tagged line, or a **`[1.x.y]`** section for the next tag if the change is released separately — the heading MUST match the tag users install from HACS).
+- **`README.md`**, **`README-advanced.md`**, **`wiki-publish/`**: MUST be updated **in addition** to the changelog when the change affects **how users configure or operate the card** — for example new or renamed YAML keys, editor fields, defaults, troubleshooting, or any behavior that contradicts or extends what those documents currently promise. Purely internal refactors with no user-visible delta are exempt.
+
+### Non-Goals (Narrative Engine)
+
+- Adding `entity_type` as a new YAML field — `interpretationToEntityKind` maps from the existing `interpretation` field; `CardConfig` is unchanged.
+- Adding `text_summary.period.quarter` — `step: 3M` maps to `"reference"` in this iteration.
+- Changing `computeTextSummary()` or `computeInterpretationSemantics()` beyond the rendering and key layers.
+- Touching Forecast | Total copy (FR-903-U remains in force).
+
+### Success Criteria (Narrative Engine)
+
+- **SC-903-N1**: All existing automated tests pass after migration; zero regressions for configurations that already worked correctly (standard MoM, YoY presets without offset).
+- **SC-903-N2**: Users with `offset`-based billing cycles see period-correct copy in 100% of unit test scenarios covering EC-N1 through EC-N5.
+- **SC-903-N3**: A new language bootstrapped with only 11 mandatory keys renders without error, verified by automated test loading a minimal-key JSON.
+- **SC-903-N4**: Adding a new entity kind requires changes to exactly 2 artifacts (mapping function + translation files) with zero render-logic changes, verified by code review checklist.
+- **SC-903-N5**: All risk items R-N1 through R-N6 mitigated or explicitly accepted before first release, with corresponding test coverage or migration notes.
+- **SC-903-N6**: Before tagging a release that includes this work, `CHANGELOG.md` reflects the user-visible delta under the correct **`[x.y.z]`** heading (matching the git tag), and any affected user-guide sections in `README.md`, `README-advanced.md`, or `wiki-publish/` are updated per **FR-903-NJ**.

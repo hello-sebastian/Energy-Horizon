@@ -3,6 +3,7 @@ import type { HomeAssistant } from "../../src/ha-types";
 import type { CardConfig } from "../../src/card/types";
 import { EnergyHorizonCard } from "../../src/card/cumulative-comparison-chart";
 import { resolveLocale, createLocalize } from "../../src/card/localize";
+import { classifyComparisonStep } from "../../src/card/narrative/classify-comparison-step";
 
 function createBaseHass(language: string): HomeAssistant {
   return {
@@ -119,24 +120,34 @@ describe("EnergyHorizonCard localization", () => {
     expect(fragment?.strings?.join("")).toBe("");
   });
 
-  it("text_summary higher/lower use full sentences with deltaUnit and deltaPercent", () => {
+  it("text_summary consumption higher composes referencePeriod from period.week (US-903-N2)", () => {
     const localize = createLocalize("en");
-    const higher = localize("text_summary.higher", {
+    expect(classifyComparisonStep("1w")).toBe("week");
+    const referencePeriod = localize("text_summary.period.week");
+    expect(referencePeriod).toContain("week");
+
+    const higher = localize("text_summary.consumption.higher", {
       deltaUnit: "12 kWh",
-      deltaPercent: "5%"
+      deltaPercent: "5%",
+      referencePeriod
     });
     expect(higher).toContain("12 kWh");
     expect(higher).toContain("5%");
     expect(higher).toContain("higher");
-    expect(higher).toContain("same period last year");
+    expect(higher).toContain(referencePeriod);
+  });
 
-    const lowerMom = localize("text_summary.lower_mom", {
-      deltaUnit: "3 kWh",
-      deltaPercent: "2%"
+  it("text_summary period.reference used for non-standard steps (US-903-N3)", () => {
+    const localize = createLocalize("en");
+    expect(classifyComparisonStep("16d")).toBe("reference");
+    expect(classifyComparisonStep("3M")).toBe("reference");
+    const refPhrase = localize("text_summary.period.reference");
+    const higher = localize("text_summary.consumption.higher", {
+      deltaUnit: "1 kWh",
+      deltaPercent: "1%",
+      referencePeriod: refPhrase
     });
-    expect(lowerMom).toContain("previous month");
-    expect(lowerMom).toContain("3 kWh");
-    expect(lowerMom).toContain("lower");
+    expect(higher).toContain(refPhrase);
   });
 });
 

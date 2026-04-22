@@ -170,6 +170,14 @@ export function getRawTemplate(
   return template;
 }
 
+/**
+ * True if {@link getRawTemplate} would return a defined string for `key` (active
+ * language then `en`), without mutating {@link createLocalize} error paths (FR-903-NE / FR-905-K).
+ */
+export function hasTranslationKey(language: string, key: string): boolean {
+  return getRawTemplate(language, key) !== undefined;
+}
+
 export function createLocalize(language: string): LocalizeFunction {
   const active =
     DICTIONARIES[language] ?? DICTIONARIES[FALLBACK_LANGUAGE] ?? {};

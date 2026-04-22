@@ -32,3 +32,5 @@
 ## Notes
 
 - Validation reviewed 2026-04-21: all items pass for `specs/903-card-ui-composition/spec.md` as updated for interpretation mode.
+- 2026-04-21 (Narrative Engine Refactor): All items pass for the `## Narrative Engine Refactor` section added to `spec.md`. No open clarifications remain; all 6 risks documented with explicit mitigations. Cross-domain impacts propagated to `905-localization-formatting` (key schema + FR-905-J–M) and `900-time-model-windows` (step field cross-domain note). `data-model.md` (migration key mapping) is a required companion artifact to be created during planning.
+- 2026-04-21 (Docs/release): **FR-903-NJ** / **SC-903-N6** require `CHANGELOG.md` (semver = git tag, e.g. `[1.1.0]` when applicable) for user-visible changes; `README.md`, `README-advanced.md`, `wiki-publish/` when configuration or documented behavior is affected — see § Documentation & release in `spec.md`, `plan.md`, and `quickstart.md`.

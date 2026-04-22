@@ -8,10 +8,12 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 ### Added
 
+- **Narrative engine (step-based copy):** the comparison comment now picks the **period phrase** from merged YAML `time_window.step` (via `classifyComparisonStep`), not from resolved window geometry — so **billing offsets** and non-calendar steps (`1w`, `16d`, `3M`, …) match the configured intent. Translation layout is **`text_summary.{consumption|production|generic}.{higher|lower|similar|neutral_band}`** plus **`text_summary.period.{day|week|month|year|reference}`** and shared **`text_summary.insufficient_data`** / **`text_summary.no_reference`**; optional entity keys fall back to mandatory **`text_summary.generic.*`**. Contributor grammar notes: `src/translations/CONTEXT.md`.
 - **`interpretation`** (`consumption` \| `production`, default consumption): aligns the **comparison narrative**, **trend icon**, and **chart delta** segment with whether the entity represents **usage** (less is better) or **generation** (more is better). Delta chip **numeric signs** stay arithmetic; Forecast \| Total copy is unchanged.
 - **`neutral_interpretation`**: optional non-negative percent **T** (default **2**). When the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative and chart delta use **neutral** “similar” styling. YAML-only in this release; the visual editor preserves the key via shallow merge.
 - **Visual editor** control for **`interpretation`** (Consumption / Production).
 - Translations (`en`, `pl`, `de`, `fr`) for production-oriented narrative, neutral-band text, and editor labels.
+
 
 ## [1.0.2]
 

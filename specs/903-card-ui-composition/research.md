@@ -1,54 +1,58 @@
-# Research: Interpretation mode & neutral band (903)
+# Research: Narrative Engine Refactor (903)
 
-**Feature**: `specs/903-card-ui-composition/spec.md`  
-**Date**: 2026-04-21
+**Date**: 2026-04-21  
+**Related**: [spec.md](./spec.md) § Narrative Engine Refactor, [plan.md](./plan.md)
 
-All **NEEDS CLARIFICATION** items from the planning template are resolved via the normative spec and clarifications session (2026-04-21). Below are implementation decisions consolidated for Phase 1.
+## R-1 — Step classification source
 
----
+**Decision**: Classify narrative period copy using **only** the merged YAML `step` string (via `classifyComparisonStep`), not resolved window geometry.
 
-## Decision: Central semantic helper
+**Rationale**: The spec (FR-903-NA) requires intent-driven classification so `offset: +15d` with `step: 1M` still yields `StepKind = "month"`. Current `resolvedWindowsAreConsecutiveCalendarMonths()` compares `startOf("month")` on window starts and fails for offset billing cycles.
 
-**Rationale**: One function (or small module) computes `SemanticOutcome` from `(current, reference, p, interpretation, T)` so the narrative row and ECharts delta styling cannot drift (**FR-903-R**).
+**Alternatives considered**:
 
-**Alternatives considered**: Inline branching in chart vs card — rejected (duplicate logic, test burden).
+- **Hybrid** (geometry + step): Rejected — adds complexity and reintroduces edge-case bugs.
+- **Luxon duration parsing** for arbitrary steps: Deferred — `1d`/`1w`/`1M`/`1y` are exact string matches per spec; everything else is `"reference"`.
 
----
+## R-2 — Key-existence API for entity-kind fallback
 
-## Decision: Use chip’s percent `p` for neutral band
+**Decision**: Add `hasTranslationKey(language: string, key: string): boolean` (or equivalent) in `src/card/localize.ts`, implemented by checking `DICTIONARIES[language]` then `DICTIONARIES.en` without mutating `createLocalize` error behavior.
 
-**Rationale**: Spec defines **`p`** as the same signed percentage as the delta chip’s percent column. Reuse the **exact** numeric value already computed for display so **`|p| ≤ T`** matches user mental model vs the chip.
+**Rationale**: `getRawTemplate` returns `undefined` for missing keys but does not distinguish "active missing, en present" from "both missing". For FR-903-NE / FR-905-K, narrative code must try `text_summary.{entityKind}.{trend}` then fall back to `text_summary.generic.{trend}` **without** entering the card error state on the first miss.
 
-**Alternatives considered**: Recompute % from raw totals in the helper — rejected unless chip and helper share one implementation to avoid rounding drift.
+**Alternatives considered**:
 
----
+- **Try `localize` and detect returned key string**: Rejected — conflates missing key with legitimate template content; fragile.
+- **Duplicate dictionary read logic in chart**: Rejected — violates single source of truth; prefer one exported helper.
 
-## Decision: Insufficient data is a fourth outcome, not neutral-band
+## R-3 — Neutral band and similar copy under new schema
 
-**Rationale**: Clarification **Option B** — placeholder chip (`---`) gets **dedicated** `localize()` keys and **muted** styling, distinct from **`|p| ≤ T`** “similar” (**FR-903-W**).
+**Decision**: Migrate `text_summary.neutral_band` / `neutral_band_mom` to the same **sentence + period phrase** composition as higher/lower: base key `text_summary.{entityKind}.neutral_band` (or `text_summary.generic.neutral_band` as mandatory) plus `text_summary.period.{stepKind}` for `{{referencePeriod}}`, with `generic` fallback chain identical to other trends.
 
-**Alternatives considered**: Treat as neutral-band — rejected (misleading).
+**Rationale**: Neutral band strings currently embed "last year" vs "previous month" inline; they must follow the same step classifier as higher/lower/similar to fix offset bugs.
 
----
+**Alternatives considered**:
 
-## Decision: `neutral_interpretation` editor optional in v1
+- **Leave neutral_band as monolithic strings**: Rejected — duplicates period logic and reintroduces MoM vs YoY split (`*_mom`).
 
-**Rationale**: Spec non-goal — YAML-only for `T` in first release; shallow-merge preserves key (**904**).
+**Note**: Confirm final key name for neutral band (`neutral_band` vs `similar` wording) in `data-model.md`; spec groups "similar" outcome under `trend: similar` for non-band neutral; percent band may stay a distinct template family under `text_summary.{entityKind}.neutral_band` with `{{referencePeriod}}`.
 
-**Alternatives considered**: Add numeric field to `ha-form` immediately — deferred to reduce editor scope.
+## R-4 — `insufficient_data` vs current `insufficient_comparison` / wrong key in render
 
----
+**Decision**: Align runtime with FR-903-W / FR-903-NH: use dedicated key `text_summary.insufficient_data` for the insufficient comparison path. Deprecate/remove `text_summary.insufficient_comparison` after migration. Fix bug where render path used `text_summary.no_reference` for insufficient-data outcome (see `cumulative-comparison-chart.ts`).
 
-## Decision: Theme tokens for semantic colors
+**Rationale**: Spec distinguishes no reference data vs insufficient comparison percent; shared messaging was incorrect.
 
-**Rationale**: Constitution **IV** — success/warning/neutral/muted states should map to existing HA CSS variables (`--success-color`, `--warning-color`, `--secondary-text-color`, etc.) as already used or extended in the card; no hardcoded hex for semantic meaning.
+**Alternatives considered**:
 
-**Alternatives considered**: New custom palette — rejected.
+- **Keep `insufficient_comparison` name**: Rejected — 905 amendment standardizes on `insufficient_data`.
 
----
+## R-5 — File placement for `classifyComparisonStep`
 
-## Decision: Vitest for semantic mapping
+**Decision**: Implement `classifyComparisonStep` in a small pure module under `src/card/` (e.g. `src/card/narrative/classify-comparison-step.ts`) and import from `cumulative-comparison-chart.ts` to keep the chart file smaller and satisfy unit-test isolation.
 
-**Rationale**: Constitution **III** — pure functions for outcome mapping are fast to unit test with table-driven cases (consumption, production, `T`, edge reference=0, missing `p`).
+**Rationale**: Constitution III asks for testable, modular logic; pure function is trivial to test without Lit harness.
 
-**Alternatives considered**: E2E only — insufficient for branch coverage.
+**Alternatives considered**:
+
+- **Inline in cumulative-comparison-chart.ts**: Acceptable for MVP but worse for diff noise and reuse.
