@@ -4,7 +4,13 @@
 **Domain**: Time Model & Windows
 **Replaces**: `001-time-windows-engine`, `006-time-windows-unify`
 **Primary code**: `src/card/time-windows/`, `src/card/ha-api.ts` 
-**Last updated**: 2026-04-21
+**Last updated**: 2026-04-22
+
+## Clarifications
+
+### Session 2026-04-22
+
+- Q: For invalid `time_window.offset`, what localization bar at release? → A: **Option C** — reuse the same user-visible localized string as other invalid `time_window` errors; **no** new `localize()` keys introduced solely for `offset` validation failures.
 
 ---
 
@@ -46,6 +52,7 @@ The "now" marker is anchored to the bucket that contains the current instant wit
 - Valid `anchor` values: `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`.
 - Valid `aggregation` values: `hour`, `day`, `week`, `month`, or absent (defaults to `day`).
 - `duration` must resolve to ≥ 1 hour.
+- **`offset`**: full **ISO 8601 duration** strings (including compound forms such as `P4M4D`, `P1M15D`, and signed forms `-P2M`, `-P1Y`). Evaluation uses calendar-aware `DateTime.plus(Duration)` semantics (component order Y → M → D → H per Luxon); end-of-month **clamping** is deterministic, not an error. **Sub-hour** offsets (e.g. `PT30M`) and **fractional** month/year components (e.g. `P0.5M`) are **rejected** in `setConfig`. Omitted `offset` or `P0D` matches legacy “no offset” behavior (backward compatible). **Legacy** single-token shims `+1d` / `+3M` / `+1Y` remain accepted as aliases of the corresponding ISO forms (`P1D` / `P3M` / `P1Y`) in one isolated parser; deprecated for removal in a later release.
 - Maximum windows from YAML/Lovelace config: **24**. Exceeding this triggers fail-fast error (same as invalid config).
 - No auto-correction of invalid values; every violation throws in `setConfig`.
 
@@ -59,11 +66,17 @@ comparison_preset: year_over_year  # | month_over_year | month_over_month
 time_window:
   anchor: start_of_month           # optional override
   duration: P1M                    # optional override, ISO 8601 duration
-  offset: P0D                      # optional, shift anchor forward/backward
+  offset: P0D                      # optional, ISO 8601 duration; compound e.g. P4M4D, -P2M; see Public Contract
   step: P1M                        # distance between consecutive windows
   count: 2                         # number of windows (max 24 from YAML)
   aggregation: day                 # hour | day | week | month
 ```
+
+**`time_window.offset` (normative)**  
+- **Syntax:** ISO 8601 duration string. **Additive** examples: `P4M4D`, `P1Y`, `P1M15D`. **Negative** examples: `-P2M`, `-P1Y`. **Default / none:** omitted key or `P0D` — behavior identical to the pre-change product (compatibility with US-900-1).  
+- **Evaluation:** `anchor` is resolved first, then the offset is applied as `DateTime.plus(Duration.fromISO(offset))` in the HA instance time zone, with Luxon’s calendar rules (including clamping when day-of-month overflows a shorter month). This is **not** equivalent to adding a single fixed day count when months or leap years differ. **DST:** day-level steps follow calendar days, not fixed 24-hour wall intervals.  
+- **Legacy compatibility:** strings matching the legacy single-unit pattern (`+1d`, `+3M`, `+1Y`, etc.) are accepted via a **shim** that maps to the equivalent ISO form; shim is confined to one parser function.  
+- **Rejected in `setConfig`:** any offset whose duration is **sub-hour** (e.g. `PT30M`, `PT59M`); any **fractional** calendar component (e.g. `P0.5M`); any string that is not a valid ISO duration and not a recognized legacy alias; any format that would leave window boundaries incoherent after the above rules.
 
 Resolved windows are passed downstream as `ComparisonWindow[]`:
 ```typescript
@@ -87,7 +100,7 @@ interface ComparisonWindow {
 
 **Consumes from**:
 - `904-configuration-surface`: raw YAML `comparison_preset` + `time_window` block.
-- `905-localization-formatting`: HA instance time zone (IANA string) for all calendar boundary calculations.
+- `905-localization-formatting`: HA instance time zone (IANA string) for all calendar boundary calculations. Invalid `offset` values surface as the **same** user-visible card error copy as other invalid merged `time_window` results (no new translation keys solely for offset — see Clarifications 2026-04-22).
 
 ---
 
@@ -175,6 +188,47 @@ As a user editing `time_window` YAML, I need invalid or contradictory values to 
 
 ---
 
+### US-900-6 — Niestandardowy dzień startowy roku rozliczeniowego (P1)
+
+As a user whose billing year starts on 5 May, I need to set `offset: P4M4D` with `anchor: start_of_year` so the card compares my current 12 months from 5 May with the previous year from 5 May — not from 1 January.
+
+**Independent test**: With `anchor: start_of_year`, `offset: P4M4D`, `duration: P1Y`, window 0 starts on 5 May and ends on 5 May the following year in the HA time zone; window 1 steps backward by `step`.
+
+**Acceptance Scenarios**:
+
+1. **Given** `anchor: start_of_year`, `offset: P4M4D`, `duration: P1Y`, **When** the card resolves windows, **Then** `window[0].start` is 5 May of the current year, `window[0].end` is 5 May of the next year, and `window[1]` shifts by `step` from that anchor (backward).
+2. **Given** a leap year (e.g. 2024), `anchor: start_of_year`, `offset: P1M28D`, **When** the card resolves the anchor+offset, **Then** the result is 1 March 2024 (not 29 February), consistent with Luxon month-end clamping.
+3. **Given** `offset: P0D` or **no** `offset` key, **When** the card resolves windows, **Then** behavior is identical to the previous product version (backward compatible with US-900-1).
+
+---
+
+### US-900-7 — Rok rozliczeniowy zaczynający się przed końcem roku kalendarzowego (P2)
+
+As a user, I need to set `offset: -P2M` with `anchor: start_of_year` so the window start falls on 1 November of the **previous** calendar year instead of 1 January.
+
+**Independent test**: On `2026-04-22` with the above, window 0’s `start` is `2025-11-01` in the HA time zone.
+
+**Acceptance Scenarios**:
+
+1. **Given** `anchor: start_of_year`, `offset: -P2M`, **When** windows are computed for “today” `2026-04-22`, **Then** `window[0].start` = `2025-11-01` (in the instance time zone).
+2. **Given** a negative offset that moves the anchor into the **previous** calendar year, **When** windows are computed, **Then** `start` and `end` are valid dates in that year — no error solely because the year rolled backward.
+
+---
+
+### US-900-8 — Czytelny błąd dla błędnego formatu offsetu (P1)
+
+As a user who typed an invalid `offset` (e.g. `PT30M`, `P0.5M`, or a malformed string), I need a clear card error message when configuration loads, not a blank chart with no explanation.
+
+**Independent test**: Invalid `offset` → `setConfig` throws; card shows error state; legacy `+3M` / `+1d` still parse and render.
+
+**Acceptance Scenarios**:
+
+1. **Given** `offset: PT30M` (or any sub-hour offset), **When** the card loads config, **Then** `setConfig` fails and the card shows the **standard invalid `time_window` error** (same localized string as other merged `time_window` failures; not a blank chart without explanation; per Clarifications 2026-04-22, no offset-specific copy required).
+2. **Given** `offset: P0.5M` (fractional month), **When** the card loads config, **Then** the same **standard invalid `time_window` error** state as scenario 1 (fail-fast; not a blank chart without explanation).
+3. **Given** legacy `+3M` or `+1d`, **When** the card loads config, **Then** the value is accepted as a compatibility alias of `P3M` / `P1D` and windows resolve correctly.
+
+---
+
 ## Edge Cases
 
 1. **`count: 1`**: No reference window — chart shows only the current series; comparison metrics and forecast requiring a reference are hidden or disabled; tooltip shows at most one value; no configuration error is raised.
@@ -187,6 +241,16 @@ As a user editing `time_window` YAML, I need invalid or contradictory values to 
 8. **`sum` row timestamp assignment (FR-DATA-1)**: when LTS rows use `sum` (monotonic total), the first non-null cumulative sample for the current window MUST align with the first timeline slot; the series MUST NOT appear shifted by one bucket relative to axis ticks.
 9. **`min`/`max` fallback (FR-DATA-2)**: when no `sum`, `change`, or `state` is available but `min` and `max` are finite, `max − min < 0` rows are silently skipped; the series MUST NOT be empty for entities that are true cumulative-style counters with `state_class: measurement`.
 10. **Two windows, unequal nominal length**: `timeline.length` equals the max nominal step count; the shorter window's series ends at its own nominal step count with null/absent values for tail slots; the axis MUST NOT be shortened to match the shorter window.
+11. **`P4M4D` from `start_of_year` in a leap year**: 1 Jan + 4M = 1 May; + 4D = 5 May — unchanged from non–leap-year arithmetic for this pattern.
+12. **`P1M30D` from 1 January**: 1 Jan + 1M = 1 Feb; + 30D = 3 Mar (not “31 February”).
+13. **`P1M` from 31 January**: Luxon clamp to last day of February (28 or 29).
+14. **`-P2M` from 1 January 2026**: → 1 November 2025.
+15. **`PT30M` or other sub-hour `offset`**: fail-fast in `setConfig`; same class of rejection as sub-hour aggregation (user-visible error, not silent).
+16. **`P0.5M` (fractional month)**: fail-fast in `setConfig`.
+17. **`P1Y` from `start_of_year` on 2024-01-01**: → 2025-01-01; leap years handled by Luxon calendar rules.
+18. **Legacy `+4M` in one field and ISO `P1Y` in another**: legacy shim applies only where legacy strings appear; both may coexist in one config.
+19. **Omitted `offset` or `P0D`**: identical behavior to prior version (no regression vs US-900-1).
+20. **DST boundary, `P1D`**: day addition follows calendar day in the zone (Luxon), not a fixed 24-hour wall delta.
 
 ---
 
@@ -194,13 +258,15 @@ As a user editing `time_window` YAML, I need invalid or contradictory values to 
 
 - **FR-900-A (Merged model)**: After merging preset and optional `time_window`, the effective configuration MUST be expressible as an explicit ordered list of comparison windows with unambiguous roles (current, reference, contextual) and boundaries — without reference to internal legacy or parallel engine paths.
 
-- **FR-900-B (Window parameters)**: Each window MUST be described by: anchor (one of `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`), optional `offset`, `duration`, `step`, `count`, and `aggregation`. `step` for window at index k = k × step unit backward from window 0.
+- **FR-900-B (Window parameters)**: Each window MUST be described by: anchor (one of `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now`), optional `offset`, `duration`, `step`, `count`, and `aggregation`. `step` for window at index k = k × step unit backward from window 0. When present, `offset` MUST be a full **ISO 8601 duration** accepted by the isolated parser (including optional legacy alias mapping), evaluated with calendar-aware `plus` semantics as in the Public Contract; `P0D` and omission MUST be equivalent.
 
 - **FR-900-C (Preset merge)**: `comparison_preset` supplies default values for all window parameters. Every field explicitly present in `time_window` unconditionally overrides the corresponding preset default. Missing `time_window` fields retain preset values. The effective merged windows are the sole behavioral source.
 
 - **FR-900-D (Calendar-correct boundaries)**: For each window the engine MUST compute explicit `start` and `end` dates using calendar-aware arithmetic (leap years, variable month lengths) consistent with Luxon's `startOf` / `plus` semantics and the HA instance time zone.
 
-- **FR-900-E (Fail-fast validation)**: Any invalid merged configuration (zero/negative `step`, sub-hourly `duration`, unrecognised `anchor`, `aggregation` token outside `hour|day|week|month`, `count > 24`) MUST cause `setConfig` to throw with a readable error message. No silent auto-correction, no fallback to preset-only, no partial application.
+- **FR-900-E (Fail-fast validation)**: Any invalid merged configuration (zero/negative `step`, sub-hourly `duration`, unrecognised `anchor`, `aggregation` token outside `hour|day|week|month`, `count > 24`, invalid or forbidden `offset` per **FR-900-Q**) MUST cause `setConfig` to throw with a readable error message. No silent auto-correction, no fallback to preset-only, no partial application.
+
+- **FR-900-Q (Compound `offset` validation)**: The card MUST parse `time_window.offset` in one place. It MUST accept full ISO 8601 duration strings (including compound and signed forms) that Luxon can apply via `DateTime.plus(Duration.fromISO(…))`. It MUST reject: sub-hour offsets; fractional year/month components; unrecognised strings (after legacy shim for single-token `+/-` **unit** forms only). It MUST treat legacy `+1d` / `+3M` / `+1Y` (and the same family) as aliases to `P1D` / `P3M` / `P1Y` for this release, with deprecation for removal. **User-visible error state** for any rejected `offset` MUST use the **same** localized card message as other invalid merged `time_window` configuration (Clarifications 2026-04-22); no new `localize()` keys only for `offset`. **`ComparisonWindow` and downstream APIs remain unchanged** — no changes to `ha-api.ts` consumer contracts.
 
 - **FR-900-F (Preset label override)**: When effective merged windows differ from the preset's implied story, the card follows the merged windows only. User-visible copy MUST NOT assert a period narrative contradicted by the effective windows (e.g. claiming year-over-year when the effective story is month-over-month). Neutral labeling or reflection of actual window dates is required.
 
@@ -249,6 +315,7 @@ As a user editing `time_window` YAML, I need invalid or contradictory values to 
 - **SC-900-3**: For N ≥ 2, automated tests (Vitest) assert that `timeline[0…prefix-1]` begins with window 0's calendar slot starts and, when the axis is longer than window 0's nominal slot count, tail entries continue at the chart aggregation step — not the longest window's calendar in isolation.
 - **SC-900-4**: In a scenario with a partially closed last bucket, the current series reaches the "now" position and the value at that marker matches the latest known cumulative value for window 0 per the summary logic, unless a documented intentional difference is stated.
 - **SC-900-5**: Automated tests confirm that `periodTotalBuckets` (forecast denominator) equals window 0's slot count and is unaffected by `timeline.length` when Longest-window axis span exceeds window 0's nominal length.
+- **SC-900-6**: Automated tests (Vitest) cover the compound-offset edge cases in the Edge Cases list (items 11–20), including backward compatibility for omitted/`P0D` offset, legacy shims, leap-year and clamping scenarios, and fail-fast for forbidden offset forms; `setConfig` errors for bad offsets use the same card error path as other invalid `time_window` config (user-visible; not a blank chart with no message). Tests need not assert offset-specific user-facing copy.
 
 ---
 
@@ -259,3 +326,5 @@ As a user editing `time_window` YAML, I need invalid or contradictory values to 
 - The 24-window safety limit applies to YAML/Lovelace input only; the internal engine algorithm may handle N > 24 (e.g. in unit tests) without the validation layer.
 - A full GUI editor for every `time_window` field is out of scope; YAML remains the surface for advanced parameters.
 - Documentation changes (wiki, README, changelog) that reflect this domain's rules are covered by domain `907-docs-product-knowledge`.
+- The legacy offset shim is **temporary**; product documentation and changelog MUST mark it as deprecated. Removal of the shim is a one-function change in the parser when scheduled.
+- Domains **904** (card error surfacing for YAML that fails at `setConfig`), **907** (end-user documentation for ISO offset and examples), and **901** (verification that forecast denominator and LTS query contracts stay tied to `ComparisonWindow[]` only) participate in the release for this feature as specified by the program team. **903** / **905** are **not** required to add new translation keys for offset errors when using the **standard invalid `time_window` message** (Clarifications 2026-04-22).

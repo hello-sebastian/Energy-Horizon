@@ -4,7 +4,7 @@
 **Domain**: Configuration Surface  
 **Replaces**: `005-gui-editor`  
 **Primary code**: `src/card/energy-horizon-card-editor.ts`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-04-22  
 
 ---
 
@@ -45,6 +45,10 @@ The editor is registered as a custom element via a static `import` at the top of
 ### `getStubConfig()`
 
 Returns a minimal valid default config (at minimum `entity: ""`) allowing the card to render without errors when added from the card picker.
+
+### Advanced YAML and card-level errors
+
+`time_window` and nested fields (including `offset`) are **not** exposed in the visual form and are **not** semantically validated in the editor (see Non-Goals). When the user edits raw YAML, invalid `time_window` / `offset` values are detected in the main card at `setConfig` and MUST surface as the **standard card error state** (user-visible message; no chart) per `900-time-model-windows` — in particular **US-900-8** (invalid offset format) and **FR-900-E** / **FR-900-Q**. The editor does not need to parse ISO offsets itself.
 
 ---
 
@@ -165,6 +169,19 @@ As a user with a Polish-language HA instance, I need all editor field labels and
 
 ---
 
+### US-904-6 — Card shows readable error for invalid `time_window.offset` in YAML (P1)
+
+As a user who typed an invalid `time_window.offset` in raw YAML, I need the live card preview (or saved dashboard) to show a clear error when the main card runs `setConfig`, because the editor does not validate ISO durations for me.
+
+**Independent test**: Invalid `offset` per `900` FR-900-Q → same visible error class as other invalid `time_window` (not a blank chart with no explanation).
+
+**Acceptance Scenarios**:
+
+1. **Given** YAML with `time_window.offset: PT30M` (forbidden), **When** the card applies config, **Then** the user sees a card error state with an explanatory message; the chart is not shown.
+2. **Given** valid compound ISO offset (e.g. `P4M4D`), **When** the card applies config, **Then** no error is raised for offset parsing; windows resolve per domain 900.
+
+---
+
 ### US-904-5 — Graceful degradation without `hass` and with unknown values (P2)
 
 As a user opening the editor in edge conditions (missing `hass` object during initialization, or a typo in `force_prefix` from YAML), I need the editor to render in a degraded state without crashing or blocking the save flow.
@@ -223,6 +240,8 @@ As a user opening the editor in edge conditions (missing `hass` object during in
 
 - **FR-904-N (unknown field values)**: When the existing YAML config contains an unknown or out-of-range `force_prefix` or `comparison_preset` value, the editor MUST show an empty/default selection without throwing an error or blocking the save flow.
 
+- **FR-904-O (Semantic validation on card)**: The editor MUST NOT be required to validate `time_window` or `time_window.offset` semantics. The main card MUST perform validation at `setConfig` and surface failures (including invalid or forbidden `offset` per `900` FR-900-Q) as the same card error pattern used for other invalid `time_window` values. The editor MUST still preserve YAML text and emit full config on change so the user can correct mistakes in YAML.
+
 ---
 
 ## Key Entities
@@ -244,6 +263,7 @@ As a user opening the editor in edge conditions (missing `hass` object during in
 - **SC-904-3**: Zero YAML-only config fields are lost when the user opens the editor, changes any form field, and saves — verified by diff of the saved YAML before and after the edit session.
 - **SC-904-4**: A user can switch from Visual mode to YAML text mode and back at least once without data loss or JavaScript error.
 - **SC-904-5**: All editor fields (including interpretation) have localized labels in English and Polish; German labels are present in `de.json`.
+- **SC-904-6**: Invalid `time_window.offset` (per `900` FR-900-Q) in saved YAML results in a visible card error on load or live preview, not an unexplained empty chart; valid compound ISO offsets load without error.
 
 ---
 

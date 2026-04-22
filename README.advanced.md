@@ -128,7 +128,7 @@ The YAML object is **deep-merged** with the preset template: fields in `time_win
 | Field | Meaning |
 |-------|---------|
 | `anchor` | `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now` — reference point for window 0 (see fiscal-year offset logic for `start_of_year` in code). |
-| `offset` | Optional duration token (e.g. `+3M`) shifting the base point relative to the anchor. |
+| `offset` | Optional **ISO 8601 duration** (including **compound** forms) shifting the resolved anchor in calendar time. Examples: `P4M4D` (e.g. 5 May from 1 Jan), `P1M15D`, `-P2M`, `P0D` / omit = no shift. **Legacy** single-token forms (`+3M`, `+1d`, `+1Y`) are still accepted as a **shim** mapping to `P3M` / `P1D` / `P1Y` (deprecated). See [Duration and offset](#duration-tokens-duration-step-offset). |
 | `duration` | Length of one window (tokens: `y`, `M`, `w`, `d`, `h`, `m`, `s` — see `duration-parse.ts`). **Minimum 1 h** for LTS. |
 | `step` | Spacing between consecutive windows (backward from window 0): window *i* starts `i × step` before window 0’s start. Must parse to a positive duration. |
 | `count` | Number of windows (1–24). Window 0 = current, 1 = reference, ≥2 = visual context. |
@@ -144,7 +144,20 @@ For `count ≥ 2`, the horizontal axis uses **Longest-window axis span** (max no
 
 ### Duration tokens (`duration`, `step`, `offset`)
 
-Format: optional `+`/`-` sign, number, unit. Units mapped to Luxon: **`y`**, **`M`** (month), **`w`**, **`d`**, **`h`**, **`m`** (minutes), **`s`**.
+- **`duration` and `step`** (non-offset): the card still accepts the compact token form — optional `+`/`−` sign, whole number, unit. Units: **`y`**, **`M`** (month), **`w`**, **`d`**, **`h`**, **`m`** (minutes), **`s`** — see `duration-parse` / preset templates.
+
+- **`offset`**: use a **full ISO 8601 duration** string. Luxon applies it with **`DateTime.plus(Duration.fromISO(…))`**: canonical component order is **Y → M → D → T → H** (and sub-day parts if present). **Clamping** when the day is invalid in the target month (e.g. 31 Jan + 1M → last day of February) is **deterministic** Luxon behavior, not an error. **Day** steps follow **calendar** days in the Home Assistant time zone, including across **DST** (not a fixed 24h wall offset). Parsing is centralized in `src/card/time-windows/parse-time-window-offset.ts` (FR-900-Q).
+
+| Form | Example | Notes |
+|------|---------|--------|
+| Zero / omit | (omit) or `P0D` | Same as pre–compound-offset behavior. |
+| Single component | `P1Y`, `P3M`, `P7D` | Shifts by whole calendar year / month / day. |
+| Compound | `P4M4D` | e.g. from 1 Jan → 1 May + 4 days = **5 May** (independent of “+124d”). |
+| Negative | `-P2M` | e.g. from 1 Jan → 1 November **previous** calendar year. |
+| Rejected | `PT30M`, `P0.5M` | **Sub-hour** total offset, or **fractional** month/year — `setConfig` error. |
+| Legacy shim | `+1d`, `+3M` | Mapped to `P1D` / `P3M` / … — **deprecated**; prefer ISO `P` forms. |
+
+**Why not a single `+Nd`?** A fixed day count is **not** equivalent to “4 months and 4 days” because months have different lengths and leap years change day counts. Use a compound ISO `P` string when you need a specific calendar start date (e.g. custom billing / fiscal year).
 
 ---
 
@@ -170,6 +183,7 @@ Format: optional `+`/`-` sign, number, unit. Units mapped to Luxon: **`y`**, **`
 | `step` / `duration` empty, invalid, or ≤ 0 | Invalid `time_window` error. |
 | `anchor` empty after merge | Invalid `time_window` error. |
 | `anchor` outside LTS allow-list | **Throws** in `setConfig` (English message listing allowed values). |
+| `offset` sub-hour (`PT30M`, …) or fractional month/year (`P0.5M`, …) or otherwise invalid / not ISO+legacy | **Throws** in `setConfig` (time window / offset error). |
 | `duration` &lt; 1 h | **Throws** in `setConfig` (LTS). |
 | Explicit `aggregation` not in `hour|day|week|month` | **Throws** in `setConfig`. |
 | Timeline length &gt; **5000** points | Card error state (`status.point_cap_exceeded`, `max` param). |

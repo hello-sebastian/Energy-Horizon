@@ -2,6 +2,7 @@ import { DateTime, type DateTime as LuxonDateTime } from "luxon";
 import type { ResolvedWindow, WindowAggregation } from "../types";
 import type { MergedTimeWindowConfig } from "../types";
 import { durationToMillis, parseDurationToken } from "./duration-parse";
+import { parseTimeWindowOffset } from "./parse-time-window-offset";
 
 function twoWindowPresetPair(
   currentStart: DateTime,
@@ -111,12 +112,9 @@ function computeStartOfWindow0(
 ): DateTime {
   const anchor = merged.anchor!;
   const anchorPoint = resolveAnchorPoint(anchor, now);
-  const offsetDur =
-    merged.offset && merged.offset.trim() !== ""
-      ? parseDurationToken(merged.offset)
-      : undefined;
+  const offsetDur = parseTimeWindowOffset(merged.offset);
 
-  if (!offsetDur || durationToMillis(offsetDur) === 0) {
+  if (durationToMillis(offsetDur) === 0) {
     return anchorPoint;
   }
 

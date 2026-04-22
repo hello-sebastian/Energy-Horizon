@@ -76,6 +76,86 @@ describe("time-windows merge + validate", () => {
     expect(v.ok).toBe(true);
   });
 
+  it("rejects invalid ISO offset (sub-hour) with standard invalid time_window key", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_month",
+        duration: "1M",
+        step: "1M",
+        count: 2,
+        offset: "PT30M"
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.errorKey).toBe("status.config_invalid_time_window");
+    }
+  });
+
+  it("rejects fractional-month offset with standard invalid time_window key", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_month",
+        duration: "1M",
+        step: "1M",
+        count: 2,
+        offset: "P0.5M"
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.errorKey).toBe("status.config_invalid_time_window");
+    }
+  });
+
+  it("US-900-5: count 25 still returns too-many-windows; invalid offset stays invalid time_window", () => {
+    const tooMany = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_month",
+        duration: "1M",
+        step: "1M",
+        count: 25,
+        offset: "PT30M"
+      },
+      periodOffset: -1
+    });
+    const vMany = validateMergedTimeWindowConfig({
+      ...tooMany,
+      aggregation: "day"
+    });
+    expect(vMany.ok).toBe(false);
+    if (!vMany.ok) {
+      expect(vMany.errorKey).toBe("status.config_too_many_windows");
+    }
+
+    const badOffset = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_month",
+        duration: "1M",
+        step: "1M",
+        count: 2,
+        offset: "garbage-offset"
+      },
+      periodOffset: -1
+    });
+    const vOff = validateMergedTimeWindowConfig({
+      ...badOffset,
+      aggregation: "day"
+    });
+    expect(vOff.ok).toBe(false);
+    if (!vOff.ok) {
+      expect(vOff.errorKey).toBe("status.config_invalid_time_window");
+    }
+  });
+
   it("rejects empty required fields after destructive merge", () => {
     const merged = mergeTimeWindowConfig({
       mode: "year_over_year",

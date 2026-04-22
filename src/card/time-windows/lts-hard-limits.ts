@@ -19,6 +19,10 @@ const LTS_ALLOWED_AGGREGATION = new Set(["hour", "day", "week", "month"]);
  * Enforces LTS (long-term statistics) hard limits: hourly minimum resolution, allowed anchors,
  * and strict aggregation enum. Intended for `setConfig` so invalid YAML surfaces as a thrown
  * Error (standard Lovelace card error overlay).
+ *
+ * `time_window.offset` is validated in {@link validateMergedTimeWindowConfig} / `assertMergedTimeWindowConfig`,
+ * which run after this in `setConfig`; sub-hour and fractional calendar offsets therefore fail there
+ * with the same invalid `time_window` path (FR-900-Q), without duplicating rules here.
  */
 export function assertLtsHardLimits(merged: MergedTimeWindowConfig): void {
   const anchorRaw = merged.anchor?.trim();

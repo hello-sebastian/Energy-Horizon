@@ -68,6 +68,161 @@ describe("resolveTimeWindows", () => {
     expect(w).toHaveLength(30);
   });
 
+  it("US-900-4: ISO P9M offset matches legacy +9M October billing alignment", () => {
+    const mergedIso = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_year",
+        offset: "P9M",
+        duration: "1y",
+        step: "1y",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const mergedLegacy = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_year",
+        offset: "+9M",
+        duration: "1y",
+        step: "1y",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const vIso = validateMergedTimeWindowConfig({ ...mergedIso, aggregation: "month" });
+    const vLeg = validateMergedTimeWindowConfig({ ...mergedLegacy, aggregation: "month" });
+    expect(vIso.ok).toBe(true);
+    expect(vLeg.ok).toBe(true);
+    if (!vIso.ok || !vLeg.ok) return;
+
+    const now = DateTime.fromObject(
+      { year: 2026, month: 3, day: 15, hour: 12 },
+      { zone: TZ }
+    ).toJSDate();
+    const wIso = resolveTimeWindows(vIso.merged, now, TZ, 24, "month");
+    const wLeg = resolveTimeWindows(vLeg.merged, now, TZ, 24, "month");
+    expect(wIso[0]!.start.getTime()).toBe(wLeg[0]!.start.getTime());
+    expect(wIso[1]!.start.getTime()).toBe(wLeg[1]!.start.getTime());
+  });
+
+  it("US-900-2: count 3 with non-zero ISO offset yields three distinct windows", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_day",
+        duration: "1d",
+        step: "1d",
+        count: 3,
+        offset: "P2D"
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+
+    const now = DateTime.fromObject(
+      { year: 2026, month: 4, day: 10, hour: 15 },
+      { zone: TZ }
+    ).toJSDate();
+    const w = resolveTimeWindows(v.merged, now, TZ, 24, "day");
+    expect(w).toHaveLength(3);
+    const t0 = w[0]!.start.getTime();
+    const t1 = w[1]!.start.getTime();
+    const t2 = w[2]!.start.getTime();
+    expect(new Set([t0, t1, t2]).size).toBe(3);
+    expect(t0 - t1).toBe(86400000);
+    expect(t1 - t2).toBe(86400000);
+  });
+
+  it("US-900-6: P4M4D + P1Y windows from start_of_year (UTC)", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_year",
+        offset: "P4M4D",
+        duration: "1y",
+        step: "1y",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+
+    const now = DateTime.fromObject(
+      { year: 2026, month: 6, day: 1, hour: 12 },
+      { zone: TZ }
+    ).toJSDate();
+    const w = resolveTimeWindows(v.merged, now, TZ, 24, "day");
+    expect(w[0]!.start.getUTCFullYear()).toBe(2026);
+    expect(w[0]!.start.getUTCMonth()).toBe(4);
+    expect(w[0]!.start.getUTCDate()).toBe(5);
+    expect(w[1]!.start.getUTCFullYear()).toBe(2025);
+    expect(w[1]!.start.getUTCMonth()).toBe(4);
+    expect(w[1]!.start.getUTCDate()).toBe(5);
+  });
+
+  it("US-900-3: P0D vs omitted offset keeps window[0].end for day aggregation", () => {
+    const now = DateTime.fromObject(
+      { year: 2026, month: 4, day: 5, hour: 18, minute: 30 },
+      { zone: TZ }
+    ).toJSDate();
+    const partial = {
+      anchor: "start_of_day" as const,
+      duration: "7d",
+      step: "7d",
+      count: 2 as const
+    };
+    const mOmit = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: partial,
+      periodOffset: -1
+    });
+    const mP0 = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: { ...partial, offset: "P0D" },
+      periodOffset: -1
+    });
+    const v1 = validateMergedTimeWindowConfig({ ...mOmit, aggregation: "day" });
+    const v2 = validateMergedTimeWindowConfig({ ...mP0, aggregation: "day" });
+    expect(v1.ok).toBe(true);
+    expect(v2.ok).toBe(true);
+    if (!v1.ok || !v2.ok) return;
+    const w1 = resolveTimeWindows(v1.merged, now, TZ, 24, "day");
+    const w2 = resolveTimeWindows(v2.merged, now, TZ, 24, "day");
+    expect(w1[0]!.end.getTime()).toBe(w2[0]!.end.getTime());
+  });
+
+  it("US-900-7: start_of_year with -P2M for 2026-04-22 yields 2025-11-01 window start", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: {
+        anchor: "start_of_year",
+        offset: "-P2M",
+        duration: "1M",
+        step: "1M",
+        count: 2
+      },
+      periodOffset: -1
+    });
+    const v = validateMergedTimeWindowConfig({ ...merged, aggregation: "day" });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+
+    const now = DateTime.fromObject(
+      { year: 2026, month: 4, day: 22, hour: 12 },
+      { zone: TZ }
+    ).toJSDate();
+    const w = resolveTimeWindows(v.merged, now, TZ, 24, "day");
+    expect(w[0]!.start.getUTCFullYear()).toBe(2025);
+    expect(w[0]!.start.getUTCMonth()).toBe(10);
+    expect(w[0]!.start.getUTCDate()).toBe(1);
+  });
+
   it("US3: fiscal year from October — two adjacent 12-month cycles", () => {
     const merged = mergeTimeWindowConfig({
       mode: "year_over_year",

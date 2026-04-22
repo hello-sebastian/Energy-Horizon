@@ -4,7 +4,7 @@
 **Domain**: Card UI Composition  
 **Replaces**: `001-card-ui-enhancements`, `001-figma-ui-rollout`, `001-separate-style-logic`, `001-ha-theming-classes`  
 **Primary code**: `src/card/cumulative-comparison-chart.ts`, `src/card/energy-horizon-card-styles.ts`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-04-22  
 
 ## Clarifications
 
@@ -135,7 +135,7 @@ function formatCompactPeriodCaption(window: ComparisonWindow, options: CaptionOp
 ## Cross-domain Contracts
 
 **Consumes from**:
-- `900-time-model-windows`: `ComparisonWindow[]` for period qualifiers and window role labels.
+- `900-time-model-windows`: `ComparisonWindow[]` for period qualifiers and window role labels. Invalid `time_window.offset` (and other time-window validation failures) MUST use the same card **configuration error** pattern as other `setConfig` failures: user-visible message, no chart (aligned with **US-900-8**).
 - `901-data-pipeline-forecasting`: `ForecastStats` (`enabled`, `confidence`, `forecast_total`), reference series total for the **full** reference period.
 - `902-chart-rendering-interaction`: chart container element ownership; `min-height` adjustments from renderer; delta segment styling aligned with interpretation semantics (see `902-chart-rendering-interaction`).
 - `904-configuration-surface`: raw YAML fields listed in Public Contract, including `interpretation` and `neutral_interpretation`; visual editor for `interpretation` (see `904-configuration-surface`); `neutral_interpretation` may remain **YAML-only** (still preserved on merge).

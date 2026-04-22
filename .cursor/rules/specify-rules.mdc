@@ -6,12 +6,12 @@ alwaysApply: true
 
 # Energy-Horizon Development Guidelines
 
-Auto-generated from domain specs. Last updated: 2026-04-21
+Auto-generated from domain specs. Last updated: 2026-04-22
 
 ## Active Technologies
 - TypeScript 5.6+ (`strict` enabled) + Lit 3.1 (LitElement, `html`, `css`, decorators) — core card stack (903-card-ui-composition)
 - Apache ECharts 5.6.0 (modular: `echarts/core`, `echarts/charts`, `echarts/components`, `echarts/renderers`) — chart rendering (902-chart-rendering-interaction)
-- Luxon 3.7 — date/time arithmetic and calendar calculations for time windows (900-time-model-windows)
+- Luxon 3.7 — date/time arithmetic, `Duration.fromISO`, calendar `plus` / clamping for time windows (900-time-model-windows)
 - Vite 6 (bundler), Vitest 2 (unit tests)
 - `window.jsyaml` (HA frontend global, no npm addition) — YAML editor mode (904-configuration-surface)
 - In-browser only; HA state is read-only at render time; no backend
@@ -52,4 +52,5 @@ TypeScript (ES2020+, `strict` enabled): Follow standard conventions
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- 900-time-model-windows: Speckit plan — ISO `time_window.offset` (FR-900-Q); see `specs/900-time-model-windows/plan.md`
 - 903-card-ui-composition: Speckit plan — Narrative Engine Refactor (`classifyComparisonStep`, three-layer `text_summary.*` i18n); see `specs/903-card-ui-composition/plan.md`

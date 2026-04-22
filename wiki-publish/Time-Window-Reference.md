@@ -21,16 +21,16 @@ If you want ready-to-use recipes, use [How-To: Time Windows](How-To-Time-Windows
 ```yaml
 time_window:
   anchor: start_of_year | start_of_month | start_of_week | start_of_day | start_of_hour | now
-  offset: "+3M" | "-1w" | "0d"   # optional; duration token string
+  offset: P4M4D | -P2M | P0D   # optional; ISO 8601 duration (incl. compound); legacy +3M still accepted
   duration: "1y" | "1M" | "1w" | "1d" | "1h" | "90m" | "30s"
   step: "1y" | "1M" | "1w" | "1d" | "1h"
   count: 1..24
   aggregation: hour | day | week | month
 ```
 
-The card accepts duration tokens with units mapped to Luxon:
+**`duration` / `step` (merged templates):** the card accepts compact duration tokens with units mapped to Luxon: `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second).
 
-- `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second)
+**`offset`:** use a **full ISO 8601** duration string (including **compound** forms like `P4M4D`, and signed forms like `-P2M`). Evaluation is calendar-aware via Luxon (not a naive “+N days” unless you use `P5D` alone). **Sub-hour** offsets and **fractional** month/year parts are **rejected** at `setConfig` with the **same** visible error class as other invalid `time_window` values (no offset-specific message). **Legacy** `+1d` / `+3M` style forms remain accepted as a **shim** to the equivalent `P` form (deprecated). See [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) in the repository for the format table and examples.
 
 ---
 
@@ -48,9 +48,7 @@ Allowed values are restricted by LTS (long-term statistics) hard limits:
 
 ### `offset` (optional)
 
-Shifts the anchor before computing the window start.
-
-Use it for fiscal cycles (e.g., “year starts in October”) or “lookahead/back” from the anchor.
+Shifts the **resolved** anchor in **calendar** time using an ISO 8601 duration (Luxon `DateTime.plus` / `Duration.fromISO`). Use it for **fiscal or billing** cycles, or to move the anchor into the **previous** year (e.g. `-P2M` from 1 Jan → 1 November prior year). **Compound** values such as `P4M4D` express “4 months and 4 days from the anchor” (e.g. 1 Jan + `P4M4D` → 5 May) — this is **not** the same as a single long day offset when months and leap years differ. **Sub-hour** (`PT30M`) and **fractional** month (`P0.5M`) offsets are invalid. Legacy `+3M` / `+1d` strings are still accepted for compatibility; prefer `P3M` / `P1D`.
 
 ### `duration`
 
@@ -171,7 +169,7 @@ entity: sensor.energy_total
 comparison_preset: year_over_year
 time_window:
   anchor: start_of_year
-  offset: "+9M"
+  offset: P9M
   duration: 1y
   step: 1y
   count: 2
@@ -184,4 +182,4 @@ aggregation: month
 
 - [How-To: Time Windows](How-To-Time-Windows)
 - [Configuration and Customization](Configuration-and-Customization)
-- Spec (repo): `specs/001-time-windows-engine/`
+- Spec (repo): `specs/900-time-model-windows/`

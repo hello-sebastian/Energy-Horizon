@@ -64,7 +64,7 @@ entity: sensor.energy_total
 comparison_preset: year_over_year
 time_window:
   anchor: start_of_year
-  offset: "+9M"
+  offset: P9M
   duration: 1y
   step: 1y
   count: 2
@@ -75,7 +75,32 @@ aggregation: month
 
 **When it fails:**
 
-- If the card errors: validate tokens and hard limits in [Time Window Reference](Time-Window-Reference).
+- If the card errors: validate tokens and hard limits in [Time Window Reference](Time-Window-Reference). (`offset: "+9M"` is still accepted as a legacy alias of `P9M`.)
+
+---
+
+## How-to: 12-month period starting on 5 May (not 1 Jan)
+
+**Goal:** Compare the current 12 months from **5 May** to the same anchor **one year back** (custom **billing / fiscal** start on 5 May).
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.energy_total
+comparison_preset: year_over_year
+time_window:
+  anchor: start_of_year
+  offset: P4M4D
+  duration: 1y
+  step: 1y
+  count: 2
+aggregation: month
+```
+
+**Idea:** `P4M4D` = four **calendar** months to 1 May, then **four** calendar days to 5 May — *not* the same as one fixed day count from 1 Jan. See [Mental Model: Comparisons and Timelines](Mental-Model-Comparisons-and-Timelines) § *Custom billing cycle start date*.
+
+**When it fails:**
+
+- Sub-hour or fractional `offset` values are rejected. Use full ISO 8601 `P` forms for new configs; legacy `+1d` / `+3M` shims may be removed in a later release.
 
 ---
 

@@ -4,7 +4,7 @@
 **Domain**: Data Pipeline & Forecasting  
 **Replaces**: `001-compute-forecast`  
 **Primary code**: `src/card/ha-api.ts`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-04-22  
 
 ---
 
@@ -236,6 +236,7 @@ As a user whose reference series covers only part of the current window's time r
 - **SC-901-4**: A reference year with `rawTrend > 3.3` or `< 0.3` never produces `confidence` above `"low"` — verified by unit tests covering all anomaly scenarios.
 - **SC-901-5**: `forecastPeriodBuckets` from `buildChartTimeline` equals window 0's nominal slot count; a Vitest test confirms it is independent of `timeline.length` when the shared axis is longer due to Longest-window axis span.
 - **SC-901-6**: No regression in `computeSummary`, `computeTextSummary`, or `buildComparisonPeriod`; existing tests for those functions continue to pass unchanged.
+- **SC-901-7 (Verification — compound `offset`)**: For windows produced with compound ISO `time_window.offset` (domain `900`), `forecastPeriodBuckets` and LTS `start`/`end` per window remain derived only from resolved `ComparisonWindow[]`; unit tests confirm no change to `ha-api.ts` public contracts and that `periodTotalBuckets` still equals window 0’s nominal slot count, not `timeline.length` when Longest-window axis span applies.
 
 ---
 

@@ -1,4 +1,5 @@
 import { durationToMillis, parseDurationToken } from "./duration-parse";
+import { parseTimeWindowOffset } from "./parse-time-window-offset";
 import type { MergedTimeWindowConfig } from "../types";
 
 export type ValidateMergedResult =
@@ -52,8 +53,9 @@ export function validateMergedTimeWindowConfig(
   }
 
   if (merged.offset !== undefined && merged.offset.trim() !== "") {
-    const off = parseDurationToken(merged.offset);
-    if (!off) {
+    try {
+      parseTimeWindowOffset(merged.offset);
+    } catch {
       return { ok: false, errorKey: "status.config_invalid_time_window" };
     }
   }

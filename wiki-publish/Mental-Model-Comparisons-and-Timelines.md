@@ -55,6 +55,20 @@ On the **default adaptive** X-axis (current series visible), the **caption for t
 
 **Default axis vs summary captions:** for two windows, adaptive labels may **omit the year** when the periods start in different years (YoY / MoY), or show **day-of-month only** when the year matches but the months differ (MoM). The comparison panel captions still carry month/year context. If you force `x_axis_format` / `tooltip_format`, your Luxon pattern applies to the tick/tooltip timestamps on that shared axis and overrides the adaptive matrix.
 
+### Custom billing cycle start date (`time_window.offset`)
+
+Some users need a **rolling 12‑month** (or other) period that **does not** start on 1 January or the first of a month. The card applies `offset` as an **ISO 8601 duration** after the anchor (`start_of_year`, etc.): components are applied in **Luxon’s** canonical order (**years → months → days → time**). If the day does not exist in the target month (e.g. 31 Jan + 1M), the result **clamps** to the last valid day of that month (deterministic).
+
+**Example — “year” from 5 May:** with `anchor: start_of_year`, use **`offset: P4M4D`**: 1 Jan + 4M → 1 May, + 4D → **5 May** in your Home Assistant time zone. That is **not** the same as adding a single fixed number of **days** to 1 Jan, because months have different lengths and years differ in length.
+
+**Why compound matters:** e.g. `+124d` from 1 Jan is a single wall-clock span; **`P4M4D`** is “four months *then* four *calendar* days”, which matches how people describe fiscal anchors.
+
+**Negative example:** `offset: -P2M` on `start_of_year` can move the start to **1 November of the *previous* calendar year** (see How-To: Time Windows).
+
+**Invalid values:** any offset shorter than one hour, or with fractional month/year, is **rejected** with a **configuration error** (you should not see a blank chart with no explanation). Legacy `+1d` / `+3M` forms are still **accepted** for now as aliases of `P1D` / `P3M`; prefer `P` strings for new configs.
+
+For copy-paste YAML, see [How-To: Time Windows](How-To-Time-Windows) and [Time Window Reference](Time-Window-Reference).
+
 ---
 
 ## Presets: legacy vs generic semantics (why YoY/MoY feel different than MoM)

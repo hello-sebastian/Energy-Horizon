@@ -73,6 +73,17 @@ These are the options most people adjust first. Everything else is in the Wiki a
 | `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. YAML-only in v1 (visual editor preserves the key). | [`README.advanced.md`](./README.advanced.md) |
 | `title`, `icon` | Card header customization. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 
+**Custom period anchor (optional YAML)** — e.g. a **12‑month “year” from 5 May** (not 1 Jan): merge `time_window` with a compound ISO `offset` such as `P4M4D` on `start_of_year`. Invalid `offset` strings fail with the **same** card error as other invalid `time_window` fields. See [`README.advanced.md`](./README.advanced.md) and [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows).
+
+```yaml
+time_window:
+  anchor: start_of_year
+  offset: P4M4D
+  duration: 1y
+  step: 1y
+  count: 2
+```
+
 ## Key features (in plain words)
 
 ### Smart X-axis (labels that “just make sense”)

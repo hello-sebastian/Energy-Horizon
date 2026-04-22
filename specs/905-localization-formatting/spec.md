@@ -4,7 +4,7 @@
 **Domain**: Localization & Formatting  
 **Replaces**: `002-i18n-localization`  
 **Primary code**: `src/card/localize.ts`, `src/translations/`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-04-22  
 
 ---
 
@@ -32,6 +32,10 @@ The card resolves all user-visible text, number formats, and time zone from a th
 ### `localize()` function
 
 `localize(key: string, variables?: Record<string, unknown>): string` — returns the translated string with optional variable interpolation (e.g., `localize("summary.higher", { percent: 15 })`). All calls in rendering code use descriptive key names; no raw string literals for UI text exist outside translation files.
+
+### Configuration error copy (`time_window.offset`)
+
+Invalid `time_window.offset` values (domain `900` FR-900-Q / US-900-8) use the **same** existing `localize()` keys / user-visible card error path as other invalid merged `time_window` configuration — **no** new translation keys introduced solely for `offset` (clarified 2026-04-22 in `900-time-model-windows` spec). Stack traces and internal parser labels are not user-facing.
 
 ### Interpretation copy (consumption vs production)
 

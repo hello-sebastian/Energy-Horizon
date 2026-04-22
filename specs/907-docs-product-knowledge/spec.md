@@ -4,7 +4,7 @@
 **Domain**: Documentation & Product Knowledge  
 **Replaces**: `001-github-wiki`, `001-energy-horizon-card`  
 **Primary artifacts**: `wiki-publish/`, `README.md`, `README-advanced.md`, `CHANGELOG.md`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-04-22  
 
 ---
 
@@ -69,7 +69,7 @@ Version tagging requirement:
 ## Cross-domain Contracts
 
 **Receives documentation obligations from all other domains**:
-- `900-time-model-windows`: window model rules, preset merge semantics, LTS limits.
+- `900-time-model-windows`: window model rules, preset merge semantics, LTS limits, **compound ISO 8601 `time_window.offset`** (including examples `P4M4D`, `-P2M`, legacy shim deprecation, Luxon evaluation order, validation rejects).
 - `901-data-pipeline-forecasting`: forecast activation thresholds, confidence levels, anomaly detection.
 - `902-chart-rendering-interaction`: axis options (`x_axis_format`, `tooltip_format`, `aggregation`), fill/color/forecast YAML keys.
 - `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`, `interpretation` (`consumption` \| `production`; omit → consumption) options; card section CSS classes; interpretation semantics for narrative and chart delta (cross-ref other domains).
@@ -164,7 +164,7 @@ As a user reading the GitHub Wiki, I need to know which card version the documen
 
 - **FR-907-B (Explanation coverage)**: The Explanation section MUST cover (in user-facing terms, not implementation terms): the role of LTS statistics, entity requirements, comparison window semantics, forecast assumptions and activation conditions, and known data limitations.
 
-- **FR-907-C (How-to coverage)**: The How-to section MUST cover at minimum: configuring the card via YAML for features not available in the visual editor; configuring time windows and aggregation; troubleshooting missing or mismatched statistics; the YAML vs visual editor boundary.
+- **FR-907-C (How-to coverage)**: The How-to section MUST cover at minimum: configuring the card via YAML for features not available in the visual editor; configuring time windows and aggregation; troubleshooting missing or mismatched statistics; the YAML vs visual editor boundary. When **compound ISO 8601 `time_window.offset`** ships (domain `900`), the wiki and README advanced reference MUST document it (examples, legacy shim note, validation rules) per the `900` Public Contract.
 
 - **FR-907-D (Reference completeness)**: The Reference section MUST document every public configuration option from domains 900–906 that is user-visible: name, type, valid values, default value, and behavioral notes including `requires / suggests / excludes` relationships where relevant. Coverage target: ≥ 90% of user-facing options have a reference entry.
 
