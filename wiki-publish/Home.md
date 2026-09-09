@@ -63,3 +63,14 @@ This wiki does **not** replace [official Home Assistant documentation](https://w
 #### Maintainers
 
 - [Documentation Maintenance](Documentation-Maintenance)
+
+## License
+
+Energy Horizon
+Copyright (C) 2026 Sebastian Sikora
+https://github.com/hello-sebastian/Energy-Horizon
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
