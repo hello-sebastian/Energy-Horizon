@@ -4,7 +4,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue)
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 <!-- IMAGE PLACEHOLDER: High-quality screenshot/GIF of the card with an active tooltip and visible current-vs-reference comparison. -->
 <!-- Example: a phone-width view + desktop-width view, if possible. -->
