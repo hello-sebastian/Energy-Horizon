@@ -1,7 +1,15 @@
 {
-  "integration": "cursor-agent",
-  "version": "0.5.1",
-  "scripts": {
-    "update-context": ".specify/integrations/cursor-agent/scripts/update-context.sh"
-  }
+  "version": "1.0.13",
+  "integration_state_schema": 1,
+  "installed_integrations": [
+    "copilot"
+  ],
+  "integration_settings": {
+    "copilot": {
+      "script": "sh",
+      "invoke_separator": "-"
+    }
+  },
+  "integration": "copilot",
+  "default_integration": "copilot"
 }
