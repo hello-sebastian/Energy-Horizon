@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "figma": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--stdio"],
+      "env": {
+        "FIGMA_API_KEY": "${input:figma-api-key}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "figma-api-key",
+      "description": "Figma Personal Access Token (Settings → Account → Security → Personal access tokens)",
+      "password": true
+    }
+  ]
+}

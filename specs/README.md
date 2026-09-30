@@ -15,6 +15,7 @@ Katalogi `NNN-nazwa` powstają przy tworzeniu funkcji (gałąź git i folder spe
 | [001-chart-updates](001-chart-updates/) | Aktualizacje wykresu (Chart.js era) | `src/card/chart-renderer.ts` (legacy) | reference |
 | [001-card-ui-enhancements](001-card-ui-enhancements/) | Ulepszenia UI karty | `src/card/cumulative-comparison-chart.ts`, style | reference |
 | [005-gui-editor](005-gui-editor/) | Edytor GUI Lovelace | `src/card/energy-horizon-card-editor.ts` | reference |
+| [007-gui-editor-full-coverage](007-gui-editor-full-coverage/) | Pełne pokrycie pól w edytorze GUI + dokumentacja | `src/card/energy-horizon-card-editor.ts`, `README.md`, `README.advanced.md`, `wiki-publish/` | draft |
 | [004-smart-unit-scaling](004-smart-unit-scaling/) | Skalowanie jednostek | `src/utils/unit-scaler.ts` | reference |
 | [001-github-wiki](001-github-wiki/) | Dokumentacja Wiki (Diátaxis) | `wiki-publish/` | reference |
 | [001-ha-theming-classes](001-ha-theming-classes/) | Theming / klasy semantyczne | `src/card/energy-horizon-card-styles.ts` | reference |
