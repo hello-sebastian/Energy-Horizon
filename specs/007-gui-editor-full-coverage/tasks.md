@@ -56,19 +56,19 @@
 
 ### Tests for User Story 1 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T008 [P] [US1] Unit tests in `tests/unit/editor-mapping.test.ts` for the pure mapping helpers: `toForm` defaults (unset booleans → `true`/`false` per card `!== false` semantics; `precision`→2; `fill_*_opacity`→30; `aggregation`/`language`→`"auto"`; `number_format`→`system`), `fromForm` (`"auto"`→`undefined`/key omitted; concrete values stored literally), and unknown-select-value tolerance (form shows `auto`/empty, raw value preserved in emitted config)
+- [X] T008 [P] [US1] Unit tests in `tests/unit/editor-mapping.test.ts` for the pure mapping helpers: `toForm` defaults (unset booleans → `true`/`false` per card `!== false` semantics; `precision`→2; `fill_*_opacity`→30; `aggregation`/`language`→`"auto"`; `number_format`→`system`), `fromForm` (`"auto"`→`undefined`/key omitted; concrete values stored literally), and unknown-select-value tolerance (form shows `auto`/empty, raw value preserved in emitted config) — 2026-10-01: written in `tests/unit/editor-mapping.test.ts` (blocks: toForm defaults, fromForm, section model); red state confirmed (21 failed / 3 passed — exports missing, as expected pre-implementation)
 
 ### Implementation for User Story 1
 
 - [ ] T009 [US1] Extract the pure, exported mapping helpers in `src/card/energy-horizon-card-editor.ts`: `sectionToForm(section, config)` and `sectionFromForm(section, data)` (plus per-section `toForm`/`fromForm` closures) so they are unit-testable without instantiating the LitElement
-- [ ] T010 [US1] Define the `EditorSection` model and the 8 section descriptors (id, labelKey, advanced, schema, toForm, fromForm) in `src/card/energy-horizon-card-editor.ts`: `basic` (no), `header` (no), `forecast` (no), `time_window` (yes), `chart_style` (yes), `localization` (yes), `date_formats` (yes), `diagnostics` (yes)
+- [ ] T010 [US1] Define the `EditorSection` model and the 8 section descriptors (id, labelKey, advanced, schema, toForm, fromForm) in `src/card/energy-horizon-card-editor.ts`: `comparison` (no), `header` (no), `forecast` (no), `time_window` (yes), `chart_style` (yes), `localization` (yes), `date_formats` (yes), `diagnostics` (yes)
 - [ ] T011 [US1] Implement `toForm` default prefill in `src/card/energy-horizon-card-editor.ts` per research R-008: `show_title`/`show_icon`/`show_forecast`/`fill_current`/`connect_nulls`→`true`; `show_legend`/`fill_reference`/`debug`→`false`; `show_comparison_summary`/`show_forecast_total_panel`/`show_narrative_comment`→`true`; `precision`→2; `fill_*_opacity`→30; `aggregation`/`language`→`"auto"`; `number_format`→`system`; `period_offset`→-1
 - [ ] T012 [US1] Implement `fromForm` in `src/card/energy-horizon-card-editor.ts`: `"auto"`→`undefined` (key omitted); concrete values stored literally; unknown select value → raw value preserved in `_config` (mapping only affects display, never storage)
 - [ ] T013 [US1] Add `@state() _openSections: Set<string>` and `@state() _fieldErrors: Record<string, string | null>` to `src/card/energy-horizon-card-editor.ts`; reset both to empty in `setConfig()` (advanced sections start collapsed, no stale errors)
 - [ ] T014 [US1] Render one `<ha-form>` per section in `src/card/energy-horizon-card-editor.ts` (`.schema`, `.data=section.toForm(_config)`, `.hass`, `.computeLabel`); wrap `advanced` sections in `<ha-expansion-panel>` (`.label`, `.expanded`, `@click` toggle) with a guard that renders the section unwrapped (always visible) if `ha-expansion-panel` is not defined at runtime
 - [ ] T015 [US1] Wire per-section `value-changed` in `src/card/energy-horizon-card-editor.ts`: `section.fromForm(e.detail.value)` → shallow-merge into `_config` (never drops keys not owned by the section) → re-validate affected fields → `_emitConfigChanged()` (always emitted, never blocked)
 
-**Checkpoint**: US1 fully functional — all 26 fields have controls, progressive disclosure works, defaults visible, no data loss. This is the MVP.
+**Checkpoint**: US1 fully functional — all 27 fields have controls, progressive disclosure works, defaults visible, no data loss. This is the MVP.
 
 ---
 
@@ -80,7 +80,7 @@
 
 ### Tests for User Story 2 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T016 [P] [US2] Unit tests in `tests/unit/editor-mapping.test.ts` for the `time_window` subform: all-empty sub-fields → `time_window` key omitted entirely (preset applies); partial override → only set sub-fields in the object; validation wiring — invalid `duration` (`"abc"`) → `_fieldErrors.time_window` set while config is still emitted, valid merged window → no error
+- [X] T016 [P] [US2] Unit tests in `tests/unit/editor-mapping.test.ts` for the `time_window` subform: all-empty sub-fields → `time_window` key omitted entirely (preset applies); partial override → only set sub-fields in the object; validation wiring — invalid `duration` (`"abc"`) → `_fieldErrors.time_window` set while config is still emitted, valid merged window → no error — 2026-10-01: written in `tests/unit/editor-mapping.test.ts` (block: time_window subform); red state confirmed
 
 ### Implementation for User Story 2
 
@@ -96,11 +96,11 @@
 
 **Goal**: README, README.advanced, and wiki document the full editor (field → control → default) with no drift against the implementation.
 
-**Independent Test**: README "Visual editor" lists all 26 fields grouped in 8 sections; README.advanced "Lovelace editor" has the full table; wiki `Configuration-and-Customization` has the coverage table and `Documentation-Maintenance` has the Spec anchors + drift-check item; no field described as "YAML-only" that actually has a control (and vice versa).
+**Independent Test**: README "Visual editor" lists all 27 fields grouped in 8 sections; README.advanced "Lovelace editor" has the full table; wiki `Configuration-and-Customization` has the coverage table and `Documentation-Maintenance` has the Spec anchors + drift-check item; no field described as "YAML-only" that actually has a control (and vice versa).
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Add a new "Visual editor" section to `README.md` listing all 26 user-configurable fields grouped by the 8 sections, with a pointer to `README.advanced.md` and the wiki
+- [ ] T020 [P] [US3] Add a new "Visual editor" section to `README.md` listing all 27 user-configurable fields grouped by the 8 sections, with a pointer to `README.advanced.md` and the wiki
 - [ ] T021 [P] [US3] Rewrite the "Lovelace editor" section in `README.advanced.md` as the full table: field → control type → default → short description (must match `data-model.md` §1 exactly)
 - [ ] T022 [P] [US3] Add a "Visual editor coverage" subsection to `wiki-publish/Configuration-and-Customization.md` with the full table (field → control → default → notes); do NOT create a new wiki page
 - [ ] T023 [P] [US3] Update `wiki-publish/Documentation-Maintenance.md`: add `005-gui-editor`/`007-gui-editor-full-coverage` to the **Spec anchors** section and add a drift-check item ("scan `src/card/energy-horizon-card-editor.ts` → update the editor table in `Configuration-and-Customization.md`") to the release checklist
@@ -117,7 +117,7 @@
 
 ### Tests for User Story 4 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T024 [P] [US4] Unit test in `tests/unit/editor-mapping.test.ts` (or `tests/unit/localize.test.ts`): assert every new `editor.*` key from T004–T007 exists in all four dictionaries (en, pl, de, fr) and that `createLocalize` falls back to English (not the raw key) for a key missing in a non-English language
+- [X] T024 [P] [US4] Unit test in `tests/unit/editor-mapping.test.ts` (or `tests/unit/localize.test.ts`): assert every new `editor.*` key from T004–T007 exists in all four dictionaries (en, pl, de, fr) and that `createLocalize` falls back to English (not the raw key) for a key missing in a non-English language — 2026-10-01: written in `tests/unit/editor-mapping.test.ts` (block: editor i18n); red state confirmed
 
 ### Implementation for User Story 4
 

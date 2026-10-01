@@ -128,7 +128,7 @@ private _validateTimeWindowSection(): void {
 
 ## Documentation Verification
 
-- `README.md` "Visual editor" section lists all 26 fields grouped in the 8 sections.
+- `README.md` "Visual editor" section lists all 27 fields grouped in the 8 sections.
 - `README.advanced.md` table: field → control → default → description (matches `data-model.md` §1).
 - Wiki `Configuration-and-Customization.md` "Visual editor coverage" table matches the implementation; no field described as "YAML-only" that has a control (SC-004).
 - `Documentation-Maintenance.md`: Spec anchors include `005-gui-editor`/`007-gui-editor-full-coverage`; drift-check checklist includes the editor scan item.

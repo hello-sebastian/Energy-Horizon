@@ -8,7 +8,7 @@
 
 ### 1. `CardConfig` *(existing — `src/card/types.ts`)*
 
-No new fields. All 26 user-configurable fields (excluding constant `type` and `forecast` alias) are now editor-controlled. The editor reads and writes this type unchanged.
+No new fields. All 27 user-configurable fields (29 `CardConfig` keys − constant `type` − `forecast` alias) are now editor-controlled. The table below lists all 27; the editor reads and writes this type unchanged.
 
 | Field | Type | Card default (effective) | Editor control |
 |---|---|---|---|
@@ -63,9 +63,9 @@ interface EditorSection {
 
 | id | advanced | Fields |
 |---|---|---|
-| `basic` | no | `entity`, `title`, `comparison_preset`, `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (existing 7) |
-| `header` | no | `show_title`, `icon`, `show_icon` |
-| `forecast` | no | `show_forecast` |
+| `comparison` | no | `entity`, `title`, `comparison_preset`, `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (existing 7) |
+| `header` | no (always visible) | `show_title`, `icon`, `show_icon` |
+| `forecast` | no (always visible) | `show_forecast` |
 | `time_window` | yes | `aggregation`, `period_offset`, `time_window_anchor`, `time_window_offset`, `time_window_duration`, `time_window_step`, `time_window_count`, `time_window_aggregation` |
 | `chart_style` | yes | `fill_current`, `fill_reference`, `fill_current_opacity`, `fill_reference_opacity`, `primary_color`, `connect_nulls`, `show_legend` |
 | `localization` | yes | `language`, `number_format`, `precision` |
@@ -147,14 +147,14 @@ Derived from the existing `DICTIONARIES` (built via `import.meta.glob`). Consume
 
 ---
 
-### 7. Translation Keys *(extended — `src/translations/{en,pl,de,fr}.json`)*
+### 7. Translation Keys *(new — `src/translations/{en,pl,de,fr}.json`)*
 
-Existing 005 keys (13) + new keys (R-009):
+The `editor.*` namespace **exists since 005** (base keys in en/pl/de; missing from fr — a 005 drift). This feature **extends** it (R-009): the keys below are added to all four dictionaries, which also closes the fr gap. Complete set:
 
 | Group | Keys |
 |---|---|
 | Field labels | `editor.show_title`, `editor.icon`, `editor.show_icon`, `editor.aggregation`, `editor.period_offset`, `editor.show_forecast`, `editor.fill_current`, `editor.fill_reference`, `editor.fill_current_opacity`, `editor.fill_reference_opacity`, `editor.primary_color`, `editor.connect_nulls`, `editor.show_legend`, `editor.language`, `editor.number_format`, `editor.precision`, `editor.x_axis_format`, `editor.tooltip_format`, `editor.debug`, `editor.time_window_anchor`, `editor.time_window_offset`, `editor.time_window_duration`, `editor.time_window_step`, `editor.time_window_count`, `editor.time_window_aggregation` |
-| Section titles | `editor.section.header`, `editor.section.comparison`, `editor.section.time_window`, `editor.section.forecast`, `editor.section.chart_style`, `editor.section.localization`, `editor.section.date_formats`, `editor.section.diagnostics` |
+| Section titles (8 — `comparison` renders without a heading by default; its key is present for completeness) | `editor.section.comparison`, `editor.section.header`, `editor.section.time_window`, `editor.section.forecast`, `editor.section.chart_style`, `editor.section.localization`, `editor.section.date_formats`, `editor.section.diagnostics` |
 | Options | `editor.aggregation.{auto,hour,day,week,month}`, `editor.number_format.{comma,decimal,language,system}`, `editor.language.{auto,en,pl,de,fr}`, `editor.anchor.{start_of_year,start_of_month,start_of_week,start_of_day,start_of_hour,now}` |
 | Errors | `editor.error.time_window`, `editor.error.format` |
 

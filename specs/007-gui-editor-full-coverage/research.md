@@ -143,7 +143,7 @@ Inline errors are shown under the offending field (localized via existing `statu
 
 ## R-009: Translation key structure
 
-**Decision**: Extend the existing `editor.*` namespace (already present in all 4 dictionaries from 005) with:
+**Decision**: Extend the existing `editor.*` namespace (base keys added in 005 to en/pl/de; missing from fr — a 005 drift this feature closes) with:
 - Field labels: `editor.show_title`, `editor.icon`, `editor.show_icon`, `editor.aggregation`, `editor.period_offset`, `editor.time_window` (section), `editor.time_window_anchor/offset/duration/step/count/aggregation`, `editor.show_forecast`, `editor.fill_current`, `editor.fill_reference`, `editor.fill_current_opacity`, `editor.fill_reference_opacity`, `editor.primary_color`, `editor.connect_nulls`, `editor.show_legend`, `editor.language`, `editor.number_format`, `editor.precision`, `editor.x_axis_format`, `editor.tooltip_format`, `editor.debug`.
 - Section titles: `editor.section.header`, `editor.section.comparison`, `editor.section.time_window`, `editor.section.forecast`, `editor.section.chart_style`, `editor.section.localization`, `editor.section.date_formats`, `editor.section.diagnostics`.
 - Option texts: `editor.aggregation.auto/hour/day/week/month`, `editor.number_format.comma/decimal/language/system`, `editor.language.auto/en/pl/de/fr`, `editor.anchor.*` (6 anchors).

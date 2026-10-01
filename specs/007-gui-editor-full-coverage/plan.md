@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing Lovelace card editor (`src/card/energy-horizon-card-editor.ts`, base domain `005-gui-editor`) from 7 visual fields to **full `CardConfig` coverage** — 32 controls for all 26 user-configurable fields (excluding the constant `type` and the `forecast` alias): header (`show_title`, `icon`, `show_icon`), comparison & time windows (`aggregation`, `period_offset`, nested `time_window`), forecast (`show_forecast`), chart style (`fill_*`, `primary_color`, `connect_nulls`, `show_legend`), localization & numbers (`language`, `number_format`, `precision`), date formats (`x_axis_format`, `tooltip_format`), diagnostics (`debug`). Fields are grouped into 8 readable sections with progressive disclosure (advanced sections collapsed by default in HA-native `ha-expansion-panel` accordions; open state not persisted). The editor reuses the card's existing validation functions (time windows, Luxon formats) for inline errors without ever blocking `config-changed` emission. Documentation (`README.md`, `README.advanced.md`, wiki `Configuration-and-Customization` + `Documentation-Maintenance`) is updated in the same feature. No new npm dependencies; HA-native components only.
+Extend the existing Lovelace card editor (`src/card/energy-horizon-card-editor.ts`, base domain `005-gui-editor`) from 7 visual fields to **full `CardConfig` coverage** — 32 controls for all 27 user-configurable fields (excluding the constant `type` and the `forecast` alias): header (`show_title`, `icon`, `show_icon`), comparison & time windows (`aggregation`, `period_offset`, nested `time_window`), forecast (`show_forecast`), chart style (`fill_*`, `primary_color`, `connect_nulls`, `show_legend`), localization & numbers (`language`, `number_format`, `precision`), date formats (`x_axis_format`, `tooltip_format`), diagnostics (`debug`). Fields are grouped into 8 readable sections with progressive disclosure (advanced sections collapsed by default in HA-native `ha-expansion-panel` accordions; open state not persisted). The editor reuses the card's existing validation functions (time windows, Luxon formats) for inline errors without ever blocking `config-changed` emission. Documentation (`README.md`, `README.advanced.md`, wiki `Configuration-and-Customization` + `Documentation-Maintenance`) is updated in the same feature. No new npm dependencies; HA-native components only.
 
 ## Technical Context
 
@@ -26,7 +26,7 @@ Extend the existing Lovelace card editor (`src/card/energy-horizon-card-editor.t
 
 **Constraints**: Zero new npm dependencies; `window.jsyaml` absent → Visual-only mode; unknown/invalid values never crash the editor; YAML-only fields never dropped (SC-002); section open-state not persisted (FR-018)
 
-**Scale/Scope**: 1 modified editor file, 1 modified `ha-types.ts`, 1 modified `localize.ts`, 4 modified translation files, 4 modified docs, 1 new test file; 32 visual controls covering all 26 user-configurable `CardConfig` fields
+**Scale/Scope**: 1 modified editor file, 1 modified `ha-types.ts`, 1 modified `localize.ts`, 4 modified translation files, 4 modified docs, 1 new test file; 32 visual controls covering all 27 user-configurable `CardConfig` fields
 
 ## Constitution Check
 

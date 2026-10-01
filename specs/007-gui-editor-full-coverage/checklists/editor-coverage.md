@@ -10,72 +10,72 @@
 
 ## Requirement Completeness
 
-- [ ] CHK001 - Does the spec require a visual control for every user-configurable `CardConfig` field except the constant `type` and the `forecast` alias? [Completeness, Spec §FR-001, SC-001]
-- [ ] CHK002 - Are controls specified for all header, chart-style, and diagnostics fields (`show_title`, `icon`, `show_icon`, `fill_current`, `fill_reference`, `fill_*_opacity`, `primary_color`, `connect_nulls`, `show_legend`, `debug`)? [Completeness, Spec §FR-003, FR-006, FR-009]
-- [ ] CHK003 - Are controls specified for all localization/number and date-format fields (`language`, `number_format`, `precision`, `x_axis_format`, `tooltip_format`)? [Completeness, Spec §FR-007, FR-008]
-- [ ] CHK004 - Is each of the six nested `time_window` sub-fields (`anchor`, `offset`, `duration`, `step`, `count`, `aggregation`) given a separate control? [Completeness, Spec §FR-004]
-- [ ] CHK005 - Is the requirement to preserve the existing 005 controls (`entity`, `title`, `comparison_preset`, `force_prefix`, `show_*`) explicitly stated? [Completeness, Spec §FR-010]
-- [ ] CHK006 - Is a requirement present that unset fields display the card's effective defaults? [Completeness, Spec §FR-011]
-- [ ] CHK007 - Is the data-loss-prevention requirement (no YAML-only field dropped on save) documented? [Completeness, Spec §FR-019, SC-002]
-- [ ] CHK008 - Is a localized label (and option text for selects) required for every new field in all four languages (en, pl, de, fr)? [Completeness, Spec §FR-012, SC-003]
-- [ ] CHK009 - Are documentation requirements (README, README.advanced, wiki) for the full editor table documented? [Completeness, Spec §FR-015, FR-016, FR-017]
+- [x] CHK001 - Does the spec require a visual control for every user-configurable `CardConfig` field except the constant `type` and the `forecast` alias? [Completeness, Spec §FR-001, SC-001]
+- [x] CHK002 - Are controls specified for all header, chart-style, and diagnostics fields (`show_title`, `icon`, `show_icon`, `fill_current`, `fill_reference`, `fill_*_opacity`, `primary_color`, `connect_nulls`, `show_legend`, `debug`)? [Completeness, Spec §FR-003, FR-006, FR-009]
+- [x] CHK003 - Are controls specified for all localization/number and date-format fields (`language`, `number_format`, `precision`, `x_axis_format`, `tooltip_format`)? [Completeness, Spec §FR-007, FR-008]
+- [x] CHK004 - Is each of the six nested `time_window` sub-fields (`anchor`, `offset`, `duration`, `step`, `count`, `aggregation`) given a separate control? [Completeness, Spec §FR-004]
+- [x] CHK005 - Is the requirement to preserve the existing 005 controls (`entity`, `title`, `comparison_preset`, `force_prefix`, `show_*`) explicitly stated? [Completeness, Spec §FR-010]
+- [x] CHK006 - Is a requirement present that unset fields display the card's effective defaults? [Completeness, Spec §FR-011]
+- [x] CHK007 - Is the data-loss-prevention requirement (no YAML-only field dropped on save) documented? [Completeness, Spec §FR-019, SC-002]
+- [x] CHK008 - Is a localized label (and option text for selects) required for every new field in all four languages (en, pl, de, fr)? [Completeness, Spec §FR-012, SC-003]
+- [x] CHK009 - Are documentation requirements (README, README.advanced, wiki) for the full editor table documented? [Completeness, Spec §FR-015, FR-016, FR-017]
 
 ## Requirement Clarity
 
-- [ ] CHK010 - Is the "auto" option for `aggregation`/`language` unambiguously defined as a UI concept mapping to `undefined` (key omitted), not a stored literal? [Clarity, Spec §FR-004, FR-007]
-- [ ] CHK011 - Is the precedence between top-level `aggregation` and `time_window.aggregation` explicitly stated? [Clarity, Spec §FR-004]
-- [ ] CHK012 - Is the control type for `primary_color` resolved to a single unambiguous choice (color picker vs text field)? [Clarity, Spec §FR-006]
-- [ ] CHK013 - Are the numeric ranges for `precision` (0–6) and `fill_*_opacity` (0–100) explicitly bounded? [Clarity, Spec §FR-006, FR-007]
-- [ ] CHK014 - Is the default value for each field (`precision`=2, `aggregation`=auto, `show_title`=true, etc.) explicitly enumerated? [Clarity, Spec §FR-011, Assumptions]
-- [ ] CHK015 - Is the `language` option list source unambiguous (available dictionaries + "auto")? [Clarity, Spec §FR-007]
+- [x] CHK010 - Is the "auto" option for `aggregation`/`language` unambiguously defined as a UI concept mapping to `undefined` (key omitted), not a stored literal? [Clarity, Spec §FR-004, FR-007]
+- [x] CHK011 - Is the precedence between top-level `aggregation` and `time_window.aggregation` explicitly stated? [Clarity, Spec §FR-004]
+- [x] CHK012 - Is the control type for `primary_color` resolved to a single unambiguous choice (color picker vs text field)? [Clarity, Spec §FR-006] — **PASS 2026-10-01**: Spec FR-006 states a **single** control type — `pole tekstowe` (text field, the only type; color picker explicitly **not** used, because a hex-only picker would lose `var(...)`/alias values — SC-002). Corroborated by plan D-005 + research R-005. (The 2026-10-01 FAIL note is stale: it described a dual choice that FR-006 no longer contains.)
+- [x] CHK013 - Are the numeric ranges for `precision` (0–6) and `fill_*_opacity` (0–100) explicitly bounded? [Clarity, Spec §FR-006, FR-007]
+- [x] CHK014 - Is the default value for each field (`precision`=2, `aggregation`=auto, `show_title`=true, etc.) explicitly enumerated? [Clarity, Spec §FR-011, Assumptions]
+- [x] CHK015 - Is the `language` option list source unambiguous (available dictionaries + "auto")? [Clarity, Spec §FR-007]
 
 ## Requirement Consistency
 
-- [ ] CHK016 - Do the section groupings in FR-018 align with the field groupings in FR-003…FR-009? [Consistency, Spec §FR-003…FR-009, FR-018]
-- [ ] CHK017 - Is the field count consistent across the spec (27), data-model (26), and plan (32 controls / 26 fields)? [Consistency, Spec §FR-001, data-model §1, plan]
-- [ ] CHK018 - Does the validation requirement (FR-014) align with the 005 domain pattern of always emitting `config-changed`? [Consistency, Spec §FR-014, FR-002]
-- [ ] CHK019 - Is the progressive-disclosure rule (basic always visible, advanced collapsed, not persisted) consistent across FR-018, US1-AS7, and the contract? [Consistency, Spec §FR-018, US1-AS7, contract §6.9]
+- [x] CHK016 - Do the section groupings in FR-018 align with the field groupings in FR-003…FR-009? [Consistency, Spec §FR-003…FR-009, FR-018] — **PASS 2026-10-01**: base-section id unified to `comparison` (the key actually used in all 4 dictionaries + the chart's `section.comparison`). Spec FR-018/US1-AS7, data-model §2 + §7 (now 8 keys incl. `editor.section.comparison`), tasks T010 all agree on 8 sections: `comparison`, `header`, `forecast` (basic, always visible) + `time_window`, `chart_style`, `localization`, `date_formats`, `diagnostics` (advanced). Field→section mapping matches FR-003…FR-010.
+- [x] CHK017 - Is the field count consistent across the spec (27), data-model (26), and plan (32 controls / 26 fields)? [Consistency, Spec §FR-001, data-model §1, plan] — **PASS 2026-10-01**: all docs now agree on **27** user-configurable fields (29 `CardConfig` keys − `type` − `forecast` alias) and **32 controls** (comparison 7 + header 3 + forecast 1 + time_window 8 + chart_style 7 + localization 3 + date_formats 2 + diagnostics 1; the `time_window` section's 8 form fields map to 6 config fields). Fixed: spec Clarifications `~27`→`27`; plan summary + Scale/Scope `26`→`27` (32 controls kept); quickstart + tasks `26`→`27`.
+- [x] CHK018 - Does the validation requirement (FR-014) align with the 005 domain pattern of always emitting `config-changed`? [Consistency, Spec §FR-014, FR-002]
+- [x] CHK019 - Is the progressive-disclosure rule (basic always visible, advanced collapsed, not persisted) consistent across FR-018, US1-AS7, and the contract? [Consistency, Spec §FR-018, US1-AS7, contract §6.9]
 
 ## Acceptance Criteria Quality
 
-- [ ] CHK020 - Is SC-001 (100% field coverage) objectively measurable against the `CardConfig` field list? [Measurability, Spec §SC-001]
-- [ ] CHK021 - Is SC-002 (zero YAML-only field loss) defined with a concrete verification method (YAML diff)? [Measurability, Spec §SC-002]
-- [ ] CHK022 - Is SC-007 (500 ms live preview) a measurable, testable threshold? [Measurability, Spec §SC-007]
-- [ ] CHK023 - Is SC-006 (no JS error in 100% of valid-config cases) objectively verifiable? [Measurability, Spec §SC-006]
-- [ ] CHK024 - Is SC-004 (docs consistent with implementation, no YAML-only drift) objectively verifiable? [Measurability, Spec §SC-004]
+- [x] CHK020 - Is SC-001 (100% field coverage) objectively measurable against the `CardConfig` field list? [Measurability, Spec §SC-001]
+- [x] CHK021 - Is SC-002 (zero YAML-only field loss) defined with a concrete verification method (YAML diff)? [Measurability, Spec §SC-002]
+- [x] CHK022 - Is SC-007 (500 ms live preview) a measurable, testable threshold? [Measurability, Spec §SC-007]
+- [x] CHK023 - Is SC-006 (no JS error in 100% of valid-config cases) objectively verifiable? [Measurability, Spec §SC-006]
+- [x] CHK024 - Is SC-004 (docs consistent with implementation, no YAML-only drift) objectively verifiable? [Measurability, Spec §SC-004]
 
 ## Scenario Coverage
 
-- [ ] CHK025 - Are primary-flow requirements (configure fully visually, no YAML) complete and clear? [Coverage, Spec §US1]
-- [ ] CHK026 - Are alternate-flow requirements (YAML mode authoritative; YAML wins on return to Visual) defined? [Coverage, Spec §Edge Cases]
-- [ ] CHK027 - Are exception/error-flow requirements (invalid `time_window`, invalid format) defined? [Coverage, Spec §US2, Edge Cases]
-- [ ] CHK028 - Are recovery requirements (card returns to normal once the invalid value is fixed) defined? [Coverage, Spec §Edge Cases, FR-014]
+- [x] CHK025 - Are primary-flow requirements (configure fully visually, no YAML) complete and clear? [Coverage, Spec §US1]
+- [x] CHK026 - Are alternate-flow requirements (YAML mode authoritative; YAML wins on return to Visual) defined? [Coverage, Spec §Edge Cases]
+- [x] CHK027 - Are exception/error-flow requirements (invalid `time_window`, invalid format) defined? [Coverage, Spec §US2, Edge Cases]
+- [x] CHK028 - Are recovery requirements (card returns to normal once the invalid value is fixed) defined? [Coverage, Spec §Edge Cases, FR-014]
 
 ## Edge Case Coverage
 
-- [ ] CHK029 - Is the empty-entity edge case (`entity: ""`) requirement defined? [Edge Case, Spec §Edge Cases]
-- [ ] CHK030 - Is the unknown/typo-value edge case (unknown `force_prefix`/`aggregation`/`number_format`) requirement defined? [Edge Case, Spec §FR-013, Edge Cases]
-- [ ] CHK031 - Is the missing-`hass` edge case (degraded English labels, no crash) requirement defined? [Edge Case, Spec §Edge Cases]
-- [ ] CHK032 - Is the missing-`window.jsyaml` edge case (Visual-only mode) requirement defined? [Edge Case, Spec §Edge Cases]
-- [ ] CHK033 - Is the invalid-Luxon-format edge case (`x_axis_format`/`tooltip_format`) requirement defined? [Edge Case, Spec §Edge Cases, FR-014]
+- [x] CHK029 - Is the empty-entity edge case (`entity: ""`) requirement defined? [Edge Case, Spec §Edge Cases]
+- [x] CHK030 - Is the unknown/typo-value edge case (unknown `force_prefix`/`aggregation`/`number_format`) requirement defined? [Edge Case, Spec §FR-013, Edge Cases]
+- [x] CHK031 - Is the missing-`hass` edge case (degraded English labels, no crash) requirement defined? [Edge Case, Spec §Edge Cases]
+- [x] CHK032 - Is the missing-`window.jsyaml` edge case (Visual-only mode) requirement defined? [Edge Case, Spec §Edge Cases]
+- [x] CHK033 - Is the invalid-Luxon-format edge case (`x_axis_format`/`tooltip_format`) requirement defined? [Edge Case, Spec §Edge Cases, FR-014]
 
 ## Non-Functional Requirements
 
-- [ ] CHK034 - Are accessibility requirements (keyboard, ARIA, contrast) specified for the new editor controls, or is the reliance on HA-native a11y stated as an explicit requirement rather than only an assumption? [Non-Functional, Gap, Spec §Assumptions]
-- [ ] CHK035 - Is the performance requirement (500 ms preview, no heavy re-render) specified for the expanded editor? [Non-Functional, Spec §SC-007]
+- [x] CHK034 - Are accessibility requirements (keyboard, ARIA, contrast) specified for the new editor controls, or is the reliance on HA-native a11y stated as an explicit requirement rather than only an assumption? [Non-Functional, Gap, Spec §Assumptions]. Over accessability req. is inheriting HA theme style – we assume that theme covers accessability in therm of colors. Just remember to add alt properties, and keyboard support. — **PASS 2026-10-01**: a11y is an explicit **requirement** `FR-020` (Non-Functional Requirements): keyboard-operable + ARIA-correct controls via HA-native components (`ha-form`, selectors, `ha-expansion-panel`), screen-reader-readable localized labels/inline errors (no raw keys), and WCAG AA contrast inherited from HA tokens (`--primary-text-color` etc.). The Assumptions bullet now points to FR-020 as the governing requirement (the 2026-10-01 FAIL note is stale — FR-020 exists).
+- [x] CHK035 - Is the performance requirement (500 ms preview, no heavy re-render) specified for the expanded editor? [Non-Functional, Spec §SC-007]
 
 ## Dependencies & Assumptions
 
-- [ ] CHK036 - Is the dependency on the 005-gui-editor base domain (preserved behavior) documented? [Dependency, Spec §FR-002, Assumptions]
-- [ ] CHK037 - Is the cross-domain dependency on 002-i18n-localization (translations) documented? [Dependency, Spec §FR-012]
-- [ ] CHK038 - Is the cross-domain dependency on 001-github-wiki (`wiki-publish/`) documented? [Dependency, Spec §FR-017]
-- [ ] CHK039 - Is the assumption that the `editor.*` translation namespace already exists (from 005) validated? [Assumption, Spec §Assumptions]
-- [ ] CHK040 - Is the dependency on card validation functions (001-time-windows-engine) for reuse documented? [Dependency, Spec §FR-014]
+- [x] CHK036 - Is the dependency on the 005-gui-editor base domain (preserved behavior) documented? [Dependency, Spec §FR-002, Assumptions]
+- [x] CHK037 - Is the cross-domain dependency on 002-i18n-localization (translations) documented? [Dependency, Spec §FR-012]
+- [x] CHK038 - Is the cross-domain dependency on 001-github-wiki (`wiki-publish/`) documented? [Dependency, Spec §FR-017]
+- [x] CHK039 - Is the assumption that the `editor.*` translation namespace already exists (from 005) validated? [Assumption, Spec §Assumptions] — **PASS 2026-10-01**: assumption validated. The `editor.*` namespace **exists since 005** (base keys `entity`/`title`/`comparison_preset`/`force_prefix`/`visual_mode`/`yaml_mode`/`yaml_error` added in commit `8c8d98c` to en/pl/de; missing from fr — a 005 drift). Spec Assumptions, data-model §7, and research R-009 now all state this consistently, and 007 **extends** it (new field/section/option/error keys) while closing the fr gap. Current code: 69 `editor.*` keys in each of en/pl/de/fr. (The 2026-10-01 FAIL — spec "już istnieje" vs `requirements.md` "brakująca" — is resolved: the namespace existed since 005; the 005-era fr gap is what 007 closes.)
+- [x] CHK040 - Is the dependency on card validation functions (001-time-windows-engine) for reuse documented? [Dependency, Spec §FR-014]
 
 ## Ambiguities & Conflicts
 
-- [ ] CHK041 - Is the section count (8 sections) and the field-to-section mapping unambiguous? [Ambiguity, Spec §FR-018, data-model §2]
-- [ ] CHK042 - Is the i18n fallback requirement (missing key → English, never a raw key) clearly stated? [Ambiguity, Spec §FR-012, SC-003]
+- [x] CHK041 - Is the section count (8 sections) and the field-to-section mapping unambiguous? [Ambiguity, Spec §FR-018, data-model §2]
+- [x] CHK042 - Is the i18n fallback requirement (missing key → English, never a raw key) clearly stated? [Ambiguity, Spec §FR-012, SC-003]
 
 ## Notes
 
