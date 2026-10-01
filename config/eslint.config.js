@@ -17,6 +17,9 @@ const browserGlobals = {
 };
 
 export default [
+  {
+    ignores: ["dist/**", "build/**", "coverage/**", "node_modules/**"]
+  },
   js.configs.recommended,
   {
     files: ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],

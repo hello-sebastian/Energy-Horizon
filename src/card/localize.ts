@@ -42,6 +42,13 @@ for (const path of Object.keys(translationModules)) {
   }
 }
 
+/**
+ * Languages with a loaded translation dictionary (keys of `DICTIONARIES`).
+ * Single source of truth for the editor's `language` select options (007 R-007):
+ * adding a new `src/translations/<lang>.json` file automatically extends this list.
+ */
+export const SUPPORTED_LANGUAGES: readonly string[] = Object.keys(DICTIONARIES);
+
 const VALID_NUMBER_FORMATS: readonly NumberFormat[] = [
   "comma",
   "decimal",

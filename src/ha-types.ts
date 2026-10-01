@@ -29,7 +29,21 @@ export type HaFormSchema =
       selector: { select: { options: Array<{ value: string; label: string }> } };
       required?: boolean;
     }
-  | { name: string; selector: { boolean: Record<string, never> }; required?: boolean };
+  | { name: string; selector: { boolean: Record<string, never> }; required?: boolean }
+  | {
+      name: string;
+      selector: {
+        number: {
+          min?: number;
+          max?: number;
+          step?: number;
+          mode?: "box" | "slider";
+        };
+      };
+      required?: boolean;
+    }
+  | { name: string; selector: { color: { markup?: boolean } }; required?: boolean }
+  | { name: string; selector: { icon: { placeholder?: string } }; required?: boolean };
 
 export interface LovelaceCardEditor extends HTMLElement {
   hass?: HomeAssistant;
