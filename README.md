@@ -104,6 +104,42 @@ Want more control? Start here:
   - [`README.advanced.md`](./README.advanced.md)
   - Wiki: [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization)
 
+## Visual editor
+
+Select the card and open its **editor** (pencil icon) to configure everything visually — no YAML required. The editor covers **all 27 user-configurable fields** in **8 sections**. The first three are always visible; the other five are collapsed under **Advanced** (click to expand). Every change is written back to the card's YAML, and fields you don't touch are preserved.
+
+| Section | Field | Control | Default |
+|---|---|---|---|
+| **Comparison** | `entity` | entity picker (`sensor`) | required |
+| | `title` | text | entity name |
+| | `comparison_preset` | select | `year_over_year` |
+| | `force_prefix` | select | `auto` |
+| | `show_comparison_summary` | toggle | on |
+| | `show_forecast_total_panel` | toggle | on |
+| | `show_narrative_comment` | toggle | on |
+| **Header** | `show_title` | toggle | on |
+| | `icon` | icon picker | from entity |
+| | `show_icon` | toggle | on |
+| **Forecast** | `show_forecast` | toggle | on |
+| **Time window** *(advanced)* | `aggregation` | select | `auto` |
+| | `period_offset` | number | `-1` |
+| | `time_window` | nested (anchor, offset, duration, step, count, aggregation) | preset template |
+| **Chart style** *(advanced)* | `fill_current` | toggle | on |
+| | `fill_reference` | toggle | off |
+| | `fill_current_opacity` | number (0–100) | `30` |
+| | `fill_reference_opacity` | number (0–100) | `30` |
+| | `primary_color` | text | `#119894` |
+| | `connect_nulls` | toggle | on |
+| | `show_legend` | toggle | off |
+| **Localization** *(advanced)* | `language` | select | HA language |
+| | `number_format` | select | system |
+| | `precision` | number (0–6) | `2` |
+| **Date formats** *(advanced)* | `x_axis_format` | text | adaptive |
+| | `tooltip_format` | text | adaptive |
+| **Diagnostics** *(advanced)* | `debug` | toggle | off |
+
+For the full field reference (types, validation, and behavior) see [`README.advanced.md`](./README.advanced.md) and the [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) wiki page.
+
 ## Documentation map
 
 - **Wiki Home (Diátaxis map)**: [Energy Horizon Wiki](https://github.com/hello-sebastian/energy-horizon/wiki)

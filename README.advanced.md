@@ -273,11 +273,48 @@ For **`count` ≥ 3**:
 
 ## Lovelace editor
 
-`EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`.
+`EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`. The editor is **data-driven**: each section is a descriptor with a `ha-form` schema, a `toForm` (config → form, applying card defaults) and a `fromForm` (form → config patch). It covers **all 27 user-configurable fields** in **8 sections**. The first three sections are always visible; the other five are collapsed under **Advanced** (`ha-expansion-panel`).
 
-**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
+**Visual mode (`ha-form`):** every field below is editable. **YAML mode:** requires global `window.jsyaml` (standard HA frontend); the full config is pasted/edited as YAML. Fields you don't touch in the editor are preserved unchanged (zero data loss).
 
-**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config.
+| Section | Field | Control | Default | Description |
+|---|---|---|---|---|
+| **Comparison** | `entity` | entity picker (`sensor`) | required | The statistic to compare. |
+| | `title` | text | entity `friendly_name` | Header label. |
+| | `comparison_preset` | select | `year_over_year` | `year_over_year` / `month_over_year` / `month_over_month`. |
+| | `force_prefix` | select | `auto` | Unit scaling (`auto`/`none`/`k`/`M`/`G`/`m`/`µ`). |
+| | `show_comparison_summary` | toggle | on | Comparison panel visibility. |
+| | `show_forecast_total_panel` | toggle | on | Forecast \| Total panel visibility. |
+| | `show_narrative_comment` | toggle | on | Narrative comment visibility. |
+| **Header** | `show_title` | toggle | on | Header title visibility. |
+| | `icon` | icon picker | from entity | Header icon. |
+| | `show_icon` | toggle | on | Header icon visibility. |
+| **Forecast** | `show_forecast` | toggle | on | Dashed forecast line. |
+| **Time window** | `aggregation` | select | `auto` | Chart resolution (`auto`/`hour`/`day`/`week`/`month`). |
+| | `period_offset` | number | `-1` | Reference period offset (years). |
+| | `time_window_anchor` | select | preset | Window start anchor (6 `TimeAnchor` values). |
+| | `time_window_offset` | text | preset | Duration token (e.g. `+9M`). |
+| | `time_window_duration` | text | preset | Duration token (e.g. `1y`). |
+| | `time_window_step` | text | preset | Duration token. |
+| | `time_window_count` | number (1–24) | preset | Number of windows. |
+| | `time_window_aggregation` | select | `auto` | Per-window aggregation override. |
+| **Chart style** | `fill_current` | toggle | on | Fill under current series. |
+| | `fill_reference` | toggle | off | Fill under reference series. |
+| | `fill_current_opacity` | number (0–100) | `30` | Current fill opacity. |
+| | `fill_reference_opacity` | number (0–100) | `30` | Reference fill opacity. |
+| | `primary_color` | text | `#119894` | Current series color. |
+| | `connect_nulls` | toggle | on | Dashed bridge across null gaps. |
+| | `show_legend` | toggle | off | Legend visibility. |
+| **Localization** | `language` | select | HA language | Translation dictionary (`auto`/`en`/`pl`/`de`/`fr`). |
+| | `number_format` | select | system | `system`/`comma`/`decimal`/`language`. |
+| | `precision` | number (0–6) | `2` | Decimal places. |
+| **Date formats** | `x_axis_format` | text | adaptive | Luxon pattern for X-axis ticks. |
+| | `tooltip_format` | text | adaptive | Luxon pattern for tooltip header. |
+| **Diagnostics** | `debug` | toggle | off | Extra console diagnostics. |
+
+**Not editor-controlled:** `type` (constant `custom:energy-horizon-card`) and `forecast` (alias merged into `show_forecast` during `setConfig` normalization).
+
+**Mapping rules:** `toForm` applies card defaults for unset fields; `aggregation`/`language` `undefined` → `auto`; an unset `time_window` shows the active preset's template values. `fromForm` maps `auto` → `undefined` (key omitted) and omits untouched `time_window` sub-fields so the preset applies. Unknown select values (a YAML typo) display as `auto`/empty but the **raw value is preserved in the stored config** and emitted unchanged.
 
 ---
 

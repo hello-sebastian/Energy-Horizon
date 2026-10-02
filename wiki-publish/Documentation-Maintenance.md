@@ -28,6 +28,7 @@ Use this checklist for every release that changes user-visible behavior.
 ### 2) Drift checks (docs vs code)
 
 - [ ] Scan `src/card/types.ts` for new/removed config keys and update [Configuration and Customization](Configuration-and-Customization) (including **Layout sections** when `show_*` visibility flags change).
+- [ ] Scan `src/card/energy-horizon-card-editor.ts` (section descriptors + `toForm`/`fromForm`) and update the **Visual editor coverage** table in [Configuration and Customization](Configuration-and-Customization) — keep field → control → default in sync with the implementation.
 - [ ] Scan `src/translations/en.json` for new status keys (errors/warnings) and ensure troubleshooting/reference pages mention them.
 - [ ] For `text_summary.*` keys: keep **one complete phrase per key** with `{{deltaUnit}}` / `{{deltaPercent}}` (or other placeholders) — do not reintroduce split `*_before` / `*_after` pairs.
 - [ ] If time windows changed: verify [Time Window Reference](Time-Window-Reference) and [How-To: Time Windows](How-To-Time-Windows) still match `src/card/time-windows/*`.
@@ -66,6 +67,8 @@ If the card behavior and wiki disagree, **treat the implementation as primary**:
 - Time windows engine: `specs/001-time-windows-engine/`
 - Forecast math and gating: `specs/001-compute-forecast/`
 - Unit scaling: `specs/004-smart-unit-scaling/`
+- GUI editor (initial 7 fields): `specs/005-gui-editor/`
+- GUI editor full coverage (27 fields / 8 sections): `specs/007-gui-editor-full-coverage/`
 
 ## Nomenclature conflicts (README vs wiki)
 

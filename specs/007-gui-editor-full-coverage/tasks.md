@@ -100,10 +100,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Add a new "Visual editor" section to `README.md` listing all 27 user-configurable fields grouped by the 8 sections, with a pointer to `README.advanced.md` and the wiki
-- [ ] T021 [P] [US3] Rewrite the "Lovelace editor" section in `README.advanced.md` as the full table: field → control type → default → short description (must match `data-model.md` §1 exactly)
-- [ ] T022 [P] [US3] Add a "Visual editor coverage" subsection to `wiki-publish/Configuration-and-Customization.md` with the full table (field → control → default → notes); do NOT create a new wiki page
-- [ ] T023 [P] [US3] Update `wiki-publish/Documentation-Maintenance.md`: add `005-gui-editor`/`007-gui-editor-full-coverage` to the **Spec anchors** section and add a drift-check item ("scan `src/card/energy-horizon-card-editor.ts` → update the editor table in `Configuration-and-Customization.md`") to the release checklist
+- [X] T020 [P] [US3] Add a new "Visual editor" section to `README.md` listing all 27 user-configurable fields grouped by the 8 sections, with a pointer to `README.advanced.md` and the wiki — 2026-10-01: added "Visual editor" section (27 fields / 8 sections table) between "Advanced configuration" and "Documentation map"
+- [X] T021 [P] [US3] Rewrite the "Lovelace editor" section in `README.advanced.md` as the full table: field → control type → default → short description (must match `data-model.md` §1 exactly) — 2026-10-01: rewrote as full 27-field table (field → control → default → description) + mapping rules; heading kept as "Lovelace editor" per FR-016
+- [X] T022 [P] [US3] Add a "Visual editor coverage" subsection to `wiki-publish/Configuration-and-Customization.md` with the full table (field → control → default → notes); do NOT create a new wiki page — 2026-10-01: added "Visual editor coverage" subsection (27-field table) after "Layout sections"; no new page
+- [X] T023 [P] [US3] Update `wiki-publish/Documentation-Maintenance.md`: add `005-gui-editor`/`007-gui-editor-full-coverage` to the **Spec anchors** section and add a drift-check item ("scan `src/card/energy-horizon-card-editor.ts` → update the editor table in `Configuration-and-Customization.md`") to the release checklist — 2026-10-01: added both spec anchors + editor drift-check item to release checklist
 
 **Checkpoint**: US3 complete — all four docs consistent with the implemented sections/fields.
 
@@ -131,8 +131,8 @@
 
 **Purpose**: Whole-feature quality gate.
 
-- [ ] T026 Run `npm run test` (unit), `npm run lint`, and `npm run build` from repo root; fix any failures introduced by this feature
-- [ ] T027 [P] Manual HA verification per `quickstart.md`: deploy `dist/` (or `npm run dev`), open the card editor, expand each advanced section, verify values match YAML/defaults, exercise `primary_color`/`aggregation`/`time_window`/`x_axis_format` live updates, confirm YAML-only field preservation (SC-002), and confirm de/fr localization with no raw keys (SC-003)
+- [X] T026 Run `npm run test` (unit), `npm run lint`, and `npm run build` from repo root; fix any failures introduced by this feature — 2026-10-01: all green (343/343 tests pass, lint clean, build succeeds)
+- [ ] T027 [P] Manual HA verification per `quickstart.md`: deploy `dist/` (or `npm run dev`), open the card editor, expand each advanced section, verify values match YAML/defaults, exercise `primary_color`/`aggregation`/`time_window`/`x_axis_format` live updates, confirm YAML-only field preservation (SC-002), and confirm de/fr localization with no raw keys (SC-003) — **requires a human** (live Home Assistant instance); all automated work for this feature is complete
 
 ---
 
