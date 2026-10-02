@@ -60,13 +60,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Extract the pure, exported mapping helpers in `src/card/energy-horizon-card-editor.ts`: `sectionToForm(section, config)` and `sectionFromForm(section, data)` (plus per-section `toForm`/`fromForm` closures) so they are unit-testable without instantiating the LitElement
-- [ ] T010 [US1] Define the `EditorSection` model and the 8 section descriptors (id, labelKey, advanced, schema, toForm, fromForm) in `src/card/energy-horizon-card-editor.ts`: `comparison` (no), `header` (no), `forecast` (no), `time_window` (yes), `chart_style` (yes), `localization` (yes), `date_formats` (yes), `diagnostics` (yes)
-- [ ] T011 [US1] Implement `toForm` default prefill in `src/card/energy-horizon-card-editor.ts` per research R-008: `show_title`/`show_icon`/`show_forecast`/`fill_current`/`connect_nulls`→`true`; `show_legend`/`fill_reference`/`debug`→`false`; `show_comparison_summary`/`show_forecast_total_panel`/`show_narrative_comment`→`true`; `precision`→2; `fill_*_opacity`→30; `aggregation`/`language`→`"auto"`; `number_format`→`system`; `period_offset`→-1
-- [ ] T012 [US1] Implement `fromForm` in `src/card/energy-horizon-card-editor.ts`: `"auto"`→`undefined` (key omitted); concrete values stored literally; unknown select value → raw value preserved in `_config` (mapping only affects display, never storage)
-- [ ] T013 [US1] Add `@state() _openSections: Set<string>` and `@state() _fieldErrors: Record<string, string | null>` to `src/card/energy-horizon-card-editor.ts`; reset both to empty in `setConfig()` (advanced sections start collapsed, no stale errors)
-- [ ] T014 [US1] Render one `<ha-form>` per section in `src/card/energy-horizon-card-editor.ts` (`.schema`, `.data=section.toForm(_config)`, `.hass`, `.computeLabel`); wrap `advanced` sections in `<ha-expansion-panel>` (`.label`, `.expanded`, `@click` toggle) with a guard that renders the section unwrapped (always visible) if `ha-expansion-panel` is not defined at runtime
-- [ ] T015 [US1] Wire per-section `value-changed` in `src/card/energy-horizon-card-editor.ts`: `section.fromForm(e.detail.value)` → shallow-merge into `_config` (never drops keys not owned by the section) → re-validate affected fields → `_emitConfigChanged()` (always emitted, never blocked)
+- [X] T009 [US1] Extract the pure, exported mapping helpers in `src/card/energy-horizon-card-editor.ts`: `sectionToForm(section, config)` and `sectionFromForm(section, data)` (plus per-section `toForm`/`fromForm` closures) so they are unit-testable without instantiating the LitElement
+- [X] T010 [US1] Define the `EditorSection` model and the 8 section descriptors (id, labelKey, advanced, schema, toForm, fromForm) in `src/card/energy-horizon-card-editor.ts`: `comparison` (no), `header` (no), `forecast` (no), `time_window` (yes), `chart_style` (yes), `localization` (yes), `date_formats` (yes), `diagnostics` (yes)
+- [X] T011 [US1] Implement `toForm` default prefill in `src/card/energy-horizon-card-editor.ts` per research R-008: `show_title`/`show_icon`/`show_forecast`/`fill_current`/`connect_nulls`→`true`; `show_legend`/`fill_reference`/`debug`→`false`; `show_comparison_summary`/`show_forecast_total_panel`/`show_narrative_comment`→`true`; `precision`→2; `fill_*_opacity`→30; `aggregation`/`language`→`"auto"`; `number_format`→`system`; `period_offset`→-1
+- [X] T012 [US1] Implement `fromForm` in `src/card/energy-horizon-card-editor.ts`: `"auto"`→`undefined` (key omitted); concrete values stored literally; unknown select value → raw value preserved in `_config` (mapping only affects display, never storage)
+- [X] T013 [US1] Add `@state() _openSections: Set<string>` and `@state() _fieldErrors: Record<string, string | null>` to `src/card/energy-horizon-card-editor.ts`; reset both to empty in `setConfig()` (advanced sections start collapsed, no stale errors)
+- [X] T014 [US1] Render one `<ha-form>` per section in `src/card/energy-horizon-card-editor.ts` (`.schema`, `.data=section.toForm(_config)`, `.hass`, `.computeLabel`); wrap `advanced` sections in `<ha-expansion-panel>` (`.label`, `.expanded`, `@click` toggle) with a guard that renders the section unwrapped (always visible) if `ha-expansion-panel` is not defined at runtime
+- [X] T015 [US1] Wire per-section `value-changed` in `src/card/energy-horizon-card-editor.ts`: `section.fromForm(e.detail.value)` → shallow-merge into `_config` (never drops keys not owned by the section) → re-validate affected fields → `_emitConfigChanged()` (always emitted, never blocked)
 
 **Checkpoint**: US1 fully functional — all 27 fields have controls, progressive disclosure works, defaults visible, no data loss. This is the MVP.
 
@@ -84,9 +84,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement the `time_window` section's 6 flat fields (`time_window_anchor` select of 6 `TimeAnchor` values, `time_window_offset`/`time_window_duration`/`time_window_step` text duration tokens, `time_window_count` number 1–24, `time_window_aggregation` select `auto`/hour/day/week/month) and their mapping into `CardConfig.time_window` in `src/card/energy-horizon-card-editor.ts` (empty → omitted; untouched → `time_window` key omitted so `getPresetTemplate` fills it)
-- [ ] T018 [US2] Wire time window validation in `src/card/energy-horizon-card-editor.ts`: on any change in the section, call `buildMergedTimeWindowConfig(this._config)` then `validateMergedTimeWindowConfig(merged)` (imported from `./time-windows`); on failure store the localized `status.*` key/message in `_fieldErrors.time_window`; **never block** `_emitConfigChanged()`
-- [ ] T019 [US2] Wire date-format validation in `src/card/energy-horizon-card-editor.ts`: on `x_axis_format`/`tooltip_format` change, call `validateXAxisFormat(value)` (imported from `./axis`) in a try/catch; on throw store the message in `_fieldErrors` for that field; **never block** `_emitConfigChanged()`
+- [X] T017 [US2] Implement the `time_window` section's 6 flat fields (`time_window_anchor` select of 6 `TimeAnchor` values, `time_window_offset`/`time_window_duration`/`time_window_step` text duration tokens, `time_window_count` number 1–24, `time_window_aggregation` select `auto`/hour/day/week/month) and their mapping into `CardConfig.time_window` in `src/card/energy-horizon-card-editor.ts` (empty → omitted; untouched → `time_window` key omitted so `getPresetTemplate` fills it)
+- [X] T018 [US2] Wire time window validation in `src/card/energy-horizon-card-editor.ts`: on any change in the section, call `buildMergedTimeWindowConfig(this._config)` then `validateMergedTimeWindowConfig(merged)` (imported from `./time-windows`); on failure store the localized `status.*` key/message in `_fieldErrors.time_window`; **never block** `_emitConfigChanged()`
+- [X] T019 [US2] Wire date-format validation in `src/card/energy-horizon-card-editor.ts`: on `x_axis_format`/`tooltip_format` change, call `validateXAxisFormat(value)` (imported from `./axis`) in a try/catch; on throw store the message in `_fieldErrors` for that field; **never block** `_emitConfigChanged()`
 
 **Checkpoint**: US2 complete — nested time window editable with advisory inline validation; card remains the validation authority.
 
@@ -121,7 +121,7 @@
 
 ### Implementation for User Story 4
 
-- [ ] T025 [US4] Ensure all select option texts (`aggregation`, `number_format`, `language`, `anchor`) and section titles resolve via `createLocalize` at schema-build time in `src/card/energy-horizon-card-editor.ts` (005 pattern: labels embedded in schema, translated at build), so no raw key is ever rendered
+- [X] T025 [US4] Ensure all select option texts (`aggregation`, `number_format`, `language`, `anchor`) and section titles resolve via `createLocalize` at schema-build time in `src/card/energy-horizon-card-editor.ts` (005 pattern: labels embedded in schema, translated at build), so no raw key is ever rendered
 
 **Checkpoint**: US4 complete — editor fully localized across all 4 languages with safe fallback.
 

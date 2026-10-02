@@ -454,13 +454,13 @@ describe("editor i18n (US4)", () => {
       expect(out).toBe((enDict as Dict)[key]); // English fallback, not the raw key
       expect(out).not.toBe(key);
     } else {
-      // Dictionaries are in lockstep; assert the documented fallback contract
-      // using a guaranteed-absent key: it must not return the raw key for a
-      // key that exists in English.
-      const localize = createLocalize("pl");
-      expect(localize("editor.show_title")).toBe(
-        createLocalize("en")("editor.show_title")
-      );
+      // Dictionaries are in lockstep (enforced by the "no drift" test above),
+      // so no real key is missing from pl. Simulate the fallback by requesting
+      // a language with no loaded dictionary: it must resolve through the
+      // English fallback (never the raw key) for a key that exists in English.
+      const out = createLocalize("xx")("editor.show_title");
+      expect(out).toBe(createLocalize("en")("editor.show_title"));
+      expect(out).not.toBe("editor.show_title");
     }
   });
 });

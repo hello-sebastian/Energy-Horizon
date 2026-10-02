@@ -2,13 +2,669 @@ import { LitElement, html, css } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { TemplateResult } from "lit";
 import type { HomeAssistant, HaFormSchema } from "../ha-types";
-import { resolveComparisonPreset, type CardConfig, type CardConfigInput } from "./types";
-import { createLocalize } from "./localize";
+import type { ForcePrefix } from "../utils/unit-scaler";
+import {
+  resolveComparisonPreset,
+  type CardConfig,
+  type CardConfigInput,
+  type ComparisonMode,
+  type MergedTimeWindowConfig,
+  type TimeAnchor,
+  type TimeWindowYaml,
+  type WindowAggregation
+} from "./types";
+import { createLocalize, SUPPORTED_LANGUAGES } from "./localize";
+import {
+  buildMergedTimeWindowConfig,
+  validateMergedTimeWindowConfig,
+  getPresetTemplate
+} from "./time-windows";
+import { validateXAxisFormat } from "./axis";
 
 type EditorMode = "visual" | "yaml";
 
+/** Flat `ha-form` data object (one per section). */
+export type FormRecord = Record<string, unknown>;
+
+/**
+ * Data-driven descriptor of one form section (007). Each section owns a slice
+ * of `CardConfig`; `toForm` applies the card's effective defaults so controls
+ * always show a meaningful value, and `fromForm` maps form data back to a
+ * config patch (empty/`auto` values are omitted so the card's defaults apply).
+ */
+export interface EditorSection {
+  /** Stable section id (e.g. `time_window`). */
+  id: string;
+  /** Translation key for the section heading (e.g. `editor.section.time_window`). */
+  labelKey: string;
+  /** `true` → wrapped in `ha-expansion-panel`, collapsed by default. */
+  advanced: boolean;
+  /** Field descriptors (English fallback labels; localized at render time). */
+  schema: ReadonlyArray<HaFormSchema>;
+  /** config → flat form data, with card defaults applied. */
+  toForm(config: CardConfig): FormRecord;
+  /** form data → config patch (empty/`auto` values omitted). */
+  fromForm(data: FormRecord, config?: Partial<CardConfig>): Partial<CardConfig>;
+}
+
+// ---------------------------------------------------------------------------
+// Pure mapping helpers (unit-tested in tests/unit/editor-mapping.test.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns `true` when a form value should be treated as "unset" and therefore
+ * omitted from the emitted config. Booleans are never empty (an unchecked
+ * checkbox is an explicit `false`).
+ */
+function isEmpty(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (typeof value === "string") return value.trim() === "";
+  return false;
+}
+
+/**
+ * Maps the UI `auto` option to `undefined` (key omitted from the emitted
+ * config) while preserving concrete values literally. Unknown values (a YAML
+ * typo) are preserved verbatim so they survive a Visual edit + save (FR-013).
+ */
+function autoToUndefined(value: unknown): unknown {
+  if (value === "auto") return undefined;
+  return value;
+}
+
+/**
+ * Builds the `time_window` object from the flat `time_window_*` form fields.
+ * Sub-fields equal to the preset template are omitted (so the saved YAML stays
+ * minimal and the preset fills them in); only values the user actually changed
+ * are written. Returns `undefined` when nothing differs from the preset.
+ */
+function buildTimeWindow(
+  data: FormRecord,
+  config: Partial<CardConfig>
+): TimeWindowYaml | undefined {
+  const anchor =
+    typeof data.time_window_anchor === "string" && data.time_window_anchor.trim() !== ""
+      ? (data.time_window_anchor as TimeAnchor)
+      : undefined;
+  const offset =
+    typeof data.time_window_offset === "string" && data.time_window_offset.trim() !== ""
+      ? data.time_window_offset
+      : undefined;
+  const duration =
+    typeof data.time_window_duration === "string" && data.time_window_duration.trim() !== ""
+      ? data.time_window_duration
+      : undefined;
+  const step =
+    typeof data.time_window_step === "string" && data.time_window_step.trim() !== ""
+      ? data.time_window_step
+      : undefined;
+  const count =
+    typeof data.time_window_count === "number" &&
+    Number.isFinite(data.time_window_count)
+      ? data.time_window_count
+      : undefined;
+  const aggregation =
+    typeof data.time_window_aggregation === "string" && data.time_window_aggregation !== ""
+      ? (autoToUndefined(data.time_window_aggregation) as
+          | WindowAggregation
+          | undefined)
+      : undefined;
+
+  // All sub-fields empty → the user left the window untouched; the preset
+  // template fills everything, so emit no `time_window` key at all.
+  if (
+    anchor === undefined &&
+    offset === undefined &&
+    duration === undefined &&
+    step === undefined &&
+    count === undefined &&
+    aggregation === undefined
+  ) {
+    return undefined;
+  }
+
+  // Determine the preset template to diff against. When the caller passes the
+  // real config we use its `comparison_preset`; otherwise (e.g. a unit test
+  // feeding back exactly what `toForm` produced) we infer the preset from the
+  // form values so untouched sub-fields are still omitted.
+  const preset = resolveTimeWindowPreset(config, {
+    anchor,
+    offset,
+    duration,
+    step,
+    count,
+    aggregation
+  });
+
+  const tw: TimeWindowYaml = {};
+  if (anchor !== undefined && anchor !== preset.anchor) {
+    tw.anchor = anchor;
+  }
+  if (offset !== undefined && offset !== preset.offset) {
+    tw.offset = offset;
+  }
+  if (duration !== undefined && duration !== preset.duration) {
+    tw.duration = duration;
+  }
+  if (step !== undefined && step !== preset.step) {
+    tw.step = step;
+  }
+  if (count !== undefined && count !== preset.count) {
+    tw.count = count;
+  }
+  if (aggregation !== undefined && aggregation !== preset.aggregation) {
+    tw.aggregation = aggregation;
+  }
+  return Object.keys(tw).length > 0 ? tw : undefined;
+}
+
+/**
+ * Resolves the preset template to diff the `time_window` sub-fields against.
+ *
+ * Prefers the card's `comparison_preset` (resolved via the card's own
+ * `resolveComparisonPreset`, so an unset preset defaults to `year_over_year`).
+ * When `comparison_preset` is absent from the passed config, the form values
+ * themselves are inspected: if they exactly match a known preset template the
+ * matching preset is used (so untouched sub-fields are omitted); otherwise the
+ * default preset is used as the baseline.
+ */
+function resolveTimeWindowPreset(
+  config: Partial<CardConfig>,
+  values: TimeWindowYaml
+): MergedTimeWindowConfig {
+  const preset = resolveComparisonPreset(config);
+  if (config.comparison_preset !== undefined) {
+    return getPresetTemplate(preset, config.period_offset);
+  }
+  const candidates: ComparisonMode[] = [
+    "year_over_year",
+    "month_over_year",
+    "month_over_month"
+  ];
+  for (const mode of candidates) {
+    const template = getPresetTemplate(mode, config.period_offset);
+    if (
+      values.anchor === template.anchor &&
+      values.offset === template.offset &&
+      values.duration === template.duration &&
+      values.step === template.step &&
+      values.count === template.count &&
+      values.aggregation === template.aggregation
+    ) {
+      return template;
+    }
+  }
+  return getPresetTemplate(preset, config.period_offset);
+}
+
+// ---------------------------------------------------------------------------
+// Section descriptors (8 sections; basic/header/forecast always visible)
+// ---------------------------------------------------------------------------
+
+/** `comparison` base section (id `basic` in the section model). */
+export const basicSection: EditorSection = {
+  id: "basic",
+  labelKey: "editor.section.comparison",
+  advanced: false,
+  schema: [
+    { name: "entity", selector: { entity: { domain: "sensor" } } },
+    { name: "title", selector: { text: {} } },
+    {
+      name: "comparison_preset",
+      selector: {
+        select: {
+          options: [
+            { value: "year_over_year", label: "Year over year" },
+            { value: "month_over_year", label: "Month over year" },
+            { value: "month_over_month", label: "Month over month (consecutive)" }
+          ]
+        }
+      }
+    },
+    {
+      name: "force_prefix",
+      selector: {
+        select: {
+          options: [
+            { value: "", label: "" },
+            { value: "auto", label: "Auto" },
+            { value: "none", label: "None (raw)" },
+            { value: "G", label: "G (Giga)" },
+            { value: "M", label: "M (Mega)" },
+            { value: "k", label: "k (Kilo)" },
+            { value: "m", label: "m (milli)" },
+            { value: "µ", label: "µ (micro)" }
+          ]
+        }
+      }
+    },
+    { name: "show_comparison_summary", selector: { boolean: {} } },
+    { name: "show_forecast_total_panel", selector: { boolean: {} } },
+    { name: "show_narrative_comment", selector: { boolean: {} } }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      entity: config.entity ?? "",
+      title: config.title,
+      comparison_preset: resolveComparisonPreset(config as CardConfigInput),
+      // `auto` is a UI option: an unset prefix displays as `auto`.
+      force_prefix: config.force_prefix ?? "auto",
+      // Card uses `!== false` semantics → default checked.
+      show_comparison_summary: config.show_comparison_summary !== false,
+      show_forecast_total_panel: config.show_forecast_total_panel !== false,
+      show_narrative_comment: config.show_narrative_comment !== false
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {};
+    if (!isEmpty(data.entity)) {
+      patch.entity = data.entity as string;
+    }
+    if (!isEmpty(data.title)) {
+      patch.title = data.title as string;
+    }
+    if (!isEmpty(data.comparison_preset)) {
+      patch.comparison_preset = data.comparison_preset as CardConfig["comparison_preset"];
+    }
+    // `auto` → omitted (card auto-selects); a concrete prefix is stored literally.
+    const forcePrefix = autoToUndefined(data.force_prefix);
+    if (forcePrefix !== undefined && !isEmpty(forcePrefix)) {
+      patch.force_prefix = forcePrefix as ForcePrefix;
+    }
+    patch.show_comparison_summary = data.show_comparison_summary === true;
+    patch.show_forecast_total_panel = data.show_forecast_total_panel === true;
+    patch.show_narrative_comment = data.show_narrative_comment === true;
+    return patch;
+  }
+};
+
+/** Header section: title / icon visibility. */
+export const headerSection: EditorSection = {
+  id: "header",
+  labelKey: "editor.section.header",
+  advanced: false,
+  schema: [
+    { name: "show_title", selector: { boolean: {} } },
+    { name: "icon", selector: { icon: {} } },
+    { name: "show_icon", selector: { boolean: {} } }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      show_title: config.show_title !== false,
+      icon: config.icon,
+      show_icon: config.show_icon !== false
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {
+      show_title: data.show_title === true,
+      show_icon: data.show_icon === true
+    };
+    if (!isEmpty(data.icon)) {
+      patch.icon = data.icon as string;
+    }
+    return patch;
+  }
+};
+
+/** Forecast section: forecast line toggle. */
+export const forecastSection: EditorSection = {
+  id: "forecast",
+  labelKey: "editor.section.forecast",
+  advanced: false,
+  schema: [{ name: "show_forecast", selector: { boolean: {} } }],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      show_forecast: config.show_forecast !== false
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    return {
+      show_forecast: data.show_forecast === true
+    };
+  }
+};
+
+/**
+ * Time window section: top-level `aggregation` + `period_offset` plus the six
+ * flat `time_window_*` fields mapped into the nested `CardConfig.time_window`.
+ */
+export const timeWindowSection: EditorSection = {
+  id: "time_window",
+  labelKey: "editor.section.time_window",
+  advanced: true,
+  schema: [
+    {
+      name: "aggregation",
+      selector: {
+        select: {
+          options: [
+            { value: "auto", label: "Auto" },
+            { value: "hour", label: "Hour" },
+            { value: "day", label: "Day" },
+            { value: "week", label: "Week" },
+            { value: "month", label: "Month" }
+          ]
+        }
+      }
+    },
+    {
+      name: "period_offset",
+      selector: { number: { mode: "box", step: 1 } }
+    },
+    {
+      name: "time_window_anchor",
+      selector: {
+        select: {
+          options: [
+            { value: "start_of_year", label: "Start of year" },
+            { value: "start_of_month", label: "Start of month" },
+            { value: "start_of_week", label: "Start of week" },
+            { value: "start_of_day", label: "Start of day" },
+            { value: "start_of_hour", label: "Start of hour" },
+            { value: "now", label: "Now" }
+          ]
+        }
+      }
+    },
+    { name: "time_window_offset", selector: { text: {} } },
+    { name: "time_window_duration", selector: { text: {} } },
+    { name: "time_window_step", selector: { text: {} } },
+    {
+      name: "time_window_count",
+      selector: { number: { min: 1, max: 24, mode: "box", step: 1 } }
+    },
+    {
+      name: "time_window_aggregation",
+      selector: {
+        select: {
+          options: [
+            { value: "auto", label: "Auto" },
+            { value: "hour", label: "Hour" },
+            { value: "day", label: "Day" },
+            { value: "week", label: "Week" },
+            { value: "month", label: "Month" }
+          ]
+        }
+      }
+    }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    const preset = getPresetTemplate(
+      config.comparison_preset,
+      config.period_offset
+    );
+    return {
+      aggregation: config.aggregation ?? "auto",
+      period_offset: config.period_offset ?? -1,
+      time_window_anchor: config.time_window?.anchor ?? preset.anchor ?? "",
+      time_window_offset: config.time_window?.offset ?? preset.offset ?? "",
+      time_window_duration: config.time_window?.duration ?? preset.duration ?? "",
+      time_window_step: config.time_window?.step ?? preset.step ?? "",
+      time_window_count: config.time_window?.count ?? preset.count ?? 2,
+      time_window_aggregation: config.time_window?.aggregation ?? "auto"
+    };
+  },
+  fromForm(data: FormRecord, config: Partial<CardConfig> = {}): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {};
+    const aggregation = autoToUndefined(data.aggregation);
+    if (aggregation !== undefined) {
+      patch.aggregation = aggregation as WindowAggregation;
+    }
+    if (
+      typeof data.period_offset === "number" &&
+      Number.isFinite(data.period_offset)
+    ) {
+      patch.period_offset = data.period_offset;
+    }
+    const timeWindow = buildTimeWindow(data, config);
+    if (timeWindow) {
+      patch.time_window = timeWindow;
+    }
+    return patch;
+  }
+};
+
+/** Chart style section: fills, opacity, color, nulls, legend. */
+export const chartStyleSection: EditorSection = {
+  id: "chart_style",
+  labelKey: "editor.section.chart_style",
+  advanced: true,
+  schema: [
+    { name: "fill_current", selector: { boolean: {} } },
+    { name: "fill_reference", selector: { boolean: {} } },
+    {
+      name: "fill_current_opacity",
+      selector: { number: { min: 0, max: 100, mode: "box", step: 1 } }
+    },
+    {
+      name: "fill_reference_opacity",
+      selector: { number: { min: 0, max: 100, mode: "box", step: 1 } }
+    },
+    { name: "primary_color", selector: { text: {} } },
+    { name: "connect_nulls", selector: { boolean: {} } },
+    { name: "show_legend", selector: { boolean: {} } }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      // Card: `fill_current ?? true` (default on) vs `fill_reference ?? false`
+      // (default off) — so the two booleans use opposite "unset" defaults.
+      fill_current: config.fill_current ?? true,
+      fill_reference: config.fill_reference ?? false,
+      fill_current_opacity: config.fill_current_opacity ?? 30,
+      fill_reference_opacity: config.fill_reference_opacity ?? 30,
+      primary_color: config.primary_color,
+      connect_nulls: config.connect_nulls ?? true,
+      // Card: `show_legend === true` (default off).
+      show_legend: config.show_legend === true
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {
+      fill_current: data.fill_current === true,
+      fill_reference: data.fill_reference === true,
+      connect_nulls: data.connect_nulls === true,
+      show_legend: data.show_legend === true
+    };
+    if (
+      typeof data.fill_current_opacity === "number" &&
+      Number.isFinite(data.fill_current_opacity)
+    ) {
+      patch.fill_current_opacity = data.fill_current_opacity;
+    }
+    if (
+      typeof data.fill_reference_opacity === "number" &&
+      Number.isFinite(data.fill_reference_opacity)
+    ) {
+      patch.fill_reference_opacity = data.fill_reference_opacity;
+    }
+    if (!isEmpty(data.primary_color)) {
+      patch.primary_color = data.primary_color as string;
+    }
+    return patch;
+  }
+};
+
+/** Localization & numbers section: language, number format, precision. */
+export const localizationSection: EditorSection = {
+  id: "localization",
+  labelKey: "editor.section.localization",
+  advanced: true,
+  schema: [
+    {
+      name: "language",
+      selector: {
+        select: {
+          options: [
+            { value: "auto", label: "Auto (Home Assistant language)" },
+            ...SUPPORTED_LANGUAGES.map((lang) => ({ value: lang, label: lang }))
+          ]
+        }
+      }
+    },
+    {
+      name: "number_format",
+      selector: {
+        select: {
+          options: [
+            { value: "system", label: "System" },
+            { value: "comma", label: "Comma (1,234.56)" },
+            { value: "decimal", label: "Decimal (1.234,56)" },
+            { value: "language", label: "Language" }
+          ]
+        }
+      }
+    },
+    {
+      name: "precision",
+      selector: { number: { min: 0, max: 6, mode: "box", step: 1 } }
+    }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      language: config.language ?? "auto",
+      number_format: config.number_format ?? "system",
+      precision: config.precision ?? 2
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {};
+    const language = autoToUndefined(data.language);
+    if (language !== undefined && !isEmpty(language)) {
+      patch.language = language as string;
+    }
+    if (!isEmpty(data.number_format)) {
+      patch.number_format = data.number_format as CardConfig["number_format"];
+    }
+    if (typeof data.precision === "number" && Number.isFinite(data.precision)) {
+      patch.precision = data.precision;
+    }
+    return patch;
+  }
+};
+
+/** Date formats section: Luxon patterns for the X axis and tooltip. */
+export const dateFormatsSection: EditorSection = {
+  id: "date_formats",
+  labelKey: "editor.section.date_formats",
+  advanced: true,
+  schema: [
+    { name: "x_axis_format", selector: { text: {} } },
+    { name: "tooltip_format", selector: { text: {} } }
+  ],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      x_axis_format: config.x_axis_format ?? "",
+      tooltip_format: config.tooltip_format ?? ""
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    const patch: Partial<CardConfig> = {};
+    if (!isEmpty(data.x_axis_format)) {
+      patch.x_axis_format = data.x_axis_format as string;
+    }
+    if (!isEmpty(data.tooltip_format)) {
+      patch.tooltip_format = data.tooltip_format as string;
+    }
+    return patch;
+  }
+};
+
+/** Diagnostics section: debug mode. */
+export const diagnosticsSection: EditorSection = {
+  id: "diagnostics",
+  labelKey: "editor.section.diagnostics",
+  advanced: true,
+  schema: [{ name: "debug", selector: { boolean: {} } }],
+  toForm(config: CardConfig): FormRecord {
+    return {
+      debug: config.debug === true
+    };
+  },
+  fromForm(data: FormRecord): Partial<CardConfig> {
+    return {
+      debug: data.debug === true
+    };
+  }
+};
+
+/** All sections, in render order (basic, header, forecast, then advanced). */
+export const SECTIONS: readonly EditorSection[] = [
+  basicSection,
+  headerSection,
+  forecastSection,
+  timeWindowSection,
+  chartStyleSection,
+  localizationSection,
+  dateFormatsSection,
+  diagnosticsSection
+];
+
+// ---------------------------------------------------------------------------
+// Advisory validation (reuses the card's validators; never blocks emission)
+// ---------------------------------------------------------------------------
+
+/**
+ * Re-validates the merged time window after a `time_window` section change and
+ * stores a localized message in `_fieldErrors.time_window` on failure. The
+ * card remains the validation authority; `config-changed` is still emitted.
+ */
+export function validateTimeWindowSection(
+  editor: EnergyHorizonCardEditor
+): void {
+  const config = editor["_config"];
+  if (!config) {
+    return;
+  }
+  const merged = buildMergedTimeWindowConfig(config);
+  const result = validateMergedTimeWindowConfig(merged);
+  if (result.ok) {
+    editor["_fieldErrors"].time_window = null;
+    return;
+  }
+  const t = createLocalize(editor["_editorLang"]());
+  const message = t(result.errorKey);
+  editor["_fieldErrors"].time_window =
+    message === result.errorKey ? t("editor.error.time_window") : message;
+}
+
+/**
+ * Re-validates `x_axis_format` / `tooltip_format` after a `date_formats`
+ * section change using the card's Luxon validator. Invalid patterns store an
+ * inline error; `config-changed` is still emitted (the card shows its error
+ * state until the value is fixed).
+ */
+export function validateDateFormatSection(
+  editor: EnergyHorizonCardEditor
+): void {
+  const config = editor["_config"];
+  if (!config) {
+    return;
+  }
+  const t = createLocalize(editor["_editorLang"]());
+  for (const field of ["x_axis_format", "tooltip_format"] as const) {
+    const raw = config[field];
+    if (raw === undefined || String(raw).trim() === "") {
+      editor["_fieldErrors"][field] = null;
+      continue;
+    }
+    try {
+      validateXAxisFormat(String(raw).trim());
+      editor["_fieldErrors"][field] = null;
+    } catch {
+      editor["_fieldErrors"][field] = t("editor.error.format");
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Editor component
+// ---------------------------------------------------------------------------
+
 export class EnergyHorizonCardEditor extends LitElement {
-  @property({ attribute: false }) accessor hass?: HomeAssistant;
+  /** Set by Lovelace; may be absent before the host wires it up. */
+  @property({ attribute: false })
+  accessor hass: HomeAssistant | undefined = undefined;
 
   private _config?: CardConfig;
 
@@ -17,6 +673,12 @@ export class EnergyHorizonCardEditor extends LitElement {
   @state() private accessor _yamlText = "";
 
   @state() private accessor _yamlError: string | null = null;
+
+  /** Advanced section ids currently expanded (local only; not persisted). */
+  @state() private accessor _openSections = new Set<string>();
+
+  /** Inline validation errors keyed by field/section id. */
+  @state() private accessor _fieldErrors: Record<string, string | null> = {};
 
   setConfig(config: CardConfigInput): void {
     const raw = config;
@@ -29,35 +691,11 @@ export class EnergyHorizonCardEditor extends LitElement {
     } as CardConfig;
     this._editorMode = "visual";
     this._yamlError = null;
+    // Ephemeral state resets on every setConfig (FR-018): advanced sections
+    // start collapsed and no stale inline errors survive.
+    this._openSections = new Set<string>();
+    this._fieldErrors = {};
     this.requestUpdate();
-  }
-
-  private _formData(): Partial<CardConfig> {
-    const cfg = this._config;
-    if (!cfg) {
-      return {};
-    }
-    return {
-      entity: cfg.entity ?? "",
-      title: cfg.title,
-      comparison_preset: resolveComparisonPreset(cfg as CardConfigInput),
-      force_prefix: cfg.force_prefix,
-      show_comparison_summary: cfg.show_comparison_summary !== false,
-      show_forecast_total_panel: cfg.show_forecast_total_panel !== false,
-      show_narrative_comment: cfg.show_narrative_comment !== false
-    };
-  }
-
-  private _computeLabel(schema: { name: string }): string {
-    const lang =
-      this.hass?.locale?.language ??
-      (this.hass as unknown as { language?: string })?.language ??
-      "en";
-    return createLocalize(lang)(`editor.${schema.name}`);
-  }
-
-  private _hasYamlSupport(): boolean {
-    return typeof window.jsyaml !== "undefined";
   }
 
   private _editorLang(): string {
@@ -68,53 +706,85 @@ export class EnergyHorizonCardEditor extends LitElement {
     );
   }
 
-  private _buildSchema(lang: string): ReadonlyArray<HaFormSchema> {
-    const t = createLocalize(lang);
-    return [
-      { name: "entity", selector: { entity: { domain: "sensor" } } },
-      { name: "title", selector: { text: {} } },
-      {
-        name: "comparison_preset",
-        selector: {
-          select: {
-            options: [
-              { value: "year_over_year", label: t("editor.year_over_year") },
-              { value: "month_over_year", label: t("editor.month_over_year") },
-              { value: "month_over_month", label: t("editor.month_over_month") }
-            ]
-          }
-        }
-      },
-      {
-        name: "force_prefix",
-        selector: {
-          select: {
-            options: [
-              { value: "", label: "" },
-              { value: "auto", label: "Auto" },
-              { value: "none", label: "None (raw)" },
-              { value: "G", label: "G (Giga)" },
-              { value: "M", label: "M (Mega)" },
-              { value: "k", label: "k (Kilo)" },
-              { value: "m", label: "m (milli)" },
-              { value: "µ", label: "µ (micro)" }
-            ]
-          }
-        }
-      },
-      { name: "show_comparison_summary", selector: { boolean: {} } },
-      { name: "show_forecast_total_panel", selector: { boolean: {} } },
-      { name: "show_narrative_comment", selector: { boolean: {} } }
-    ];
+  private _computeLabel(schema: { name: string }): string {
+    return createLocalize(this._editorLang())(`editor.${schema.name}`);
   }
 
-  private _handleValueChanged(e: CustomEvent): void {
-    if (!this._config) return;
-    const updated: CardConfig = {
-      ...this._config,
-      ...(e.detail.value as Partial<CardConfig>)
-    };
-    this._config = updated;
+  private _hasYamlSupport(): boolean {
+    return typeof window.jsyaml !== "undefined";
+  }
+
+  private _hasExpansionPanel(): boolean {
+    return (
+      typeof customElements !== "undefined" &&
+      customElements.get("ha-expansion-panel") !== undefined
+    );
+  }
+
+  /**
+   * Localizes a section's static schema (English fallback labels) for the
+   * current language. Select option labels resolve via `createLocalize` at
+   * build time so no raw key is ever rendered (005 pattern).
+   */
+  private _buildSectionSchema(
+    section: EditorSection
+  ): ReadonlyArray<HaFormSchema> {
+    const t = createLocalize(this._editorLang());
+    return section.schema.map((entry) => {
+      if (entry.selector && "select" in entry.selector && entry.selector.select) {
+        const options = entry.selector.select.options.map((opt) => ({
+          value: opt.value,
+          label: opt.value === "" ? "" : t(`editor.${entry.name}.${opt.value}`)
+        }));
+        return { ...entry, selector: { select: { options } } };
+      }
+      return entry;
+    });
+  }
+
+  private _sectionFormData(section: EditorSection): FormRecord {
+    const cfg = this._config;
+    if (!cfg) {
+      return {};
+    }
+    return section.toForm(cfg);
+  }
+
+  private _toggleSection(e: CustomEvent): void {
+    const id = (e.currentTarget as HTMLElement & { id?: string })?.id;
+    if (!id) {
+      return;
+    }
+    const next = new Set(this._openSections);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    this._openSections = next;
+  }
+
+  private _handleSectionValueChanged(
+    value: FormRecord,
+    sectionId: string
+  ): void {
+    if (!this._config) {
+      return;
+    }
+    const section = SECTIONS.find((s) => s.id === sectionId);
+    if (!section) {
+      return;
+    }
+    const patch = section.fromForm(value, this._config);
+    // Shallow-merge only the section's own fields; keys not owned by the
+    // section (e.g. YAML-only fields) are never dropped (SC-002).
+    this._config = { ...this._config, ...patch } as CardConfig;
+    // Re-validate advisory fields owned by this section (never blocks emit).
+    if (section.id === "time_window") {
+      validateTimeWindowSection(this);
+    } else if (section.id === "date_formats") {
+      validateDateFormatSection(this);
+    }
     this._emitConfigChanged();
   }
 
@@ -141,13 +811,13 @@ export class EnergyHorizonCardEditor extends LitElement {
     try {
       const parsed = window.jsyaml!.load(this._yamlText);
       if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        const lang = this._editorLang();
-        this._yamlError = createLocalize(lang)("editor.yaml_error");
+        this._yamlError = createLocalize(this._editorLang())("editor.yaml_error");
         return;
       }
       this._config = parsed as CardConfig;
       this._yamlError = null;
       this._editorMode = "visual";
+      this._fieldErrors = {};
       this._emitConfigChanged();
     } catch (err) {
       this._yamlError = (err as Error).message;
@@ -156,6 +826,57 @@ export class EnergyHorizonCardEditor extends LitElement {
 
   private _handleYamlInput(e: { target: { value: string } }): void {
     this._yamlText = e.target.value;
+  }
+
+  private _renderSection(section: EditorSection): TemplateResult {
+    const t = createLocalize(this._editorLang());
+    const error = this._fieldErrors[section.id];
+    const form = html`
+      <ha-form
+        .schema=${this._buildSectionSchema(section)}
+        .data=${this._sectionFormData(section)}
+        .hass=${this.hass}
+        .computeLabel=${this._computeLabel.bind(this)}
+        @value-changed=${(e: CustomEvent) => {
+          const value = (e.detail?.value ?? {}) as FormRecord;
+          this._handleSectionValueChanged(value, section.id);
+        }}
+      ></ha-form>
+    `;
+
+    if (!section.advanced) {
+      // Basic sections render without a heading / wrapper (always visible).
+      return html`
+        <section class="eh-section">
+          ${form}
+          ${error ? html`<p class="error">${error}</p>` : ""}
+        </section>
+      `;
+    }
+
+    if (!this._hasExpansionPanel()) {
+      // Graceful degradation: very old HA without `ha-expansion-panel` — the
+      // section renders unwrapped (always visible) rather than crashing.
+      return html`
+        <section class="eh-section">
+          <h3 class="eh-section__title">${t(section.labelKey)}</h3>
+          ${form}
+          ${error ? html`<p class="error">${error}</p>` : ""}
+        </section>
+      `;
+    }
+
+    return html`
+      <ha-expansion-panel
+        id=${section.id}
+        .label=${t(section.labelKey)}
+        .expanded=${this._openSections.has(section.id)}
+        @click=${this._toggleSection}
+      >
+        ${form}
+        ${error ? html`<p class="error">${error}</p>` : ""}
+      </ha-expansion-panel>
+    `;
   }
 
   static styles = css`
@@ -184,6 +905,15 @@ export class EnergyHorizonCardEditor extends LitElement {
       border-color: var(--primary-color);
       color: var(--primary-color);
     }
+    .eh-section {
+      margin-bottom: 8px;
+    }
+    .eh-section__title {
+      margin: 8px 0 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary-text-color, #000);
+    }
     .yaml-editor {
       width: 100%;
       min-height: 200px;
@@ -192,7 +922,7 @@ export class EnergyHorizonCardEditor extends LitElement {
     }
     .error {
       color: var(--error-color, #c62828);
-      margin-top: 8px;
+      margin: 8px 0 0;
     }
   `;
 
@@ -201,8 +931,7 @@ export class EnergyHorizonCardEditor extends LitElement {
       return html``;
     }
 
-    const lang = this._editorLang();
-    const t = createLocalize(lang);
+    const t = createLocalize(this._editorLang());
     const visualLabel = t("editor.visual_mode");
     const yamlLabel = t("editor.yaml_mode");
 
@@ -214,14 +943,14 @@ export class EnergyHorizonCardEditor extends LitElement {
                 <button
                   type="button"
                   class=${this._editorMode === "visual" ? "active" : ""}
-                  @click=${this._switchToVisual}
+                  @click=${() => this._switchToVisual()}
                 >
                   ${visualLabel}
                 </button>
                 <button
                   type="button"
                   class=${this._editorMode === "yaml" ? "active" : ""}
-                  @click=${this._switchToYaml}
+                  @click=${() => this._switchToYaml()}
                 >
                   ${yamlLabel}
                 </button>
@@ -229,15 +958,7 @@ export class EnergyHorizonCardEditor extends LitElement {
             `
           : ""}
         ${this._editorMode === "visual"
-          ? html`
-              <ha-form
-                .schema=${this._buildSchema(lang)}
-                .data=${this._formData()}
-                .hass=${this.hass}
-                .computeLabel=${this._computeLabel.bind(this)}
-                @value-changed=${this._handleValueChanged}
-              ></ha-form>
-            `
+          ? html`${SECTIONS.map((section) => this._renderSection(section))}`
           : html`
               <textarea
                 class="yaml-editor"
