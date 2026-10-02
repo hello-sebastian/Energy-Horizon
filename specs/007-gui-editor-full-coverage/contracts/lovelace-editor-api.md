@@ -59,17 +59,19 @@ Unchanged from 005: full `CardConfig` in `detail.config`, `bubbles: true`, `comp
 
 | Field | Control | Value contract |
 |---|---|---|
-| `aggregation` | select | options `auto`/`hour`/`day`/`week`/`month`; `auto` ⇔ `undefined` in config; unknown YAML value → shows `auto`, raw value preserved in `_config` |
+| `aggregation` | select (list) | options `auto`/`hour`/`day`/`week`/`month`; `auto` ⇔ `undefined` in config; unknown YAML value → shows `auto`, raw value preserved in `_config` |
 | `period_offset` | number | integer years; unset → `-1` |
 | `time_window.*` | select/text/number | flat `time_window_*` fields; empty → omitted from `time_window` (preset applies); validated via `buildMergedTimeWindowConfig` + `validateMergedTimeWindowConfig` |
 | `language` | select | `auto` ⇔ `undefined`; concrete values from `SUPPORTED_LANGUAGES`; unknown → `auto` display, raw preserved |
-| `number_format` | select | `comma`/`decimal`/`language`/`system`; unset → `system` |
+| `number_format` | select (list) | `comma`/`decimal`/`language`/`system`; unset → `system` |
 | `precision` | number | 0–6; unset → `2` |
 | `fill_*_opacity` | number | 0–100; unset → `30` |
 | `primary_color` | text | any string (hex / `var(...)` / aliases) preserved verbatim |
 | `x_axis_format` / `tooltip_format` | text | validated with `validateXAxisFormat`; invalid → inline error, config still emitted |
 | booleans (`show_*`, `fill_*`, `connect_nulls`, `debug`) | boolean | checkbox; card `!== false` fields default checked; unchecking writes explicit `false` |
-| `icon` | icon selector | MDI icon; empty allowed |
+| `icon` | select (list) | first option `""` = "Entity icon (auto)" (card inherits entity icon); concrete MDI icon values; `""` ⇔ `undefined` in config (FR-025) |
+| `force_prefix` | select (list) | `auto`/`none`/`G`/`M`/`k`/`m`/`u`; `auto` ⇔ `undefined`; localized option labels (FR-021) |
+| `comparison_preset` | select | `year_over_year`/`month_over_year`/`month_over_month`; localized option labels (FR-021) |
 
 ---
 
@@ -83,3 +85,4 @@ Unchanged from 005: full `CardConfig` in `detail.config`, `bubbles: true`, `comp
 8. **Validation is advisory in the editor**: inline errors never block `config-changed`; the card remains the validation authority (FR-014).
 9. **Section state is ephemeral**: advanced sections start collapsed on every `setConfig()`; open-state is never persisted (FR-018).
 10. **Localized everywhere**: all labels, section titles, option texts, and inline errors resolve via `createLocalize` with English fallback — no raw keys rendered (SC-003).
+11. **Section toggle isolation**: clicks inside form content (dropdowns, radios, switches) do NOT collapse the section; only header/chevron clicks toggle (FR-024). Collapsed sections take no vertical space (SC-008).

@@ -4,6 +4,7 @@
         "/^cd \"/Users/sebastian/Projekty local/Energy-Horizon\" && python3 -c \"\nimport json\nd = json\\.load\\(open\\('src/translations/en\\.json'\\)\\)\nfor k in sorted\\(d\\):\n    if k\\.startswith\\('status\\.'\\):\n        print\\(k, '=', repr\\(d\\[k\\]\\)\\)\n\"$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        ".specify/scripts/bash/check-prerequisites.sh": true
     }
 }

@@ -26,7 +26,13 @@ export type HaFormSchema =
   | { name: string; selector: { text: Record<string, never> }; required?: boolean }
   | {
       name: string;
-      selector: { select: { options: Array<{ value: string; label: string }> } };
+      selector: {
+        select: {
+          options: Array<{ value: string; label: string }>;
+          /** HA `ha-selector-select` mode: `list` renders a dropdown (007). */
+          mode?: "list" | "dropdown";
+        };
+      };
       required?: boolean;
     }
   | { name: string; selector: { boolean: Record<string, never> }; required?: boolean }

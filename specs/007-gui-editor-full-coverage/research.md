@@ -191,3 +191,7 @@ All keys added to **en, pl, de, fr** (FR-012). `computeLabel` maps `schema.name`
 | R-008: Default prefill | ✅ Resolved (card defaults + preset template) |
 | R-009: Translation keys | ✅ Resolved (extended `editor.*` in 4 dictionaries) |
 | R-010: Documentation placement | ✅ Resolved (README new section, advanced table, wiki subsection + maintenance) |
+| R-011: Localized option labels for comparison_preset / force_prefix | ✅ Resolved (new `editor.comparison_preset.*` / `editor.force_prefix.*` keys in 4 dicts; legacy 005 keys retained) |
+| R-012: Dropdown vs radio for select fields | ✅ Resolved (`mode: "list"` on aggregation, time_window_aggregation, number_format, force_prefix, icon) |
+| R-013: Section titles and spacing | ✅ Resolved (basic: `<h3>`; advanced: panel label; consistent `.eh-section` container) |
+| R-014: Section toggle isolation | ✅ Resolved (click handler checks `e.target` containment in `ha-form`; CSS hides collapsed content) |

@@ -124,6 +124,18 @@ The `language` select options are derived from the loaded translation dictionari
 ### D-008: Documentation in the same feature
 `README.md` gains a "Visual editor" section (**none exists today** — 005's FR-010 drift, fixed here); `README.advanced.md`'s "Lovelace editor" section becomes the full field → control → default table; wiki `Configuration-and-Customization.md` gains a "Visual editor coverage" subsection (Reference quadrant, no new page); `Documentation-Maintenance.md` gains Spec anchors + a drift-check item.
 
+### D-009: Human-readable localized labels for comparison preset and unit prefix (FR-021)
+`comparison_preset` and `force_prefix` select options resolve their labels via `editor.comparison_preset.*` and `editor.force_prefix.*` keys in all four dictionaries. The legacy flat keys from 005 (`editor.year_over_year`, etc.) are retained for backward compatibility but no longer used by the editor.
+
+### D-010: Dropdowns for aggregation, number format, force prefix, and icon (FR-022)
+`aggregation`, `time_window.aggregation`, `number_format`, `force_prefix`, and `icon` use `ha-selector-select` with `mode: "list"` (dropdown) instead of the default radio buttons. The `HaFormSchema` select variant is extended with `mode?: "list" | "dropdown"`.
+
+### D-011: Visible section titles and consistent spacing (FR-023)
+Basic sections render an `<h3 class="eh-section__title">` with the localized section name; advanced sections use the `ha-expansion-panel` label. Consistent `.eh-section` container with normalized `ha-form` margins.
+
+### D-012: Section toggle only from header; collapsed sections take no space (FR-024)
+The `@click` handler on `ha-expansion-panel` checks `e.target` — clicks originating inside `ha-form` (dropdowns, radios, switches) are ignored; only header/chevron clicks toggle the panel. CSS `ha-expansion-panel:not(.expanded) ha-form { display: none }` ensures collapsed sections occupy no vertical space.
+
 ---
 
 ## Phase 0 Research Summary

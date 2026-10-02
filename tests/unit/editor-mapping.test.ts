@@ -196,6 +196,36 @@ describe("fromForm (US1)", () => {
     const patch = tw.fromForm({ aggregation: "not_a_real_value" });
     expect(patch.aggregation).toBe("not_a_real_value");
   });
+
+  it("icon: `\"\"` → key omitted (entity icon auto); concrete stored (FR-025)", () => {
+    const header = sectionById("header");
+    expect(header.fromForm({ icon: "" }).icon).toBeUndefined();
+    expect(header.fromForm({ icon: "mdi:flash" }).icon).toBe("mdi:flash");
+  });
+
+  it("icon: toForm maps unset icon to `\"\"` (entity icon auto)", () => {
+    const header = sectionById("header");
+    expect(header.toForm(baseConfig()).icon).toBe("");
+    expect(header.toForm(baseConfig({ icon: "mdi:flash" })).icon).toBe("mdi:flash");
+  });
+
+  it("force_prefix: `u` (micro) round-trips; `auto` → omitted", () => {
+    const basic = sectionById("basic");
+    expect(basic.fromForm({ force_prefix: "u" }).force_prefix).toBe("u");
+    expect(basic.fromForm({ force_prefix: "auto" }).force_prefix).toBeUndefined();
+    expect(basic.toForm(baseConfig()).force_prefix).toBe("auto");
+    expect(basic.toForm(baseConfig({ force_prefix: "u" })).force_prefix).toBe("u");
+  });
+
+  it("comparison_preset: concrete values round-trip", () => {
+    const basic = sectionById("basic");
+    expect(basic.fromForm({ comparison_preset: "month_over_year" }).comparison_preset).toBe(
+      "month_over_year"
+    );
+    expect(basic.toForm(baseConfig({ comparison_preset: "month_over_month" })).comparison_preset).toBe(
+      "month_over_month"
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -346,6 +376,41 @@ describe("section model (US1)", () => {
       expect(typeof s.fromForm).toBe("function");
     }
   });
+
+  it("aggregation, time_window_aggregation, number_format, force_prefix, icon use `mode: \"list\"` (FR-022)", () => {
+    const tw = sectionById("time_window");
+    const loc = sectionById("localization");
+    const basic = sectionById("basic");
+    const header = sectionById("header");
+
+    const findSelect = (
+      schema: typeof tw.schema,
+      name: string
+    ): { mode?: string } | undefined => {
+      const entry = schema.find((e) => e.name === name);
+      if (!entry || !("selector" in entry) || !entry.selector || !("select" in entry.selector)) {
+        return undefined;
+      }
+      return entry.selector.select as { mode?: string };
+    };
+
+    expect(findSelect(tw.schema, "aggregation")?.mode).toBe("list");
+    expect(findSelect(tw.schema, "time_window_aggregation")?.mode).toBe("list");
+    expect(findSelect(loc.schema, "number_format")?.mode).toBe("list");
+    expect(findSelect(basic.schema, "force_prefix")?.mode).toBe("list");
+    expect(findSelect(header.schema, "icon")?.mode).toBe("list");
+  });
+
+  it("icon select offers `\"\"` (entity icon auto) as the first option (FR-025)", () => {
+    const header = sectionById("header");
+    const entry = header.schema.find((e) => e.name === "icon");
+    expect(entry).toBeDefined();
+    if (entry && "selector" in entry && entry.selector && "select" in entry.selector) {
+      const options = entry.selector.select.options;
+      expect(options[0]?.value).toBe("");
+      expect(options.length).toBeGreaterThan(1);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -410,6 +475,19 @@ describe("editor i18n (US4)", () => {
     "editor.anchor.start_of_day",
     "editor.anchor.start_of_hour",
     "editor.anchor.now",
+    // 007 FR-021: comparison preset + unit prefix option labels
+    "editor.comparison_preset.year_over_year",
+    "editor.comparison_preset.month_over_year",
+    "editor.comparison_preset.month_over_month",
+    "editor.force_prefix.auto",
+    "editor.force_prefix.none",
+    "editor.force_prefix.G",
+    "editor.force_prefix.M",
+    "editor.force_prefix.k",
+    "editor.force_prefix.m",
+    "editor.force_prefix.u",
+    // 007 FR-025: icon "entity icon (auto)" option
+    "editor.icon.entity",
     // errors
     "editor.error.time_window",
     "editor.error.format"

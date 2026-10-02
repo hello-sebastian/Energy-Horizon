@@ -25,9 +25,9 @@ Developer guide for implementing full GUI editor coverage. See `data-model.md` f
 
 | File | Change |
 |------|--------|
-| `src/ha-types.ts` | Extend `HaFormSchema` union: `number`, `color`, `icon` selector variants |
+| `src/ha-types.ts` | Extend `HaFormSchema` union: `number`, `color`, `icon` selector variants; `select` gains `mode?: "list" \| "dropdown"` |
 | `src/card/localize.ts` | Export `SUPPORTED_LANGUAGES` (dictionary keys) |
-| `src/translations/en.json` | New `editor.*` keys (labels, sections, options, errors) |
+| `src/translations/en.json` | New `editor.*` keys (labels, sections, options, errors); `editor.comparison_preset.*`, `editor.force_prefix.*`, `editor.icon.entity` |
 | `src/translations/pl.json` | Same |
 | `src/translations/de.json` | Same |
 | `src/translations/fr.json` | Same |
@@ -49,7 +49,10 @@ Developer guide for implementing full GUI editor coverage. See `data-model.md` f
    - `toForm`: apply card defaults (R-008 table in `research.md`); `aggregation`/`language` `undefined` → `"auto"`; unset `time_window` → `getPresetTemplate(comparison_preset, period_offset)` values.
    - `fromForm`: `"auto"` → `undefined`; empty `time_window_*` → omitted; untouched `time_window` → key omitted.
    - Validation: on `time_window` section change run `buildMergedTimeWindowConfig` + `validateMergedTimeWindowConfig`; on format fields run `validateXAxisFormat`; store results in `_fieldErrors` (inline display). **Never block `_emitConfigChanged()`.**
-   - Render: toggle row (005) + sections; advanced sections in `<ha-expansion-panel>` (guard: if element undefined, render unwrapped); `_openSections`/`_fieldErrors` reset in `setConfig`.
+   - Render: toggle row (005) + sections; basic sections get `<h3 class="eh-section__title">`; advanced sections in `<ha-expansion-panel>` (guard: if element undefined, render unwrapped); `_openSections`/`_fieldErrors` reset in `setConfig`.
+   - Selects with `mode: "list"`: `aggregation`, `time_window_aggregation`, `number_format`, `force_prefix`, `icon` (dropdown, not radio).
+   - Icon: `select` with first option `""` = "Entity icon (auto)"; `toForm`: `icon: config.icon ?? ""`; `fromForm`: `""` → `undefined`.
+   - `_toggleSection`: ignore clicks from inside `ha-form` (only header/chevron toggles); CSS hides collapsed panel content.
 5. **`Test/tests/unit/editor-mapping.test.ts`** — unit tests (see below).
 6. **Docs** — `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md` (tables must match the implemented sections/fields exactly).
 

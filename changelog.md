@@ -4,6 +4,19 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 
 
+## [Unreleased]
+
+### Added
+- **Visual editor — icon auto option:** The header icon control is now a dropdown whose first option is **"Entity icon (auto)"** — selecting it omits `icon` from the saved YAML so the card inherits the entity's icon.
+
+### Changed
+- **Visual editor — dropdowns:** `aggregation`, `time_window.aggregation`, `number_format`, `force_prefix`, and `icon` now render as **dropdowns** (compact) instead of radio buttons.
+- **Visual editor — section titles:** All sections (basic and advanced) now show a **visible, localized title**.
+- **Visual editor — localized option labels:** `comparison_preset` and `force_prefix` option labels are now **localized** in all four languages (en, pl, de, fr).
+
+### Fixed
+- **Visual editor — section collapse:** Clicking a control inside an expanded section no longer **collapses** the whole section. Only the section header/chevron toggles expansion. Collapsed sections take **no vertical space**.
+
 ## [1.0.2]
 
 ### Added

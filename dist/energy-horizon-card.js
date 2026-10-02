@@ -28458,7 +28458,18 @@ const kR = {
   "editor.anchor.start_of_hour": "Stundenanfang",
   "editor.anchor.now": "Jetzt",
   "editor.error.time_window": "Ungültige Zeitfenster-Konfiguration. Prüfe Anchor, Offset, Dauer, Schritt und Anzahl.",
-  "editor.error.format": "Ungültiges Datumsformat. Verwende eine unterstützte Luxon-Formatzeichenkette."
+  "editor.error.format": "Ungültiges Datumsformat. Verwende eine unterstützte Luxon-Formatzeichenkette.",
+  "editor.comparison_preset.year_over_year": "Jahr zu Jahr",
+  "editor.comparison_preset.month_over_year": "Monat zu Jahr",
+  "editor.comparison_preset.month_over_month": "Monat zu Monat (aufeinanderfolgend)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Keine (roh)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (Milli)",
+  "editor.force_prefix.u": "µ (Mikro)",
+  "editor.icon.entity": "Entitätssymbol (auto)"
 }, LR = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   default: kR
@@ -28567,7 +28578,18 @@ const kR = {
   "editor.anchor.start_of_hour": "Start of hour",
   "editor.anchor.now": "Now",
   "editor.error.time_window": "Invalid time window configuration. Check anchor, offset, duration, step, and count.",
-  "editor.error.format": "Invalid date format. Use a supported Luxon format string."
+  "editor.error.format": "Invalid date format. Use a supported Luxon format string.",
+  "editor.comparison_preset.year_over_year": "Year over year",
+  "editor.comparison_preset.month_over_year": "Month over year",
+  "editor.comparison_preset.month_over_month": "Month over month (consecutive)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "None (raw)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (milli)",
+  "editor.force_prefix.u": "µ (micro)",
+  "editor.icon.entity": "Entity icon (auto)"
 }, ER = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   default: IR
@@ -28676,7 +28698,18 @@ const kR = {
   "editor.anchor.start_of_hour": "Début d'heure",
   "editor.anchor.now": "Maintenant",
   "editor.error.time_window": "Configuration de fenêtre temporelle invalide. Vérifiez l'ancrage, le décalage, la durée, le pas et le nombre.",
-  "editor.error.format": "Format de date invalide. Utilisez une chaîne de format Luxon prise en charge."
+  "editor.error.format": "Format de date invalide. Utilisez une chaîne de format Luxon prise en charge.",
+  "editor.comparison_preset.year_over_year": "Année sur année",
+  "editor.comparison_preset.month_over_year": "Mois sur année",
+  "editor.comparison_preset.month_over_month": "Mois sur mois (consécutif)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Aucun (brut)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (milli)",
+  "editor.force_prefix.u": "µ (micro)",
+  "editor.icon.entity": "Icône de l'entité (auto)"
 }, OR = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   default: PR
@@ -28785,7 +28818,18 @@ const kR = {
   "editor.anchor.start_of_hour": "Początek godziny",
   "editor.anchor.now": "Teraz",
   "editor.error.time_window": "Nieprawidłowa konfiguracja okna czasowego. Sprawdź anchor, offset, duration, step i count.",
-  "editor.error.format": "Nieprawidłowy format daty. Użyj obsługiwanego wzorca Luxon."
+  "editor.error.format": "Nieprawidłowy format daty. Użyj obsługiwanego wzorca Luxon.",
+  "editor.comparison_preset.year_over_year": "Rok do roku",
+  "editor.comparison_preset.month_over_year": "Miesiąc do roku",
+  "editor.comparison_preset.month_over_month": "Miesiąc do miesiąca (zastępczo)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Brak (surowe)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (mili)",
+  "editor.force_prefix.u": "µ (mikro)",
+  "editor.icon.entity": "Ikona encji (auto)"
 }, NR = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   default: RR
@@ -29642,15 +29686,15 @@ const hN = {
       name: "force_prefix",
       selector: {
         select: {
+          mode: "list",
           options: [
-            { value: "", label: "" },
             { value: "auto", label: "Auto" },
             { value: "none", label: "None (raw)" },
             { value: "G", label: "G (Giga)" },
             { value: "M", label: "M (Mega)" },
             { value: "k", label: "k (Kilo)" },
             { value: "m", label: "m (milli)" },
-            { value: "µ", label: "µ (micro)" }
+            { value: "u", label: "µ (micro)" }
           ]
         }
       }
@@ -29684,13 +29728,30 @@ const hN = {
   advanced: !1,
   schema: [
     { name: "show_title", selector: { boolean: {} } },
-    { name: "icon", selector: { icon: {} } },
+    {
+      name: "icon",
+      selector: {
+        select: {
+          mode: "list",
+          options: [
+            { value: "", label: "Entity icon (auto)" },
+            { value: "mdi:flash", label: "mdi:flash" },
+            { value: "mdi:lightning-bolt", label: "mdi:lightning-bolt" },
+            { value: "mdi:solar-power", label: "mdi:solar-power" },
+            { value: "mdi:battery", label: "mdi:battery" },
+            { value: "mdi:home", label: "mdi:home" },
+            { value: "mdi:thermometer", label: "mdi:thermometer" }
+          ]
+        }
+      }
+    },
     { name: "show_icon", selector: { boolean: {} } }
   ],
   toForm(r) {
     return {
       show_title: r.show_title !== !1,
-      icon: r.icon,
+      // `""` = "Entity icon (auto)" — the card inherits the entity's icon.
+      icon: r.icon ?? "",
       show_icon: r.show_icon !== !1
     };
   },
@@ -29725,6 +29786,7 @@ const hN = {
       name: "aggregation",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto" },
             { value: "hour", label: "Hour" },
@@ -29743,6 +29805,7 @@ const hN = {
       name: "time_window_anchor",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "start_of_year", label: "Start of year" },
             { value: "start_of_month", label: "Start of month" },
@@ -29765,6 +29828,7 @@ const hN = {
       name: "time_window_aggregation",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto" },
             { value: "hour", label: "Hour" },
@@ -29850,6 +29914,7 @@ const hN = {
       name: "language",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto (Home Assistant language)" },
             ...FR.map((r) => ({ value: r, label: r }))
@@ -29861,6 +29926,7 @@ const hN = {
       name: "number_format",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "system", label: "System" },
             { value: "comma", label: "Comma (1,234.56)" },
@@ -29996,7 +30062,10 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
           value: a.value,
           label: a.value === "" ? "" : t(`editor.${n.name}.${a.value}`)
         }));
-        return { ...n, selector: { select: { options: i } } };
+        return {
+          ...n,
+          selector: { select: { ...n.selector.select, options: i } }
+        };
       }
       return n;
     });
@@ -30006,12 +30075,17 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
     return t ? e.toForm(t) : {};
   }
   _toggleSection(e) {
-    var i;
-    const t = (i = e.currentTarget) == null ? void 0 : i.id;
-    if (!t)
+    const t = e.currentTarget, n = t == null ? void 0 : t.id;
+    if (!n || !t)
       return;
-    const n = new Set(this._openSections);
-    n.has(t) ? n.delete(t) : n.add(t), this._openSections = n;
+    const i = e.target;
+    if (i && t.contains(i)) {
+      const o = t.querySelector("ha-form");
+      if (o && o.contains(i))
+        return;
+    }
+    const a = new Set(this._openSections);
+    a.has(n) ? a.delete(n) : a.add(n), this._openSections = a;
   }
   _handleSectionValueChanged(e, t) {
     if (!this._config)
@@ -30082,6 +30156,7 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
         </section>
       ` : re`
         <section class="eh-section">
+          <h3 class="eh-section__title">${t(e.labelKey)}</h3>
           ${i}
           ${n ? re`<p class="error">${n}</p>` : ""}
         </section>
@@ -30171,6 +30246,15 @@ Cr.styles = Zy`
       font-size: 0.9rem;
       font-weight: 600;
       color: var(--primary-text-color, #000);
+    }
+    /* Collapsed advanced sections must take no vertical space (007 FR-024). */
+    ha-expansion-panel:not(.expanded) ha-form,
+    ha-expansion-panel:not(.expanded) .error {
+      display: none;
+    }
+    /* Consistent spacing between form fields inside a section. */
+    .eh-section ha-form {
+      margin: 0;
     }
     .yaml-editor {
       width: 100%;

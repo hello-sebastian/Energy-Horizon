@@ -136,6 +136,22 @@
 
 ---
 
+## Phase 8: Editor UX Fixes (2026-10-01)
+
+**Purpose**: Fix visual form issues reported after initial 007 implementation — localized option labels, dropdowns, section titles, section collapse bug, and icon UX.
+
+- [X] T028 [P] Add `mode?: "list" | "dropdown"` to the `select` variant of `HaFormSchema` in `src/ha-types.ts` (FR-022)
+- [X] T029 [P] Add new `editor.*` keys to all four translation dictionaries: `editor.comparison_preset.{year_over_year,month_over_year,month_over_month}`, `editor.force_prefix.{auto,none,G,M,k,m,u}`, `editor.icon.entity` (FR-021, FR-025)
+- [X] T030 Set `mode: "list"` on `aggregation`, `time_window_aggregation`, `number_format`, `force_prefix`, and `icon` selects in `src/card/energy-horizon-card-editor.ts` (FR-022)
+- [X] T031 Change `icon` from `ha-selector-icon` to `select` with `mode: "list"`; first option `""` = "Entity icon (auto)"; `toForm`: `icon: config.icon ?? ""`; `fromForm`: `""` → `undefined` (FR-025)
+- [X] T032 Add visible `<h3 class="eh-section__title">` to basic sections in `_renderSection` (FR-023)
+- [X] T033 Fix `_toggleSection` to ignore clicks originating inside `ha-form` (only header/chevron toggles); add CSS `ha-expansion-panel:not(.expanded) ha-form { display: none }` (FR-024)
+- [X] T034 Extend `tests/unit/editor-mapping.test.ts`: icon mapping (`""` ⇔ omitted), force_prefix round-trip, comparison_preset round-trip, `mode: "list"` assertions, i18n key presence for all new keys
+- [X] T035 Update speckit artifacts: spec.md (FR-021…FR-025, SC-008, SC-009, Clarifications 2026-10-01), data-model.md (§1, §2, §5, §7), plan.md (D-009…D-012), contracts/lovelace-editor-api.md (§5, invariant 11), research.md (R-011…R-014), tasks.md (this phase)
+- [ ] T036 Update user documentation: `README.md` (aggregation/number_format/time_window_aggregation → "select (list)"; icon → "select (entity icon / custom)"), `README.advanced.md` (same + mapping rules), `wiki-publish/Configuration-and-Customization.md` (same), `wiki-publish/Documentation-Maintenance.md` (drift-check precision), `changelog.md` (new Unreleased/1.0.3 section)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Task Dependency Graph

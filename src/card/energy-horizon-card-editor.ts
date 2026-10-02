@@ -225,15 +225,15 @@ export const basicSection: EditorSection = {
       name: "force_prefix",
       selector: {
         select: {
+          mode: "list",
           options: [
-            { value: "", label: "" },
             { value: "auto", label: "Auto" },
             { value: "none", label: "None (raw)" },
             { value: "G", label: "G (Giga)" },
             { value: "M", label: "M (Mega)" },
             { value: "k", label: "k (Kilo)" },
             { value: "m", label: "m (milli)" },
-            { value: "µ", label: "µ (micro)" }
+            { value: "u", label: "µ (micro)" }
           ]
         }
       }
@@ -285,13 +285,30 @@ export const headerSection: EditorSection = {
   advanced: false,
   schema: [
     { name: "show_title", selector: { boolean: {} } },
-    { name: "icon", selector: { icon: {} } },
+    {
+      name: "icon",
+      selector: {
+        select: {
+          mode: "list",
+          options: [
+            { value: "", label: "Entity icon (auto)" },
+            { value: "mdi:flash", label: "mdi:flash" },
+            { value: "mdi:lightning-bolt", label: "mdi:lightning-bolt" },
+            { value: "mdi:solar-power", label: "mdi:solar-power" },
+            { value: "mdi:battery", label: "mdi:battery" },
+            { value: "mdi:home", label: "mdi:home" },
+            { value: "mdi:thermometer", label: "mdi:thermometer" }
+          ]
+        }
+      }
+    },
     { name: "show_icon", selector: { boolean: {} } }
   ],
   toForm(config: CardConfig): FormRecord {
     return {
       show_title: config.show_title !== false,
-      icon: config.icon,
+      // `""` = "Entity icon (auto)" — the card inherits the entity's icon.
+      icon: config.icon ?? "",
       show_icon: config.show_icon !== false
     };
   },
@@ -338,6 +355,7 @@ export const timeWindowSection: EditorSection = {
       name: "aggregation",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto" },
             { value: "hour", label: "Hour" },
@@ -356,6 +374,7 @@ export const timeWindowSection: EditorSection = {
       name: "time_window_anchor",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "start_of_year", label: "Start of year" },
             { value: "start_of_month", label: "Start of month" },
@@ -378,6 +397,7 @@ export const timeWindowSection: EditorSection = {
       name: "time_window_aggregation",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto" },
             { value: "hour", label: "Hour" },
@@ -495,6 +515,7 @@ export const localizationSection: EditorSection = {
       name: "language",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "auto", label: "Auto (Home Assistant language)" },
             ...SUPPORTED_LANGUAGES.map((lang) => ({ value: lang, label: lang }))
@@ -506,6 +527,7 @@ export const localizationSection: EditorSection = {
       name: "number_format",
       selector: {
         select: {
+          mode: "list",
           options: [
             { value: "system", label: "System" },
             { value: "comma", label: "Comma (1,234.56)" },
@@ -736,7 +758,11 @@ export class EnergyHorizonCardEditor extends LitElement {
           value: opt.value,
           label: opt.value === "" ? "" : t(`editor.${entry.name}.${opt.value}`)
         }));
-        return { ...entry, selector: { select: { options } } };
+        // `mode` is preserved so `list` selects render as dropdowns (007).
+        return {
+          ...entry,
+          selector: { select: { ...entry.selector.select, options } }
+        };
       }
       return entry;
     });
@@ -750,10 +776,21 @@ export class EnergyHorizonCardEditor extends LitElement {
     return section.toForm(cfg);
   }
 
-  private _toggleSection(e: CustomEvent): void {
-    const id = (e.currentTarget as HTMLElement & { id?: string })?.id;
-    if (!id) {
+  private _toggleSection(e: Event): void {
+    const panel = e.currentTarget as HTMLElement | null;
+    const id = panel?.id;
+    if (!id || !panel) {
       return;
+    }
+    // Only the header (label/chevron) toggles the panel. Clicks that bubble
+    // up from the form content (dropdowns, radios, switches) must NOT
+    // collapse the section (007 FR-024).
+    const target = e.target as Node | null;
+    if (target && panel.contains(target)) {
+      const form = panel.querySelector("ha-form");
+      if (form && form.contains(target)) {
+        return;
+      }
     }
     const next = new Set(this._openSections);
     if (next.has(id)) {
@@ -845,9 +882,10 @@ export class EnergyHorizonCardEditor extends LitElement {
     `;
 
     if (!section.advanced) {
-      // Basic sections render without a heading / wrapper (always visible).
+      // Basic sections render with a visible title (007 FR-023).
       return html`
         <section class="eh-section">
+          <h3 class="eh-section__title">${t(section.labelKey)}</h3>
           ${form}
           ${error ? html`<p class="error">${error}</p>` : ""}
         </section>
@@ -913,6 +951,15 @@ export class EnergyHorizonCardEditor extends LitElement {
       font-size: 0.9rem;
       font-weight: 600;
       color: var(--primary-text-color, #000);
+    }
+    /* Collapsed advanced sections must take no vertical space (007 FR-024). */
+    ha-expansion-panel:not(.expanded) ha-form,
+    ha-expansion-panel:not(.expanded) .error {
+      display: none;
+    }
+    /* Consistent spacing between form fields inside a section. */
+    .eh-section ha-form {
+      margin: 0;
     }
     .yaml-editor {
       width: 100%;

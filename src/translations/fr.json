@@ -103,5 +103,16 @@
   "editor.anchor.start_of_hour": "Début d'heure",
   "editor.anchor.now": "Maintenant",
   "editor.error.time_window": "Configuration de fenêtre temporelle invalide. Vérifiez l'ancrage, le décalage, la durée, le pas et le nombre.",
-  "editor.error.format": "Format de date invalide. Utilisez une chaîne de format Luxon prise en charge."
+  "editor.error.format": "Format de date invalide. Utilisez une chaîne de format Luxon prise en charge.",
+  "editor.comparison_preset.year_over_year": "Année sur année",
+  "editor.comparison_preset.month_over_year": "Mois sur année",
+  "editor.comparison_preset.month_over_month": "Mois sur mois (consécutif)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Aucun (brut)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (milli)",
+  "editor.force_prefix.u": "µ (micro)",
+  "editor.icon.entity": "Icône de l'entité (auto)"
 }

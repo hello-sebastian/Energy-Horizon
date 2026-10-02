@@ -103,6 +103,17 @@
   "editor.anchor.start_of_hour": "Początek godziny",
   "editor.anchor.now": "Teraz",
   "editor.error.time_window": "Nieprawidłowa konfiguracja okna czasowego. Sprawdź anchor, offset, duration, step i count.",
-  "editor.error.format": "Nieprawidłowy format daty. Użyj obsługiwanego wzorca Luxon."
+  "editor.error.format": "Nieprawidłowy format daty. Użyj obsługiwanego wzorca Luxon.",
+  "editor.comparison_preset.year_over_year": "Rok do roku",
+  "editor.comparison_preset.month_over_year": "Miesiąc do roku",
+  "editor.comparison_preset.month_over_month": "Miesiąc do miesiąca (zastępczo)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Brak (surowe)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (mili)",
+  "editor.force_prefix.u": "µ (mikro)",
+  "editor.icon.entity": "Ikona encji (auto)"
 }
 

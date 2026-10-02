@@ -113,15 +113,15 @@ Select the card and open its **editor** (pencil icon) to configure everything vi
 | **Comparison** | `entity` | entity picker (`sensor`) | required |
 | | `title` | text | entity name |
 | | `comparison_preset` | select | `year_over_year` |
-| | `force_prefix` | select | `auto` |
+| | `force_prefix` | select (list) | `auto` |
 | | `show_comparison_summary` | toggle | on |
 | | `show_forecast_total_panel` | toggle | on |
 | | `show_narrative_comment` | toggle | on |
 | **Header** | `show_title` | toggle | on |
-| | `icon` | icon picker | from entity |
+| | `icon` | select (entity icon / custom) | entity icon |
 | | `show_icon` | toggle | on |
 | **Forecast** | `show_forecast` | toggle | on |
-| **Time window** *(advanced)* | `aggregation` | select | `auto` |
+| **Time window** *(advanced)* | `aggregation` | select (list) | `auto` |
 | | `period_offset` | number | `-1` |
 | | `time_window` | nested (anchor, offset, duration, step, count, aggregation) | preset template |
 | **Chart style** *(advanced)* | `fill_current` | toggle | on |
@@ -132,7 +132,7 @@ Select the card and open its **editor** (pencil icon) to configure everything vi
 | | `connect_nulls` | toggle | on |
 | | `show_legend` | toggle | off |
 | **Localization** *(advanced)* | `language` | select | HA language |
-| | `number_format` | select | system |
+| | `number_format` | select (list) | system |
 | | `precision` | number (0–6) | `2` |
 | **Date formats** *(advanced)* | `x_axis_format` | text | adaptive |
 | | `tooltip_format` | text | adaptive |
@@ -154,7 +154,6 @@ For the full field reference (types, validation, and behavior) see [`README.adva
 If this card saves you time, you can support development:
 
 [![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy+me+a+coffee&emoji=&slug=hello.sebastian&button_colour=FFDD00&font_colour=000000&font_family=Lato&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/hello.sebastian)
-[![Buy me a coffee on buycoffee.to](https://buycoffee.to/static/img/share/share-button-primary.png)](https://buycoffee.to/hello.sebastian)
 
 ## Development
 

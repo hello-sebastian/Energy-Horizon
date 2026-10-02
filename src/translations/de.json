@@ -103,5 +103,16 @@
   "editor.anchor.start_of_hour": "Stundenanfang",
   "editor.anchor.now": "Jetzt",
   "editor.error.time_window": "Ungültige Zeitfenster-Konfiguration. Prüfe Anchor, Offset, Dauer, Schritt und Anzahl.",
-  "editor.error.format": "Ungültiges Datumsformat. Verwende eine unterstützte Luxon-Formatzeichenkette."
+  "editor.error.format": "Ungültiges Datumsformat. Verwende eine unterstützte Luxon-Formatzeichenkette.",
+  "editor.comparison_preset.year_over_year": "Jahr zu Jahr",
+  "editor.comparison_preset.month_over_year": "Monat zu Jahr",
+  "editor.comparison_preset.month_over_month": "Monat zu Monat (aufeinanderfolgend)",
+  "editor.force_prefix.auto": "Auto",
+  "editor.force_prefix.none": "Keine (roh)",
+  "editor.force_prefix.G": "G (Giga)",
+  "editor.force_prefix.M": "M (Mega)",
+  "editor.force_prefix.k": "k (Kilo)",
+  "editor.force_prefix.m": "m (Milli)",
+  "editor.force_prefix.u": "µ (Mikro)",
+  "editor.icon.entity": "Entitätssymbol (auto)"
 }

@@ -125,6 +125,11 @@ Użytkownik z niemieckim lub francuskim interfejsem HA otwiera edytor. Wszystkie
 ### Non-Functional Requirements
 
 - **FR-020** (a11y): Wszystkie nowe kontrolki edytora MUSI być w pełni operowalne klawiaturą i semantycznie poprawne pod względem ARIA — wymagania te MUSI być spełnione przez natywne komponenty HA (`ha-form`, selektory, `ha-expansion-panel`), a nie przez niestandardowe UI; etykiety pól oraz komunikaty błędów inline MUSI być odczytywalne przez screen reader (zlokalizowane, bez surowych kluczy). Kontrast tekstów MUSI wynikać z natywnych tokenów HA (`--primary-text-color` itd.) i zachowywać WCAG AA.
+- **FR-021** (etykiety opcji): Teksty opcji list `comparison_preset` (year_over_year, month_over_year, month_over_month) oraz `force_prefix` (auto, none, G, M, k, m, u) MUSI być zlokalizowane we wszystkich czterech językach (en, pl, de, fr) przez klucze `editor.comparison_preset.*` i `editor.force_prefix.*`; brak tłumaczenia MUSI degradować się do angielskiego.
+- **FR-022** (dropdowny): Pola `aggregation`, `time_window.aggregation`, `number_format`, `force_prefix` oraz `icon` MUSI być renderowane jako listy rozwijane (`ha-selector-select` z `mode: "list"`), nie jako przyciski radio.
+- **FR-023** (tytuły sekcji): Każda sekcja edytora MUSI mieć widoczny, zlokalizowany tytuł — sekcje podstawowe jako nagłówek `<h3>`, sekcje zaawansowane jako etykieta panelu rozwijanego. Spójne odstępy między polami wewnątrz sekcji.
+- **FR-024** (zachowanie sekcji): Kliknięcie wewnątrz zawartości sekcji (dropdown, radio, przełącznik) NIE MUSI zwijać sekcji — zwijanie/rozwijanie następuje wyłącznie po kliknięciu w nagłówek/strzałkę panelu. Zwinięta sekcja MUSI nie zajmować miejsca w układzie.
+- **FR-025** (ikona): Pole `icon` MUSI być listą rozwijaną z pierwszą opcją „Ikona encji (auto)" (wartość `""` — karta dziedziczy ikonę encji). Gdy YAML zawiera `icon`, lista MUSI pokazywać bieżącą wartość jako wybraną. Wybór `""` zapisuje `icon` jako `undefined` (pole pominięte w YAML).
 
 - **CardConfig** *(istniejący — `src/card/types.ts`)*: Pełny obiekt konfiguracji. Edytor odczytuje i zapisuje ten typ. W tym rozszerzeniu wszystkie pola (poza `type` i aliasem `forecast`) mają kontrolki wizualne.
 - **EditorSchema** *(rozszerzony — `src/card/energy-horizon-card-editor.ts`)*: Statyczna tablica deskryptorów pól. W tym rozszerzeniu zawiera wszystkie pola z FR-003…FR-010, pogrupowane w sekcje.
@@ -146,6 +151,8 @@ Użytkownik z niemieckim lub francuskim interfejsem HA otwiera edytor. Wszystkie
 - **SC-005**: Użytkownik, który nigdy nie edytował YAML, może skonfigurować wszystkie sekcje edytora (nagłówek, okna czasowe, prognoza, styl, lokalizacja) bez przełączania się w tryb YAML.
 - **SC-006**: Edytor otwiera się i wyświetla wszystkie pola bez błędu JavaScript w 100% przypadków, gdy karta ma ważną istniejącą konfigurację.
 - **SC-007**: Zmiana dowolnego pola w edytorze jest odzwierciedlona w wizualnym wyjściu karty w ciągu 500 ms (live preview).
+- **SC-008**: Zero przypadków zwinięcia sekcji po interakcji z kontrolką wewnątrz sekcji (dropdown, radio, przełącznik) — zwijanie wyłącznie przez nagłówek/strzałkę.
+- **SC-009**: Wszystkie etykiety pól, tytuły sekcji i teksty opcji list są zlokalizowane w 4 językach (en, pl, de, fr); zero surowych kluczy w UI.
 
 ---
 
@@ -174,3 +181,11 @@ Użytkownik z niemieckim lub francuskim interfejsem HA otwiera edytor. Wszystkie
 - Q: Czy dokumentacja jest w zakresie tej funkcji? → A: Tak — README, README.advanced i wiki. W wiki pokrycie edytora ląduje w istniejącej stronie `Configuration-and-Customization.md` (Reference) + uzupełnienie `Documentation-Maintenance.md` (Spec anchors + drift-check) — **bez** nowej, odrębnej strony „GUI Editor" (unikamy duplikatu Diátaxis).
 - Q: Gdy pole z walidacją (`x_axis_format`, `tooltip_format`, `time_window`) ma nieprawidłową wartość, co edytor robi z emisją konfiguracji? → A: Wzorzec domeny 005: edytor emituje pełną konfigurację (wraz z nieprawidłową wartością) przy każdej zmianie + błąd inline przy polu; karta jest warstwą walidacji (czytelny stan błędu: komunikat + brak wykresu do czasu poprawy). Edytor NIE blokuje emisji `config-changed`.
 - Q: Jak edytor układa 27 pól w panelu bocznym HA? → A: Progresywne ujawnianie — sekcje podstawowe (encja, tytuł, porównanie) zawsze widoczne; sekcje zaawansowane (okno czasowe, styl wykresu, lokalizacja/liczby, formaty dat, diagnostyka) zwinięte domyślnie (akordeon); stan rozwinięcia niepersystowany (przy otwarciu edytora startują zwinięte).
+
+### Session 2026-10-01
+
+- Q: Czy etykiety opcji `comparison_preset` i `force_prefix` mają być zlokalizowane? → A: Tak — nowe klucze `editor.comparison_preset.*` i `editor.force_prefix.*` w 4 słownikach (FR-021).
+- Q: Czy `aggregation`, `time_window.aggregation`, `number_format` mają być dropdownami? → A: Tak — `mode: "list"` (FR-022).
+- Q: Czy sekcje podstawowe mają mieć widoczne tytuły? → A: Tak — `<h3>` z zlokalizowanym tekstem (FR-023).
+- Q: Czy kliknięcie wewnątrz sekcji zwija sekcję? → A: Nie — zwijanie wyłącznie przez nagłówek/strzałkę (FR-024).
+- Q: Jak obsłużyć ikonę, gdy YAML nie ma `icon`? → A: Pierwsza opcja dropdown = „Ikona encji (auto)" (wartość `""`); karta dziedziczy ikonę encji (FR-025).

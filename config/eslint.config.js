@@ -13,7 +13,9 @@ const browserGlobals = {
   getComputedStyle: "readonly",
   Document: "readonly",
   ResizeObserver: "readonly",
-  CustomEvent: "readonly"
+  CustomEvent: "readonly",
+  Event: "readonly",
+  Node: "readonly"
 };
 
 export default [

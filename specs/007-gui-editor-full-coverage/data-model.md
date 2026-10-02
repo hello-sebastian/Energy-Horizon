@@ -15,17 +15,17 @@ No new fields. All 27 user-configurable fields (29 `CardConfig` keys − constan
 | `entity` | `string` | required | entity selector (`sensor` domain) — existing |
 | `title` | `string?` | entity `friendly_name` | text — existing |
 | `show_title` | `boolean?` | `true` (`!== false`) | boolean |
-| `icon` | `string?` | from entity | icon selector |
+| `icon` | `string?` | from entity | select (list) — `""` = entity icon (auto) |
 | `show_icon` | `boolean?` | `true` (`!== false`) | boolean |
 | `comparison_preset` | `ComparisonMode` | `year_over_year` | select — existing |
-| `aggregation` | `WindowAggregation?` | auto (`pickAutoAggregation`) | select (`auto` → `undefined`) |
+| `aggregation` | `WindowAggregation?` | auto (`pickAutoAggregation`) | select (list) (`auto` → `undefined`) |
 | `period_offset` | `number?` | `-1` | number |
 | `time_window` | `TimeWindowYaml?` | preset template | nested section (6 fields) |
 | `show_forecast` | `boolean?` | `true` (`!== false`) | boolean |
 | `precision` | `number?` | `2` | number (0–6) |
 | `debug` | `boolean?` | `false` | boolean |
 | `language` | `string?` | HA language | select (`auto` → `undefined`) |
-| `number_format` | `NumberFormat?` | HA/system | select |
+| `number_format` | `NumberFormat?` | HA/system | select (list) |
 | `fill_current` | `boolean?` | `true` | boolean |
 | `fill_reference` | `boolean?` | `false` | boolean |
 | `fill_current_opacity` | `number?` | `30` (`clampOpacity`) | number (0–100) |
@@ -38,7 +38,7 @@ No new fields. All 27 user-configurable fields (29 `CardConfig` keys − constan
 | `show_narrative_comment` | `boolean?` | `true` (`!== false`) | boolean — existing |
 | `x_axis_format` | `string?` | adaptive | text + inline validation |
 | `tooltip_format` | `string?` | adaptive | text + inline validation |
-| `force_prefix` | `ForcePrefix?` | `auto` | select — existing |
+| `force_prefix` | `ForcePrefix?` | `auto` | select (list) — existing |
 
 **Not editor-controlled**: `type` (constant `custom:energy-horizon-card`), `forecast` (alias merged into `show_forecast` during `setConfig` normalization).
 
@@ -73,8 +73,8 @@ interface EditorSection {
 | `diagnostics` | yes | `debug` |
 
 **Mapping rules** (pure, unit-tested):
-- `toForm`: applies card defaults for unset fields (R-008); `aggregation`/`language` `undefined` → `"auto"`; `time_window` unset → values from `getPresetTemplate(comparison_preset, period_offset)`.
-- `fromForm`: `"auto"` → `undefined` (key omitted); empty `time_window_*` → omitted from `time_window` object; untouched `time_window` sub-fields → `time_window` key omitted entirely (preset applies).
+- `toForm`: applies card defaults for unset fields (R-008); `aggregation`/`language` `undefined` → `"auto"`; `icon` `undefined` → `""` (entity icon auto); `time_window` unset → values from `getPresetTemplate(comparison_preset, period_offset)`.
+- `fromForm`: `"auto"` → `undefined` (key omitted); `icon` `""` → `undefined` (key omitted); empty `time_window_*` → omitted from `time_window` object; untouched `time_window` sub-fields → `time_window` key omitted entirely (preset applies).
 - Unknown values in select fields (typo in YAML) → form shows `auto`/empty; the **raw value is preserved in `_config`** and emitted unchanged (FR-013) — the mapping only affects what the control displays, never what is stored.
 
 ---
@@ -135,6 +135,8 @@ field change ──► merge into _config ──► re-validate affected fields 
 | { name: string; selector: { icon: { placeholder?: string } }; required?: boolean }
 ```
 
+The `select` variant is extended with `mode?: "list" | "dropdown"` (FR-022) so `ha-selector-select` renders a dropdown instead of radio buttons.
+
 ---
 
 ### 6. `SUPPORTED_LANGUAGES` *(new — `src/card/localize.ts`)*
@@ -154,8 +156,8 @@ The `editor.*` namespace **exists since 005** (base keys in en/pl/de; missing fr
 | Group | Keys |
 |---|---|
 | Field labels | `editor.show_title`, `editor.icon`, `editor.show_icon`, `editor.aggregation`, `editor.period_offset`, `editor.show_forecast`, `editor.fill_current`, `editor.fill_reference`, `editor.fill_current_opacity`, `editor.fill_reference_opacity`, `editor.primary_color`, `editor.connect_nulls`, `editor.show_legend`, `editor.language`, `editor.number_format`, `editor.precision`, `editor.x_axis_format`, `editor.tooltip_format`, `editor.debug`, `editor.time_window_anchor`, `editor.time_window_offset`, `editor.time_window_duration`, `editor.time_window_step`, `editor.time_window_count`, `editor.time_window_aggregation` |
-| Section titles (8 — `comparison` renders without a heading by default; its key is present for completeness) | `editor.section.comparison`, `editor.section.header`, `editor.section.time_window`, `editor.section.forecast`, `editor.section.chart_style`, `editor.section.localization`, `editor.section.date_formats`, `editor.section.diagnostics` |
-| Options | `editor.aggregation.{auto,hour,day,week,month}`, `editor.number_format.{comma,decimal,language,system}`, `editor.language.{auto,en,pl,de,fr}`, `editor.anchor.{start_of_year,start_of_month,start_of_week,start_of_day,start_of_hour,now}` |
+| Section titles (8 — all sections render a visible title, FR-023) | `editor.section.comparison`, `editor.section.header`, `editor.section.time_window`, `editor.section.forecast`, `editor.section.chart_style`, `editor.section.localization`, `editor.section.date_formats`, `editor.section.diagnostics` |
+| Options | `editor.aggregation.{auto,hour,day,week,month}`, `editor.number_format.{comma,decimal,language,system}`, `editor.language.{auto,en,pl,de,fr}`, `editor.anchor.{start_of_year,start_of_month,start_of_week,start_of_day,start_of_hour,now}`, `editor.comparison_preset.{year_over_year,month_over_year,month_over_month}`, `editor.force_prefix.{auto,none,G,M,k,m,u}`, `editor.icon.entity` |
 | Errors | `editor.error.time_window`, `editor.error.format` |
 
 Missing key in a language → `createLocalize` falls back to English (existing behavior); raw keys never rendered (SC-003).
