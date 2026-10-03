@@ -28,7 +28,7 @@ Use this checklist for every release that changes user-visible behavior.
 ### 2) Drift checks (docs vs code)
 
 - [ ] Scan `src/card/types.ts` for new/removed config keys and update [Configuration and Customization](Configuration-and-Customization) (including **Layout sections** when `show_*` visibility flags change).
-- [ ] Scan `src/card/energy-horizon-card-editor.ts` (section descriptors + `toForm`/`fromForm` + select `mode`) and update the **Visual editor coverage** table in [Configuration and Customization](Configuration-and-Customization) — keep field → control (incl. `select (list)` vs `select`) → default in sync with the implementation.
+- [ ] Scan `src/card/energy-horizon-card-editor.ts` (section descriptors + `toForm`/`fromForm` + select `mode`/`custom_value`) and update the **Visual editor coverage** table in [Configuration and Customization](Configuration-and-Customization) — keep field → control (incl. `select (dropdown)` vs `select`, and searchable `custom_value` for the icon field) → default in sync with the implementation.
 - [ ] Scan `src/translations/en.json` for new status keys (errors/warnings) and ensure troubleshooting/reference pages mention them.
 - [ ] For `text_summary.*` keys: keep **one complete phrase per key** with `{{deltaUnit}}` / `{{deltaPercent}}` (or other placeholders) — do not reintroduce split `*_before` / `*_after` pairs.
 - [ ] If time windows changed: verify [Time Window Reference](Time-Window-Reference) and [How-To: Time Windows](How-To-Time-Windows) still match `src/card/time-windows/*`.

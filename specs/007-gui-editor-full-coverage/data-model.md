@@ -15,17 +15,17 @@ No new fields. All 27 user-configurable fields (29 `CardConfig` keys − constan
 | `entity` | `string` | required | entity selector (`sensor` domain) — existing |
 | `title` | `string?` | entity `friendly_name` | text — existing |
 | `show_title` | `boolean?` | `true` (`!== false`) | boolean |
-| `icon` | `string?` | from entity | select (list) — `""` = entity icon (auto) |
+| `icon` | `string?` | from entity | select (dropdown, searchable `custom_value`) — `auto` = entity icon (auto); any MDI icon reachable |
 | `show_icon` | `boolean?` | `true` (`!== false`) | boolean |
-| `comparison_preset` | `ComparisonMode` | `year_over_year` | select — existing |
-| `aggregation` | `WindowAggregation?` | auto (`pickAutoAggregation`) | select (list) (`auto` → `undefined`) |
+| `comparison_preset` | `ComparisonMode` | `year_over_year` | select (dropdown) — existing |
+| `aggregation` | `WindowAggregation?` | auto (`pickAutoAggregation`) | select (dropdown) (`auto` → `undefined`) |
 | `period_offset` | `number?` | `-1` | number |
 | `time_window` | `TimeWindowYaml?` | preset template | nested section (6 fields) |
 | `show_forecast` | `boolean?` | `true` (`!== false`) | boolean |
 | `precision` | `number?` | `2` | number (0–6) |
 | `debug` | `boolean?` | `false` | boolean |
-| `language` | `string?` | HA language | select (`auto` → `undefined`) |
-| `number_format` | `NumberFormat?` | HA/system | select (list) |
+| `language` | `string?` | HA language | select (dropdown) (`auto` → `undefined`) |
+| `number_format` | `NumberFormat?` | HA/system | select (dropdown) |
 | `fill_current` | `boolean?` | `true` | boolean |
 | `fill_reference` | `boolean?` | `false` | boolean |
 | `fill_current_opacity` | `number?` | `30` (`clampOpacity`) | number (0–100) |
@@ -38,7 +38,7 @@ No new fields. All 27 user-configurable fields (29 `CardConfig` keys − constan
 | `show_narrative_comment` | `boolean?` | `true` (`!== false`) | boolean — existing |
 | `x_axis_format` | `string?` | adaptive | text + inline validation |
 | `tooltip_format` | `string?` | adaptive | text + inline validation |
-| `force_prefix` | `ForcePrefix?` | `auto` | select (list) — existing |
+| `force_prefix` | `ForcePrefix?` | `auto` | select (dropdown) — existing |
 
 **Not editor-controlled**: `type` (constant `custom:energy-horizon-card`), `forecast` (alias merged into `show_forecast` during `setConfig` normalization).
 
@@ -73,8 +73,8 @@ interface EditorSection {
 | `diagnostics` | yes | `debug` |
 
 **Mapping rules** (pure, unit-tested):
-- `toForm`: applies card defaults for unset fields (R-008); `aggregation`/`language` `undefined` → `"auto"`; `icon` `undefined` → `""` (entity icon auto); `time_window` unset → values from `getPresetTemplate(comparison_preset, period_offset)`.
-- `fromForm`: `"auto"` → `undefined` (key omitted); `icon` `""` → `undefined` (key omitted); empty `time_window_*` → omitted from `time_window` object; untouched `time_window` sub-fields → `time_window` key omitted entirely (preset applies).
+- `toForm`: applies card defaults for unset fields (R-008); `aggregation`/`language` `undefined` → `"auto"`; `icon` `undefined` → `"auto"` (entity icon auto); `time_window` unset → values from `getPresetTemplate(comparison_preset, period_offset)`.
+- `fromForm`: `"auto"` → `undefined` (key omitted) for `aggregation`/`language`/`force_prefix`/`icon`; empty `time_window_*` → omitted from `time_window` object; untouched `time_window` sub-fields → `time_window` key omitted entirely (preset applies).
 - Unknown values in select fields (typo in YAML) → form shows `auto`/empty; the **raw value is preserved in `_config`** and emitted unchanged (FR-013) — the mapping only affects what the control displays, never what is stored.
 
 ---
@@ -85,12 +85,12 @@ Flat fields mapped to `CardConfig.time_window` (`TimeWindowYaml`):
 
 | Form field | Config path | Selector | Validation |
 |---|---|---|---|
-| `time_window_anchor` | `time_window.anchor` | select (6 `TimeAnchor` values) | via merged validation |
+| `time_window_anchor` | `time_window.anchor` | select (dropdown, 6 `TimeAnchor` values) | via merged validation |
 | `time_window_offset` | `time_window.offset` | text (duration token, e.g. `+9M`) | via merged validation |
 | `time_window_duration` | `time_window.duration` | text (duration token, e.g. `1y`) | via merged validation |
 | `time_window_step` | `time_window.step` | text (duration token) | via merged validation |
 | `time_window_count` | `time_window.count` | number (1–24) | via merged validation |
-| `time_window_aggregation` | `time_window.aggregation` | select (`auto`/hour/day/week/month) | precedence: `time_window.aggregation` > top-level `aggregation` > auto-pick |
+| `time_window_aggregation` | `time_window.aggregation` | select (dropdown, `auto`/hour/day/week/month) | precedence: `time_window.aggregation` > top-level `aggregation` > auto-pick |
 
 **Validation**: after any change in this section, the editor builds `buildMergedTimeWindowConfig(config)` and runs `validateMergedTimeWindowConfig(merged)` (card functions, R-004). On failure: inline error under the section (localized `status.*` key / message); `config-changed` still emitted (FR-014).
 
@@ -135,7 +135,7 @@ field change ──► merge into _config ──► re-validate affected fields 
 | { name: string; selector: { icon: { placeholder?: string } }; required?: boolean }
 ```
 
-The `select` variant is extended with `mode?: "list" | "dropdown"` (FR-022) so `ha-selector-select` renders a dropdown instead of radio buttons.
+The `select` variant is extended with `mode?: "list" | "dropdown"` and `custom_value?: boolean` (FR-022, FR-025). `mode: "dropdown"` makes `ha-selector-select` render the compact dropdown (all eight selects); `mode: "list"` would render radio buttons (the earlier bug). `custom_value: true` (icon field) renders a searchable combo box so any MDI icon is reachable.
 
 ---
 
@@ -161,6 +161,8 @@ The `editor.*` namespace **exists since 005** (base keys in en/pl/de; missing fr
 | Errors | `editor.error.time_window`, `editor.error.format` |
 
 Missing key in a language → `createLocalize` falls back to English (existing behavior); raw keys never rendered (SC-003).
+
+Icon option labels are an exception: icon names (e.g. `mdi:flash`) are **not** translatable, so the editor's schema builder shows them verbatim and localizes only the `auto` sentinel via `editor.icon.entity` (FR-025).
 
 ---
 

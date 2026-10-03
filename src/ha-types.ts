@@ -29,8 +29,17 @@ export type HaFormSchema =
       selector: {
         select: {
           options: Array<{ value: string; label: string }>;
-          /** HA `ha-selector-select` mode: `list` renders a dropdown (007). */
+          /**
+           * HA `ha-selector-select` mode: `list` renders radio buttons,
+           * `dropdown` renders the compact dropdown (007).
+           */
           mode?: "list" | "dropdown";
+          /**
+           * HA `ha-selector-select` `custom_value`: renders a searchable
+           * combo box (free text + suggestions) — used for the icon field so
+           * any MDI icon is reachable (007).
+           */
+          custom_value?: boolean;
         };
       };
       required?: boolean;

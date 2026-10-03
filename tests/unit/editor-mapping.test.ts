@@ -197,15 +197,15 @@ describe("fromForm (US1)", () => {
     expect(patch.aggregation).toBe("not_a_real_value");
   });
 
-  it("icon: `\"\"` → key omitted (entity icon auto); concrete stored (FR-025)", () => {
+  it("icon: `auto` → key omitted (entity icon auto); concrete stored (FR-025)", () => {
     const header = sectionById("header");
-    expect(header.fromForm({ icon: "" }).icon).toBeUndefined();
+    expect(header.fromForm({ icon: "auto" }).icon).toBeUndefined();
     expect(header.fromForm({ icon: "mdi:flash" }).icon).toBe("mdi:flash");
   });
 
-  it("icon: toForm maps unset icon to `\"\"` (entity icon auto)", () => {
+  it("icon: toForm maps unset icon to `auto` (entity icon auto)", () => {
     const header = sectionById("header");
-    expect(header.toForm(baseConfig()).icon).toBe("");
+    expect(header.toForm(baseConfig()).icon).toBe("auto");
     expect(header.toForm(baseConfig({ icon: "mdi:flash" })).icon).toBe("mdi:flash");
   });
 
@@ -377,7 +377,7 @@ describe("section model (US1)", () => {
     }
   });
 
-  it("aggregation, time_window_aggregation, number_format, force_prefix, icon use `mode: \"list\"` (FR-022)", () => {
+  it("all eight selects use `mode: \"dropdown\"` (FR-022)", () => {
     const tw = sectionById("time_window");
     const loc = sectionById("localization");
     const basic = sectionById("basic");
@@ -386,29 +386,36 @@ describe("section model (US1)", () => {
     const findSelect = (
       schema: typeof tw.schema,
       name: string
-    ): { mode?: string } | undefined => {
+    ): { mode?: string; custom_value?: boolean } | undefined => {
       const entry = schema.find((e) => e.name === name);
       if (!entry || !("selector" in entry) || !entry.selector || !("select" in entry.selector)) {
         return undefined;
       }
-      return entry.selector.select as { mode?: string };
+      return entry.selector.select as { mode?: string; custom_value?: boolean };
     };
 
-    expect(findSelect(tw.schema, "aggregation")?.mode).toBe("list");
-    expect(findSelect(tw.schema, "time_window_aggregation")?.mode).toBe("list");
-    expect(findSelect(loc.schema, "number_format")?.mode).toBe("list");
-    expect(findSelect(basic.schema, "force_prefix")?.mode).toBe("list");
-    expect(findSelect(header.schema, "icon")?.mode).toBe("list");
+    expect(findSelect(basic.schema, "comparison_preset")?.mode).toBe("dropdown");
+    expect(findSelect(basic.schema, "force_prefix")?.mode).toBe("dropdown");
+    expect(findSelect(header.schema, "icon")?.mode).toBe("dropdown");
+    expect(findSelect(tw.schema, "aggregation")?.mode).toBe("dropdown");
+    expect(findSelect(tw.schema, "time_window_anchor")?.mode).toBe("dropdown");
+    expect(findSelect(tw.schema, "time_window_aggregation")?.mode).toBe("dropdown");
+    expect(findSelect(loc.schema, "language")?.mode).toBe("dropdown");
+    expect(findSelect(loc.schema, "number_format")?.mode).toBe("dropdown");
   });
 
-  it("icon select offers `\"\"` (entity icon auto) as the first option (FR-025)", () => {
+  it("icon select offers `auto` (entity icon auto) first and is searchable (FR-025)", () => {
     const header = sectionById("header");
     const entry = header.schema.find((e) => e.name === "icon");
     expect(entry).toBeDefined();
     if (entry && "selector" in entry && entry.selector && "select" in entry.selector) {
-      const options = entry.selector.select.options;
-      expect(options[0]?.value).toBe("");
-      expect(options.length).toBeGreaterThan(1);
+      const select = entry.selector.select as {
+        options: Array<{ value: string }>;
+        custom_value?: boolean;
+      };
+      expect(select.options[0]?.value).toBe("auto");
+      expect(select.options.length).toBeGreaterThan(1);
+      expect(select.custom_value).toBe(true);
     }
   });
 });

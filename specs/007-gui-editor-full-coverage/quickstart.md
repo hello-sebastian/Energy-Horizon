@@ -50,9 +50,9 @@ Developer guide for implementing full GUI editor coverage. See `data-model.md` f
    - `fromForm`: `"auto"` → `undefined`; empty `time_window_*` → omitted; untouched `time_window` → key omitted.
    - Validation: on `time_window` section change run `buildMergedTimeWindowConfig` + `validateMergedTimeWindowConfig`; on format fields run `validateXAxisFormat`; store results in `_fieldErrors` (inline display). **Never block `_emitConfigChanged()`.**
    - Render: toggle row (005) + sections; basic sections get `<h3 class="eh-section__title">`; advanced sections in `<ha-expansion-panel>` (guard: if element undefined, render unwrapped); `_openSections`/`_fieldErrors` reset in `setConfig`.
-   - Selects with `mode: "list"`: `aggregation`, `time_window_aggregation`, `number_format`, `force_prefix`, `icon` (dropdown, not radio).
-   - Icon: `select` with first option `""` = "Entity icon (auto)"; `toForm`: `icon: config.icon ?? ""`; `fromForm`: `""` → `undefined`.
-   - `_toggleSection`: ignore clicks from inside `ha-form` (only header/chevron toggles); CSS hides collapsed panel content.
+   - Selects with `mode: "dropdown"` (compact dropdown, not radio — `mode: "list"` renders radio buttons): `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, `number_format`.
+   - Icon: `select` with `custom_value: true` (searchable combo box — any MDI icon reachable); first option `auto` = "Entity icon (auto)" (the combo box value handler swallows `""`); `toForm`: `icon: config.icon ?? "auto"`; `fromForm`: `autoToUndefined(data.icon)`.
+   - `_handleExpandedChanged`: syncs `_openSections` from the panel's `expanded-changed` event (the panel's internal `#summary` handler is the sole toggle); `header` property for the section title; collapsed sections take no space via the panel's internal `height: 0px` + `_showContent` gating; `ha-expansion-panel { display: block }` set explicitly (matches HA's own pattern; avoids Chromium overlap bug).
 5. **`Test/tests/unit/editor-mapping.test.ts`** — unit tests (see below).
 6. **Docs** — `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md` (tables must match the implemented sections/fields exactly).
 
@@ -79,9 +79,10 @@ protected render(): TemplateResult {
         if (!s.advanced) return form;
         const open = this._openSections.has(s.id);
         return html`<ha-expansion-panel
-          .label=${this._t(s.labelKey)}
+          .header=${this._t(s.labelKey)}
           .expanded=${open}
-          @click=${() => this._toggleSection(s.id)}
+          @expanded-changed=${(e: CustomEvent<{ expanded: boolean }>) =>
+            this._handleExpandedChanged(s.id, e)}
         >${form}</ha-expansion-panel>`;
       })}
     </div>`;

@@ -145,10 +145,25 @@
 - [X] T030 Set `mode: "list"` on `aggregation`, `time_window_aggregation`, `number_format`, `force_prefix`, and `icon` selects in `src/card/energy-horizon-card-editor.ts` (FR-022)
 - [X] T031 Change `icon` from `ha-selector-icon` to `select` with `mode: "list"`; first option `""` = "Entity icon (auto)"; `toForm`: `icon: config.icon ?? ""`; `fromForm`: `""` → `undefined` (FR-025)
 - [X] T032 Add visible `<h3 class="eh-section__title">` to basic sections in `_renderSection` (FR-023)
-- [X] T033 Fix `_toggleSection` to ignore clicks originating inside `ha-form` (only header/chevron toggles); add CSS `ha-expansion-panel:not(.expanded) ha-form { display: none }` (FR-024)
+- [X] T033 Fix `_toggleSection` to ignore clicks originating inside `ha-form` (only header/chevron toggles); add CSS `ha-expansion-panel:not(.expanded) ha-form { display: none }` (FR-024) — **superseded by T037**
 - [X] T034 Extend `tests/unit/editor-mapping.test.ts`: icon mapping (`""` ⇔ omitted), force_prefix round-trip, comparison_preset round-trip, `mode: "list"` assertions, i18n key presence for all new keys
 - [X] T035 Update speckit artifacts: spec.md (FR-021…FR-025, SC-008, SC-009, Clarifications 2026-10-01), data-model.md (§1, §2, §5, §7), plan.md (D-009…D-012), contracts/lovelace-editor-api.md (§5, invariant 11), research.md (R-011…R-014), tasks.md (this phase)
-- [ ] T036 Update user documentation: `README.md` (aggregation/number_format/time_window_aggregation → "select (list)"; icon → "select (entity icon / custom)"), `README.advanced.md` (same + mapping rules), `wiki-publish/Configuration-and-Customization.md` (same), `wiki-publish/Documentation-Maintenance.md` (drift-check precision), `changelog.md` (new Unreleased/1.0.3 section)
+- [ ] T036 Update user documentation: `README.md` (all eight selects → "select (dropdown)"; icon → "select (dropdown, searchable)"), `README.advanced.md` (same + mapping rules), `wiki-publish/Configuration-and-Customization.md` (same), `wiki-publish/Documentation-Maintenance.md` (drift-check precision), `changelog.md` (new Unreleased/1.0.3 section)
+- [X] T037 Fix `ha-expansion-panel` usage: `.label` → `.header` (the property HA's component actually accepts); remove `@click` handler (panel's internal `#summary` is the sole toggle); add `@expanded-changed` to sync `_openSections`; fix CSS `:not(.expanded)` → `:not([expanded])` (attribute, not class — `reflect: true`). Root cause of "sections not visible" bug.
+
+---
+
+## Phase 9: Dropdowns + Searchable Icon (2026-10-02)
+
+**Purpose**: Fix the radio-button rendering of all eight select fields (root cause: `mode: "list"` renders `<ha-radio-group>` in HA's `ha-selector-select`) and make the icon field a searchable combo box so any MDI icon is reachable.
+
+- [X] T038 Set `mode: "dropdown"` on all eight select fields in `src/card/energy-horizon-card-editor.ts`: `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, `number_format` (FR-022)
+- [X] T039 Make `icon` a searchable combo box: `custom_value: true`; first option `auto` = "Entity icon (auto)" (the combo box value handler swallows `""`); `toForm`: `icon: config.icon ?? "auto"`; `fromForm`: `autoToUndefined(data.icon)` (FR-025)
+- [X] T040 Special-case icon option labels in `_buildSectionSchema`: icon names shown verbatim (not translatable); only `auto` localized via `editor.icon.entity`; fix the stale `mode` comment (FR-025)
+- [X] T041 Extend the `select` variant of `HaFormSchema` in `src/ha-types.ts` with `custom_value?: boolean`; correct the `mode` doc comment (`list` = radio, `dropdown` = dropdown) (FR-022, FR-025)
+- [X] T042 Update `tests/unit/editor-mapping.test.ts`: all-eight `mode: "dropdown"` assertions, icon `auto` sentinel mapping, `custom_value: true` assertion (FR-022, FR-025)
+- [X] T043 Update speckit artifacts: spec.md (FR-022, FR-025, Clarifications 2026-10-02), data-model.md (§1, §2, §5, §7), plan.md (D-010), contracts/lovelace-editor-api.md (§5), research.md (R-012, R-015), tasks.md (this phase)
+- [ ] T044 Update user documentation: `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md`, `changelog.md` — all eight selects as dropdowns; icon as searchable dropdown with Auto (FR-022, FR-025)
 
 ---
 
@@ -214,4 +229,6 @@ Phase 1 (Setup)
 | 5 | US3 — documentation | P2 | T020–T023 (4) |
 | 6 | US4 — i18n | P3 | T024–T025 (2) |
 | 7 | Polish | — | T026–T027 (2) |
-| **Total** | | | **27 tasks** |
+| 8 | Editor UX fixes | — | T028–T037 (10) |
+| 9 | Dropdowns + searchable icon | — | T038–T044 (7) |
+| **Total** | | | **44 tasks** |

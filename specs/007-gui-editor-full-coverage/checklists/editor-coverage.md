@@ -79,7 +79,7 @@
 - [x] CHK043 - Are localized option labels required for `comparison_preset` and `force_prefix` in all four languages? [Completeness, Spec §FR-021, SC-009]
 - [x] CHK044 - Is the dropdown (vs radio) control type specified for `aggregation`, `time_window.aggregation`, `number_format`, `force_prefix`, and `icon`? [Clarity, Spec §FR-022]
 - [x] CHK045 - Is a visible, localized title required for every section (basic: heading; advanced: panel label)? [Completeness, Spec §FR-023]
-- [x] CHK046 - Is the section-toggle isolation requirement (clicks inside form content do NOT collapse; only header/chevron toggles) specified? [Clarity, Spec §FR-024, SC-008]
+- [x] CHK046 - Is the section-toggle isolation requirement (panel's internal `#summary` handler is the sole toggle; `expanded-changed` syncs state; `header` property for title; attribute CSS for collapsed) specified? [Clarity, Spec §FR-024, SC-008]
 - [x] CHK047 - Is the icon "entity icon (auto)" first-option behavior and `""` ⇔ `undefined` mapping specified? [Clarity, Spec §FR-025]
 
 ## Notes

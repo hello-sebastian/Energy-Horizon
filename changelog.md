@@ -7,15 +7,17 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ## [Unreleased]
 
 ### Added
-- **Visual editor — icon auto option:** The header icon control is now a dropdown whose first option is **"Entity icon (auto)"** — selecting it omits `icon` from the saved YAML so the card inherits the entity's icon.
+- **Visual editor — searchable icon picker:** The header icon control is now a **searchable dropdown** — type any MDI icon name (e.g. `mdi:flash`) to use it, with common energy/home icons offered as suggestions. The first option is **"Entity icon (auto)"** — selecting it omits `icon` from the saved YAML so the card inherits the entity's icon.
 
 ### Changed
-- **Visual editor — dropdowns:** `aggregation`, `time_window.aggregation`, `number_format`, `force_prefix`, and `icon` now render as **dropdowns** (compact) instead of radio buttons.
+- **Visual editor — dropdowns:** All eight select fields — `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, and `number_format` — now render as **compact dropdowns** instead of radio buttons.
 - **Visual editor — section titles:** All sections (basic and advanced) now show a **visible, localized title**.
 - **Visual editor — localized option labels:** `comparison_preset` and `force_prefix` option labels are now **localized** in all four languages (en, pl, de, fr).
 
 ### Fixed
 - **Visual editor — section collapse:** Clicking a control inside an expanded section no longer **collapses** the whole section. Only the section header/chevron toggles expansion. Collapsed sections take **no vertical space**.
+- **Visual editor — advanced section headers:** Advanced section headers (title + chevron) are now **visible and clickable**. The `ha-expansion-panel` component's `header` property is used (not `label`), and the panel's internal click handler manages expansion.
+- **Visual editor — section overlap in Chromium:** Advanced sections no longer **overlap** in the HA desktop app (Chromium/Electron). The redundant `display: none` CSS rule on collapsed panel content is removed (the panel's internal `height: 0px` + `_showContent` gating already handles collapse), and `ha-expansion-panel { display: block }` is set explicitly, matching HA's own editor pattern.
 
 ## [1.0.2]
 

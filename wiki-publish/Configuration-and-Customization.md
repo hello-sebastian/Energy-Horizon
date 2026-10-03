@@ -80,23 +80,23 @@ The card's visual editor (`energy-horizon-card-editor`) covers **all 27 user-con
 |---|---|---|---|---|
 | **Comparison** | `entity` | entity picker (`sensor`) | required | The statistic to compare. |
 | | `title` | text | entity `friendly_name` | Header label. |
-| | `comparison_preset` | select | `year_over_year` | `year_over_year` / `month_over_year` / `month_over_month`. |
-| | `force_prefix` | select (list) | `auto` | Unit scaling (`auto`/`none`/`k`/`M`/`G`/`m`/`µ`). |
+| | `comparison_preset` | select (dropdown) | `year_over_year` | `year_over_year` / `month_over_year` / `month_over_month`. |
+| | `force_prefix` | select (dropdown) | `auto` | Unit scaling (`auto`/`none`/`k`/`M`/`G`/`m`/`µ`). |
 | | `show_comparison_summary` | toggle | on | Comparison panel visibility. |
 | | `show_forecast_total_panel` | toggle | on | Forecast \| Total panel visibility. |
 | | `show_narrative_comment` | toggle | on | Narrative comment visibility. |
 | **Header** | `show_title` | toggle | on | Header title visibility. |
-| | `icon` | select (entity icon / custom) | entity icon | Header icon. First option = entity icon (auto); selecting it omits `icon` from YAML. |
+| | `icon` | select (dropdown, searchable) | entity icon | Header icon. First option = entity icon (auto); selecting it omits `icon` from YAML. Searchable — type any MDI icon name (e.g. `mdi:flash`) to use it. |
 | | `show_icon` | toggle | on | Header icon visibility. |
 | **Forecast** | `show_forecast` | toggle | on | Dashed forecast line. |
-| **Time window** | `aggregation` | select (list) | `auto` | Chart resolution (`auto`/`hour`/`day`/`week`/`month`). |
+| **Time window** | `aggregation` | select (dropdown) | `auto` | Chart resolution (`auto`/`hour`/`day`/`week`/`month`). |
 | | `period_offset` | number | `-1` | Reference period offset (years). |
-| | `time_window_anchor` | select | preset | Window start anchor (6 `TimeAnchor` values). |
+| | `time_window_anchor` | select (dropdown) | preset | Window start anchor (6 `TimeAnchor` values). |
 | | `time_window_offset` | text | preset | Duration token (e.g. `+9M`). |
 | | `time_window_duration` | text | preset | Duration token (e.g. `1y`). |
 | | `time_window_step` | text | preset | Duration token. |
 | | `time_window_count` | number (1–24) | preset | Number of windows. |
-| | `time_window_aggregation` | select (list) | `auto` | Per-window aggregation override. |
+| | `time_window_aggregation` | select (dropdown) | `auto` | Per-window aggregation override. |
 | **Chart style** | `fill_current` | toggle | on | Fill under current series. |
 | | `fill_reference` | toggle | off | Fill under reference series. |
 | | `fill_current_opacity` | number (0–100) | `30` | Current fill opacity. |
@@ -104,14 +104,14 @@ The card's visual editor (`energy-horizon-card-editor`) covers **all 27 user-con
 | | `primary_color` | text | `#119894` | Current series color. |
 | | `connect_nulls` | toggle | on | Dashed bridge across null gaps. |
 | | `show_legend` | toggle | off | Legend visibility. |
-| **Localization** | `language` | select | HA language | Translation dictionary (`auto`/`en`/`pl`/`de`/`fr`). |
-| | `number_format` | select (list) | system | `system`/`comma`/`decimal`/`language`. |
+| **Localization** | `language` | select (dropdown) | HA language | Translation dictionary (`auto`/`en`/`pl`/`de`/`fr`). |
+| | `number_format` | select (dropdown) | system | `system`/`comma`/`decimal`/`language`. |
 | | `precision` | number (0–6) | `2` | Decimal places. |
 | **Date formats** | `x_axis_format` | text | adaptive | Luxon pattern for X-axis ticks. |
 | | `tooltip_format` | text | adaptive | Luxon pattern for tooltip header. |
 | **Diagnostics** | `debug` | toggle | off | Extra console diagnostics. |
 
-**Mapping rules:** `toForm` applies card defaults for unset fields; `aggregation`/`language` `undefined` → `auto`; `icon` `undefined` → `""` (entity icon auto); an unset `time_window` shows the active preset's template values. `fromForm` maps `auto` → `undefined` (key omitted), `""` icon → `undefined` (key omitted), and omits untouched `time_window` sub-fields so the preset applies. Unknown select values (a YAML typo) display as `auto`/empty but the **raw value is preserved in the stored config** and emitted unchanged.
+**Mapping rules:** `toForm` applies card defaults for unset fields; `aggregation`/`language`/`icon` `undefined` → `auto`; an unset `time_window` shows the active preset's template values. `fromForm` maps `auto` → `undefined` (key omitted) for `aggregation`/`language`/`force_prefix`/`icon`, and omits untouched `time_window` sub-fields so the preset applies. Unknown select values (a YAML typo) display as `auto`/empty but the **raw value is preserved in the stored config** and emitted unchanged.
 
 ---
 

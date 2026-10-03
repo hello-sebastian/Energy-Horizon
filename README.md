@@ -112,16 +112,16 @@ Select the card and open its **editor** (pencil icon) to configure everything vi
 |---|---|---|---|
 | **Comparison** | `entity` | entity picker (`sensor`) | required |
 | | `title` | text | entity name |
-| | `comparison_preset` | select | `year_over_year` |
-| | `force_prefix` | select (list) | `auto` |
+| | `comparison_preset` | select (dropdown) | `year_over_year` |
+| | `force_prefix` | select (dropdown) | `auto` |
 | | `show_comparison_summary` | toggle | on |
 | | `show_forecast_total_panel` | toggle | on |
 | | `show_narrative_comment` | toggle | on |
 | **Header** | `show_title` | toggle | on |
-| | `icon` | select (entity icon / custom) | entity icon |
+| | `icon` | select (dropdown, searchable) | entity icon |
 | | `show_icon` | toggle | on |
 | **Forecast** | `show_forecast` | toggle | on |
-| **Time window** *(advanced)* | `aggregation` | select (list) | `auto` |
+| **Time window** *(advanced)* | `aggregation` | select (dropdown) | `auto` |
 | | `period_offset` | number | `-1` |
 | | `time_window` | nested (anchor, offset, duration, step, count, aggregation) | preset template |
 | **Chart style** *(advanced)* | `fill_current` | toggle | on |
@@ -131,8 +131,8 @@ Select the card and open its **editor** (pencil icon) to configure everything vi
 | | `primary_color` | text | `#119894` |
 | | `connect_nulls` | toggle | on |
 | | `show_legend` | toggle | off |
-| **Localization** *(advanced)* | `language` | select | HA language |
-| | `number_format` | select (list) | system |
+| **Localization** *(advanced)* | `language` | select (dropdown) | HA language |
+| | `number_format` | select (dropdown) | system |
 | | `precision` | number (0–6) | `2` |
 | **Date formats** *(advanced)* | `x_axis_format` | text | adaptive |
 | | `tooltip_format` | text | adaptive |
