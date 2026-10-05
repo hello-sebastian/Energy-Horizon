@@ -148,7 +148,7 @@
 - [X] T033 Fix `_toggleSection` to ignore clicks originating inside `ha-form` (only header/chevron toggles); add CSS `ha-expansion-panel:not(.expanded) ha-form { display: none }` (FR-024) — **superseded by T037**
 - [X] T034 Extend `tests/unit/editor-mapping.test.ts`: icon mapping (`""` ⇔ omitted), force_prefix round-trip, comparison_preset round-trip, `mode: "list"` assertions, i18n key presence for all new keys
 - [X] T035 Update speckit artifacts: spec.md (FR-021…FR-025, SC-008, SC-009, Clarifications 2026-10-01), data-model.md (§1, §2, §5, §7), plan.md (D-009…D-012), contracts/lovelace-editor-api.md (§5, invariant 11), research.md (R-011…R-014), tasks.md (this phase)
-- [ ] T036 Update user documentation: `README.md` (all eight selects → "select (dropdown)"; icon → "select (dropdown, searchable)"), `README.advanced.md` (same + mapping rules), `wiki-publish/Configuration-and-Customization.md` (same), `wiki-publish/Documentation-Maintenance.md` (drift-check precision), `changelog.md` (new Unreleased/1.0.3 section)
+- [X] T036 Update user documentation: `README.md` (all eight selects → "select (dropdown)"; icon → "select (dropdown, searchable)"), `README.advanced.md` (same + mapping rules), `wiki-publish/Configuration-and-Customization.md` (same), `wiki-publish/Documentation-Maintenance.md` (drift-check precision), `changelog.md` (new Unreleased/1.0.3 section) — 2026-10-03: all five docs updated (commit `880d5f9` + `ec57733`); changelog section is `[Unreleased]` (1.0.3 not yet released)
 - [X] T037 Fix `ha-expansion-panel` usage: `.label` → `.header` (the property HA's component actually accepts); remove `@click` handler (panel's internal `#summary` is the sole toggle); add `@expanded-changed` to sync `_openSections`; fix CSS `:not(.expanded)` → `:not([expanded])` (attribute, not class — `reflect: true`). Root cause of "sections not visible" bug.
 
 ---
@@ -163,7 +163,17 @@
 - [X] T041 Extend the `select` variant of `HaFormSchema` in `src/ha-types.ts` with `custom_value?: boolean`; correct the `mode` doc comment (`list` = radio, `dropdown` = dropdown) (FR-022, FR-025)
 - [X] T042 Update `tests/unit/editor-mapping.test.ts`: all-eight `mode: "dropdown"` assertions, icon `auto` sentinel mapping, `custom_value: true` assertion (FR-022, FR-025)
 - [X] T043 Update speckit artifacts: spec.md (FR-022, FR-025, Clarifications 2026-10-02), data-model.md (§1, §2, §5, §7), plan.md (D-010), contracts/lovelace-editor-api.md (§5), research.md (R-012, R-015), tasks.md (this phase)
-- [ ] T044 Update user documentation: `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md`, `changelog.md` — all eight selects as dropdowns; icon as searchable dropdown with Auto (FR-022, FR-025)
+- [X] T044 Update user documentation: `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md`, `changelog.md` — all eight selects as dropdowns; icon as searchable dropdown with Auto (FR-022, FR-025) — 2026-10-03: all five docs updated in commit `ec57733` (all eight `select (dropdown)`, icon `select (dropdown, searchable)`, mapping rules with `auto` sentinel, drift-check with `custom_value`, changelog searchable-icon entry)
+
+---
+
+## Phase 10: Section Body Isolation (2026-10-05)
+
+**Purpose**: Fix the reported behavior where interacting with a section's own controls (selecting a dropdown option, typing into an input, toggling a switch) collapsed the whole section. Only the section header (title + chevron) must expand/collapse a section (FR-018).
+
+- [X] T045 [US1] In `src/card/energy-horizon-card-editor.ts` `_renderSection`, wrap the advanced section's form + error in an `eh-section__body` container that stops `click`/`pointerdown`/`keydown` propagation, so interactions with the section's own controls never reach the `ha-expansion-panel` header toggle; update the `_handleExpandedChanged` doc comment and add the `.eh-section__body` style (FR-018)
+- [X] T046 [US1] Extend `tests/unit/editor-mapping.test.ts` with a structural guard: an advanced section renders the `eh-section__body` isolation container with the three `stopPropagation` handlers, while a basic section renders the form directly (FR-018)
+- [X] T047 Update speckit artifacts (spec.md FR-018 + Clarifications 2026-10-05, plan.md D-001, data-model.md §4 state transitions, tasks.md this phase) and user documentation (`README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`) — all in the present tense, no change-history sections (FR-018)
 
 ---
 

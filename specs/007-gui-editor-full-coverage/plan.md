@@ -101,7 +101,7 @@ No constitution violations. No complexity exceptions needed.
 ## Design Decisions
 
 ### D-001: Sections as data-driven schema slices + `ha-expansion-panel`
-The editor renders one `<ha-form>` per section. Basic sections (the existing 7 fields, header, forecast) are always visible; advanced sections (time window, chart style, localization/numbers, date formats, diagnostics) are wrapped in `<ha-expansion-panel>` (HA-native accordion), collapsed by default. Section open-state is component-local and resets on every `setConfig()` — not persisted (FR-018). Each form's `value-changed` shallow-merges only its own fields into `_config` — the 005 merge guarantee (SC-002) is preserved per section.
+The editor renders one `<ha-form>` per section. Basic sections (the existing 7 fields, header, forecast) are always visible; advanced sections (time window, chart style, localization/numbers, date formats, diagnostics) are wrapped in `<ha-expansion-panel>` (HA-native accordion), collapsed by default. Section open-state is component-local and resets on every `setConfig()` — not persisted (FR-018). The form body of an advanced section is wrapped in an `eh-section__body` container that stops `click`/`pointerdown`/`keydown` propagation, so interactions with the section's own controls never reach the panel's header toggle — only the header (title + chevron) expands/collapses the section (FR-018). Each form's `value-changed` shallow-merges only its own fields into `_config` — the 005 merge guarantee (SC-002) is preserved per section.
 
 ### D-002: Nested `time_window` via flat form fields
 `ha-form` data is a flat object; the time window section uses flat field names (`time_window_anchor`, `time_window_offset`, `time_window_duration`, `time_window_step`, `time_window_count`, `time_window_aggregation`) mapped into `CardConfig.time_window` by a pure, unit-tested helper (deep-merge; `undefined`/empty values omitted so the preset template applies).
@@ -123,18 +123,6 @@ The `language` select options are derived from the loaded translation dictionari
 
 ### D-008: Documentation in the same feature
 `README.md` gains a "Visual editor" section (**none exists today** — 005's FR-010 drift, fixed here); `README.advanced.md`'s "Lovelace editor" section becomes the full field → control → default table; wiki `Configuration-and-Customization.md` gains a "Visual editor coverage" subsection (Reference quadrant, no new page); `Documentation-Maintenance.md` gains Spec anchors + a drift-check item.
-
-### D-009: Human-readable localized labels for comparison preset and unit prefix (FR-021)
-`comparison_preset` and `force_prefix` select options resolve their labels via `editor.comparison_preset.*` and `editor.force_prefix.*` keys in all four dictionaries. The legacy flat keys from 005 (`editor.year_over_year`, etc.) are retained for backward compatibility but no longer used by the editor.
-
-### D-010: Dropdowns for all eight select fields; searchable icon (FR-022, FR-025)
-All eight select fields — `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, `number_format` — use `ha-selector-select` with `mode: "dropdown"` (compact dropdown) instead of radio buttons. Root cause of the earlier bug: `mode: "list"` renders `<ha-radio-group>` in HA's `ha-selector-select`; only `mode: "dropdown"` renders the dropdown. The `HaFormSchema` select variant is extended with `mode?: "list" | "dropdown"` and `custom_value?: boolean`. The `icon` field additionally sets `custom_value: true` → searchable combo box (suggestions + free text) so any MDI icon is reachable; its Auto option uses the `auto` sentinel (the combo box value handler swallows `""`), mapped to `undefined` via `autoToUndefined` like `aggregation`/`language`/`force_prefix`.
-
-### D-011: Visible section titles and consistent spacing (FR-023)
-Basic sections render an `<h3 class="eh-section__title">` with the localized section name; advanced sections use the `ha-expansion-panel` label. Consistent `.eh-section` container with normalized `ha-form` margins.
-
-### D-012: Section toggle only from header; collapsed sections take no space (FR-024)
-The panel's internal `#summary` click handler is the sole toggle mechanism — clicks on form content never reach it, so FR-024 is guaranteed by the panel's architecture. The editor listens to `expanded-changed` to sync `_openSections` state. The `header` property (not `label`) renders the section title. Collapsed sections occupy no vertical space via the panel's internal `.container { height: 0px }` + `_showContent` slot gating — no external `display: none` rule is needed (and one is harmful in Chromium, where the `display: none`→`block` toggle on slotted content causes `scrollHeight` miscalculation during the expand animation, making subsequent sections overlap). The editor sets `ha-expansion-panel { display: block }` explicitly, matching HA's own pattern in `config-elements-style.ts` and `ha-form-expandable.ts`.
 
 ---
 

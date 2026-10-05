@@ -106,7 +106,7 @@ Want more control? Start here:
 
 ## Visual editor
 
-Select the card and open its **editor** (pencil icon) to configure everything visually — no YAML required. The editor covers **all 27 user-configurable fields** in **8 sections**. The first three are always visible; the other five are collapsed under **Advanced** (click to expand). Every change is written back to the card's YAML, and fields you don't touch are preserved.
+Select the card and open its **editor** (pencil icon) to configure everything visually — no YAML required. The editor covers **all 27 user-configurable fields** in **8 sections**. The first three are always visible; the other five are collapsed under **Advanced**. Click a section's **header** (title + chevron) to expand or collapse it — interacting with the fields inside a section (dropdowns, inputs, toggles) never collapses it. Every change is written back to the card's YAML, and fields you don't touch are preserved.
 
 | Section | Field | Control | Default |
 |---|---|---|---|

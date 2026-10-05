@@ -273,7 +273,7 @@ For **`count` ≥ 3**:
 
 ## Lovelace editor
 
-`EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`. The editor is **data-driven**: each section is a descriptor with a `ha-form` schema, a `toForm` (config → form, applying card defaults) and a `fromForm` (form → config patch). It covers **all 27 user-configurable fields** in **8 sections**. The first three sections are always visible; the other five are collapsed under **Advanced** (`ha-expansion-panel`).
+`EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`. The editor is **data-driven**: each section is a descriptor with a `ha-form` schema, a `toForm` (config → form, applying card defaults) and a `fromForm` (form → config patch). It covers **all 27 user-configurable fields** in **8 sections**. The first three sections are always visible; the other five are collapsed under **Advanced** (`ha-expansion-panel`). A section is expanded or collapsed **only by clicking its header** (title + chevron); interacting with the controls inside a section (selecting a dropdown option, typing into an input, toggling a switch) does not change its expanded state.
 
 **Visual mode (`ha-form`):** every field below is editable. **YAML mode:** requires global `window.jsyaml` (standard HA frontend); the full config is pasted/edited as YAML. Fields you don't touch in the editor are preserved unchanged (zero data loss).
 

@@ -15,7 +15,7 @@
  * `customElements.define` call inside the module is guarded so the import is
  * safe in a non-DOM (node) test environment.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   basicSection,
   headerSection,
@@ -547,5 +547,50 @@ describe("editor i18n (US4)", () => {
       expect(out).toBe(createLocalize("en")("editor.show_title"));
       expect(out).not.toBe("editor.show_title");
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FR-018 — section body isolation (only the header toggles a section)
+//
+// The node test environment has no `ha-expansion-panel`, so we assert on the
+// rendered template structure rather than real click behavior: an advanced
+// section must wrap its form in an `eh-section__body` that stops
+// `click`/`pointerdown`/`keydown` propagation (so interactions with the
+// section's own controls never reach the panel's header toggle), while a basic
+// section renders the form directly.
+// ---------------------------------------------------------------------------
+
+type RenderSection = {
+  _renderSection: (s: EditorSection) => { strings: readonly string[] };
+};
+
+describe("section body isolation (FR-018)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("advanced sections wrap the form in an eh-section__body that stops propagation", () => {
+    // Force the real panel branch (the node env has no ha-expansion-panel).
+    vi.stubGlobal("customElements", {
+      get: (name: string) => (name === "ha-expansion-panel" ? {} : undefined)
+    });
+
+    const editor = new EnergyHorizonCardEditor() as unknown as RenderSection;
+    editor.setConfig(baseConfig() as never);
+    const text = editor._renderSection(sectionById("time_window")).strings.join("");
+
+    expect(text).toContain('class="eh-section__body"');
+    expect(text).toContain("@click=");
+    expect(text).toContain("@pointerdown=");
+    expect(text).toContain("@keydown=");
+  });
+
+  it("basic sections render the form directly (no isolation container)", () => {
+    const editor = new EnergyHorizonCardEditor() as unknown as RenderSection;
+    editor.setConfig(baseConfig() as never);
+    const text = editor._renderSection(sectionById("basic")).strings.join("");
+
+    expect(text).not.toContain("eh-section__body");
   });
 });

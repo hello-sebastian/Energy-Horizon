@@ -30080,10 +30080,11 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
     return t ? e.toForm(t) : {};
   }
   /**
-   * Syncs `_openSections` from the panel's `expanded-changed` event. The
-   * panel's internal `#summary` click handler is the sole toggle mechanism —
-   * clicks on form content never reach it, so FR-024 is guaranteed by the
-   * panel's architecture rather than a custom click handler.
+   * Syncs `_openSections` from the panel's `expanded-changed` event. Only the
+   * panel's header (`#summary`) toggles a section: the form body stops
+   * `click`/`pointerdown`/`keydown` propagation, so interactions with the
+   * section's own controls (dropdowns, inputs, toggles) never reach the
+   * panel's toggle mechanism (FR-018).
    */
   _handleExpandedChanged(e, t) {
     var a;
@@ -30148,8 +30149,15 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
         .expanded=${this._openSections.has(e.id)}
         @expanded-changed=${(a) => this._handleExpandedChanged(e.id, a)}
       >
-        ${i}
-        ${n ? re`<p class="error">${n}</p>` : ""}
+        <div
+          class="eh-section__body"
+          @click=${(a) => a.stopPropagation()}
+          @pointerdown=${(a) => a.stopPropagation()}
+          @keydown=${(a) => a.stopPropagation()}
+        >
+          ${i}
+          ${n ? re`<p class="error">${n}</p>` : ""}
+        </div>
       </ha-expansion-panel>
     ` : re`
         <section class="eh-section">
@@ -30256,6 +30264,11 @@ Cr.styles = Zy`
        (Chromium miscalculates scrollHeight when display:none toggles on
        slotted content; Firefox tolerates it.) */
     ha-expansion-panel {
+      display: block;
+    }
+    /* Form body inside an advanced section: isolates the controls from the
+       panel's header toggle (see _renderSection). */
+    .eh-section__body {
       display: block;
     }
     /* Consistent spacing between form fields inside a section. */

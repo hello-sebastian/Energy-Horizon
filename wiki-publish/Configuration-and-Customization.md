@@ -74,7 +74,7 @@ The Lovelace **visual editor** exposes these three fields (and, since full cover
 
 ## Visual editor coverage
 
-The card's visual editor (`energy-horizon-card-editor`) covers **all 27 user-configurable fields** in **8 sections**. The first three sections are always visible; the other five are collapsed under **Advanced**. Every change is written back to the card's YAML; fields you don't touch are preserved unchanged (zero data loss). `type` (constant) and `forecast` (alias of `show_forecast`) are not editor-controlled.
+The card's visual editor (`energy-horizon-card-editor`) covers **all 27 user-configurable fields** in **8 sections**. The first three sections are always visible; the other five are collapsed under **Advanced**. A section is expanded or collapsed **only by clicking its header** (title + chevron); interacting with the controls inside a section (dropdowns, inputs, toggles) does not change its expanded state. Every change is written back to the card's YAML; fields you don't touch are preserved unchanged (zero data loss). `type` (constant) and `forecast` (alias of `show_forecast`) are not editor-controlled.
 
 | Section | Field | Control | Default | Notes |
 |---|---|---|---|---|

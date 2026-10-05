@@ -25,9 +25,9 @@ Developer guide for implementing full GUI editor coverage. See `data-model.md` f
 
 | File | Change |
 |------|--------|
-| `src/ha-types.ts` | Extend `HaFormSchema` union: `number`, `color`, `icon` selector variants; `select` gains `mode?: "list" \| "dropdown"` |
+| `src/ha-types.ts` | Extend `HaFormSchema` union: `number`, `color`, `icon` selector variants |
 | `src/card/localize.ts` | Export `SUPPORTED_LANGUAGES` (dictionary keys) |
-| `src/translations/en.json` | New `editor.*` keys (labels, sections, options, errors); `editor.comparison_preset.*`, `editor.force_prefix.*`, `editor.icon.entity` |
+| `src/translations/en.json` | New `editor.*` keys (labels, sections, options, errors) |
 | `src/translations/pl.json` | Same |
 | `src/translations/de.json` | Same |
 | `src/translations/fr.json` | Same |
@@ -49,10 +49,7 @@ Developer guide for implementing full GUI editor coverage. See `data-model.md` f
    - `toForm`: apply card defaults (R-008 table in `research.md`); `aggregation`/`language` `undefined` → `"auto"`; unset `time_window` → `getPresetTemplate(comparison_preset, period_offset)` values.
    - `fromForm`: `"auto"` → `undefined`; empty `time_window_*` → omitted; untouched `time_window` → key omitted.
    - Validation: on `time_window` section change run `buildMergedTimeWindowConfig` + `validateMergedTimeWindowConfig`; on format fields run `validateXAxisFormat`; store results in `_fieldErrors` (inline display). **Never block `_emitConfigChanged()`.**
-   - Render: toggle row (005) + sections; basic sections get `<h3 class="eh-section__title">`; advanced sections in `<ha-expansion-panel>` (guard: if element undefined, render unwrapped); `_openSections`/`_fieldErrors` reset in `setConfig`.
-   - Selects with `mode: "dropdown"` (compact dropdown, not radio — `mode: "list"` renders radio buttons): `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, `number_format`.
-   - Icon: `select` with `custom_value: true` (searchable combo box — any MDI icon reachable); first option `auto` = "Entity icon (auto)" (the combo box value handler swallows `""`); `toForm`: `icon: config.icon ?? "auto"`; `fromForm`: `autoToUndefined(data.icon)`.
-   - `_handleExpandedChanged`: syncs `_openSections` from the panel's `expanded-changed` event (the panel's internal `#summary` handler is the sole toggle); `header` property for the section title; collapsed sections take no space via the panel's internal `height: 0px` + `_showContent` gating; `ha-expansion-panel { display: block }` set explicitly (matches HA's own pattern; avoids Chromium overlap bug).
+   - Render: toggle row (005) + sections; advanced sections in `<ha-expansion-panel>` (guard: if element undefined, render unwrapped); `_openSections`/`_fieldErrors` reset in `setConfig`.
 5. **`Test/tests/unit/editor-mapping.test.ts`** — unit tests (see below).
 6. **Docs** — `README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Documentation-Maintenance.md` (tables must match the implemented sections/fields exactly).
 
@@ -79,10 +76,9 @@ protected render(): TemplateResult {
         if (!s.advanced) return form;
         const open = this._openSections.has(s.id);
         return html`<ha-expansion-panel
-          .header=${this._t(s.labelKey)}
+          .label=${this._t(s.labelKey)}
           .expanded=${open}
-          @expanded-changed=${(e: CustomEvent<{ expanded: boolean }>) =>
-            this._handleExpandedChanged(s.id, e)}
+          @click=${() => this._toggleSection(s.id)}
         >${form}</ha-expansion-panel>`;
       })}
     </div>`;
