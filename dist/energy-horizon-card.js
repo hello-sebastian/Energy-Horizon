@@ -30251,9 +30251,12 @@ Cr.styles = Zy`
     }
     .eh-section {
       margin-bottom: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--divider-color, #ccc);
+      border-radius: 8px;
     }
     .eh-section__title {
-      margin: 8px 0 4px;
+      margin: 0 0 4px;
       font-size: 0.9rem;
       font-weight: 600;
       color: var(--primary-text-color, #000);
@@ -30265,11 +30268,15 @@ Cr.styles = Zy`
        slotted content; Firefox tolerates it.) */
     ha-expansion-panel {
       display: block;
+      margin-bottom: 8px;
+      border: 1px solid var(--divider-color, #ccc);
+      border-radius: 8px;
     }
     /* Form body inside an advanced section: isolates the controls from the
        panel's header toggle (see _renderSection). */
     .eh-section__body {
       display: block;
+      padding: 0 12px 8px;
     }
     /* Consistent spacing between form fields inside a section. */
     .eh-section ha-form {

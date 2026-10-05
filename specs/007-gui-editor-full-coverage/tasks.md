@@ -187,6 +187,15 @@
 
 ---
 
+## Phase 12: Section Borders (2026-10-05)
+
+**Purpose**: Make section boundaries visible in the visual editor — each section (basic and advanced) is framed with the HA-standard `--divider-color` border + `border-radius`, so the user sees where a section ends and which controls belong to it. CSS-only refinement of the editor's `static styles`; no structural, behavioral, or data-model change.
+
+- [X] T051 [US1] In `src/card/energy-horizon-card-editor.ts` `static styles`: `.eh-section` gains `padding: 8px 12px` + `border: 1px solid var(--divider-color, #ccc)` + `border-radius: 8px`; `ha-expansion-panel` gains the same border + `margin-bottom: 8px`; `.eh-section__title` top margin drops to `0 0 4px` (section padding provides the gap); `.eh-section__body` gains `padding: 0 12px 8px` so the form never touches the border (FR-018)
+- [X] T052 Verify `tests/unit/editor-mapping.test.ts` still passes unchanged (class names, handlers, and `_renderSection` structure are untouched) — 2026-10-05: 35/35 passed; visual confirmation of the framed sections is the remaining manual step (T027 pattern)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Task Dependency Graph
@@ -251,4 +260,7 @@ Phase 1 (Setup)
 | 7 | Polish | — | T026–T027 (2) |
 | 8 | Editor UX fixes | — | T028–T037 (10) |
 | 9 | Dropdowns + searchable icon | — | T038–T044 (7) |
-| **Total** | | | **44 tasks** |
+| 10 | Section body isolation | — | T045–T047 (3) |
+| 11 | setConfig self-echo guard | — | T048–T050 (3) |
+| 12 | Section borders | — | T051–T052 (2) |
+| **Total** | | | **52 tasks** |

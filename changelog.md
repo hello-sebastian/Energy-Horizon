@@ -13,6 +13,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 - **Visual editor — dropdowns:** All eight select fields — `comparison_preset`, `force_prefix`, `icon`, `aggregation`, `time_window_anchor`, `time_window_aggregation`, `language`, and `number_format` — now render as **compact dropdowns** instead of radio buttons.
 - **Visual editor — section titles:** All sections (basic and advanced) now show a **visible, localized title**.
 - **Visual editor — localized option labels:** `comparison_preset` and `force_prefix` option labels are now **localized** in all four languages (en, pl, de, fr).
+- **Visual editor — section borders:** Every editor section (basic and advanced) is now framed with a **Home Assistant-standard border** (`--divider-color` + rounded corners) and inner padding, so it is clearly visible where a section ends and which controls belong to it.
 
 ### Fixed
 - **Visual editor — section collapse:** Clicking a control inside an expanded section no longer **collapses** the whole section. Only the section header/chevron toggles expansion. Collapsed sections take **no vertical space**.
