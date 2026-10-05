@@ -177,6 +177,16 @@
 
 ---
 
+## Phase 11: setConfig Self-Echo Guard (2026-10-05)
+
+**Purpose**: The Phase 10 body isolation alone did not stop the collapse. Root cause: entering a value emits `config-changed`, and HA's `HuiElementEditor` wrapper re-invokes `setConfig` on the **same** (reused) editor element with the exact object the editor just emitted; `setConfig` reset `_openSections` to empty, collapsing every section. `setConfig` now detects that self-echo by object identity and skips the reset (FR-018).
+
+- [X] T048 [US1] In `src/card/energy-horizon-card-editor.ts` `setConfig`, detect the HA self-echo (`config === this._config`) and reset `_openSections`/`_fieldErrors` only for a genuinely new config object; document the mechanism in the method comment (FR-018)
+- [X] T049 [US1] Extend `tests/unit/editor-mapping.test.ts` with a `setConfig self-echo preserves open sections` suite: same-object echo keeps sections open, a real value change + echo round-trip keeps them open, a genuinely new object resets to collapsed (FR-018)
+- [X] T050 Update speckit artifacts (spec.md FR-018 + Clarifications 2026-10-05, plan.md D-001, data-model.md §4 state transitions, tasks.md this phase); user documentation wording (behavior-level) is unchanged and remains accurate (FR-018)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Task Dependency Graph

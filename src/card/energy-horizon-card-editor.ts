@@ -708,6 +708,16 @@ export class EnergyHorizonCardEditor extends LitElement {
   @state() private accessor _fieldErrors: Record<string, string | null> = {};
 
   setConfig(config: CardConfigInput): void {
+    // HA's `HuiElementEditor` re-invokes `setConfig` with the exact object we
+    // last emitted via `config-changed` (a self-echo): it listens for
+    // `config-changed`, sets its `value`, and calls `setConfig` again on this
+    // same (reused) editor element. Detect that echo by object identity against
+    // the config we currently hold. On a self-echo we must NOT reset the
+    // ephemeral open-section state, otherwise every keystroke collapses all
+    // advanced sections (FR-018). A genuinely new config object (fresh open or
+    // an external change) still resets to the default collapsed state.
+    const isSelfEcho = config === this._config;
+
     const raw = config;
     const comparison_preset = resolveComparisonPreset(raw);
     const { comparison_mode: _legacyComparisonMode, ...rest } = raw;
@@ -718,10 +728,12 @@ export class EnergyHorizonCardEditor extends LitElement {
     } as CardConfig;
     this._editorMode = "visual";
     this._yamlError = null;
-    // Ephemeral state resets on every setConfig (FR-018): advanced sections
-    // start collapsed and no stale inline errors survive.
-    this._openSections = new Set<string>();
-    this._fieldErrors = {};
+    if (!isSelfEcho) {
+      // Ephemeral state resets on a fresh config (FR-018): advanced sections
+      // start collapsed and no stale inline errors survive.
+      this._openSections = new Set<string>();
+      this._fieldErrors = {};
+    }
     this.requestUpdate();
   }
 

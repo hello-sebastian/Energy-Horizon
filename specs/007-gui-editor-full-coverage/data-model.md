@@ -109,7 +109,7 @@ class EnergyHorizonCardEditor extends LitElement {
   @state() private _openSections: Set<string>;  // NEW: advanced section ids currently expanded (not persisted)
   @state() private _fieldErrors: Record<string, string | null>; // NEW: inline validation errors per field/section
 
-  setConfig(config: CardConfigInput): void;     // 005 behavior + reset _openSections/_fieldErrors
+  setConfig(config: CardConfigInput): void;     // 005 behavior; resets _openSections/_fieldErrors only for a new config object (not for the HA self-echo, see state transitions)
   protected render(): TemplateResult;           // toggle row + sections (forms / expansion panels) / yaml textarea
   // 005 handlers unchanged: _handleValueChanged, _switchToYaml, _switchToVisual, _handleYamlInput,
   // _emitConfigChanged, _computeLabel, _hasYamlSupport, _editorLang
@@ -118,10 +118,12 @@ class EnergyHorizonCardEditor extends LitElement {
 
 **State transitions** (new):
 ```
-setConfig() ──► _openSections = ∅, _fieldErrors = ∅   (advanced sections collapsed)
+setConfig(new object) ──► _openSections = ∅, _fieldErrors = ∅   (fresh open / external change → collapsed)
+setConfig(self-echo)  ──► no reset   (config === this._config: HA re-invoked setConfig with the object we just emitted)
 user clicks section header ──► _openSections ± id    (local only, not persisted; the sole toggle)
 field change ──► merge into _config ──► re-validate affected fields ──► emit config-changed (always)
-                 (field change never touches _openSections — the form body stops propagation)
+                 (field change never touches _openSections — the form body stops propagation,
+                  and the resulting HA self-echo is detected by object identity and skipped)
 ```
 
 ---

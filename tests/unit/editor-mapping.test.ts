@@ -594,3 +594,66 @@ describe("section body isolation (FR-018)", () => {
     expect(text).not.toContain("eh-section__body");
   });
 });
+
+// ---------------------------------------------------------------------------
+// FR-018 — setConfig self-echo must not collapse open sections
+//
+// HA's `HuiElementEditor` re-invokes `setConfig` on the *same* editor element
+// with the exact object we last emitted via `config-changed`. `setConfig`
+// detects that echo by object identity (`config === this._config`) and skips
+// the `_openSections` reset, so a keystroke never collapses the sections. A
+// genuinely new config object (fresh open / external change) still resets to
+// the default collapsed state.
+// ---------------------------------------------------------------------------
+
+type EditorInternals = {
+  setConfig: (c: unknown) => void;
+  _config: unknown;
+  _openSections: Set<string>;
+  _handleSectionValueChanged: (
+    value: Record<string, unknown>,
+    sectionId: string
+  ) => void;
+};
+
+describe("setConfig self-echo preserves open sections (FR-018)", () => {
+  it("keeps a section open when setConfig receives the same object it emitted", () => {
+    const editor = new EnergyHorizonCardEditor() as unknown as EditorInternals;
+    editor.setConfig(baseConfig() as never);
+
+    // User expands the time_window section.
+    editor._openSections = new Set(["time_window"]);
+
+    // HA echoes back the exact object the editor currently holds.
+    const emitted = editor._config;
+    editor.setConfig(emitted as never);
+
+    expect(editor._openSections.has("time_window")).toBe(true);
+  });
+
+  it("keeps sections open across a real value change + HA echo round-trip", () => {
+    const editor = new EnergyHorizonCardEditor() as unknown as EditorInternals;
+    editor.setConfig(baseConfig() as never);
+    editor._openSections = new Set(["time_window", "chart_style"]);
+
+    // User edits a field → `_config` becomes a new object and is emitted.
+    editor._handleSectionValueChanged({}, "header");
+
+    // HA wrapper re-invokes setConfig with the emitted object.
+    editor.setConfig(editor._config as never);
+
+    expect(editor._openSections.has("time_window")).toBe(true);
+    expect(editor._openSections.has("chart_style")).toBe(true);
+  });
+
+  it("resets to collapsed when setConfig receives a genuinely new config object", () => {
+    const editor = new EnergyHorizonCardEditor() as unknown as EditorInternals;
+    editor.setConfig(baseConfig() as never);
+    editor._openSections = new Set(["time_window"]);
+
+    // A fresh, different object (e.g. re-opening the editor).
+    editor.setConfig(baseConfig() as never);
+
+    expect(editor._openSections.size).toBe(0);
+  });
+});

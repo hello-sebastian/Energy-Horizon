@@ -30032,11 +30032,11 @@ class Cr extends (Ph = Ci, Xb = [Bb({ attribute: !1 })], qb = [Ea()], Zb = [Ea()
     super(...arguments), gi(this, ev, bt(Oe, 8, this)), bt(Oe, 11, this), this._config = void 0, gi(this, tv, bt(Oe, 12, this, "visual")), bt(Oe, 15, this), gi(this, rv, bt(Oe, 16, this, "")), bt(Oe, 19, this), gi(this, nv, bt(Oe, 20, this, null)), bt(Oe, 23, this), gi(this, iv, bt(Oe, 24, this, /* @__PURE__ */ new Set())), bt(Oe, 27, this), gi(this, av, bt(Oe, 28, this, {})), bt(Oe, 31, this);
   }
   setConfig(e) {
-    const t = e, n = Vl(t), { comparison_mode: i, ...a } = t;
+    const t = e === this._config, n = e, i = Vl(n), { comparison_mode: a, ...o } = n;
     this._config = {
-      ...a,
-      comparison_preset: n
-    }, this._editorMode = "visual", this._yamlError = null, this._openSections = /* @__PURE__ */ new Set(), this._fieldErrors = {}, this.requestUpdate();
+      ...o,
+      comparison_preset: i
+    }, this._editorMode = "visual", this._yamlError = null, t || (this._openSections = /* @__PURE__ */ new Set(), this._fieldErrors = {}), this.requestUpdate();
   }
   _editorLang() {
     var e, t, n;
