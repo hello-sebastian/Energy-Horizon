@@ -130,13 +130,13 @@ type ComparisonMode = "year_over_year" | "month_over_year" | "month_over_month" 
 - `custom` = "resolve windows generically from `time_window`". Domain 900 `getPresetTemplate("custom")` returns the generic shape (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`, **no** legacy flags) so `resolveTimeWindows` takes `resolveGeneric`. Backward compatible, opt-in.
 - **Preset ↔ custom cleanup** (FR-908-Q): standard→`custom` removes `period_offset` and initializes `time_window` with the defaults above; `custom`→standard removes `time_window` and restores `period_offset: -1`.
 
-## 8. `EditorMode` (unchanged)
+## 8. `EditorMode` (v1.2.0: YAML is a first-class input path)
 
 ```ts
 type EditorMode = "visual" | "yaml";
 ```
 
-Visual/YAML toggle and `window.jsyaml` behavior unchanged from v1.1.0 (toggle hidden when `jsyaml` absent). Switching YAML→Visual parses, normalizes, and emits; the preservative merge preserves all keys.
+Visual/YAML toggle shown when `window.jsyaml` is present (hidden when absent, unchanged from v1.1.0). **v1.2.0 change**: `setConfig()` **preserves** `_editorMode` (v1.1.0 reset to `"visual"`). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): text updates immediately; parse is debounced (short interval) for fast error feedback; emit is debounced (longer interval) for preview with no-op suppression (structural diff). The textarea is re-serialized only on mode switch or external config change, never by a self-echo. Switching YAML→Visual parses, normalizes, and emits (if changed); the preservative merge preserves all keys.
 
 ## 9. Translation keys (`editor.*`)
 
@@ -154,3 +154,6 @@ New keys for the added sections/fields/options, added to **all four** dictionari
 | Preset standard→custom | remove `period_offset`; init `time_window` defaults | `expanded` preserved | Immediate |
 | Preset custom→standard | remove `time_window`; restore `period_offset: -1` | `expanded` preserved | Immediate |
 | YAML→Visual switch | parse + `normalizeForLoad` | re-applied | Immediate (if changed) |
+| YAML textarea keystroke | `preservativeMerge` (if parse succeeds) | unchanged | **Debounced** (long interval; no-op suppressed) |
+| `setConfig` in YAML mode — self-echo (config == lastEmitted) | `normalizeForLoad` | re-applied | **No** (FR-908-N); textarea NOT re-serialized |
+| `setConfig` in YAML mode — external (config ≠ lastEmitted) | `normalizeForLoad` | re-applied | **No** (FR-908-N); textarea re-serialized (caret best-effort) |

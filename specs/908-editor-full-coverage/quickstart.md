@@ -47,6 +47,7 @@ Key automated checks:
 - **i18n** (SC-908-7): every `editor.*` key resolves in `en`/`pl`/`de`/`fr`.
 - **Mode switching** (SC-908-5): standard↔`custom` adds/removes `period_offset`/`time_window` correctly.
 - **Backward compat** (SC-908-6): a v1.1.0 config with `comparison_mode` + YAML-only fields opens, saves with `comparison_preset`, loses no fields.
+- **YAML live-edit** (SC-908-9): YAML keystroke → debounced emit with no-op suppression (reformat → 0 emits; value change → 1 emit); invalid YAML → inline error, no emit, preview unchanged; `setConfig` self-echo → textarea not re-serialized; Save without switching → last valid YAML text saved.
 
 ## 5. Verify (manual, in Home Assistant)
 
@@ -60,6 +61,7 @@ Prereq: a dev HA instance with the card deployed (`npm run build` → copy `dist
 6. **Backward compat** (SC-908-6): open a v1.1.0 config containing `comparison_mode` and YAML-only fields → opens without error, `comparison_preset` pre-filled, save rewrites `comparison_mode`→`comparison_preset` and drops `forecast`, no YAML-only field lost.
 7. **Localization** (SC-908-7): set `language: pl` (and `de`, `fr`) → the whole form re-labels live; no raw-key fallback.
 8. **Graceful degradation** (FR-908-T): a config with an unknown `force_prefix` value and an out-of-range `time_window.count` → editor opens, shows empty/default selection, does not block save; the **card** surfaces the standard error.
+9. **YAML live-edit** (SC-908-9): switch to YAML mode → type a value change → preview updates within the emit debounce window (and on blur); type a syntax error → inline error appears within the parse debounce window, preview unchanged; fix the error → preview updates; click Save **without** switching to Visual → the last valid YAML text is saved.
 
 ## 6. Docs / release (`907-docs-product-knowledge`)
 

@@ -27,6 +27,7 @@ class EnergyHorizonCardEditor extends LitElement {
 
 - Accepts the raw Lovelace config (may contain deprecated `comparison_mode`, legacy `forecast`, unknown keys).
 - Normalizes for load (FR-908-I/V), stores the full object as `_config`, re-renders.
+- **Preserves `_editorMode`** (does not reset to Visual; FR-908-Y). If the incoming config is a self-echo (structurally equal to the last-emitted config), the YAML textarea is not re-serialized. If it is an external change, the YAML textarea is re-serialized (caret best-effort).
 - **Re-applies `EditorUiState`** (expanded/focus/scroll) and **emits nothing** (FR-908-N). A passive re-render produces zero `config-changed` (SC-908-3).
 
 ### `config-changed` event
@@ -57,5 +58,5 @@ The `comparison_preset` select offers exactly: `year_over_year`, `month_over_yea
 - Emits the full `CardConfig` on change; never drops unmodeled keys (FR-908-P).
 - Performs **no** blocking semantic validation (FR-908-S); invalid values pass through to the card's error state.
 - Opens without a JS error when `hass` is absent, a select value is unknown, or the config is the minimal stub (FR-908-T).
-- Visual/YAML toggle and `window.jsyaml` behavior unchanged from v1.1.0 (toggle hidden when `jsyaml` absent).
+- Visual/YAML toggle: shown when `window.jsyaml` is present (hidden when absent). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): edits emit live (debounced) and the last valid YAML text is the saved config. `setConfig()` preserves the editor mode (does not reset to Visual).
 - All labels/options localized via the card's `localize()` under `editor.*` (FR-908-U); label language per FR-908-X.

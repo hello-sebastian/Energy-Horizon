@@ -20,6 +20,8 @@ This feature (v1.2.0) expands the editor to **100% coverage** of the card's YAML
 
 The editor remains a **faithful visual representation of the YAML**: it is the user interface *for* the YAML, never a second source of truth. Fields the editor does not model are preserved verbatim (preservative deep merge).
 
+The YAML mode is a **first-class, independent input path** (FR-908-Y): editing YAML updates the card preview live and the last valid YAML text is the config that gets saved — no switch to Visual mode is required.
+
 ---
 
 ## Clarifications
@@ -147,6 +149,8 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 - **`x_axis_format` / `tooltip_format` with invalid Luxon tokens**: the editor allows entry; the card surfaces the `config_invalid_*` error state. Empty (after trim) = adaptive mode, no validation.
 - **A YAML key the editor does not model** (e.g. a future field or a typo'd key): preserved verbatim through every `config-changed` (preservative merge); never dropped.
 - **User deletes a field in YAML text mode**: removal is intentional; the parsed config (without that key) becomes the new `_config` and is emitted.
+- **YAML text with a syntax error (mid-typing)**: the editor shows the parse error inline, keeps the last valid `_config` (the card preview is unchanged), and does not emit `config-changed`. Once the YAML becomes valid again (debounced parse succeeds), the config updates and the preview refreshes.
+- **User edits YAML and clicks Save without switching to Visual**: the last valid YAML text is the config that gets saved (FR-908-Y); no switch to Visual mode is required for YAML edits to take effect.
 - **`window.jsyaml` absent**: the Visual/YAML toggle is hidden; the editor operates Visual-only (unchanged from v1.1.0).
 - **Editor opened on a fresh card**: `getStubConfig()` provides `{ entity: "" }`; all sections render with defaults; no crash.
 - **Re-render during an in-flight debounce**: a re-render must not cancel a pending, user-visible text value; the field's displayed value is authoritative for the UI, the debounced emit is only for the config object.
@@ -192,7 +196,8 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 
 #### Input Handling & Merge
 
-- **FR-908-O (Text-input debounce)**: For free-text and number fields, the editor MUST debounce the emission of `config-changed` so that rapid typing does not fire a full config emit (and thus a full card re-query) on every keystroke. The debounce MUST flush on blur, on a short idle timeout, or on an explicit commit — whichever the implementation chooses — and MUST always flush before the editor is closed/saved. The **displayed** field value MUST update immediately (no debounce on the visible value).
+- **FR-908-O (Text-input debounce)**: For free-text and number fields, the editor MUST debounce the emission of `config-changed` so that rapid typing does not fire a full config emit (and thus a full card re-query) on every keystroke. The debounce MUST flush on blur, on a short idle timeout, or on an explicit commit — whichever the implementation chooses — and MUST always flush before the editor is closed/saved. The **displayed** field value MUST update immediately (no debounce on the visible value). The same debounce applies to the **YAML textarea** (FR-908-Y): the displayed text updates immediately on every keystroke, but the parse (for error detection) is debounced at a shorter interval and the `config-changed` emit (for preview) is debounced at a longer interval, with **no-op suppression** (emit only when the parsed config differs structurally from the last-emitted config). The pending emit MUST be force-flushed on blur, on a mode switch, or on close.
+- **FR-908-Y (YAML first-class input path)**: The YAML mode is a **first-class, independent input path**, not a draft/scratchpad. Editing the YAML textarea updates the card preview live (debounced) and the **last valid YAML text is the config that gets saved** — no switch to Visual mode is required. On a YAML syntax error, the editor MUST show the error inline, keep the last valid `_config` (preview unchanged), and MUST NOT emit `config-changed`. The `setConfig()` method MUST **preserve the current editor mode** (it does not reset to Visual). The YAML textarea MUST NOT be re-serialized by a `setConfig()` self-echo (the config the editor just emitted); it is re-serialized only on an explicit mode switch or an external config change that differs from the last-emitted config.
 - **FR-908-P (Preservative deep merge)**: On every change, the editor MUST merge changed fields into the full stored config using a **preservative deep merge**: changed/known fields are updated; the `time_window` object is merged field-by-field (not replaced wholesale) so unedited sub-fields survive; and **all** keys not modeled by the editor (including deprecated and unknown keys) are preserved verbatim. No key present in the incoming config may be silently dropped.
 - **FR-908-Q (Preset ↔ Custom state cleanup)**: On switching standard → `custom`, the editor MUST remove `period_offset` and initialize `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`). On switching `custom` → standard, it MUST remove the `time_window` object and restore `period_offset: -1`.
 - **FR-908-R (Optional/required marking)**: The editor MUST visually distinguish **required** fields (at minimum `entity`) from **optional** ones, using a consistent, localized convention. Optional fields with no value MUST render empty (or their documented default) without an error.
@@ -217,7 +222,7 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 - **`FieldRegistry`** (new): The ordered collection of `FieldDescriptor`s, grouped by `section`. The single source of truth for what the editor renders and where.
 - **`EditorUiState`** (new): Component-local, config-independent presentation state — per-section `expanded` flags (and any other UI-only state). Survives `setConfig()` re-renders.
 - **`_config`**: The editor's internal full `CardConfig`, updated by preservative deep merge on each change and on YAML parse.
-- **`EditorMode`**: `"visual" | "yaml"` — unchanged from v1.1.0.
+- **`EditorMode`**: `"visual" | "yaml"` — the current editor mode. `setConfig()` preserves the mode (does not reset to Visual). In YAML mode, the textarea is a first-class input path (FR-908-Y).
 - **`ComparisonPreset`** (extended): The v1.2.0 editor offers `year_over_year`, `month_over_year`, `month_over_month`, and **`custom`** as the four preset choices. `custom` is a new value (see Cross-domain Contracts → `900`).
 - **Translation keys** (`editor.*`): New i18n keys for the added sections/fields/options in `en.json`, `pl.json`, `de.json`, `fr.json`.
 
@@ -287,6 +292,8 @@ The render loop iterates sections in fixed order, filters descriptors by `visibl
 - **`EditorUiState`** (presentation): per-section `expanded` booleans, last-focused field id, last caret offset, scroll anchor. **Never derived from `config`**; restored across `setConfig()` re-renders (FR-908-J/K/L/M).
 - **Re-render contract**: `setConfig()` updates `_config` and re-renders, but MUST re-apply `EditorUiState` (expanded, focus, scroll) and MUST NOT emit `config-changed` (FR-908-N). Emission is gated on a genuine value delta.
 - **Debounce**: text/number inputs update the displayed value immediately and update `_config` immediately, but the `config-changed` **emit** is debounced (idle timeout) and force-flushed on blur/commit/close (FR-908-O). Selects/switches/sliders emit immediately (discrete values).
+- **YAML mode** (FR-908-Y): the YAML textarea is a live input path. Text updates immediately; parse is debounced (short interval) for fast error feedback; emit is debounced (longer interval) for preview with no-op suppression (structural diff). The textarea is re-serialized only on mode switch or external config change, never by a self-echo.
+- **`setConfig()` mode preservation**: `setConfig()` updates `_config` and re-renders but **preserves `_editorMode`** (does not reset to Visual). If the incoming config is a self-echo (structurally equal to the last-emitted config), the YAML textarea is not re-serialized. If it is an external change (structurally different), the YAML textarea is re-serialized with the new config (caret preservation is best-effort).
 
 ### Preservative deep merge
 
@@ -317,7 +324,7 @@ dispatchEvent(new CustomEvent("config-changed", {
 - Renders six sections (FR-908-E) from the `FieldRegistry`.
 - Keeps `EditorUiState` independent of `config` (FR-908-J).
 - Emits the full `CardConfig` on change; never drops unmodeled keys (FR-908-P).
-- Visual/YAML toggle and `window.jsyaml` behavior unchanged from v1.1.0.
+- Visual/YAML toggle: shown when `window.jsyaml` is present (hidden when absent, unchanged). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): edits emit live (debounced) and the last valid YAML text is the saved config. `setConfig()` preserves the editor mode (does not reset to Visual).
 
 ---
 
@@ -363,6 +370,8 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 ### `README.advanced.md` (authoritative reference)
 
 - **Rewrite the "Lovelace editor" section** (currently lists only the v1.1.0 subset) to describe the **six sections**, the **conditional rendering** (`custom` ↔ `time_window`), the **forecast cascade**, and the **lifecycle guarantees** (expanded panels persist, focus/caret preserved, no spurious re-emit).
+- **Visual ↔ YAML round-trip**: document that Visual and YAML modes are two views of the same config — switching to YAML dumps the full current config (every field, including those set in the form), and switching back re-populates every field from the YAML (lossless; the YAML is authoritative). Replace the v1.1.0 framing ("YAML mode: all other fields are set in YAML") — with 100% coverage, both modes expose the full surface.
+- **YAML live-edit (FR-908-Y)**: document that YAML mode is a **first-class input path** — edits update the preview live (debounced) and the last valid YAML text is the saved config, with no switch to Visual required; a YAML syntax error is shown inline without changing the preview.
 - **YAML parameters table**: add a column or note marking which fields are **GUI-editable** (now all of them) vs. the deprecated `comparison_mode` / `forecast` alias (not standalone fields).
 - **`comparison_preset` section**: document the new **`custom`** value (resolve windows generically from `time_window`; no legacy flags) alongside the three standard presets.
 - **`neutral_interpretation`**: change the "YAML-only in v1" note to "GUI-editable in v1.2.0".
@@ -380,13 +389,14 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 
 - Add a **`[1.2.0]`** section with:
   - **Added**: full-coverage visual editor (six sections); `custom` comparison preset; GUI controls for `time_window.*`, colors/opacities, formatting, Luxon patterns, forecast, debug.
-  - **Changed**: editor lifecycle — expanded panels, focus, and scroll now persist across re-renders; text-input emits are debounced.
+  - **Changed**: editor lifecycle — expanded panels, focus, and scroll now persist across re-renders; text-input emits are debounced; YAML mode is now a first-class input path (live preview, last valid text is saved, no switch to Visual required).
   - **Fixed**: deprecated `comparison_mode` is migrated to `comparison_preset` in the GUI on save.
   - **Documentation**: README/wiki updated for the new editor coverage.
 
 ### Consistency rules (must hold across all docs)
 
 - The **`custom`** preset value, the **six section names**, and the **field→section mapping** must be identical in `README.advanced.md`, the wiki, and the changelog.
+- The **Visual ↔ YAML round-trip** (both modes show the full config; switching is lossless in both directions) must be stated consistently, and the v1.1.0 "YAML is authoritative for the full config / switch to YAML for advanced fields" framing MUST be retired wherever it appears (`README.advanced.md`, `First-Comparisons-Quick-Recipes.md`, `Configuration-and-Customization.md`).
 - Any field described as "YAML-only" in v1.1.0 docs MUST be updated to reflect v1.2.0 GUI coverage.
 - Docs MUST not promise inline validation (Non-Goal); they should state that invalid values surface as the standard card error.
 
@@ -402,6 +412,7 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 - **SC-908-6 (Backward compatibility)**: A v1.1.0 config containing `comparison_mode` and any YAML-only fields opens in the v1.2.0 editor without error, saves with `comparison_preset` populated, and loses no YAML-only fields.
 - **SC-908-7 (Localization)**: All new section titles, field labels, and option labels resolve in `en`, `pl`, `de`, and `fr` (no missing-key fallback to the raw key).
 - **SC-908-8 (Extensibility)**: Moving any single field to a different section, or adding one new field, requires editing only the `FieldRegistry` data (no Lit template structural change).
+- **SC-908-9 (YAML live-edit)**: Editing the YAML textarea produces a live preview update within the emit debounce window and on blur; a YAML syntax error is shown inline within the parse debounce window without changing the preview; saving without switching to Visual saves the last valid YAML text; a `setConfig()` self-echo does not re-serialize the textarea (no caret disruption).
 
 ---
 
@@ -411,6 +422,6 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 - **HA runtime components are available.** `ha-form`, `ha-expansion-panel`, `ha-entity-picker`, `ha-icon-picker`, `ha-select`, `ha-textfield`, `ha-switch`, `ha-slider`, and a color control are present in the HA frontend at runtime (HA 2024+). Where a specific HA control is unavailable, the editor degrades to an equivalent standard control rather than failing.
 - **`window.jsyaml`** is the YAML serializer (unchanged); if absent, the Visual/YAML toggle is hidden (Visual-only), per domain `904`.
 - **Defaults** follow the v1.1.0 card: `show_*` default `true` (visible when not `false`); `fill_current` `true` / `fill_reference` `false`; opacities `30`; `connect_nulls` `true`; `show_legend` `false`; `precision` `2`; `neutral_interpretation` `2`; `force_prefix` `auto`; `number_format` `system`; `aggregation` `auto`; `period_offset` `-1`; `time_window` defaults `anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`; `debug` `false`.
-- **Debounce window** is an implementation detail (a short idle timeout, e.g. a few hundred ms) chosen in `/speckit-plan`; the spec fixes the *behavior* (immediate display, debounced emit, flush on blur/commit/close), not the exact constant.
+- **Debounce windows** are implementation details chosen in `/speckit-plan`: visual text/number fields use a short idle timeout (a few hundred ms); the YAML textarea uses a **two-tier** debounce — a short interval for parse (fast error feedback) and a longer interval for emit (preview) with no-op suppression. The spec fixes the *behavior* (immediate display, debounced emit, flush on blur/commit/close, no-op suppression), not the exact constants.
 - **Documentation** (README, wiki, changelog) describing the v1.2.0 editor is owned by domain `907-docs-product-knowledge` and is planned alongside this feature but authored under that domain's governance.
 - **The editor is the UI for the YAML**, not a second source of truth: the YAML (Storage UI / file) remains authoritative, and the editor's job is faithful, lossless round-tripping plus convenience.

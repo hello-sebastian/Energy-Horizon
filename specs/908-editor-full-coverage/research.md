@@ -161,6 +161,22 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 
 ---
 
+## R13. YAML mode as a first-class input path (FR-908-Y)
+
+**Decision**: The YAML textarea is a **first-class, independent input path**, not a draft/scratchpad. Text updates **immediately** on every keystroke (display). **Parse** is debounced at a short interval (`YAML_PARSE_DEBOUNCE_MS = 150`) for fast inline error feedback. **Emit** (the expensive preview re-query) is debounced at a longer interval (`YAML_EMIT_DEBOUNCE_MS = 1000`) with **no-op suppression**: the parsed config is deep-compared against the last-emitted config, and `config-changed` is dispatched only when it differs structurally. The pending emit is force-flushed on blur, on a mode switch, and on close. `setConfig()` **preserves `_editorMode`** (v1.1.0 reset to `"visual"`). A `setConfig()` **self-echo** (incoming config structurally equal to the last-emitted config) does **not** re-serialize the textarea; an **external change** (structurally different) re-serializes it (caret preservation best-effort). On a YAML syntax error: inline error, keep the last valid `_config`, no emit.
+
+**Rationale**: The user's perception is "what I see is what gets saved." The v1.1.0 model (YAML as draft, commit only on YAML→Visual switch) breaks this: the user edits YAML, clicks Save, but the last-emitted config is saved, not their edits — silent data loss. Making YAML a first-class input path fixes the decisive criterion (WYSIWYG save) and adds a live preview. Two core protective mechanisms keep the preview live but not overactive, and keep the textarea stable: (1) **no-op suppression** — the real cost saver; reformatting / key reordering / quoting changes produce zero re-queries regardless of typing frequency; (2) **self-echo → no reserialization** — the textarea is touched only by the user and on explicit mode switch / external change, so the editor's own emissions never disturb the user's caret. The separated parse/emit debounce gives fast error feedback (150 ms) while the expensive preview updates rarely (1 s idle).
+
+**Alternatives considered**:
+- *Model 2 (v1.1.0: YAML as draft, commit on switch)* — rejected: silent data loss on Save; no live preview; `setConfig` resets the mode to Visual, orphaning the draft.
+- *Per-keystroke emit (no debounce)* — rejected: every keystroke fires a full card re-query; violates Constitution V.
+- *2 s emit debounce* — rejected: the preview lags behind typing, undermining the value of live preview; 1 s coalesces a burst while staying "live."
+- *Four protective mechanisms in the spec* — rejected: the separated debounce and the error banner are implementation details, not protective mechanisms; the spec names the two essential ones (no-op suppression, self-echo → no reserialization) to keep the requirement surface minimal.
+
+**Constants**: `YAML_PARSE_DEBOUNCE_MS = 150`, `YAML_EMIT_DEBOUNCE_MS = 1000` (in `config-merge.ts` alongside `EMIT_DEBOUNCE_MS = 300`).
+
+---
+
 ## Consolidated decisions
 
 | # | Decision | Drives |
@@ -177,5 +193,6 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 | R10 | Six sections, S1 expanded, membership = data | FR-908-E/F, SC-908-8 |
 | R11 | Declarative `visibleWhen`/`disabledWhen` for cascades | FR-908-G/H |
 | R12 | No blocking validation; graceful degradation | FR-908-S/T |
+| R13 | YAML first-class input path: two-tier debounce (150 ms parse / 1 s emit) + no-op suppression + self-echo → no reserialization; `setConfig` preserves mode | FR-908-Y, SC-908-9 |
 
 **All NEEDS CLARIFICATION items resolved.** No open unknowns remain for Phase 1.
