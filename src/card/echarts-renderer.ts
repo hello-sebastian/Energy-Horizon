@@ -21,7 +21,7 @@ import {
   carryForwardCurrentCumulativeAtNow,
   findNowSlotIndexOnComparisonAxis
 } from './ha-api';
-import { trendResolvedLineColor } from './trend-visual';
+import { semanticResolvedLineColor, trendResolvedLineColor } from './trend-visual';
 import { formatTooltipHeader } from './axis/tooltip-format';
 import { findTimelineSlotContainingInstant } from './axis/now-marker-slot';
 import {
@@ -405,6 +405,8 @@ export class EChartsRenderer {
       styles.getPropertyValue('--secondary-text-color').trim() || 'rgba(127, 127, 127, 0.55)';
     const trendUnknown =
       styles.getPropertyValue('--disabled-text-color').trim() || trendSimilar;
+    const trendMuted =
+      styles.getPropertyValue('--disabled-text-color').trim() || trendSimilar;
 
     const todayFullHeightLine = grid || 'rgba(127, 127, 127, 0.35)';
     const referenceDotBorder = tooltipBackground || '#ffffff';
@@ -422,7 +424,8 @@ export class EChartsRenderer {
       trendHigher,
       trendLower,
       trendSimilar,
-      trendUnknown
+      trendUnknown,
+      trendMuted
     };
   }
 
@@ -822,7 +825,10 @@ export class EChartsRenderer {
       const todayCurrentY = currentValues[todaySlotIndex] ?? null;
       const todayReferenceY = referenceValues[todaySlotIndex] ?? null;
 
-      const deltaColor = trendResolvedLineColor(theme, rendererConfig.chartTrend);
+      const deltaColor =
+        rendererConfig.chartSemanticOutcome != null
+          ? semanticResolvedLineColor(theme, rendererConfig.chartSemanticOutcome)
+          : trendResolvedLineColor(theme, rendererConfig.chartTrend);
 
       const markLineData: any[] = [
         {

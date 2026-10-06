@@ -1,0 +1,15 @@
+# Energy Horizon Card — interpretation & neutral band (public YAML contract)
+# Normative: specs/903-card-ui-composition/spec.md
+
+# interpretation: optional. Case-insensitive. Omitted or invalid → consumption.
+interpretation: consumption   # consumption | production
+
+# neutral_interpretation: optional non-negative number = percent threshold T.
+# Semantic neutral when |p| ≤ T, where p is the same signed % as the delta chip.
+# Omitted → 2
+neutral_interpretation: 2
+
+# Notes:
+# - Delta chip numeric values are not altered by these keys.
+# - Forecast | Total panel strings do not change with interpretation.
+# - When delta chip is placeholder (no p), narrative + chart use insufficient-data semantics (see spec FR-903-W).

@@ -1,6 +1,6 @@
 {
   "name": "energy-horizon-card",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Custom Home Assistant Lovelace card for cumulative energy usage comparison (Energy Horizon).",
   "type": "module",
   "scripts": {

@@ -69,7 +69,20 @@ These are the options most people adjust first. Everything else is in the Wiki a
 | `force_prefix` | Unit scaling (`auto`, `none`, `k`, `M`, …). | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 | `primary_color` | Current series line/fill color; default is the card’s brand teal (`#119894`). Use `ha-primary` or `var(--primary-color)` to follow your HA theme. | [`README.advanced.md`](./README.advanced.md) |
 | `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` | Hide specific card sections (comparison panel, Forecast \| Total panel, narrative comment). | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
+| `interpretation` | `consumption` (default) or `production` — controls whether “higher than reference” reads as **bad** (usage) or **good** (generation) for the **narrative row**, **trend icon**, and **chart delta** colors. Period wording in the narrative follows merged **`time_window.step`** (not calendar heuristics). Does **not** change delta chip `+/−` math or Forecast \| Total copy. | [`README.advanced.md`](./README.advanced.md) |
+| `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. YAML-only in v1 (visual editor preserves the key). | [`README.advanced.md`](./README.advanced.md) |
 | `title`, `icon` | Card header customization. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
+
+**Custom period anchor (optional YAML)** — e.g. a **12‑month “year” from 5 May** (not 1 Jan): merge `time_window` with a compound ISO `offset` such as `P4M4D` on `start_of_year`. Invalid `offset` strings fail with the **same** card error as other invalid `time_window` fields. See [`README.advanced.md`](./README.advanced.md) and [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows).
+
+```yaml
+time_window:
+  anchor: start_of_year
+  offset: P4M4D
+  duration: 1y
+  step: 1y
+  count: 2
+```
 
 ## Key features (in plain words)
 

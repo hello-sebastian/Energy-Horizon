@@ -29,7 +29,7 @@ Use this checklist for every release that changes user-visible behavior.
 
 - [ ] Scan `src/card/types.ts` for new/removed config keys and update [Configuration and Customization](Configuration-and-Customization) (including **Layout sections** when `show_*` visibility flags change).
 - [ ] Scan `src/translations/en.json` for new status keys (errors/warnings) and ensure troubleshooting/reference pages mention them.
-- [ ] For `text_summary.*` keys: keep **one complete phrase per key** with `{{deltaUnit}}` / `{{deltaPercent}}` (or other placeholders) — do not reintroduce split `*_before` / `*_after` pairs.
+- [ ] For `text_summary.*` keys: keep **one complete phrase per key** with `{{deltaUnit}}` / `{{deltaPercent}}` / `{{referencePeriod}}` where required (see `contracts/narrative-i18n.md`); use the nested **`text_summary.{consumption|production|generic}.*`** + **`text_summary.period.*`** layout — do not reintroduce flat `text_summary.higher` or `*_mom` keys.
 - [ ] If time windows changed: verify [Time Window Reference](Time-Window-Reference) and [How-To: Time Windows](How-To-Time-Windows) still match `src/card/time-windows/*`.
 - [ ] If forecast changed: verify [Forecast and Data Internals](Forecast-and-Data-Internals) matches `computeForecast` in `src/card/ha-api.ts`.
 - [ ] If axis/format validation changed: verify [Luxon Formats Reference](Luxon-Formats-Reference) and [Aggregation and Axis Labels](Aggregation-and-Axis-Labels).

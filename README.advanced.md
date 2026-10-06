@@ -50,7 +50,7 @@ comparison_preset: year_over_year
 | **Chart** | Apache ECharts: current series (window 0), reference (window 1), optional background for windows ≥ 2. |
 | **X-axis** | Shared axis length = **max nominal bucket count** across windows at the chart aggregation (window 0’s grain), not wall‑clock span alone; shorter series end earlier on that axis. |
 | **Numeric summary** | Cumulative values at the end of the current timeline vs reference, using the same alignment as the chart. |
-| **Trend text** | Higher / lower / similar vs reference (“similar” threshold: difference &lt; 0.01 in display units). |
+| **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_interpretation`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
 | **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode or with `show_forecast: false`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
 
@@ -78,6 +78,8 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `precision` | number | **`2`** | Decimal places in UI numbers (implementation: `?? 2`). |
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
 | `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. |
+| `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
+| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
@@ -126,7 +128,7 @@ The YAML object is **deep-merged** with the preset template: fields in `time_win
 | Field | Meaning |
 |-------|---------|
 | `anchor` | `start_of_year`, `start_of_month`, `start_of_week`, `start_of_day`, `start_of_hour`, `now` — reference point for window 0 (see fiscal-year offset logic for `start_of_year` in code). |
-| `offset` | Optional duration token (e.g. `+3M`) shifting the base point relative to the anchor. |
+| `offset` | Optional **ISO 8601 duration** (including **compound** forms) shifting the resolved anchor in calendar time. Examples: `P4M4D` (e.g. 5 May from 1 Jan), `P1M15D`, `-P2M`, `P0D` / omit = no shift. **Legacy** single-token forms (`+3M`, `+1d`, `+1Y`) are still accepted as a **shim** mapping to `P3M` / `P1D` / `P1Y` (deprecated). See [Duration and offset](#duration-tokens-duration-step-offset). |
 | `duration` | Length of one window (tokens: `y`, `M`, `w`, `d`, `h`, `m`, `s` — see `duration-parse.ts`). **Minimum 1 h** for LTS. |
 | `step` | Spacing between consecutive windows (backward from window 0): window *i* starts `i × step` before window 0’s start. Must parse to a positive duration. |
 | `count` | Number of windows (1–24). Window 0 = current, 1 = reference, ≥2 = visual context. |
@@ -142,7 +144,20 @@ For `count ≥ 2`, the horizontal axis uses **Longest-window axis span** (max no
 
 ### Duration tokens (`duration`, `step`, `offset`)
 
-Format: optional `+`/`-` sign, number, unit. Units mapped to Luxon: **`y`**, **`M`** (month), **`w`**, **`d`**, **`h`**, **`m`** (minutes), **`s`**.
+- **`duration` and `step`** (non-offset): the card still accepts the compact token form — optional `+`/`−` sign, whole number, unit. Units: **`y`**, **`M`** (month), **`w`**, **`d`**, **`h`**, **`m`** (minutes), **`s`** — see `duration-parse` / preset templates.
+
+- **`offset`**: use a **full ISO 8601 duration** string. Luxon applies it with **`DateTime.plus(Duration.fromISO(…))`**: canonical component order is **Y → M → D → T → H** (and sub-day parts if present). **Clamping** when the day is invalid in the target month (e.g. 31 Jan + 1M → last day of February) is **deterministic** Luxon behavior, not an error. **Day** steps follow **calendar** days in the Home Assistant time zone, including across **DST** (not a fixed 24h wall offset). Parsing is centralized in `src/card/time-windows/parse-time-window-offset.ts` (FR-900-Q).
+
+| Form | Example | Notes |
+|------|---------|--------|
+| Zero / omit | (omit) or `P0D` | Same as pre–compound-offset behavior. |
+| Single component | `P1Y`, `P3M`, `P7D` | Shifts by whole calendar year / month / day. |
+| Compound | `P4M4D` | e.g. from 1 Jan → 1 May + 4 days = **5 May** (independent of “+124d”). |
+| Negative | `-P2M` | e.g. from 1 Jan → 1 November **previous** calendar year. |
+| Rejected | `PT30M`, `P0.5M` | **Sub-hour** total offset, or **fractional** month/year — `setConfig` error. |
+| Legacy shim | `+1d`, `+3M` | Mapped to `P1D` / `P3M` / … — **deprecated**; prefer ISO `P` forms. |
+
+**Why not a single `+Nd`?** A fixed day count is **not** equivalent to “4 months and 4 days” because months have different lengths and leap years change day counts. Use a compound ISO `P` string when you need a specific calendar start date (e.g. custom billing / fiscal year).
 
 ---
 
@@ -168,6 +183,7 @@ Format: optional `+`/`-` sign, number, unit. Units mapped to Luxon: **`y`**, **`
 | `step` / `duration` empty, invalid, or ≤ 0 | Invalid `time_window` error. |
 | `anchor` empty after merge | Invalid `time_window` error. |
 | `anchor` outside LTS allow-list | **Throws** in `setConfig` (English message listing allowed values). |
+| `offset` sub-hour (`PT30M`, …) or fractional month/year (`P0.5M`, …) or otherwise invalid / not ISO+legacy | **Throws** in `setConfig` (time window / offset error). |
 | `duration` &lt; 1 h | **Throws** in `setConfig` (LTS). |
 | Explicit `aggregation` not in `hour|day|week|month` | **Throws** in `setConfig`. |
 | Timeline length &gt; **5000** points | Card error state (`status.point_cap_exceeded`, `max` param). |
@@ -255,6 +271,7 @@ Full Luxon token table: [Luxon — formatting tokens](https://moment.github.io/l
 ## Localization and numbers
 
 - **`language`**: must match `src/translations/<lang>.json`; otherwise the card uses **English** (warning when `debug`).
+- **Comparison narrative (`text_summary.*`):** full sentences live under `text_summary.{consumption|production|generic}.{higher|lower|similar|neutral_band}` with `{{deltaUnit}}`, `{{deltaPercent}}`, and `{{referencePeriod}}`. The period fragment comes from `text_summary.period.{day|week|month|year|reference}`, chosen from merged **`time_window.step`** (intent), not from window geometry. Shared states: `text_summary.no_reference`, `text_summary.insufficient_data`. New languages can ship with only the **11** mandatory keys documented in domain spec **FR-903-NG** / **FR-905-L**; see `src/translations/CONTEXT.md` for how `period.*` must read after comparatives in each language.
 - **`number_format`**: maps to `Intl` locale (`comma` → `de`, `decimal` → `en`, `language` → selected language, `system` → `navigator.language` or card language).
 
 Time zone always from **`hass.config.time_zone`** (fallback `UTC`).
@@ -275,9 +292,9 @@ For **`count` ≥ 3**:
 
 `EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`.
 
-**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
+**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, **`interpretation`** (consumption vs production), `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
 
-**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config.
+**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config — including **`neutral_interpretation`** (YAML-only in v1; shallow merge preserves it when editing other fields in Visual mode).
 
 ---
 
@@ -301,6 +318,16 @@ type: custom:energy-horizon-card
 entity: sensor.energy_total
 comparison_preset: month_over_month
 aggregation: day
+```
+
+### Solar / production entity (higher generation = success semantics)
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.solar_production_month
+comparison_preset: year_over_year
+interpretation: production
+# optional: neutral_interpretation: 2
 ```
 
 ### Window width override (e.g. year / year) — merge with YoY preset

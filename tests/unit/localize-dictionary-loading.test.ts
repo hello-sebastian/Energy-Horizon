@@ -15,7 +15,9 @@ describe("localize dictionary loading (US3)", () => {
 
       expect(localize("status.loading")).toContain("Langzeitstatistiken");
       expect(localize("summary.difference")).toBe("Differenz");
-      expect(localize("text_summary.similar")).toContain("Energieverbrauch");
+      expect(localize("text_summary.consumption.similar", { referencePeriod: "x" })).toContain(
+        "Energieverbrauch"
+      );
     });
 
     it("createLocalize('de') interpolates variables in German", () => {

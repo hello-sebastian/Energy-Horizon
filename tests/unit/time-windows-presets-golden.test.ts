@@ -104,4 +104,43 @@ describe("preset golden vs buildComparisonPeriod", () => {
     assertClose(windows[1]!.start, previousMonthStart.toJSDate());
     assertClose(windows[1]!.end, previousMonthEnd.toJSDate());
   });
+
+  it("US-900-1: omitted offset vs P0D yields identical validation and window[0].start", () => {
+    const now = DateTime.fromObject(
+      { year: 2026, month: 3, day: 10, hour: 12 },
+      { zone: "UTC" }
+    ).toJSDate();
+    const basePartial = {
+      anchor: "start_of_month" as const,
+      duration: "1M",
+      step: "1M",
+      count: 2 as const
+    };
+    const mergedOmit = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: basePartial,
+      periodOffset: -1
+    });
+    const mergedP0 = mergeTimeWindowConfig({
+      mode: "year_over_year",
+      timeWindowPartial: { ...basePartial, offset: "P0D" },
+      periodOffset: -1
+    });
+    const v1 = validateMergedTimeWindowConfig({
+      ...mergedOmit,
+      aggregation: "day"
+    });
+    const v2 = validateMergedTimeWindowConfig({
+      ...mergedP0,
+      aggregation: "day"
+    });
+    expect(v1.ok).toBe(true);
+    expect(v2.ok).toBe(true);
+    if (!v1.ok || !v2.ok) return;
+
+    const w1 = resolveTimeWindows(v1.merged, now, "UTC", 24, "day");
+    const w2 = resolveTimeWindows(v2.merged, now, "UTC", 24, "day");
+    expect(w1[0]!.start.getTime()).toBe(w2[0]!.start.getTime());
+    expect(w1[0]!.end.getTime()).toBe(w2[0]!.end.getTime());
+  });
 });

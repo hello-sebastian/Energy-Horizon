@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  semanticMdiIcon,
+  semanticResolvedLineColor,
+  semanticToneClass,
   trendMdiIcon,
   trendResolvedLineColor,
   trendToneClass
@@ -19,7 +22,8 @@ const mockTheme: ChartThemeResolved = {
   trendHigher: "#e1",
   trendLower: "#e2",
   trendSimilar: "#e3",
-  trendUnknown: "#e4"
+  trendUnknown: "#e4",
+  trendMuted: "#e5"
 };
 
 describe("trend-visual", () => {
@@ -29,6 +33,16 @@ describe("trend-visual", () => {
     expect(trendResolvedLineColor(mockTheme, "similar")).toBe("#e3");
     expect(trendResolvedLineColor(mockTheme, "unknown")).toBe("#e4");
     expect(trendResolvedLineColor(mockTheme, undefined)).toBe("#e4");
+  });
+
+  it("maps semantic outcomes to tone, icon, and line color", () => {
+    expect(semanticToneClass("positive")).toBe("ebc-trend--positive");
+    expect(semanticToneClass("insufficient_data")).toBe("ebc-trend--insufficient");
+    expect(semanticResolvedLineColor(mockTheme, "positive")).toBe("#e2");
+    expect(semanticResolvedLineColor(mockTheme, "insufficient_data")).toBe("#e5");
+    expect(semanticMdiIcon("positive", 5)).toBe("mdi:trending-up");
+    expect(semanticMdiIcon("positive", -5)).toBe("mdi:trending-down");
+    expect(semanticMdiIcon("insufficient_data", 0)).toBe("mdi:help-circle-outline");
   });
 
   it("maps each trend to an MDI id and tone class", () => {

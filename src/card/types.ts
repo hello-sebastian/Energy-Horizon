@@ -19,6 +19,16 @@ export type WindowAggregation = "day" | "week" | "month" | "hour";
 
 export type WindowRole = "current" | "reference" | "context";
 
+/** YAML `interpretation` — semantic polarity for narrative + chart delta (903). */
+export type InterpretationMode = "consumption" | "production";
+
+/** Outcome for narrative icon + chart delta segment (903). */
+export type SemanticOutcome =
+  | "positive"
+  | "negative"
+  | "neutral"
+  | "insufficient_data";
+
 export interface TimeWindowYaml {
   anchor?: TimeAnchor;
   offset?: string;
@@ -116,6 +126,16 @@ export interface CardConfig {
    * SI unit scaling: `auto` (default when omitted), `none`, or a forced prefix (`k`, `M`, …).
    */
   force_prefix?: ForcePrefix;
+  /**
+   * Consumption vs production semantics for comparison narrative + chart delta only.
+   * Set by `setConfig` when omitted or invalid → `consumption`.
+   */
+  interpretation?: InterpretationMode;
+  /**
+   * Neutral band half-width in percentage points (same signed % as delta chip).
+   * Set by `setConfig` when invalid → `2`.
+   */
+  neutral_interpretation?: number;
 }
 
 /**
@@ -126,6 +146,9 @@ export type CardConfigInput = Omit<CardConfig, "comparison_preset"> & {
   comparison_preset?: ComparisonMode;
   /** @deprecated Use `comparison_preset`. */
   comparison_mode?: ComparisonMode;
+  /** Raw YAML may use any string; normalized in `setConfig`. */
+  interpretation?: InterpretationMode | string;
+  neutral_interpretation?: number;
 };
 
 /** Resolves YAML `comparison_preset` vs legacy `comparison_mode` (non-empty wins; else `year_over_year`). */
@@ -274,6 +297,8 @@ export interface ChartThemeResolved {
   trendLower: string;
   trendSimilar: string;
   trendUnknown: string;
+  /** Non-judgment / insufficient comparison delta color (903). */
+  trendMuted: string;
 }
 
 export interface ChartRendererConfig {
@@ -337,8 +362,10 @@ export interface ChartRendererConfig {
   tooltipFormatPattern?: string;
   /** When set, chart uses these instead of calling `getComputedStyle` on the container. */
   chartTheme?: ChartThemeResolved;
-  /** Consumption trend vs reference — drives delta-at-today segment color (US-6). */
+  /** Consumption trend vs reference — legacy fallback when `chartSemanticOutcome` is unset. */
   chartTrend?: Trend;
+  /** Interpretation semantics for delta-at-today segment color (903). */
+  chartSemanticOutcome?: SemanticOutcome;
   /**
    * Multi-window comparison: omit calendar year on default X-axis / tooltip (YoY, MoY).
    * Forced `x_axis_format` / `tooltip_format` overrides adaptive behavior.

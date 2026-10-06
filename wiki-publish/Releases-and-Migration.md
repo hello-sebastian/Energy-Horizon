@@ -21,6 +21,11 @@ Cross-check option names against [Configuration and Customization](Configuration
 
 ## Notable behavior changes
 
+### 1.1.0 — `interpretation` and `neutral_interpretation` (903)
+
+- **`interpretation`:** optional; defaults to **`consumption`** (same narrative semantics as before). Set **`production`** for generation entities so “higher than reference” reads as success for the **narrative row**, **trend icon**, and **chart delta** colors. Delta chip **+/−** values are unchanged.
+- **`neutral_interpretation`:** optional percent band **T** (default **2**); when the chip percent **p** satisfies **|p| ≤ T**, those same UI areas use **neutral** styling. YAML-only in v1; the visual editor keeps the key when you edit other fields.
+
 ### Forecast line default (`show_forecast`)
 
 The forecast overlay is **shown by default** when a forecast can be computed. To hide it:

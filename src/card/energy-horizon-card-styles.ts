@@ -126,7 +126,7 @@ export const energyHorizonCardStyles = css`
     opacity: 0.85;
   }
 
-  /* Figma: Series label — Medium 12, ~5% tracking (§4.3 figma-design.md) */
+  /* Figma: Series label — Medium 12, ~5% tracking (§4.3 specs/001-figma-ui-rollout/figma-ui-project-source.md) */
   .ebc-series-caption {
     display: flex;
     align-items: center;
@@ -264,6 +264,15 @@ export const energyHorizonCardStyles = css`
     );
   }
 
+  .ebc-trend--insufficient {
+    color: var(--disabled-text-color);
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 25%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
   .ebc-section--forecast-total {
     padding: 16px;
     border-radius: 16px;
@@ -337,7 +346,7 @@ export const energyHorizonCardStyles = css`
     );
   }
 
-  /* Figma Inteligent comment — 40px icon hit area, MDI 24px (§3 figma-design.md) */
+  /* Figma Inteligent comment — 40px icon hit area, MDI 24px (§3 specs/001-figma-ui-rollout/figma-ui-project-source.md) */
   .ebc-comment-icon-wrap {
     flex-shrink: 0;
     width: 40px;
@@ -382,6 +391,14 @@ export const energyHorizonCardStyles = css`
     );
   }
 
+  .ebc-comment-icon-wrap.ebc-trend--insufficient {
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 22%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
   .ebc-comment-icon {
     flex-shrink: 0;
     display: flex;
@@ -406,6 +423,10 @@ export const energyHorizonCardStyles = css`
   .ebc-comment-icon.ebc-trend--neutral,
   .ebc-comment-icon.ebc-trend--unknown {
     color: var(--secondary-text-color);
+  }
+
+  .ebc-comment-icon.ebc-trend--insufficient {
+    color: var(--disabled-text-color);
   }
 
   .ebc-comment-text {

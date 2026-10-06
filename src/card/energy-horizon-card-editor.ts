@@ -3,6 +3,10 @@ import { property, state } from "lit/decorators.js";
 import type { TemplateResult } from "lit";
 import type { HomeAssistant, HaFormSchema } from "../ha-types";
 import { resolveComparisonPreset, type CardConfig, type CardConfigInput } from "./types";
+import {
+  parseInterpretationMode,
+  parseNeutralInterpretationT
+} from "./interpretation-semantics";
 import { createLocalize } from "./localize";
 
 type EditorMode = "visual" | "yaml";
@@ -23,9 +27,20 @@ export class EnergyHorizonCardEditor extends LitElement {
     const comparison_preset = resolveComparisonPreset(raw);
     const { comparison_mode: _legacyComparisonMode, ...rest } = raw;
     void _legacyComparisonMode;
+    const interpretation = parseInterpretationMode(rest.interpretation, {
+      debug: Boolean((rest as CardConfig).debug),
+      log: (message) => {
+        console.warn(message);
+      }
+    });
+    const neutral_interpretation = parseNeutralInterpretationT(
+      rest.neutral_interpretation
+    );
     this._config = {
       ...rest,
-      comparison_preset
+      comparison_preset,
+      interpretation,
+      neutral_interpretation
     } as CardConfig;
     this._editorMode = "visual";
     this._yamlError = null;
@@ -41,6 +56,7 @@ export class EnergyHorizonCardEditor extends LitElement {
       entity: cfg.entity ?? "",
       title: cfg.title,
       comparison_preset: resolveComparisonPreset(cfg as CardConfigInput),
+      interpretation: cfg.interpretation ?? "consumption",
       force_prefix: cfg.force_prefix,
       show_comparison_summary: cfg.show_comparison_summary !== false,
       show_forecast_total_panel: cfg.show_forecast_total_panel !== false,
@@ -81,6 +97,17 @@ export class EnergyHorizonCardEditor extends LitElement {
               { value: "year_over_year", label: t("editor.year_over_year") },
               { value: "month_over_year", label: t("editor.month_over_year") },
               { value: "month_over_month", label: t("editor.month_over_month") }
+            ]
+          }
+        }
+      },
+      {
+        name: "interpretation",
+        selector: {
+          select: {
+            options: [
+              { value: "consumption", label: t("editor.interpretation_consumption") },
+              { value: "production", label: t("editor.interpretation_production") }
             ]
           }
         }
@@ -145,7 +172,23 @@ export class EnergyHorizonCardEditor extends LitElement {
         this._yamlError = createLocalize(lang)("editor.yaml_error");
         return;
       }
-      this._config = parsed as CardConfig;
+      const p = parsed as CardConfigInput;
+      const comparison_preset = resolveComparisonPreset(p);
+      const interpretation = parseInterpretationMode(p.interpretation, {
+        debug: Boolean((p as CardConfig).debug),
+        log: (message) => {
+          console.warn(message);
+        }
+      });
+      const neutral_interpretation = parseNeutralInterpretationT(
+        p.neutral_interpretation
+      );
+      this._config = {
+        ...(p as CardConfig),
+        comparison_preset,
+        interpretation,
+        neutral_interpretation
+      } as CardConfig;
       this._yamlError = null;
       this._editorMode = "visual";
       this._emitConfigChanged();
