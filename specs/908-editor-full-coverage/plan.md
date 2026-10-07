@@ -6,7 +6,7 @@
 
 ## Summary
 
-Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **100% coverage** of the v1.1.0 YAML surface, organized into **six progressive-disclosure sections** driven by a **schema-driven field registry** (data, not template). The central engineering problem is the **lifecycle**: every field change emits `config-changed` → HA re-invokes `setConfig()` → the whole editor re-renders, which today would collapse expanded panels and steal focus mid-typing. The plan introduces a config-independent `EditorUiState` (expanded flags, focus, scroll) re-applied on every render, a **preservative deep merge** that never drops unmodeled keys, and a **debounced emit** pipeline (immediate display, debounced `config-changed`). It adds the **`custom`** comparison preset (type-level addition to `ComparisonMode` + a generic preset template in domain 900), normalizes the legacy `forecast` alias and deprecated `comparison_mode` on save, and localizes all new labels via the card's `localize()` under `editor.*` in all four shipped dictionaries. The YAML mode is a **first-class input path** (FR-908-Y): edits update the preview live (debounced) and the last valid YAML text is the saved config; `setConfig()` preserves the editor mode. No new npm dependencies; the editor stays a static import.
+Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **100% coverage** of the v1.1.0 YAML surface, organized into **six progressive-disclosure sections** driven by a **schema-driven field registry** (data, not template). The central engineering problem is the **lifecycle**: every field change emits `config-changed` → HA re-invokes `setConfig()` → the whole editor re-renders, which today would collapse expanded panels and steal focus mid-typing. The plan introduces a config-independent `EditorUiState` (expanded flags, focus, scroll) re-applied on every render, a **preservative deep merge** that never drops unmodeled keys, and a **debounced emit** pipeline (immediate display, debounced `config-changed`). It adds the **`custom`** comparison preset (type-level addition to `ComparisonMode` + a generic preset template in domain 900), normalizes the legacy `forecast` alias and deprecated `comparison_mode` on save, and localizes all new labels via the card's `localize()` under `editor.*` in all four shipped dictionaries. The YAML mode is a **first-class input path** (FR-908-Y): edits update the preview live (debounced) and the last valid YAML **values** are the saved config (HA re-serializes the config object, so values persist but text formatting is canonicalized); `setConfig()` preserves the editor mode. No new npm dependencies; the editor stays a static import.
 
 ## Technical Context
 
@@ -72,7 +72,7 @@ src/card/
 ├── time-windows/
 │   └── presets.ts                  # getPresetTemplate: add "custom" branch → generic shape (no legacy flags)
 ├── editor/                         # NEW: pure, unit-testable editor modules
-│   ├── field-registry.ts           # FieldDescriptor type + the full registry (32 fields, 6 sections; time_window.* are declarative fields)
+│   ├── field-registry.ts           # FieldDescriptor type + the full registry (33 fields, 6 sections; time_window.* are declarative fields)
 │   ├── editor-ui-state.ts          # EditorUiState type + expand/collapse/focus/scroll helpers
 │   ├── config-merge.ts             # preservative deep merge (field-path aware; time_window key-by-key)
 │   └── config-normalize.ts         # load/save normalization: comparison_mode→comparison_preset, forecast→show_forecast
@@ -94,6 +94,8 @@ tests/unit/
 tests/integration/
 └── editor-lifecycle.test.ts        # setConfig re-render: no spurious config-changed; focus/scroll/expanded preserved; ≥20-edit stability (SC-908-2)
 ```
+
+> **Note (test files):** the tree above lists the *core* test files. The user-story phases in `tasks.md` create **additional** test files: `editor-coverage.test.ts` (T012), `editor-preset-switch-integration.test.ts` (T016), `editor-sections.test.ts` (T018), `editor-cascade.test.ts` (T020), `editor-degradation.test.ts` (T022), `editor-accessibility.test.ts` (T028), `editor-yaml-mode.test.ts` (T029), plus the T008 smoke test and the T011 language-chain test. The full set is defined by `tasks.md`; this tree is not exhaustive.
 
 **Structure Decision**: Single-package layout (unchanged). New pure editor logic is isolated under `src/card/editor/` so the merge/normalization/registry/state rules are unit-testable without the Lit element (Constitution III). The Lit element itself (`energy-horizon-card-editor.ts`) becomes a thin shell: it owns `EditorUiState`, the debounce timer, and the registry-driven render loop. Domain 900 receives exactly one minimal, backward-compatible change (`ComparisonMode` + `custom` template branch). Documentation files (README/wiki/changelog) are **not** authored here — they are owned by domain `907` per the spec's Documentation Plan.
 

@@ -109,16 +109,18 @@ interface EditorUiState {
 ```
 setConfig(incoming) ─▶ normalizeForLoad(incoming) ─▶ _config (full CardConfig)
                                                               │
-   user edits a field ─▶ preservativeMerge(_config, changes) ─▶ _config
+   visual field edit ─▶ preservativeMerge(_config, changes) ─▶ _config   (incremental)
+   YAML keystroke    ─▶ jsyaml.load (safe mode) ─▶ _config = parsedConfig (full replacement)
                                                               │
                  delta vs lastEmitted? ─yes─▶ debounce/flush ─▶ dispatch config-changed
                  (re-render path: NO emit)
 ```
 
 - **`normalizeForLoad`** (FR-908-I/V): pre-fill `comparison_preset` from `comparison_mode` when empty; resolve `show_forecast` as `config.show_forecast ?? config.forecast ?? true` for display. Pure.
-- **`preservativeMerge(base, changes)`** (FR-908-P): field-path aware. Top-level scalars set; `time_window` merged key-by-key; **every** unmodeled key (deprecated/unknown/future) copied through. Pure. No key in `base` is dropped.
+- **`preservativeMerge(base, changes)`** (FR-908-P): field-path aware. Top-level scalars set; `time_window` merged key-by-key; **every** unmodeled key (deprecated/unknown/future) copied through. Pure. No key in `base` is dropped. **Applies to visual field edits only.**
+- **YAML parse** (FR-908-Y): `jsyaml.load` in **safe mode** (no code execution / object instantiation from hostile tags). On success, `_config` is **replaced wholesale** with the parsed config (the parsed YAML *is* the config — it is not merged into the previous one). On a syntax error: inline error, `_config` unchanged, no emit.
 - **`normalizeForSave(config)`** (FR-908-I/V): emit `comparison_preset` (replace `comparison_mode`), emit `show_forecast` (drop `forecast` alias). Pure.
-- **Emit gate** (FR-908-N): dispatch only when the would-be config differs (field-path deep compare) from the last-emitted config. Text/number emits are debounced (`EMIT_DEBOUNCE_MS = 300`, research R1) and force-flushed on blur/commit/close; discrete controls emit immediately.
+- **Emit gate** (FR-908-N): dispatch only when the would-be config differs (field-path deep compare) from the last-emitted config. Text/number emits are debounced (`EMIT_DEBOUNCE_MS = 300`, research R1) and force-flushed on blur/commit/close; discrete controls emit immediately. In YAML mode the same gate provides **no-op suppression** (reformatting / key reordering → no structural delta → no emit). The structural diff MUST be robust to the known normalizations HA applies on the round-trip (key order, scalar type coercion) so a self-echo is never misclassified as an external change.
 
 ## 7. `ComparisonPreset` (extended, domain 900)
 
@@ -136,7 +138,7 @@ type ComparisonMode = "year_over_year" | "month_over_year" | "month_over_month" 
 type EditorMode = "visual" | "yaml";
 ```
 
-Visual/YAML toggle shown when `window.jsyaml` is present (hidden when absent, unchanged from v1.1.0). **v1.2.0 change**: `setConfig()` **preserves** `_editorMode` (v1.1.0 reset to `"visual"`). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): text updates immediately; parse is debounced (short interval) for fast error feedback; emit is debounced (longer interval) for preview with no-op suppression (structural diff). The textarea is re-serialized only on mode switch or external config change, never by a self-echo. Switching YAML→Visual parses, normalizes, and emits (if changed); the preservative merge preserves all keys.
+Visual/YAML toggle shown when `window.jsyaml` is present (hidden when absent, unchanged from v1.1.0). **v1.2.0 change**: `setConfig()` **preserves** `_editorMode` (v1.1.0 reset to `"visual"`). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): text updates immediately; parse is debounced (short interval, **safe mode** — no code execution from hostile tags) for fast error feedback; emit is debounced (longer interval) for preview with no-op suppression (structural diff). The textarea is re-serialized only on mode switch or external config change, never by a self-echo. On blur / mode switch / close the pending parse/emit flushes **atomically and in order** (parse first, then emit if valid; a failed parse keeps the last valid `_config` and emits nothing). Switching YAML→Visual parses, normalizes, and emits (if changed). **Note**: a YAML parse **replaces** `_config` wholesale (it is not a preservative merge — the parsed YAML *is* the config); the preservative merge applies to *visual field edits*.
 
 ## 9. Translation keys (`editor.*`)
 
@@ -154,6 +156,6 @@ New keys for the added sections/fields/options, added to **all four** dictionari
 | Preset standard→custom | remove `period_offset`; init `time_window` defaults | `expanded` preserved | Immediate |
 | Preset custom→standard | remove `time_window`; restore `period_offset: -1` | `expanded` preserved | Immediate |
 | YAML→Visual switch | parse + `normalizeForLoad` | re-applied | Immediate (if changed) |
-| YAML textarea keystroke | `preservativeMerge` (if parse succeeds) | unchanged | **Debounced** (long interval; no-op suppressed) |
+| YAML textarea keystroke | `_config = parsedConfig` (full replacement, if parse succeeds; safe mode) | unchanged | **Debounced** (long interval; no-op suppressed) |
 | `setConfig` in YAML mode — self-echo (config == lastEmitted) | `normalizeForLoad` | re-applied | **No** (FR-908-N); textarea NOT re-serialized |
 | `setConfig` in YAML mode — external (config ≠ lastEmitted) | `normalizeForLoad` | re-applied | **No** (FR-908-N); textarea re-serialized (caret best-effort) |
