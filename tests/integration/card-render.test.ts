@@ -109,7 +109,7 @@ describe("energy-horizon-card integration", () => {
     expect(el.shadowRoot).toBeDefined();
   });
 
-  it("renders loading state when state is loading", () => {
+  it("renders loading state when state is loading", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") {
@@ -135,13 +135,14 @@ describe("energy-horizon-card integration", () => {
 
     // wymuszenie stanu loading
     (el as any)._state = { status: "loading" };
+    await el.updateComplete;
 
     const card = el.shadowRoot!.querySelector("ha-card");
     expect(card).not.toBeNull();
     expect(card!.textContent).toContain("Ładowanie danych statystyk długoterminowych");
   });
 
-  it("renders error state with message", () => {
+  it("renders error state with message", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
@@ -157,13 +158,14 @@ describe("energy-horizon-card integration", () => {
       status: "error",
       errorMessage: "Testowy błąd"
     };
+    await el.updateComplete;
 
     const alert = el.shadowRoot!.querySelector("ha-alert");
     expect(alert).not.toBeNull();
     expect(alert!.textContent).toContain("Testowy błąd");
   });
 
-  it("renders no-data state with info alert", () => {
+  it("renders no-data state with info alert", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
@@ -178,13 +180,14 @@ describe("energy-horizon-card integration", () => {
     (el as any)._state = {
       status: "no-data"
     };
+    await el.updateComplete;
 
     const alert = el.shadowRoot!.querySelector("ha-alert");
     expect(alert).not.toBeNull();
     expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
   });
 
-  it("forecast section does not contain historical_value row", () => {
+  it("forecast section does not contain historical_value row", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);
     if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
@@ -196,26 +199,11 @@ describe("energy-horizon-card integration", () => {
       }
     } as HomeAssistant;
 
-    (el as any)._state = {
-      status: "ready",
-      comparisonSeries: [
-        { label: "Current", data: [10, 20] },
-        { label: "Reference", data: [15, 18] }
-      ],
-      summary: {
-        current_total: 30,
-        reference_total: 33,
-        difference: -3,
-        difference_percent: -9.09,
-        unit: "kWh"
-      },
-      forecast: {
-        current_forecast: 50,
-        reference_total: 33,
-        confidence: 0.95,
-        unit: "kWh"
-      }
-    };
+    // A valid ready state (two windows + enabled forecast) so the forecast
+    // section actually renders. (The previous inline fake state was malformed
+    // and only passed vacuously before the card element upgraded under jsdom.)
+    (el as any)._state = baseYoYReadyState();
+    await el.updateComplete;
 
     const shadowText = el.shadowRoot!.textContent || "";
     // Assert that "Historical value" translation key is NOT present

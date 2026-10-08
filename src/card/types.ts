@@ -5,7 +5,8 @@ export { MAX_POINTS_PER_SERIES } from "./axis/point-cap";
 export type ComparisonMode =
   | "year_over_year"
   | "month_over_year"
-  | "month_over_month";
+  | "month_over_month"
+  | "custom";
 
 export type TimeAnchor =
   | "start_of_year"

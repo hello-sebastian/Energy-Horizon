@@ -29,6 +29,19 @@ export function getPresetTemplate(
       comparisonMode: mode
     };
   }
+  if (mode === "custom") {
+    // Generic shape only — no `currentEndIsNow` / `referenceFullPeriod` /
+    // `periodOffsetYears` legacy flags, so `resolveTimeWindows` routes to
+    // `resolveGeneric` (windows resolved purely from anchor/offset/duration/
+    // step/count). `comparisonMode` is kept for label/caption consumers.
+    return {
+      anchor: "start_of_year",
+      duration: "1y",
+      step: "1y",
+      count: 2,
+      comparisonMode: mode
+    };
+  }
   return {
     anchor: "start_of_month",
     duration: "1M",

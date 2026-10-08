@@ -10,10 +10,17 @@ const browserGlobals = {
   customElements: "readonly",
   HTMLElement: "readonly",
   HTMLCanvasElement: "readonly",
+  HTMLInputElement: "readonly",
+  HTMLTextAreaElement: "readonly",
   getComputedStyle: "readonly",
   Document: "readonly",
   ResizeObserver: "readonly",
-  CustomEvent: "readonly"
+  CustomEvent: "readonly",
+  Event: "readonly",
+  FocusEvent: "readonly",
+  CSS: "readonly",
+  setTimeout: "readonly",
+  clearTimeout: "readonly"
 };
 
 export default [
