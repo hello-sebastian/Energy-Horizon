@@ -139,6 +139,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   private _mergedTimeWindow!: MergedTimeWindowConfig;
 
   private _chartRenderer?: EChartsRenderer;
+  private _loadPromise?: Promise<void>;
 
   static styles = energyHorizonCardStyles;
 
@@ -239,43 +240,54 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   protected updated(changedProps: Map<string, unknown>): void {
     if (
       changedProps.has("hass") ||
-      changedProps.has("_config") ||
-      changedProps.has("_state")
+      changedProps.has("_config")
     ) {
       if (this._state.status === "loading") {
-        void this._loadData();
+        void this._requestLoadData();
+      }
+    }
+
+    if (
+      this._state.status === "ready" &&
+      this._state.comparisonSeries
+    ) {
+      if (!this._chartRenderer) {
+        const container = this.renderRoot.querySelector(".chart-container") as
+          | HTMLElement
+          | null;
+        if (container) {
+          this._chartRenderer = new EChartsRenderer(container);
+        }
       }
 
       if (
-        this._state.status === "ready" &&
-        this._state.comparisonSeries
+        this._chartRenderer &&
+        this._state.period &&
+        this._state.resolvedWindows &&
+        this._state.chartTime
       ) {
-        if (!this._chartRenderer) {
-          const container = this.renderRoot.querySelector(".chart-container") as
-            | HTMLElement
-            | null;
-          if (container) {
-            this._chartRenderer = new EChartsRenderer(container);
-          }
-        }
-
-        if (
-          this._chartRenderer &&
-          this._state.period &&
-          this._state.resolvedWindows &&
-          this._state.chartTime
-        ) {
-          const locResolved = resolveLocale(this.hass, this._config);
-          const localize = createLocalize(locResolved.language);
-          const { timeline } = this._state.chartTime;
-          const rendererConfig = this._buildRendererConfig(timeline);
-          this._chartRenderer.update(this._state.comparisonSeries, timeline, rendererConfig, {
-            current: this._localizeOrError(localize, "period.current"),
-            reference: this._localizeOrError(localize, "period.reference")
-          });
-        }
+        const locResolved = resolveLocale(this.hass, this._config);
+        const localize = createLocalize(locResolved.language);
+        const { timeline } = this._state.chartTime;
+        const rendererConfig = this._buildRendererConfig(timeline);
+        this._chartRenderer.update(this._state.comparisonSeries, timeline, rendererConfig, {
+          current: this._localizeOrError(localize, "period.current"),
+          reference: this._localizeOrError(localize, "period.reference")
+        });
       }
     }
+  }
+
+  private async _requestLoadData(): Promise<void> {
+    if (this._loadPromise) {
+      return this._loadPromise;
+    }
+
+    this._loadPromise = this._loadData().finally(() => {
+      this._loadPromise = undefined;
+    });
+
+    return this._loadPromise;
   }
 
   private async _loadData(): Promise<void> {
@@ -1201,4 +1213,3 @@ declare global {
     "energy-horizon-card": EnergyHorizonCard;
   }
 }
-
