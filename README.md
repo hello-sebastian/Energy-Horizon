@@ -4,6 +4,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue)
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange)
+![Version](https://img.shields.io/badge/version-1.2.0-informational)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 <!-- IMAGE PLACEHOLDER: High-quality screenshot/GIF of the card with an active tooltip and visible current-vs-reference comparison. -->
@@ -13,6 +14,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 - **Readable timelines**: smart axis labels that stay legible on mobile.
 - **Always-usable charts**: automatic aggregation keeps the chart clean.
 - **Optional forecast**: a dashed estimate for the period total when it’s meaningful.
+- **Full-coverage visual editor** (v1.2.0): every configuration parameter is editable in the Lovelace editor across six sections — no YAML required.
 
 > This card is built for **long-term statistics** (energy history), not live power charts.
 
@@ -70,7 +72,7 @@ These are the options most people adjust first. Everything else is in the Wiki a
 | `primary_color` | Current series line/fill color; default is the card’s brand teal (`#119894`). Use `ha-primary` or `var(--primary-color)` to follow your HA theme. | [`README.advanced.md`](./README.advanced.md) |
 | `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` | Hide specific card sections (comparison panel, Forecast \| Total panel, narrative comment). | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 | `interpretation` | `consumption` (default) or `production` — controls whether “higher than reference” reads as **bad** (usage) or **good** (generation) for the **narrative row**, **trend icon**, and **chart delta** colors. Period wording in the narrative follows merged **`time_window.step`** (not calendar heuristics). Does **not** change delta chip `+/−` math or Forecast \| Total copy. | [`README.advanced.md`](./README.advanced.md) |
-| `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. YAML-only in v1 (visual editor preserves the key). | [`README.advanced.md`](./README.advanced.md) |
+| `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. GUI-editable in v1.2.0 (Basic Settings section). | [`README.advanced.md`](./README.advanced.md) |
 | `title`, `icon` | Card header customization. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 
 **Custom period anchor (optional YAML)** — e.g. a **12‑month “year” from 5 May** (not 1 Jan): merge `time_window` with a compound ISO `offset` such as `P4M4D` on `start_of_year`. Invalid `offset` strings fail with the **same** card error as other invalid `time_window` fields. See [`README.advanced.md`](./README.advanced.md) and [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows).
@@ -83,6 +85,12 @@ time_window:
   step: 1y
   count: 2
 ```
+
+## Visual editor (v1.2.0)
+
+The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into six sections: **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, and **System & Debug**. You do not need to touch YAML to configure the card.
+
+Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
 
 ## Key features (in plain words)
 

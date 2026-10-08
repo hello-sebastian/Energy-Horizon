@@ -4,6 +4,31 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 
 
+## [1.2.0]
+
+### Added
+
+- **Full-coverage visual editor:** the Lovelace editor now exposes **every** user-configurable parameter, organized into six sections — **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, **System & Debug**. No YAML is required to configure the card.
+- **`custom` comparison preset:** `comparison_preset: custom` resolves windows **generically** from the `time_window` block (no preset template, no `period_offset`). In the editor, selecting `custom` shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`) and hides `period_offset`; switching back to a standard preset restores `period_offset: -1` and removes `time_window`.
+- **GUI controls** for `time_window.*`, colors/opacities (`primary_color`, `fill_*`, `fill_*_opacity`), formatting (`precision`, `force_prefix`, `number_format`, `language`), Luxon patterns (`x_axis_format`, `tooltip_format`), forecast (`show_forecast`), and `debug`.
+- **`neutral_interpretation`** is now GUI-editable (Basic Settings).
+
+### Changed
+
+- **Editor lifecycle:** expanded panels, focus/caret, and scroll now persist across HA re-renders (UI state is independent of the config object); text-input emits are **debounced**; passive re-renders emit **no** spurious `config-changed` events.
+- **YAML mode is a first-class input path:** edits update the preview live (debounced), the **last valid YAML values** are the saved config (no switch to Visual required), and syntax errors are shown inline. HA re-serializes the config on save, so values persist but text formatting (comments, key order, indentation) is canonicalized.
+- **Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions.
+
+### Fixed
+
+- Deprecated **`comparison_mode`** is migrated to **`comparison_preset`** in the GUI on save.
+
+### Documentation
+
+- README / wiki updated for the new editor coverage (six sections, `custom` preset, Visual ↔ YAML round-trip, YAML live-edit, lifecycle guarantees).
+
+---
+
 ## [1.1.0]
 
 ### Added

@@ -79,7 +79,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
 | `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
-| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. |
+| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (Basic Settings). |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
@@ -94,6 +94,8 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `x_axis_format` | string | — | Luxon pattern for X-axis labels; disables adaptive label mode. |
 | `tooltip_format` | string | — | Luxon pattern for tooltip header (first line). Validated like `x_axis_format`. |
 | `force_prefix` | see [scaling](#unit-scaling-force_prefix) | `auto` (when omitted) | SI prefix control for scalable units. |
+
+**GUI-editable (v1.2.0):** every user-configurable key in the table above is editable in the visual editor (see [Lovelace editor](#lovelace-editor) for the section mapping). The deprecated `comparison_mode` and the `forecast` alias are **not** standalone editor fields — the editor writes the canonical `comparison_preset` / `show_forecast` keys.
 
 ---
 
@@ -113,9 +115,15 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 
 - Anchor `start_of_month`, `duration: 1M`, `step: 1M`, `count: 2` — **no** legacy flags; **generic** resolution (`resolveGeneric`): window 0 = current calendar month, window 1 = previous **full** calendar month.
 
+### `custom` (v1.2.0)
+
+- **No preset template** — windows are resolved **generically** from the `time_window` block you provide (no legacy YoY/MoY flags).
+- In the visual editor, selecting `custom` hides `period_offset` and shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`), initialized with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`) when switching from a standard preset.
+- The card owns window validation; an invalid `time_window` surfaces as the standard card error (the editor does not block the save).
+
 ### Legacy: `comparison_mode`
 
-Kept for compatibility only. Use `comparison_preset` in new configs.
+Kept for compatibility only. Use `comparison_preset` in new configs. The visual editor migrates a legacy `comparison_mode` to `comparison_preset` on save.
 
 ---
 
@@ -292,9 +300,40 @@ For **`count` ≥ 3**:
 
 `EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`.
 
-**Visual mode (`ha-form`):** entity (`sensor` domain), title, `comparison_preset`, **`interpretation`** (consumption vs production), `force_prefix`, `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` (boolean toggles).
+Since **v1.2.0** the visual editor covers the **full configuration surface** — every user-configurable YAML parameter is editable in the GUI. The form is organized into **six sections**, each an expandable panel:
 
-**YAML mode:** requires global `window.jsyaml` (standard HA frontend). All other fields are set in YAML or by pasting full config — including **`neutral_interpretation`** (YAML-only in v1; shallow merge preserves it when editing other fields in Visual mode).
+| Section | Keys |
+|---------|------|
+| **Basic Settings** | `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation` |
+| **Time & Aggregation** | `aggregation`, `period_offset` (standard presets), `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset) |
+| **Layout & Visibility** | `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment` |
+| **Visuals & Chart Styling** | `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend` |
+| **Formatting & Axis** | `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` |
+| **System & Debug** | `debug` |
+
+### Conditional rendering & cascading
+
+- **`custom` ↔ `time_window`:** when `comparison_preset` is **`custom`**, the editor hides `period_offset` and shows the `time_window` sub-block (five fields: `anchor`, `duration`, `step`, `count`, `offset`). When a standard preset is selected, `period_offset` is shown and the `time_window` sub-block is hidden. Switching standard → `custom` removes `period_offset` and initializes `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`); switching back removes `time_window` and restores `period_offset: -1`.
+- **Forecast cascade:** when `show_forecast` is `false`, the `show_forecast_total_panel` control is rendered **disabled** (the panel cannot appear without the forecast line).
+
+### Lifecycle guarantees
+
+The editor keeps its UI state (expanded panels, focus, caret position, scroll) **independent of the config object**. Across HA re-renders (`setConfig`), expanded sections stay expanded, focus/caret in an actively-typed field is preserved, and no spurious `config-changed` events are emitted. Text-input emits are **debounced** (short idle timeout); discrete controls (select/switch/slider) emit immediately.
+
+### Visual ↔ YAML round-trip
+
+Visual and YAML modes are **two views of the same config**. Switching to YAML dumps the **full** current config (every field, including those set in the form); switching back re-populates every field from the YAML. The round-trip is **lossless in both directions** — no field is lost or altered by a mode switch.
+
+### YAML mode (first-class input path)
+
+YAML mode requires the global `window.jsyaml` (standard HA frontend); if absent, the Visual/YAML toggle is hidden (Visual-only). YAML mode is a **first-class input path**, not just a viewer:
+
+- Edits update the card preview **live** (debounced).
+- The **last valid YAML values** are the saved config — no switch to Visual is required before saving.
+- A YAML syntax error is shown **inline** without changing the preview.
+- HA re-serializes the config on save, so the **values** persist but the exact text formatting (comments, key order, indentation) is canonicalized — verbatim text preservation is **not** promised.
+
+The editor does **not** perform inline validation of field values (invalid values surface as the standard card error state).
 
 ---
 
@@ -355,6 +394,22 @@ time_window:
   count: 3
 aggregation: month
 ```
+
+### Custom preset (fully manual windows, v1.2.0)
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.energy_total
+comparison_preset: custom
+time_window:
+  anchor: start_of_year
+  duration: 1y
+  step: 1y
+  count: 2
+aggregation: month
+```
+
+`custom` resolves windows **generically** from `time_window` — no preset template, no `period_offset`. The same config can be produced entirely in the visual editor (Basic Settings → `comparison_preset: custom`, then the Time & Aggregation section).
 
 ### Custom Luxon X-axis and tooltip
 

@@ -29,13 +29,13 @@ If you came here from the project README:
 |-----|------|---------|--------------|-------------------------|---------|
 | `type` | string | required | Identifies the custom card | Wrong value → “custom element”/config errors | [Getting Started](Getting-Started) |
 | `entity` | string | required | One statistic ID → many LTS queries (one per resolved window) | Entity has **no long-term statistics** → empty chart | [Troubleshooting and FAQ](Troubleshooting-and-FAQ) |
-| `comparison_preset` | `year_over_year \| month_over_year \| month_over_month` | `year_over_year` | Chooses a preset window template (then YAML can override) | Confusing MoY vs MoM | [First Comparisons](First-Comparisons-Quick-Recipes) |
+| `comparison_preset` | `year_over_year \| month_over_year \| month_over_month \| custom` | `year_over_year` | Chooses a preset window template (then YAML can override); **`custom`** (v1.2.0) resolves windows generically from `time_window` with no preset template | Confusing MoY vs MoM | [First Comparisons](First-Comparisons-Quick-Recipes) |
 | `comparison_mode` | same as above | — | **Deprecated** legacy name | If both set, it is ignored in favor of `comparison_preset` | [Releases and Migration](Releases-and-Migration) |
 | `time_window` | object | — | Advanced override of window template (deep merge) | Invalid window → fail-fast config error | [How-To: Time Windows](How-To-Time-Windows) / [Time Window Reference](Time-Window-Reference) |
 | `aggregation` | `hour \| day \| week \| month` | auto/derived | LTS bucket size used for *all* windows | Too fine + long window → point cap error; the “now” marker uses the bucket that contains the current instant **inside window 0** (HA time zone), mapped to the shared axis | [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance) |
 | `period_offset` | number | `-1` | Shifts **reference year** in legacy YoY/MoY presets | Only meaningful for YoY/MoY legacy semantics | [Mental Model](Mental-Model-Comparisons-and-Timelines) |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic “better/worse” for **narrative + chart delta** only (not chip signs, not Forecast \| Total). Narrative **period** wording follows merged **`time_window.step`**, not window geometry. | Case-insensitive; unknown → `consumption` | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
-| `neutral_interpretation` | number (≥ 0) | `2` | **Neutral band** on chip percent **p**: **|p| ≤ T** → neutral styling | Invalid → `2`; YAML-only in v1 (editor preserves key) | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
+| `neutral_interpretation` | number (≥ 0) | `2` | **Neutral band** on chip percent **p**: **|p| ≤ T** → neutral styling | Invalid → `2`; GUI-editable in v1.2.0 (Basic Settings) | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
 
 ---
 
@@ -70,7 +70,7 @@ Optional **visibility** flags (default **on**: omit the key or use any value oth
 | `show_forecast_total_panel` | **Surface Container** (Forecast \| Total) | When `false`, hides that panel **only** if it would otherwise show. Still requires `show_forecast` not to be `false` and forecast data gating — if forecast is off, the whole panel stays absent (same as before these flags). |
 | `show_narrative_comment` | **Inteligent comment** | When `false`, the comment block (icon + narrative) is not rendered. |
 
-The Lovelace **visual editor** exposes these three fields plus **`interpretation`** (consumption vs production); YAML mode remains authoritative for the full config (see editor contract in the card repo). **`neutral_interpretation`** is YAML-only in v1 but is preserved when editing other fields in Visual mode.
+Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration surface** — every key on this page is GUI-editable. **`neutral_interpretation`** is GUI-editable in v1.2.0 (Basic Settings). See the [Visual editor](#visual-editor-v120) block below and [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md#lovelace-editor) for the full section mapping.
 
 ---
 
@@ -149,6 +149,25 @@ card_mod:
       height: 260px;
     }
 ```
+
+---
+
+## Visual editor (v1.2.0)
+
+Since **v1.2.0** the Lovelace visual editor covers the **full configuration surface** — every key on this page is GUI-editable. The form is organized into **six sections** (each an expandable panel):
+
+| Section | Keys |
+|---------|------|
+| **Basic Settings** | `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation` |
+| **Time & Aggregation** | `aggregation`, `period_offset` (standard presets), `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset) |
+| **Layout & Visibility** | `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment` |
+| **Visuals & Chart Styling** | `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend` |
+| **Formatting & Axis** | `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` |
+| **System & Debug** | `debug` |
+
+**Conditional rendering:** `comparison_preset: custom` hides `period_offset` and shows the `time_window` sub-block; a standard preset does the reverse. **Forecast cascade:** `show_forecast: false` disables the `show_forecast_total_panel` control.
+
+**Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions. YAML mode is a first-class input path (live preview, last valid values saved). The editor does not perform inline validation — invalid values surface as the standard card error.
 
 ---
 

@@ -6,7 +6,7 @@ Welcome to the full documentation for **Energy Horizon Card** — a Home Assista
 
 ## Documentation version
 
-**This documentation matches Energy Horizon Card `0.4.0-beta`.**  
+**This documentation matches Energy Horizon Card `1.2.0`.**  
 When you publish the wiki after a release, update this line to the same [semver](https://github.com/hello-sebastian/energy-horizon/releases) as the bundled card (FR-014, SC-006).
 
 Canonical Markdown for all wiki pages is maintained in the repository under **`wiki-publish/`** on the default branch; [GitHub Wiki](https://github.com/hello-sebastian/energy-horizon/wiki) is updated after each release. See [Documentation Maintenance](Documentation-Maintenance).

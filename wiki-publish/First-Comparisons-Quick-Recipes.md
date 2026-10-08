@@ -53,14 +53,11 @@ aggregation: day
 
 ---
 
-## When to use the visual editor vs YAML
+## Visual editor vs YAML
 
-- Use the **visual editor** when you only need `entity`, `comparison_preset`, and basic display options.
-- Switch to **YAML** when you need any of:
-  - `time_window` recipes
-  - `x_axis_format` / `tooltip_format`
-  - `connect_nulls`, fills, fine styling
-  - `debug: true`
+Since **v1.2.0** the **visual editor** covers the **full configuration surface** — every option above (and the advanced ones: `time_window`, `x_axis_format` / `tooltip_format`, fills, `connect_nulls`, `debug`, …) is editable in the GUI across six sections. You do **not** need to switch to YAML for advanced fields.
+
+YAML mode inside the editor is still available as a first-class input path (live preview, last valid values saved) — both modes show the complete config and switching between them is lossless. Use whichever you prefer.
 
 ---
 

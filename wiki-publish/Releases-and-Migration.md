@@ -21,10 +21,19 @@ Cross-check option names against [Configuration and Customization](Configuration
 
 ## Notable behavior changes
 
+### 1.2.0 — Full-coverage visual editor (908)
+
+- **Full-coverage visual editor:** the Lovelace editor now exposes **every** configuration parameter, organized into six sections — **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, **System & Debug**. No YAML is required to configure the card.
+- **New `custom` comparison preset:** `comparison_preset: custom` resolves windows **generically** from the `time_window` block (no preset template, no `period_offset`). In the editor, selecting `custom` shows the `time_window` sub-block and hides `period_offset`; switching back to a standard preset restores `period_offset: -1` and removes `time_window`.
+- **Editor lifecycle stability:** expanded sections, focus/caret, and scroll now persist across HA re-renders; text-input emits are debounced; no spurious `config-changed` events on passive re-renders.
+- **YAML mode is a first-class input path:** live preview (debounced), the last valid YAML **values** are saved without switching to Visual, and syntax errors are shown inline. HA re-serializes the config on save, so values persist but text formatting is canonicalized.
+- **`comparison_mode` → `comparison_preset` migration in the GUI:** a legacy `comparison_mode` is migrated to `comparison_preset` when saving from the visual editor.
+- **`neutral_interpretation`** is now GUI-editable (Basic Settings) — no longer YAML-only.
+
 ### 1.1.0 — `interpretation` and `neutral_interpretation` (903)
 
 - **`interpretation`:** optional; defaults to **`consumption`** (same narrative semantics as before). Set **`production`** for generation entities so “higher than reference” reads as success for the **narrative row**, **trend icon**, and **chart delta** colors. Delta chip **+/−** values are unchanged.
-- **`neutral_interpretation`:** optional percent band **T** (default **2**); when the chip percent **p** satisfies **|p| ≤ T**, those same UI areas use **neutral** styling. YAML-only in v1; the visual editor keeps the key when you edit other fields.
+- **`neutral_interpretation`:** optional percent band **T** (default **2**); when the chip percent **p** satisfies **|p| ≤ T**, those same UI areas use **neutral** styling. YAML-only in 1.1.0; **GUI-editable since 1.2.0** (Basic Settings).
 
 ### Forecast line default (`show_forecast`)
 
@@ -51,7 +60,7 @@ The boolean alias `forecast` is accepted and merged into `show_forecast` at load
 
 ## Advanced YAML (`time_window`)
 
-Custom windows are **YAML-only** for most setups. Full parameter tables and examples:
+Custom windows can be set in YAML or in the visual editor (v1.2.0: `comparison_preset: custom` → Time & Aggregation section). Full parameter tables and examples:
 
 - Repo draft: [`specs/001-time-windows-engine/wiki-time-windows.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/specs/001-time-windows-engine/wiki-time-windows.md)
 
