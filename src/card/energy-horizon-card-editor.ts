@@ -379,6 +379,14 @@ export class EnergyHorizonCardEditor extends LitElement {
     this.requestUpdate();
   }
 
+  /** Keyboard toggle for the fallback section header (Enter / Space). */
+  private _onSectionHeaderKeydown(section: SectionId, e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this._onSectionToggle(section, e);
+    }
+  }
+
   private _onScroll(e: Event): void {
     const target = e.target as HTMLElement;
     this._uiState = withScroll(this._uiState, target.scrollTop);
@@ -707,6 +715,15 @@ export class EnergyHorizonCardEditor extends LitElement {
       )}
     `;
 
+    // NOTE: the fallback is a `<div>`-based panel (NOT `<details>`). A
+    // `<details>` + `?open` binding fires the native `toggle` event whenever
+    // Lit re-applies the `open` attribute on a re-render, which re-enters
+    // `_onSectionToggle` and flips the section back — a feedback loop that
+    // collapses panels on every passive re-render (FR-908-J, SC-908-2). A
+    // `<div>` toggled by a clickable header has no such native event, so the
+    // expansion state is driven purely by `EditorUiState` and survives
+    // re-renders. The body stays in the DOM (hidden when collapsed) so there
+    // is no flash/reset and field counts are stable.
     const panel = this._haAvailable("ha-expansion-panel")
       ? html`
           <ha-expansion-panel
@@ -721,16 +738,24 @@ export class EnergyHorizonCardEditor extends LitElement {
           </ha-expansion-panel>
         `
       : html`
-          <details
+          <div
             class="editor-section"
             data-section=${section}
             data-expanded=${expanded ? "true" : "false"}
-            ?open=${expanded}
-            @toggle=${(e: Event) => this._onSectionToggle(section, e)}
           >
-            <summary>${label}</summary>
-            ${body}
-          </details>
+            <div
+              class="section-header"
+              role="button"
+              tabindex="0"
+              aria-expanded=${expanded ? "true" : "false"}
+              @click=${(e: Event) => this._onSectionToggle(section, e)}
+              @keydown=${(e: KeyboardEvent) =>
+                this._onSectionHeaderKeydown(section, e)}
+            >
+              ${label}
+            </div>
+            <div class="section-body" ?hidden=${!expanded}>${body}</div>
+          </div>
         `;
 
     return panel;
@@ -777,10 +802,18 @@ export class EnergyHorizonCardEditor extends LitElement {
       border: 1px solid var(--divider-color, #ccc);
       border-radius: 4px;
     }
-    .editor-section summary {
+    .section-header {
       cursor: pointer;
       padding: 8px;
       font-weight: 600;
+      user-select: none;
+    }
+    .section-header:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: -2px;
+    }
+    .section-body[hidden] {
+      display: none;
     }
     .field {
       display: flex;

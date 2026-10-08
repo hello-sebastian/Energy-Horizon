@@ -44,8 +44,13 @@ function mountEditor(config: CardConfigInput, hass?: HomeAssistant): EditorEl {
 
 function basicSectionLabel(el: EditorEl): string {
   const section = el.shadowRoot!.querySelector<HTMLElement>('[data-section="basic"]')!;
-  const summary = section.querySelector("summary") ?? section;
-  return (summary.textContent ?? "").trim();
+  // The section title lives in the clickable header (`.section-header` in the
+  // `<div>` fallback, `slot="title"` in `ha-expansion-panel`).
+  const header =
+    section.querySelector(".section-header") ??
+    section.querySelector('[slot="title"]') ??
+    section;
+  return (header.textContent ?? "").trim();
 }
 
 const BASE: CardConfigInput = {

@@ -18,6 +18,7 @@ const browserGlobals = {
   CustomEvent: "readonly",
   Event: "readonly",
   FocusEvent: "readonly",
+  KeyboardEvent: "readonly",
   CSS: "readonly",
   setTimeout: "readonly",
   clearTimeout: "readonly"
