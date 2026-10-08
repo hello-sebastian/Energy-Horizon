@@ -471,5 +471,20 @@ export function toConfigValue(
   if (field.control.kind === "select" && field.control.valueToConfig) {
     return field.control.valueToConfig(String(rawValue ?? ""));
   }
+  // Number fields must store a real number, not the control's raw string.
+  // The card validates `time_window.count` with `Number.isInteger` (domain 900),
+  // so a string like `"5"` would be rejected as an invalid window. An empty or
+  // non-numeric value maps to `undefined` (the key is dropped — adaptive /
+  // cleared), consistent with the text-field semantics.
+  if (field.control.kind === "number") {
+    if (rawValue === undefined || rawValue === null) {
+      return undefined;
+    }
+    const trimmed = String(rawValue).trim();
+    if (trimmed === "" || Number.isNaN(Number(trimmed))) {
+      return undefined;
+    }
+    return Number(trimmed);
+  }
   return rawValue;
 }

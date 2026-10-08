@@ -471,7 +471,6 @@ export class EnergyHorizonCardEditor extends LitElement {
   ): TemplateResult {
     const id = this._fieldId(field);
     const control = field.control;
-    const disabledAttr = disabled ? "disabled" : "";
     const str = (v: unknown): string =>
       v === undefined || v === null ? "" : String(v);
 
@@ -479,6 +478,12 @@ export class EnergyHorizonCardEditor extends LitElement {
     // same template as the element. Factoring them into a nested attribute
     // template (e.g. `const h = html\`@change=${...}\``) silently drops the
     // listener, so the handlers are inlined per control below.
+    //
+    // `disabled` is applied with Lit's boolean attribute binding
+    // (`?disabled=${disabled}`), NOT a bare `${...}` string interpolation: a
+    // bare `${...}` with no `name=`/`?name=`/`.name=`/`@name=` prefix is a
+    // child *text* part, so the `disabled` attribute would never be set and
+    // `disabledWhen` (FR-908-H) would silently no-op.
 
     switch (control.kind) {
       case "entity":
@@ -489,7 +494,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 .hass=${this.hass}
                 .value=${str(value)}
                 .config=${{ domain: control.domain }}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-entity-picker>
             `
@@ -498,7 +503,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 id=${id}
                 type="text"
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;
@@ -510,7 +515,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 id=${id}
                 .hass=${this.hass}
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-icon-picker>
             `
@@ -519,7 +524,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 id=${id}
                 type="text"
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;
@@ -530,7 +535,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <ha-textfield
                 id=${id}
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
                 @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
                 @blur=${() => this._onFieldBlur(field)}
@@ -541,7 +546,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 id=${id}
                 type="text"
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
                 @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
                 @blur=${() => this._onFieldBlur(field)}
@@ -557,7 +562,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 .value=${str(value)}
                 min=${control.min ?? undefined}
                 max=${control.max ?? undefined}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
                 @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
                 @blur=${() => this._onFieldBlur(field)}
@@ -570,7 +575,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 .value=${str(value)}
                 min=${control.min ?? undefined}
                 max=${control.max ?? undefined}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
                 @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
                 @blur=${() => this._onFieldBlur(field)}
@@ -594,7 +599,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                   value: o.value,
                   label: localize(o.labelKey)
                 }))}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-select>
             `
@@ -602,7 +607,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <select
                 id=${id}
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               >
                 ${options}
@@ -616,7 +621,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <ha-switch
                 id=${id}
                 .value=${Boolean(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-switch>
             `
@@ -625,7 +630,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 id=${id}
                 type="checkbox"
                 .checked=${Boolean(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;
@@ -639,7 +644,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 min=${control.min}
                 max=${control.max}
                 step=${control.step ?? 1}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-slider>
             `
@@ -651,7 +656,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 min=${control.min}
                 max=${control.max}
                 step=${control.step ?? 1}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;
@@ -662,7 +667,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <ha-color-picker
                 id=${id}
                 .value=${str(value)}
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-color-picker>
             `
@@ -672,7 +677,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 type="text"
                 .value=${str(value)}
                 placeholder="var(--accent-color) / #rrggbb"
-                ${disabledAttr}
+                ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;

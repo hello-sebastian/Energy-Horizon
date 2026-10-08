@@ -102,11 +102,11 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T016 [P] [US3] Add `tests/unit/editor-preset-switch-integration.test.ts` (element-level): standard→`custom` removes `period_offset`, initializes `time_window` with the FR-908-Q defaults, shows the `time_window` sub-block and hides `period_offset` (FR-908-G); `custom`→standard removes `time_window`, restores `period_offset: -1`, hides the sub-block; the section's expanded state is preserved across the switch (spec US3 acceptance 1–4)
+- [X] T016 [P] [US3] Add `tests/unit/editor-preset-switch-integration.test.ts` (element-level): standard→`custom` removes `period_offset`, initializes `time_window` with the FR-908-Q defaults, shows the `time_window` sub-block and hides `period_offset` (FR-908-G); `custom`→standard removes `time_window`, restores `period_offset: -1`, hides the sub-block; the section's expanded state is preserved across the switch (spec US3 acceptance 1–4)
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Verify and fix the preset↔custom cleanup and the `visibleWhen` predicates in `src/card/energy-horizon-card-editor.ts` against the integration test, including the `custom` mode with an empty/invalid `time_window` (editor opens with defaults; the **card** — not the editor — surfaces the invalid-window error, FR-908-S)
+- [X] T017 [US3] Verify and fix the preset↔custom cleanup and the `visibleWhen` predicates in `src/card/energy-horizon-card-editor.ts` against the integration test, including the `custom` mode with an empty/invalid `time_window` (editor opens with defaults; the **card** — not the editor — surfaces the invalid-window error, FR-908-S)
 
 **Checkpoint**: All P1 user stories (1, 2, 3) should now be independently functional.
 
@@ -120,11 +120,11 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T018 [P] [US4] Add `tests/unit/editor-sections.test.ts`: the six sections render in the fixed order `basic → time → layout → visuals → formatting → system` with S1 expanded and S2–S6 collapsed (spec US4 acceptance 1); expanding "Formatting & Axis" shows exactly `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` (acceptance 2); "System & Debug" shows exactly `debug` (acceptance 3); an in-session expansion survives re-renders but a fresh editor instance reopens collapsed (acceptance 4)
+- [X] T018 [P] [US4] Add `tests/unit/editor-sections.test.ts`: the six sections render in the fixed order `basic → time → layout → visuals → formatting → system` with S1 expanded and S2–S6 collapsed (spec US4 acceptance 1); expanding "Formatting & Axis" shows exactly `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` (acceptance 2); "System & Debug" shows exactly `debug` (acceptance 3); an in-session expansion survives re-renders but a fresh editor instance reopens collapsed (acceptance 4)
 
 ### Implementation for User Story 4
 
-- [ ] T019 [US4] Verify and fix section rendering and the localized section titles in `src/card/energy-horizon-card-editor.ts` against the test (titles from `editor.section.*` keys, FR-908-E)
+- [X] T019 [US4] Verify and fix section rendering and the localized section titles in `src/card/energy-horizon-card-editor.ts` against the test (titles from `editor.section.*` keys, FR-908-E)
 
 **Checkpoint**: At this point, User Stories 1–4 should all work independently.
 
@@ -138,11 +138,11 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T020 [P] [US5] Add `tests/unit/editor-cascade.test.ts`: `show_forecast: true` → `show_forecast_total_panel` enabled; toggling `show_forecast` to `false` → `show_forecast_total_panel` rendered disabled; toggling back to `true` → re-enabled (spec US5 acceptance 1–2); saving with `show_forecast: false` keeps the emitted config consistent with domain 903 gating (acceptance 3)
+- [X] T020 [P] [US5] Add `tests/unit/editor-cascade.test.ts`: `show_forecast: true` → `show_forecast_total_panel` enabled; toggling `show_forecast` to `false` → `show_forecast_total_panel` rendered disabled; toggling back to `true` → re-enabled (spec US5 acceptance 1–2); saving with `show_forecast: false` keeps the emitted config consistent with domain 903 gating (acceptance 3)
 
 ### Implementation for User Story 5
 
-- [ ] T021 [US5] Verify and fix the `disabledWhen` application in `src/card/energy-horizon-card-editor.ts` against the test (the `show_forecast_total_panel` descriptor's `disabledWhen: cfg => cfg.show_forecast === false` is applied uniformly by the render loop, research R11)
+- [X] T021 [US5] Verify and fix the `disabledWhen` application in `src/card/energy-horizon-card-editor.ts` against the test (the `show_forecast_total_panel` descriptor's `disabledWhen: cfg => cfg.show_forecast === false` is applied uniformly by the render loop, research R11)
 
 **Checkpoint**: At this point, User Stories 1–5 should all work independently.
 
@@ -156,11 +156,11 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T022 [P] [US6] Add `tests/unit/editor-degradation.test.ts`: a config with `comparison_mode: month_over_month` and no `comparison_preset` opens with `comparison_preset` pre-filled (spec US6 acceptance 1); saving emits `comparison_preset` and replaces (not duplicates) `comparison_mode` (acceptance 2); an unknown `force_prefix` value shows an empty/default selection with no thrown error and no blocked save (acceptance 3); `hass` absent → the editor renders in a degraded state without a JavaScript error (acceptance 4, FR-908-T); a v1.1.0 config with `comparison_mode` + YAML-only fields opens, saves with `comparison_preset`, and loses no YAML-only fields (SC-908-6)
+- [X] T022 [P] [US6] Add `tests/unit/editor-degradation.test.ts`: a config with `comparison_mode: month_over_month` and no `comparison_preset` opens with `comparison_preset` pre-filled (spec US6 acceptance 1); saving emits `comparison_preset` and replaces (not duplicates) `comparison_mode` (acceptance 2); an unknown `force_prefix` value shows an empty/default selection with no thrown error and no blocked save (acceptance 3); `hass` absent → the editor renders in a degraded state without a JavaScript error (acceptance 4, FR-908-T); a v1.1.0 config with `comparison_mode` + YAML-only fields opens, saves with `comparison_preset`, and loses no YAML-only fields (SC-908-6)
 
 ### Implementation for User Story 6
 
-- [ ] T023 [US6] Verify and fix the load/save normalization wiring in `src/card/energy-horizon-card-editor.ts` against the test (`normalizeForLoad` on `setConfig`/YAML parse, `normalizeForSave` on every emit; unknown select values degrade to empty selection, FR-908-T)
+- [X] T023 [US6] Verify and fix the load/save normalization wiring in `src/card/energy-horizon-card-editor.ts` against the test (`normalizeForLoad` on `setConfig`/YAML parse, `normalizeForSave` on every emit; unknown select values degrade to empty selection, FR-908-T)
 
 **Checkpoint**: All user stories should now be independently functional.
 
