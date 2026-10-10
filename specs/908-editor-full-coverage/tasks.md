@@ -179,6 +179,25 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ---
 
+## Post-implementation corrections (HA-native component fidelity)
+
+> These corrections were made after the v1.2.0 feature was built, to align the
+> editor's HA-component usage with the **actual** `home-assistant/frontend`
+> component APIs (verified against the upstream source). The original
+> implementation referenced a non-existent `ha-textfield`, used the wrong
+> `ha-expansion-panel` slot, and wired the wrong events/properties on several
+> pickers — which made those fields silently dead and stripped labels/section
+> names in a real HA runtime. The field-registry architecture is unchanged;
+> only the control→component mapping and the section panel were corrected.
+
+- [X] T030 [P] Correct the control→component mapping in `src/card/energy-horizon-card-editor.ts` to the real HA APIs: text/number use `ha-input` (not the non-existent `ha-textfield`) with the built-in `label` property and composed `focusin`/`focusout` (caret read via `composedPath()`); `ha-select` listens for `selected` (value in `detail.value`), not `change`; `ha-icon-picker` / `ha-color-picker` listen for `value-changed` (value in `detail.value`), not `change`; `ha-switch` binds `.checked` (not `.value`); `ha-entity-picker` keeps `change` and gains the built-in `label`. `_readControlValue` dispatches by control kind and falls back to `e.target.value` for the standard (jsdom) controls
+- [X] T031 [P] Correct section rendering in `src/card/energy-horizon-card-editor.ts`: `ha-expansion-panel` takes its title via the `header` property (not `slot="title"`, which fell into the body slot and hid the section name); the panel's own summary handles click/keyboard toggling and fires `expanded-changed` with `{ expanded }`, which the editor syncs into `EditorUiState` (no `@click` on the whole panel, which would also toggle the section when clicking a field inside it)
+- [X] T032 [P] Make field labels HA-native: components with a built-in `label` (`ha-input`, `ha-select`, `ha-entity-picker`, `ha-icon-picker`, `ha-color-picker`) render the label inside their shadow DOM, so the editor renders **no** external `<label for>` for them (it cannot cross the shadow boundary and would duplicate the label); `ha-switch` / `ha-slider` (no built-in label) and all standard fallback controls keep the external `<label for>` (Constitution IV — every control still carries an accessible name)
+- [X] T033 [P] Add `preview: true` and `documentationURL` to the `window.customCards` declaration in `src/index.ts` and extend `CustomCardDeclaration` in `src/ha-types.ts` so the card is offered with a live preview and a documentation link in the HA card picker
+- [X] T034 Re-run the full suite (`TZ=UTC npm test`) and `npm run lint`; update the two field-control tests that dispatched a non-composed `blur` to dispatch the composed `focusout` the editor now listens for (the YAML textarea still uses `@blur` and is unaffected)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

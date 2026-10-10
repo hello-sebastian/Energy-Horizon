@@ -40,6 +40,13 @@ export interface CustomCardDeclaration {
   type: string;
   name: string;
   description: string;
+  /**
+   * When `true`, the card is offered in the "Add card" picker's preview
+   * (the card is rendered with sample data in the picker).
+   */
+  preview?: boolean;
+  /** URL shown as a "documentation" link in the card picker / editor. */
+  documentationURL?: string;
 }
 
 declare global {

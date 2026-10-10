@@ -12,7 +12,7 @@ Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **1
 
 **Language/Version**: TypeScript 5.6+ (`strict`), ES modules, Lit 3 decorators
 
-**Primary Dependencies**: Lit 3 (existing), ECharts 5, Luxon 3, date-fns 4 (existing); HA frontend runtime components (`ha-expansion-panel`, `ha-select`, `ha-textfield`, `ha-switch`, `ha-slider`, `ha-entity-picker`, `ha-icon-picker`, `ha-color-picker`); `window.jsyaml` (HA global, zero bundle cost). **No new npm packages.**
+**Primary Dependencies**: Lit 3 (existing), ECharts 5, Luxon 3, date-fns 4 (existing); HA frontend runtime components (`ha-expansion-panel`, `ha-select`, `ha-input`, `ha-switch`, `ha-slider`, `ha-entity-picker`, `ha-icon-picker`, `ha-color-picker`); `window.jsyaml` (HA global, zero bundle cost). **No new npm packages.**
 
 **Storage**: N/A (in-browser Lovelace card; config round-trips through HA's `config-changed` / `setConfig` contract; translations in `src/translations/*.json`)
 

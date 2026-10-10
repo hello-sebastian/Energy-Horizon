@@ -79,7 +79,9 @@ function setCount(el: EditorEl, value: number): void {
   )!;
   count.value = String(value);
   count.dispatchEvent(new Event("input", { bubbles: true }));
-  count.dispatchEvent(new Event("blur", { bubbles: true }));
+  // `focusout` is the composed event the editor listens for (crosses the
+  // ha-input shadow boundary; `blur` does not).
+  count.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
 }
 
 function isExpanded(el: EditorEl, section: string): boolean {

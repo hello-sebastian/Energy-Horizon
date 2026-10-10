@@ -101,8 +101,9 @@ describe("editor debounce pipeline (T009)", () => {
     await el.updateComplete;
     expect(emittedConfigs(el).length).toBe(0);
 
-    // Blur flushes immediately.
-    title.dispatchEvent(new Event("blur", { bubbles: true }));
+    // Blur flushes immediately. `focusout` is the composed event the editor
+    // listens for (it crosses the ha-input shadow boundary; `blur` does not).
+    title.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
     await el.updateComplete;
     expect(emittedConfigs(el).length).toBe(1);
     expect(emittedConfigs(el)[0]!.title).toBe("Renamed");

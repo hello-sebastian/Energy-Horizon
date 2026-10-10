@@ -12,6 +12,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 - **`custom` comparison preset:** `comparison_preset: custom` resolves windows **generically** from the `time_window` block (no preset template, no `period_offset`). In the editor, selecting `custom` shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`) and hides `period_offset`; switching back to a standard preset restores `period_offset: -1` and removes `time_window`.
 - **GUI controls** for `time_window.*`, colors/opacities (`primary_color`, `fill_*`, `fill_*_opacity`), formatting (`precision`, `force_prefix`, `number_format`, `language`), Luxon patterns (`x_axis_format`, `tooltip_format`), forecast (`show_forecast`), and `debug`.
 - **`neutral_interpretation`** is now GUI-editable (Basic Settings).
+- **Card picker metadata:** the card now declares `preview: true` and a `documentationURL`, so it is offered with a live preview and a documentation link in the HA "Add card" picker.
 
 ### Changed
 
@@ -22,6 +23,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Fixed
 
 - Deprecated **`comparison_mode`** is migrated to **`comparison_preset`** in the GUI on save.
+- **Editor HA-component fidelity:** the editor now uses the real Home Assistant component APIs — text/number fields use `ha-input` (with built-in labels) instead of a non-existent `ha-textfield`; `ha-select` / `ha-icon-picker` / `ha-color-picker` listen for their actual events (`selected` / `value-changed`) so those fields are no longer silently dead; `ha-switch` binds `.checked`; and sections use `ha-expansion-panel`'s `header` property + `expanded-changed` so **section names render** and clicking a field no longer collapses the section. Every control keeps an accessible label (built-in where the component supports it, external `<label>` otherwise).
 
 ### Documentation
 

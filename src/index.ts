@@ -6,5 +6,7 @@ window.customCards.push({
   name: "Energy Horizon",
   description:
     "Visualize energy consumption by comparing current and reference period trends.",
+  preview: true,
+  documentationURL: "https://github.com/hello-sebastian/Energy-Horizon",
 });
 

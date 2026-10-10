@@ -1,7 +1,17 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { TemplateResult } from "lit";
 import type { HomeAssistant } from "../ha-types";
+
+/**
+ * Detail shape of the value-carrying events dispatched by HA's picker/select
+ * components (`ha-select` → `selected`, `ha-icon-picker` / `ha-color-picker`
+ * → `value-changed`). All expose the new value as `detail.value`. Mirrors the
+ * HA frontend event types without importing the HA frontend package.
+ */
+interface HaValueDetailEvent {
+  detail: { value: unknown };
+}
 import type {
   CardConfig,
   CardConfigInput,
@@ -321,19 +331,48 @@ export class EnergyHorizonCardEditor extends LitElement {
   // Control event handlers
   // -------------------------------------------------------------------------
 
+  /**
+   * Reads the new value out of a control event. HA components do NOT all
+   * expose the value on `e.target`:
+   *   - `ha-select` fires `selected` with `detail.value` (no `change` event);
+   *   - `ha-icon-picker` / `ha-color-picker` fire `value-changed` with
+   *     `detail.value` (no `change` event);
+   *   - `ha-entity-picker` fires both `change` and `value-changed`;
+   *   - `ha-switch` / `ha-slider` are webawesome-based and fire native
+   *     `change` with the value on the target.
+   * Standard fallback controls always expose the value on the target.
+   */
   private _readControlValue(field: FieldDescriptor, e: Event): unknown {
-    const target = e.target as HTMLElement & {
-      checked?: boolean;
-      value?: string;
-    };
-    if (field.control.kind === "boolean") {
-      return target.checked ?? Boolean(target.value);
+    const kind = field.control.kind;
+    if (kind === "boolean") {
+      const target = e.target as HTMLElement & { checked?: boolean };
+      return target.checked ?? false;
     }
+    // `ha-select` (selected) and `ha-icon-picker` / `ha-color-picker`
+    // (value-changed) carry the value in `detail.value`. The standard
+    // fallback controls (native `<select>` / `<input>`) carry it on
+    // `e.target.value` — prefer `detail` when present, else fall back.
+    if (kind === "select" || kind === "icon" || kind === "color") {
+      const detail = (e as HaValueDetailEvent).detail?.value;
+      if (detail !== undefined) {
+        return detail;
+      }
+      const target = e.target as HTMLElement & { value?: string };
+      return target.value;
+    }
+    const target = e.target as HTMLElement & { value?: string };
     return target.value;
   }
 
   private _caretFromEvent(e: Event): number | undefined {
-    const target = e.target as HTMLInputElement;
+    // For ha-input (delegatesFocus), e.target is retargeted to the host.
+    // Walk the composed path to find the real native <input> for the caret.
+    const path = e.composedPath();
+    const native = path.find(
+      (el): el is HTMLInputElement =>
+        el instanceof HTMLElement && el.tagName === "INPUT"
+    );
+    const target = (native ?? e.target) as HTMLInputElement;
     return typeof target.selectionStart === "number"
       ? target.selectionStart
       : undefined;
@@ -345,6 +384,21 @@ export class EnergyHorizonCardEditor extends LitElement {
   }
 
   private _onFieldChange(field: FieldDescriptor, e: Event): void {
+    const value = this._readControlValue(field, e);
+    this._applyFieldChange(field, value);
+  }
+
+  /** Handler for `ha-select`'s `selected` event (value in `detail.value`). */
+  private _onFieldSelect(field: FieldDescriptor, e: Event): void {
+    const value = this._readControlValue(field, e);
+    this._applyFieldChange(field, value);
+  }
+
+  /**
+   * Handler for `ha-icon-picker` / `ha-color-picker` `value-changed` events
+   * (value in `detail.value`).
+   */
+  private _onFieldValueChanged(field: FieldDescriptor, e: Event): void {
     const value = this._readControlValue(field, e);
     this._applyFieldChange(field, value);
   }
@@ -377,6 +431,24 @@ export class EnergyHorizonCardEditor extends LitElement {
     const current = this._uiState.expanded[section];
     this._uiState = withExpanded(this._uiState, section, !current);
     this.requestUpdate();
+  }
+
+  /**
+   * Syncs `EditorUiState` from `ha-expansion-panel`'s `expanded-changed`
+   * event. The panel's own summary (role="button", tabindex=0) handles
+   * click/keyboard toggling internally and fires `expanded-changed` with
+   * `{ expanded }` — we must NOT attach `@click` to the whole panel, which
+   * would also toggle the section when clicking any field inside it.
+   */
+  private _onSectionExpandedChanged(
+    section: SectionId,
+    e: CustomEvent
+  ): void {
+    const detail = (e as CustomEvent<{ expanded: boolean }>).detail;
+    if (detail && typeof detail.expanded === "boolean") {
+      this._uiState = withExpanded(this._uiState, section, detail.expanded);
+      this.requestUpdate();
+    }
   }
 
   /** Keyboard toggle for the fallback section header (Enter / Space). */
@@ -463,6 +535,47 @@ export class EnergyHorizonCardEditor extends LitElement {
     return `eh-field-${field.key.replace(/\./g, "-")}`;
   }
 
+  /** Maps a control kind to the HA custom-element tag it renders, or null. */
+  private _haTagForKind(kind: string): string | null {
+    switch (kind) {
+      case "entity":
+        return "ha-entity-picker";
+      case "icon":
+        return "ha-icon-picker";
+      case "text":
+      case "number":
+        return "ha-input";
+      case "select":
+        return "ha-select";
+      case "boolean":
+        return "ha-switch";
+      case "slider":
+        return "ha-slider";
+      case "color":
+        return "ha-color-picker";
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Returns true when the HA component for this control kind renders its own
+   * accessible label inside its shadow DOM (via the `label` property).
+   * For those we must NOT also render an external `<label for>` (it would
+   * duplicate the label in real HA and the `for` attribute cannot cross the
+   * shadow-DOM boundary anyway).
+   */
+  private _hasBuiltInLabel(kind: string): boolean {
+    return (
+      kind === "entity" ||
+      kind === "icon" ||
+      kind === "text" ||
+      kind === "number" ||
+      kind === "select" ||
+      kind === "color"
+    );
+  }
+
   private _renderControl(
     field: FieldDescriptor,
     value: unknown,
@@ -492,6 +605,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <ha-entity-picker
                 id=${id}
                 .hass=${this.hass}
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 .config=${{ domain: control.domain }}
                 ?disabled=${disabled}
@@ -514,9 +628,11 @@ export class EnergyHorizonCardEditor extends LitElement {
               <ha-icon-picker
                 id=${id}
                 .hass=${this.hass}
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 ?disabled=${disabled}
-                @change=${(e: Event) => this._onFieldChange(field, e)}
+                @value-changed=${(e: Event) =>
+                  this._onFieldValueChanged(field, e)}
               ></ha-icon-picker>
             `
           : html`
@@ -530,16 +646,17 @@ export class EnergyHorizonCardEditor extends LitElement {
             `;
 
       case "text":
-        return this._haAvailable("ha-textfield")
+        return this._haAvailable("ha-input")
           ? html`
-              <ha-textfield
+              <ha-input
                 id=${id}
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @blur=${() => this._onFieldBlur(field)}
-              ></ha-textfield>
+                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+                @focusout=${() => this._onFieldBlur(field)}
+              ></ha-input>
             `
           : html`
               <input
@@ -548,25 +665,26 @@ export class EnergyHorizonCardEditor extends LitElement {
                 .value=${str(value)}
                 ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @blur=${() => this._onFieldBlur(field)}
+                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+                @focusout=${() => this._onFieldBlur(field)}
               />
             `;
 
       case "number":
-        return this._haAvailable("ha-textfield")
+        return this._haAvailable("ha-input")
           ? html`
-              <ha-textfield
+              <ha-input
                 id=${id}
                 type="number"
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 min=${control.min ?? undefined}
                 max=${control.max ?? undefined}
                 ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @blur=${() => this._onFieldBlur(field)}
-              ></ha-textfield>
+                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+                @focusout=${() => this._onFieldBlur(field)}
+              ></ha-input>
             `
           : html`
               <input
@@ -577,8 +695,8 @@ export class EnergyHorizonCardEditor extends LitElement {
                 max=${control.max ?? undefined}
                 ?disabled=${disabled}
                 @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focus=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @blur=${() => this._onFieldBlur(field)}
+                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+                @focusout=${() => this._onFieldBlur(field)}
               />
             `;
 
@@ -594,13 +712,14 @@ export class EnergyHorizonCardEditor extends LitElement {
           ? html`
               <ha-select
                 id=${id}
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 .options=${control.options.map((o) => ({
                   value: o.value,
                   label: localize(o.labelKey)
                 }))}
                 ?disabled=${disabled}
-                @change=${(e: Event) => this._onFieldChange(field, e)}
+                @selected=${(e: Event) => this._onFieldSelect(field, e)}
               ></ha-select>
             `
           : html`
@@ -620,7 +739,7 @@ export class EnergyHorizonCardEditor extends LitElement {
           ? html`
               <ha-switch
                 id=${id}
-                .value=${Boolean(value)}
+                .checked=${Boolean(value)}
                 ?disabled=${disabled}
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               ></ha-switch>
@@ -666,9 +785,11 @@ export class EnergyHorizonCardEditor extends LitElement {
           ? html`
               <ha-color-picker
                 id=${id}
+                .label=${localize(field.labelKey)}
                 .value=${str(value)}
                 ?disabled=${disabled}
-                @change=${(e: Event) => this._onFieldChange(field, e)}
+                @value-changed=${(e: Event) =>
+                  this._onFieldValueChanged(field, e)}
               ></ha-color-picker>
             `
           : html`
@@ -692,6 +813,34 @@ export class EnergyHorizonCardEditor extends LitElement {
     }
   }
 
+  /**
+   * Renders the external `<label for>` for a field — but only when the
+   * control does not render its own accessible label. HA components with a
+   * built-in `label` property (ha-input, ha-select, ha-entity-picker,
+   * ha-icon-picker, ha-color-picker) render the label inside their shadow
+   * DOM; an external `<label for>` cannot cross the shadow boundary and
+   * would duplicate the label in real HA. Fallback native controls and
+   * label-less HA components (ha-switch, ha-slider) keep the external label.
+   */
+  private _renderFieldLabel(
+    field: FieldDescriptor,
+    localize: (key: string) => string
+  ): TemplateResult | typeof nothing {
+    const kind = field.control.kind;
+    const haTag = this._haTagForKind(kind);
+    const useBuiltInLabel =
+      haTag !== null && this._haAvailable(haTag) && this._hasBuiltInLabel(kind);
+    if (useBuiltInLabel) {
+      return nothing;
+    }
+    return html`
+      <label class="field-label" for=${this._fieldId(field)}>
+        ${localize(field.labelKey)}
+        ${field.required ? html`<span class="req">*</span>` : ""}
+      </label>
+    `;
+  }
+
   private _renderSection(
     section: SectionId,
     cfg: CardConfig,
@@ -705,10 +854,7 @@ export class EnergyHorizonCardEditor extends LitElement {
       ${fields.map(
         (field) => html`
           <div class="field" data-field=${field.key}>
-            <label class="field-label" for=${this._fieldId(field)}>
-              ${localize(field.labelKey)}
-              ${field.required ? html`<span class="req">*</span>` : ""}
-            </label>
+            ${this._renderFieldLabel(field, localize)}
             ${this._renderControl(
               field,
               resolveFieldValue(field, cfg),
@@ -735,10 +881,11 @@ export class EnergyHorizonCardEditor extends LitElement {
             class="editor-section"
             data-section=${section}
             data-expanded=${expanded ? "true" : "false"}
+            .header=${label}
             .expanded=${expanded}
-            @click=${(e: Event) => this._onSectionToggle(section, e)}
+            @expanded-changed=${(e: CustomEvent) =>
+              this._onSectionExpandedChanged(section, e)}
           >
-            <span slot="title">${label}</span>
             ${body}
           </ha-expansion-panel>
         `
