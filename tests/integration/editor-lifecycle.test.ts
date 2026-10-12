@@ -116,12 +116,13 @@ const BASE: CardConfigInput = {
 };
 
 const ALL_SECTIONS = [
-  "basic",
+  "general",
   "time",
-  "layout",
-  "visuals",
+  "panels",
   "formatting",
-  "system"
+  "chart",
+  "style",
+  "diagnostics"
 ] as const;
 
 describe("editor lifecycle (T014, US2)", () => {
@@ -148,21 +149,22 @@ describe("editor lifecycle (T014, US2)", () => {
     const el = mountEditor(BASE);
     await el.updateComplete;
 
-    // Expand two sections (time + visuals).
-    toggleSection(el, "time");
+    // Expand two collapsed-by-default sections (panels + style).
+    toggleSection(el, "panels");
     await el.updateComplete;
-    toggleSection(el, "visuals");
+    toggleSection(el, "style");
     await el.updateComplete;
-    expect(isExpanded(el, "time")).toBe(true);
-    expect(isExpanded(el, "visuals")).toBe(true);
+    expect(isExpanded(el, "panels")).toBe(true);
+    expect(isExpanded(el, "style")).toBe(true);
 
     // A passive re-render must not collapse them.
     el.setConfig({ ...BASE });
     await el.updateComplete;
+    expect(isExpanded(el, "panels")).toBe(true);
+    expect(isExpanded(el, "style")).toBe(true);
+    // general + time stay expanded (default).
+    expect(isExpanded(el, "general")).toBe(true);
     expect(isExpanded(el, "time")).toBe(true);
-    expect(isExpanded(el, "visuals")).toBe(true);
-    // basic stays expanded (default).
-    expect(isExpanded(el, "basic")).toBe(true);
   });
 
   it("focus + caret of the typed field survive a re-render (SC-908-2, FR-908-K/L)", async () => {
@@ -227,8 +229,9 @@ describe("editor lifecycle (T014, US2)", () => {
     container.dispatchEvent(new Event("scroll"));
     await el.updateComplete;
 
-    // The sections the user has expanded (must stay expanded).
-    const userExpanded = new Set<string>(["basic"]);
+    // The sections the user has expanded (must stay expanded). `general` and
+    // `time` are expanded by default.
+    const userExpanded = new Set<string>(["general", "time"]);
 
     // Spies on the actively-typed field's focus()/setSelectionRange() so the
     // passive re-render's restore effect (FR-908-K/L) is observable. jsdom does
@@ -318,21 +321,21 @@ describe("editor lifecycle (T014, US2)", () => {
     };
 
     // --- 22 mixed edits ---
-    // 1. Expand "time".
-    toggleSection(el, "time");
-    userExpanded.add("time");
+    // 1. Expand "panels".
+    toggleSection(el, "panels");
+    userExpanded.add("panels");
     await el.updateComplete;
     await reRender();
 
-    // 2. Expand "visuals".
-    toggleSection(el, "visuals");
-    userExpanded.add("visuals");
+    // 2. Expand "style".
+    toggleSection(el, "style");
+    userExpanded.add("style");
     await el.updateComplete;
     await reRender();
 
-    // 3. Expand "layout".
-    toggleSection(el, "layout");
-    userExpanded.add("layout");
+    // 3. Expand "chart".
+    toggleSection(el, "chart");
+    userExpanded.add("chart");
     await el.updateComplete;
     await reRender();
 
@@ -342,15 +345,15 @@ describe("editor lifecycle (T014, US2)", () => {
     await el.updateComplete;
     await reRender();
 
-    // 5. Type in title (text, basic).
+    // 5. Type in title (text, general).
     await typeText("title", "Energy v2", 9);
     await reRender();
 
-    // 6. Toggle show_title (switch, basic).
+    // 6. Toggle show_title (switch, general).
     await toggleSwitch("show_title");
     await reRender();
 
-    // 7. Change comparison_preset (select, basic).
+    // 7. Change comparison_preset (select, time).
     await changeSelect("comparison_preset", "month_over_month");
     await reRender();
 
@@ -358,11 +361,11 @@ describe("editor lifecycle (T014, US2)", () => {
     await typeText("x_axis_format", "dd LLL", 7);
     await reRender();
 
-    // 9. Toggle show_forecast (switch, layout).
+    // 9. Toggle show_forecast (switch, chart).
     await toggleSwitch("show_forecast");
     await reRender();
 
-    // 10. Change interpretation (select, basic).
+    // 10. Change interpretation (select, general).
     await changeSelect("interpretation", "production");
     await reRender();
 
@@ -370,19 +373,19 @@ describe("editor lifecycle (T014, US2)", () => {
     await typeText("tooltip_format", "HH:mm", 5);
     await reRender();
 
-    // 12. Toggle show_legend (switch, visuals).
+    // 12. Toggle show_legend (switch, chart).
     await toggleSwitch("show_legend");
     await reRender();
 
-    // 13. Change aggregation (select, time).
+    // 13. Change aggregation (select, general).
     await changeSelect("aggregation", "week");
     await reRender();
 
-    // 14. Type in title again (text, basic).
+    // 14. Type in title again (text, general).
     await typeText("title", "Energy v3", 10);
     await reRender();
 
-    // 15. Toggle show_icon (switch, basic).
+    // 15. Toggle show_icon (switch, general).
     await toggleSwitch("show_icon");
     await reRender();
 
@@ -394,7 +397,7 @@ describe("editor lifecycle (T014, US2)", () => {
     await changeSelect("language", "pl");
     await reRender();
 
-    // 18. Toggle show_narrative_comment (switch, layout).
+    // 18. Toggle show_narrative_comment (switch, panels).
     await toggleSwitch("show_narrative_comment");
     await reRender();
 
@@ -402,15 +405,15 @@ describe("editor lifecycle (T014, US2)", () => {
     await changeSelect("force_prefix", "k");
     await reRender();
 
-    // 20. Type in title again (text, basic).
+    // 20. Type in title again (text, general).
     await typeText("title", "Energy v4", 10);
     await reRender();
 
-    // 21. Toggle fill_current (switch, visuals).
+    // 21. Toggle fill_current (switch, style).
     await toggleSwitch("fill_current");
     await reRender();
 
-    // 22. Collapse "time".
+    // 22. Collapse "time" (expanded by default).
     toggleSection(el, "time");
     userExpanded.delete("time");
     await el.updateComplete;

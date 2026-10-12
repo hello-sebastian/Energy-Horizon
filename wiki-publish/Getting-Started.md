@@ -79,7 +79,7 @@ aggregation: day
 Since **v1.2.0** you can configure the card entirely in the GUI:
 
 1. Open the dashboard in **Edit** mode and click the card’s **pencil** (or three-dot menu → **Options**).
-2. The editor shows **six sections** — Basic Settings, Time & Aggregation, Layout & Visibility, Visuals & Chart Styling, Formatting & Axis, System & Debug. Expand any section to edit its fields.
+2. The editor shows **seven sections** — General, Time windows, Panels, Formatting & Localization, Chart settings, Style, Diagnostics (General and Time windows are expanded by default). Expand any section to edit its fields.
 3. The **live preview** updates as you change values; click **Done** to save.
 
 You do not need to touch YAML. Advanced users can switch to **YAML mode** inside the editor — both modes show the full config and switching is lossless. See [Configuration and Customization](Configuration-and-Customization#visual-editor-v120).

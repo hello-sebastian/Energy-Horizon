@@ -3,15 +3,19 @@
  * window (element-level integration, SC-908-5, FR-908-G/Q/S).
  *
  * Asserts (spec US3 acceptance 1–4):
- * 1. standard → `custom`: `period_offset` removed, `time_window` initialized
- *    with the FR-908-Q defaults, the `time_window` sub-block shown and
- *    `period_offset` hidden (FR-908-G).
- * 2. `custom` → standard: `time_window` removed, `period_offset` restored to
- *    `-1`, the sub-block hidden and `period_offset` shown.
+ * 1. standard → `custom`: `period_offset` removed from the config,
+ *    `time_window` initialized with the FR-908-Q defaults, the `time_window`
+ *    sub-block shown.
+ * 2. `custom` → standard: `time_window` removed from the config,
+ *    `period_offset` restored to `-1`, the sub-block hidden.
  * 3. In `custom` mode, editing `time_window.count` and saving emits
  *    `comparison_preset: custom` plus the full `time_window` block.
  * 4. The section's expanded state is preserved across the switch (the panel
  *    does not collapse as a side effect of the mode switch).
+ *
+ * `period_offset` is a YAML-only (legacy) value: it is managed at the config
+ * level by the preset switch but is NOT rendered as a control in the visual
+ * editor, so no `[data-field="period_offset"]` DOM assertions are made.
  *
  * Plus the FR-908-S edge: a `custom` config with an empty/absent
  * `time_window` opens with the documented defaults (the editor initializes
@@ -128,7 +132,7 @@ describe("preset ↔ custom switch (T016, US3)", () => {
     });
   });
 
-  it("standard → custom: shows the time_window sub-block, hides period_offset (FR-908-G)", async () => {
+  it("standard → custom: shows the time_window sub-block (FR-908-G)", async () => {
     const el = mountEditor(STANDARD);
     await el.updateComplete;
 
@@ -137,6 +141,7 @@ describe("preset ↔ custom switch (T016, US3)", () => {
 
     expect(el.shadowRoot!.querySelector('[data-field="time_window.anchor"]')).not.toBeNull();
     expect(el.shadowRoot!.querySelector('[data-field="time_window.count"]')).not.toBeNull();
+    // period_offset is YAML-only — it is never rendered as a control.
     expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).toBeNull();
   });
 
@@ -155,7 +160,7 @@ describe("preset ↔ custom switch (T016, US3)", () => {
     expect(cfg.period_offset).toBe(-1);
   });
 
-  it("custom → standard: hides the time_window sub-block, shows period_offset (FR-908-G)", async () => {
+  it("custom → standard: hides the time_window sub-block (FR-908-G)", async () => {
     const el = mountEditor(CUSTOM);
     await el.updateComplete;
 
@@ -163,7 +168,8 @@ describe("preset ↔ custom switch (T016, US3)", () => {
     await el.updateComplete;
 
     expect(el.shadowRoot!.querySelector('[data-field="time_window.anchor"]')).toBeNull();
-    expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).not.toBeNull();
+    // period_offset is YAML-only — it is never rendered as a control.
+    expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).toBeNull();
   });
 
   it("custom mode: editing time_window.count and saving emits the full time_window block (acceptance 3)", async () => {
@@ -189,21 +195,22 @@ describe("preset ↔ custom switch (T016, US3)", () => {
     const el = mountEditor(STANDARD);
     await el.updateComplete;
 
-    // Expand the time section via the header (the real user gesture).
+    // Expand a collapsed-by-default section (panels) via the header (the real
+    // user gesture).
     const header = el.shadowRoot!.querySelector<HTMLElement>(
-      '[data-section="time"] .section-header'
+      '[data-section="panels"] .section-header'
     )!;
     header.dispatchEvent(new Event("click", { bubbles: true }));
     await el.updateComplete;
-    expect(isExpanded(el, "time")).toBe(true);
+    expect(isExpanded(el, "panels")).toBe(true);
 
     selectPreset(el, "custom");
     await el.updateComplete;
-    expect(isExpanded(el, "time")).toBe(true);
+    expect(isExpanded(el, "panels")).toBe(true);
 
     selectPreset(el, "month_over_month");
     await el.updateComplete;
-    expect(isExpanded(el, "time")).toBe(true);
+    expect(isExpanded(el, "panels")).toBe(true);
   });
 
   it("custom with an empty/absent time_window opens with the documented defaults (FR-908-S)", async () => {

@@ -134,7 +134,7 @@ describe("deprecated & unknown value handling (T022, US6)", () => {
     await el.updateComplete;
 
     const sections = el.shadowRoot!.querySelectorAll(".editor-section");
-    expect(sections.length).toBe(6);
+    expect(sections.length).toBe(7);
   });
 
   it("a v1.1.0 config with comparison_mode + YAML-only fields saves with comparison_preset and loses no YAML-only fields (SC-908-6)", async () => {

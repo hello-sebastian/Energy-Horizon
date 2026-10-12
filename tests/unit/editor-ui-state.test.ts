@@ -9,14 +9,15 @@ import {
 } from "../../src/card/editor/editor-ui-state";
 
 describe("EditorUiState (data-model.md §5, research R4)", () => {
-  it("defaults: S1 (basic) expanded, S2–S6 collapsed", () => {
+  it("defaults: general+time expanded, the rest collapsed", () => {
     const s = defaultUiState();
-    expect(s.expanded.basic).toBe(true);
-    expect(s.expanded.time).toBe(false);
-    expect(s.expanded.layout).toBe(false);
-    expect(s.expanded.visuals).toBe(false);
+    expect(s.expanded.general).toBe(true);
+    expect(s.expanded.time).toBe(true);
+    expect(s.expanded.panels).toBe(false);
     expect(s.expanded.formatting).toBe(false);
-    expect(s.expanded.system).toBe(false);
+    expect(s.expanded.chart).toBe(false);
+    expect(s.expanded.style).toBe(false);
+    expect(s.expanded.diagnostics).toBe(false);
     expect(s.lastFocusedField).toBeUndefined();
     expect(s.lastCaret).toBeUndefined();
     expect(s.scrollAnchor).toBeUndefined();
@@ -24,19 +25,19 @@ describe("EditorUiState (data-model.md §5, research R4)", () => {
 
   it("withExpanded toggles a single section without touching others", () => {
     let s = defaultUiState();
-    s = withExpanded(s, "time", true);
+    s = withExpanded(s, "panels", true);
+    expect(s.expanded.panels).toBe(true);
+    expect(s.expanded.general).toBe(true);
     expect(s.expanded.time).toBe(true);
-    expect(s.expanded.basic).toBe(true);
-    expect(s.expanded.layout).toBe(false);
     // Collapsing again.
-    s = withExpanded(s, "time", false);
-    expect(s.expanded.time).toBe(false);
+    s = withExpanded(s, "panels", false);
+    expect(s.expanded.panels).toBe(false);
   });
 
   it("withExpanded does not mutate the input state", () => {
     const before = defaultUiState();
     const snapshot = JSON.parse(JSON.stringify(before));
-    withExpanded(before, "visuals", true);
+    withExpanded(before, "style", true);
     expect(before).toEqual(snapshot);
   });
 
@@ -76,13 +77,13 @@ describe("EditorUiState (data-model.md §5, research R4)", () => {
   it("a config change does not reset the UI state (the core lifecycle fix)", () => {
     // Build a state with non-default presentation.
     let s: EditorUiState = defaultUiState();
-    s = withExpanded(s, "visuals", true);
+    s = withExpanded(s, "style", true);
     s = withFocus(s, "language", 3);
 
     // Simulate: setConfig() re-renders with a *different* config object, but
     // the UI state is re-applied verbatim (it is never derived from config).
     const reRendered = reapplyAfterRender(s);
-    expect(reRendered.expanded.visuals).toBe(true);
+    expect(reRendered.expanded.style).toBe(true);
     expect(reRendered.lastFocusedField).toBe("language");
     expect(reRendered.lastCaret).toBe(3);
   });

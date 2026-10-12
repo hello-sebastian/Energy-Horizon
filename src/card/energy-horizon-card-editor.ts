@@ -55,9 +55,9 @@ type EditorMode = "visual" | "yaml";
  *
  * A thin Lit shell driven entirely by the declarative {@link FIELD_REGISTRY}
  * (contracts/field-registry.md render-loop contract):
- *   - iterates the six sections in fixed order as expansion panels;
+ *   - iterates the seven sections in fixed order as expansion panels;
  *   - groups descriptors by `section`, filters by `visibleWhen`, applies
- *     `disabledWhen`;
+ *     `disabledWhen`, and emits non-collapsible subsection headers;
  *   - renders each control from declarative `ControlSpec` metadata (HA native
  *     components with graceful degradation to standard controls, FR-908-T);
  *   - routes every change through `preservativeMerge` → emit gate
@@ -179,6 +179,11 @@ export class EnergyHorizonCardEditor extends LitElement {
     caret?: number
   ): void {
     if (!this._config) {
+      return;
+    }
+    // UX-only dummy fields (e.g. `show_chart`) have no config representation:
+    // they are rendered permanently ON + disabled, so a change is a no-op.
+    if (field.dummy) {
       return;
     }
 
@@ -734,7 +739,28 @@ export class EnergyHorizonCardEditor extends LitElement {
             `;
       }
 
-      case "boolean":
+      case "boolean": {
+        // UX-only dummy fields (e.g. `show_chart`): permanently ON + disabled,
+        // no change handler — they explain an always-true behavior and never
+        // write to the config.
+        if (field.dummy) {
+          return this._haAvailable("ha-switch")
+            ? html`
+                <ha-switch
+                  id=${id}
+                  .checked=${true}
+                  ?disabled=${true}
+                ></ha-switch>
+              `
+            : html`
+                <input
+                  id=${id}
+                  type="checkbox"
+                  .checked=${true}
+                  ?disabled=${true}
+                />
+              `;
+        }
         return this._haAvailable("ha-switch")
           ? html`
               <ha-switch
@@ -753,6 +779,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 @change=${(e: Event) => this._onFieldChange(field, e)}
               />
             `;
+      }
 
       case "slider":
         return this._haAvailable("ha-slider")
@@ -881,23 +908,39 @@ export class EnergyHorizonCardEditor extends LitElement {
       </div>
     `;
 
-    const body = html`
-      ${fields.map((field) => {
-        if (field.inlineWith) {
-          return nothing; // rendered inside its primary field's row
+    // Single pass over the visible fields (registry order). A non-collapsible
+    // subsection header is emitted whenever the `subsection` of consecutive
+    // fields changes; fields without a `subsection` render at the top level.
+    // Inline fields are folded into their primary field's row (FR-908-Z).
+    const bodyParts: TemplateResult[] = [];
+    let currentSubsection: string | undefined;
+    for (const field of fields) {
+      if (field.subsection !== currentSubsection) {
+        currentSubsection = field.subsection;
+        if (field.subsection) {
+          bodyParts.push(
+            html`<div class="subsection-header">${localize(field.subsection)}</div>`
+          );
         }
-        const inlines = inlineByPrimary.get(field.key) ?? [];
-        if (inlines.length === 0) {
-          return renderField(field);
-        }
-        return html`
-          <div class="field-row">
-            ${renderField(field, "field-main")}
-            ${inlines.map((inline) => renderField(inline, "field-inline"))}
-          </div>
-        `;
-      })}
-    `;
+      }
+      if (field.inlineWith) {
+        continue; // rendered inside its primary field's row
+      }
+      const inlines = inlineByPrimary.get(field.key) ?? [];
+      if (inlines.length === 0) {
+        bodyParts.push(renderField(field));
+      } else {
+        bodyParts.push(
+          html`
+            <div class="field-row">
+              ${renderField(field, "field-main")}
+              ${inlines.map((inline) => renderField(inline, "field-inline"))}
+            </div>
+          `
+        );
+      }
+    }
+    const body = html`${bodyParts}`;
 
     // NOTE: the fallback is a `<div>`-based panel (NOT `<details>`). A
     // `<details>` + `?open` binding fires the native `toggle` event whenever
@@ -996,6 +1039,14 @@ export class EnergyHorizonCardEditor extends LitElement {
     .section-header:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: -2px;
+    }
+    .subsection-header {
+      padding: 8px 12px 0;
+      font-size: 0.8em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--secondary-text-color, #555);
     }
     .section-body[hidden] {
       display: none;

@@ -79,7 +79,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
 | `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. In the editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
-| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (Basic Settings). |
+| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (General). |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
@@ -118,7 +118,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 ### `custom` (v1.2.0)
 
 - **No preset template** — windows are resolved **generically** from the `time_window` block you provide (no legacy YoY/MoY flags).
-- In the visual editor, selecting `custom` hides `period_offset` and shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`), initialized with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`) when switching from a standard preset.
+- In the visual editor, selecting `custom` shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`) under the **Custom settings** subsection, initialized with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`) when switching from a standard preset. (`period_offset` is YAML-only — it is removed from the config on the switch but is never a control in the editor.)
 - The card owns window validation; an invalid `time_window` surfaces as the standard card error (the editor does not block the save).
 
 ### Legacy: `comparison_mode`
@@ -302,22 +302,25 @@ For **`count` ≥ 3**:
 
 `EnergyHorizonCard` exposes `getConfigElement()` → `energy-horizon-card-editor`.
 
-Since **v1.2.0** the visual editor covers the **full configuration surface** — every user-configurable YAML parameter is editable in the GUI. The form is organized into **six sections**, each an expandable panel:
+Since **v1.2.0** the visual editor covers the **full configuration surface** — every user-configurable YAML parameter is editable in the GUI. The form is organized into **seven sections**, each an expandable panel (**General** and **Time windows** are expanded by default; the rest are collapsed). Some sections contain non-collapsible **subsections**:
 
 | Section | Keys |
 |---------|------|
-| **Basic Settings** | `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation` |
-| **Time & Aggregation** | `aggregation`, `period_offset` (standard presets), `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset) |
-| **Layout & Visibility** | `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment` |
-| **Visuals & Chart Styling** | `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend` |
-| **Formatting & Axis** | `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` |
-| **System & Debug** | `debug` |
+| **General** | `entity`, `show_title` + `title`, `show_icon` + `icon`, `interpretation` + `neutral_interpretation`, `aggregation` |
+| **Time windows** | `comparison_preset`; **Custom settings** subsection: `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset only) |
+| **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
+| **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
+| **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend` |
+| **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
+| **Diagnostics** | `debug` |
 
-**Inline rows:** in **Basic Settings**, `show_title` renders in the same row as `title` (to its right) and `show_icon` in the same row as `icon` (to its right); each keeps its label-above-switch layout, the primary field takes the available width, and the toggle is compact. All other fields are standalone rows.
+**Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_interpretation`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact. All other fields are standalone rows.
+
+**`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (removed on standard → `custom`, restored to `-1` on `custom` → standard) but it is not a control in the visual editor.
 
 ### Conditional rendering & cascading
 
-- **`custom` ↔ `time_window`:** when `comparison_preset` is **`custom`**, the editor hides `period_offset` and shows the `time_window` sub-block (five fields: `anchor`, `duration`, `step`, `count`, `offset`). When a standard preset is selected, `period_offset` is shown and the `time_window` sub-block is hidden. Switching standard → `custom` removes `period_offset` and initializes `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`); switching back removes `time_window` and restores `period_offset: -1`.
+- **`custom` ↔ `time_window`:** when `comparison_preset` is **`custom`**, the editor shows the `time_window` sub-block (five fields: `anchor`, `duration`, `step`, `count`, `offset`) under the **Custom settings** subsection. When a standard preset is selected, the `time_window` sub-block is hidden. Switching standard → `custom` removes `period_offset` from the config and initializes `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`); switching back removes `time_window` and restores `period_offset: -1` in the config.
 - **Forecast line / panel independence:** `show_forecast` controls **only** the forecast line on the chart. The `show_forecast_total_panel` control is **always enabled** (independent of `show_forecast`), so the line and the Forecast | Total panel can be toggled separately.
 
 ### Lifecycle guarantees
@@ -413,7 +416,7 @@ time_window:
 aggregation: month
 ```
 
-`custom` resolves windows **generically** from `time_window` — no preset template, no `period_offset`. The same config can be produced entirely in the visual editor (Basic Settings → `comparison_preset: custom`, then the Time & Aggregation section).
+`custom` resolves windows **generically** from `time_window` — no preset template, no `period_offset`. The same config can be produced entirely in the visual editor (Time windows → `comparison_preset: custom`, then the **Custom settings** subsection).
 
 ### Custom Luxon X-axis and tooltip
 

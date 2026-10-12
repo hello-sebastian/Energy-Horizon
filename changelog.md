@@ -8,10 +8,10 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 ### Added
 
-- **Full-coverage visual editor:** the Lovelace editor now exposes **every** user-configurable parameter, organized into six sections — **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, **System & Debug**. No YAML is required to configure the card.
-- **`custom` comparison preset:** `comparison_preset: custom` resolves windows **generically** from the `time_window` block (no preset template, no `period_offset`). In the editor, selecting `custom` shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`) and hides `period_offset`; switching back to a standard preset restores `period_offset: -1` and removes `time_window`.
+- **Full-coverage visual editor:** the Lovelace editor now exposes **every** user-configurable parameter, organized into seven sections — **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, **Reference series**). **General** and **Time windows** are expanded by default. No YAML is required to configure the card.
+- **`custom` comparison preset:** `comparison_preset: custom` resolves windows **generically** from the `time_window` block (no preset template, no `period_offset`). In the editor, selecting `custom` shows the `time_window` sub-block (`anchor`, `duration`, `step`, `count`, `offset`) under the **Custom settings** subsection; switching back to a standard preset removes `time_window` and restores `period_offset: -1` in the config. `period_offset` is YAML-only — it is never a control in the visual editor.
 - **GUI controls** for `time_window.*`, colors/opacities (`primary_color`, `fill_*`, `fill_*_opacity`), formatting (`precision`, `force_prefix`, `number_format`, `language`), Luxon patterns (`x_axis_format`, `tooltip_format`), forecast (`show_forecast`), and `debug`.
-- **`neutral_interpretation`** is now GUI-editable (Basic Settings).
+- **`neutral_interpretation`** is now GUI-editable (General).
 - **Card picker metadata:** the card now declares `preview: true` and a `documentationURL`, so it is offered with a live preview and a documentation link in the HA "Add card" picker.
 
 ### Changed
@@ -30,7 +30,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 ### Documentation
 
-- README / wiki updated for the new editor coverage (six sections, `custom` preset, Visual ↔ YAML round-trip, YAML live-edit, lifecycle guarantees).
+- README / wiki updated for the new editor coverage (seven sections, `custom` preset, Visual ↔ YAML round-trip, YAML live-edit, lifecycle guarantees).
 
 ---
 

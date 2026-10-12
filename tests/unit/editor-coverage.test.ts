@@ -91,23 +91,25 @@ function sectionOf(el: EditorEl, key: string): string | null {
 }
 
 /**
- * A config exercising **every** FR-908-D parameter (all 33 registry fields),
- * in `custom` mode so the `time_window.*` sub-fields are visible, plus an
- * unknown key (`custom_extra`) that must survive the round-trip.
+ * A config exercising **every** FR-908-D parameter (all 32 config-backed
+ * registry fields), in `custom` mode so the `time_window.*` sub-fields are
+ * visible, plus an unknown key (`custom_extra`) that must survive the
+ * round-trip. The `show_chart` dummy has no config representation and is
+ * intentionally absent.
  */
 const FULL_CONFIG: CardConfigInput = {
   type: "custom:energy-horizon-card",
-  // S1 — Basic
+  // S1 — General
   entity: "sensor.energy",
   title: "Energy",
   show_title: true,
   icon: "mdi:flash",
   show_icon: true,
-  comparison_preset: "custom",
   interpretation: "consumption",
   neutral_interpretation: 2,
-  // S2 — Time & Aggregation
   aggregation: "day",
+  // S2 — Time windows
+  comparison_preset: "custom",
   time_window: {
     anchor: "start_of_month",
     duration: "1M",
@@ -115,27 +117,28 @@ const FULL_CONFIG: CardConfigInput = {
     count: 3,
     offset: "-1M"
   },
-  // S3 — Layout & Visibility
+  // S3 — Panels
   show_comparison_summary: true,
-  show_forecast: false,
   show_forecast_total_panel: true,
   show_narrative_comment: true,
-  // S4 — Visuals
+  // S4 — Formatting & Localization
+  force_prefix: "k",
+  number_format: "comma",
+  precision: 3,
+  language: "pl",
+  x_axis_format: "dd LLL",
+  tooltip_format: "dd LLL yyyy",
+  // S5 — Chart settings
+  show_forecast: false,
+  connect_nulls: true,
+  show_legend: true,
+  // S6 — Style
   primary_color: "#ff0000",
   fill_current: true,
   fill_current_opacity: 45,
   fill_reference: false,
   fill_reference_opacity: 20,
-  connect_nulls: true,
-  show_legend: true,
-  // S5 — Formatting & Axis
-  precision: 3,
-  force_prefix: "k",
-  number_format: "comma",
-  language: "pl",
-  x_axis_format: "dd LLL",
-  tooltip_format: "dd LLL yyyy",
-  // S6 — System & Debug
+  // S7 — Diagnostics
   debug: true,
   // Unknown / future key — must survive the round-trip (FR-908-P).
   custom_extra: "keep-me"
@@ -161,8 +164,8 @@ describe("editor coverage (T012, US1)", () => {
     const el = mountEditor(FULL_CONFIG);
     await el.updateComplete;
 
-    // Every field visible in `custom` mode renders (32 of 33: `period_offset`
-    // is hidden in `custom` mode, the five `time_window.*` fields are shown).
+    // Every field visible in `custom` mode renders (the five `time_window.*`
+    // fields are shown; the `show_chart` dummy is always visible).
     const loadedFull = normalizeForLoad(FULL_CONFIG);
     const expectedVisible = FIELD_REGISTRY.filter(
       (f) => !f.visibleWhen || f.visibleWhen(loadedFull)
@@ -171,7 +174,7 @@ describe("editor coverage (T012, US1)", () => {
     expect(fieldCount).toBe(expectedVisible);
 
     for (const field of FIELD_REGISTRY) {
-      // `period_offset` is hidden in `custom` mode (FR-908-G) — nothing to assert.
+      // `time_window.*` is hidden in standard mode — nothing to assert.
       if (field.visibleWhen && !field.visibleWhen(loadedFull)) {
         expect(controlFor(el, field.key), `${field.key} should be hidden`).toBeNull();
         continue;
@@ -219,8 +222,8 @@ describe("editor coverage (T012, US1)", () => {
 
     // No spurious error anywhere in the form.
     expect(el.shadowRoot!.querySelector(".error")).toBeNull();
-    // All six sections still render.
-    expect(el.shadowRoot!.querySelectorAll(".editor-section").length).toBe(6);
+    // All seven sections still render.
+    expect(el.shadowRoot!.querySelectorAll(".editor-section").length).toBe(7);
   });
 
   it("renders the language field as a <select> in the formatting section", async () => {

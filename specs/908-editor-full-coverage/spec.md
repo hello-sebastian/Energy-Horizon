@@ -16,7 +16,7 @@
 
 The v1.1.0 visual editor exposes a small subset of the card's YAML surface (entity, title, `comparison_preset`, `interpretation`, `force_prefix`, and three `show_*` toggles). Everything else — time windows, aggregation, colors, opacities, formatting, Luxon patterns, forecast, debug — is **YAML-only**.
 
-This feature (v1.2.0) expands the editor to **100% coverage** of the card's YAML configuration, organized into **six progressive-disclosure sections**, driven by a **schema-driven field registry** that decouples field metadata from rendering. It also solves the central **lifecycle problem**: because every field change emits `config-changed`, Home Assistant re-invokes `setConfig()` and re-renders the whole editor — which today would collapse expanded panels and steal focus mid-typing. The spec defines the state-persistence, focus, and merge rules that make a large form feel stable.
+This feature (v1.2.0) expands the editor to **100% coverage** of the card's YAML configuration, organized into **seven progressive-disclosure sections** (with non-collapsible subsections inside some sections), driven by a **schema-driven field registry** that decouples field metadata from rendering. It also solves the central **lifecycle problem**: because every field change emits `config-changed`, Home Assistant re-invokes `setConfig()` and re-renders the whole editor — which today would collapse expanded panels and steal focus mid-typing. The spec defines the state-persistence, focus, and merge rules that make a large form feel stable.
 
 The editor remains a **faithful visual representation of the YAML**: it is the user interface *for* the YAML, never a second source of truth. Fields the editor does not model are preserved verbatim (preservative deep merge).
 
@@ -65,7 +65,7 @@ As a user configuring the card, I need the editor to **keep my place**: expanded
 
 **Acceptance Scenarios**:
 
-1. **Given** the user has expanded the "Time & Aggregation" and "Visuals" panels, **When** they change any field (which triggers `setConfig` + re-render), **Then** both panels remain expanded exactly as before.
+1. **Given** the user has expanded the "Panels" and "Style" sections, **When** they change any field (which triggers `setConfig` + re-render), **Then** both sections remain expanded exactly as before.
 2. **Given** the user is typing in the `title` text field, **When** a re-render occurs, **Then** the field retains focus and the caret stays at the typed position; the user can continue typing without re-clicking.
 3. **Given** the user has scrolled the editor to a lower section, **When** a re-render occurs, **Then** the scroll position is preserved (no jump to top).
 4. **Given** the editor re-renders, **When** the new render is produced, **Then** no control emits a spurious `config-changed` as a side effect of the re-render itself (no feedback loop / no config churn).
@@ -82,8 +82,10 @@ As a user, I need to move between the standard comparison presets and a fully cu
 
 **Acceptance Scenarios**:
 
-1. **Given** `comparison_preset` is a standard preset and the config has `period_offset`, **When** the user selects `custom`, **Then** `period_offset` is removed from the config, a `time_window` object is initialized with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`), and the `time_window` sub-section becomes visible while `period_offset` is hidden.
-2. **Given** `comparison_preset` is `custom` with a populated `time_window`, **When** the user selects a standard preset, **Then** the entire `time_window` object is removed, `period_offset` is restored to `-1`, and the `time_window` sub-section is hidden while `period_offset` is shown.
+1. **Given** `comparison_preset` is a standard preset and the config has `period_offset`, **When** the user selects `custom`, **Then** `period_offset` is removed from the config, a `time_window` object is initialized with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`), and the `time_window` sub-section becomes visible.
+2. **Given** `comparison_preset` is `custom` with a populated `time_window`, **When** the user selects a standard preset, **Then** the entire `time_window` object is removed, `period_offset` is restored to `-1` in the config, and the `time_window` sub-section is hidden.
+
+> **Note**: `period_offset` is a YAML-only (legacy) value. It is managed at the config level by the preset switch (removed on standard→`custom`, restored to `-1` on `custom`→standard) but is **not** rendered as a control in the visual editor, so "hidden"/"shown" refers only to the `time_window` sub-section.
 3. **Given** the user is in `custom` mode and edits `time_window.count` to `3`, **When** they save, **Then** the config contains `comparison_preset: custom` and the full `time_window` block; the card resolves windows generically per domain `900`.
 4. **Given** the user switches preset, **When** the re-render occurs, **Then** the section's expanded state is preserved (the panel does not collapse as a side effect of the mode switch).
 
@@ -91,18 +93,20 @@ As a user, I need to move between the standard comparison presets and a fully cu
 
 ### User Story 4 — Progressive disclosure through sections (Priority: P2)
 
-As a user, I need the form grouped into six clearly-labeled sections — with the essentials always visible and advanced groups collapsed by default — so I can find what I need without wading through 30 fields.
+As a user, I need the form grouped into seven clearly-labeled sections — with the essentials always visible and advanced groups collapsed by default — so I can find what I need without wading through 30 fields.
 
 **Why this priority**: Improves discoverability and reduces cognitive load; it is the structural backbone of the form but is lower-risk than the lifecycle and state-cleanup stories.
 
-**Independent Test**: Open the editor → Section 1 (Basic) is expanded and visible; Sections 2–6 are collapsed. Expand each and confirm the correct fields appear in the correct section.
+**Independent Test**: Open the editor → Sections 1 (General) and 2 (Time windows) are expanded and visible; Sections 3–7 are collapsed. Expand each and confirm the correct fields appear in the correct section, with subsection headers where present.
 
 **Acceptance Scenarios**:
 
-1. **Given** the editor opens, **When** it renders, **Then** Section 1 (Basic Settings) is expanded and Sections 2–6 are collapsed.
-2. **Given** the user expands "Formatting & Axis", **When** it renders, **Then** it shows exactly `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`.
-3. **Given** the user expands "System & Debug", **When** it renders, **Then** it shows `debug`.
-4. **Given** a section is expanded, **When** the user collapses it and re-opens the editor, **Then** it reopens collapsed (default), unless the user's in-session expansion state is still alive for the current editor instance.
+1. **Given** the editor opens, **When** it renders, **Then** Section 1 (General) and Section 2 (Time windows) are expanded and Sections 3–7 (Panels, Formatting & Localization, Chart settings, Style, Diagnostics) are collapsed.
+2. **Given** the user expands "Formatting & Localization", **When** it renders, **Then** it shows `language`, then a **Unit** subsection with `force_prefix`, `number_format`, `precision`, then a **Dates** subsection with `x_axis_format`, `tooltip_format`.
+3. **Given** the user expands "Diagnostics", **When** it renders, **Then** it shows `debug`.
+4. **Given** the user expands "Style", **When** it renders, **Then** it shows a **Current series** subsection (`primary_color`, `fill_current`, `fill_current_opacity`) and a **Reference series** subsection (`fill_reference`, `fill_reference_opacity`).
+5. **Given** the user expands "Panels", **When** it renders, **Then** it shows `show_comparison_summary`, a permanently ON + disabled `show_chart` control (dummy), `show_forecast_total_panel`, and `show_narrative_comment`.
+6. **Given** a section is expanded, **When** the user collapses it and re-opens the editor, **Then** it reopens collapsed (default), unless the user's in-session expansion state is still alive for the current editor instance.
 
 ---
 
@@ -168,23 +172,24 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 - **FR-908-A (Field Registry)**: The editor MUST define its fields through a **schema-driven field registry** — a data structure where each field descriptor carries: the YAML key (path), the control type, the owning **section**, default value, required/optional flag, and declarative **visibility** and **disabled** rules. Rendering MUST be generated from this registry, not from a hard-coded per-field template.
 - **FR-908-B (Section relocation is a data change)**: Moving a field from one section to another MUST be achievable by changing only the field's `section` property in the registry — without editing the Lit render template. The render loop MUST group fields by their `section` value.
 - **FR-908-C (Hybrid rendering)**: The registry MUST support a **custom-renderer escape hatch**: a field or sub-block may declare a custom renderer for complex controls (e.g. the `time_window` sub-section in `custom` mode). Standard controls (boolean, text, number, select, slider, color) MUST be rendered from the registry's declarative metadata. The custom renderer MUST still read/write through the same config-merge and event pipeline as declarative fields.
-- **FR-908-D (100% YAML coverage)**: The registry MUST model every user-configurable YAML parameter of the v1.1.0 card: `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation`, `aggregation`, `period_offset`, `time_window.{anchor,offset,duration,step,count}`, `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment`, `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`, `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`, `debug`. The fixed `type` key is NOT an editable field. The deprecated `comparison_mode` and the legacy `forecast` alias are NOT standalone fields (handled by FR-908-I and FR-908-V respectively).
+- **FR-908-D (100% YAML coverage)**: The registry MUST model every user-configurable YAML parameter of the v1.1.0 card: `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation`, `aggregation`, `time_window.{anchor,offset,duration,step,count}`, `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment`, `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`, `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`, `debug`. The fixed `type` key is NOT an editable field. The deprecated `comparison_mode` and the legacy `forecast` alias are NOT standalone fields (handled by FR-908-I and FR-908-V respectively). `period_offset` is a **YAML-only** legacy value: it is managed at the config level by the preset switch (FR-908-Q) but is NOT a registry field and is never rendered as a control.
 
 #### Section Layout
 
-- **FR-908-E (Six sections)**: The editor MUST present fields in exactly six sections, in this order: (1) **Basic Settings** — always expanded; (2) **Time & Aggregation** — collapsible; (3) **Layout & Visibility** — collapsible; (4) **Visuals & Chart Styling** — collapsible; (5) **Formatting & Axis** — collapsible; (6) **System & Debug** — collapsible.
+- **FR-908-E (Seven sections)**: The editor MUST present fields in exactly seven sections, in this order: (1) **General** — expanded by default; (2) **Time windows** — expanded by default; (3) **Panels** — collapsed by default; (4) **Formatting & Localization** — collapsed by default; (5) **Chart settings** — collapsed by default; (6) **Style** — collapsed by default; (7) **Diagnostics** — collapsed by default. Sections may contain non-collapsible **subsections** (a visual grouping within a section, emitted as a header when the first visible field with that subsection appears).
 - **FR-908-F (Section field membership)**: Section membership MUST be:
-  - **S1 Basic**: `entity` (required), `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation`.
-  - **S2 Time & Aggregation**: `aggregation`, `period_offset` (standard mode), and the `time_window` sub-block `anchor`, `duration`, `step`, `count`, `offset` (custom mode).
-  - **S3 Layout & Visibility**: `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment`.
-  - **S4 Visuals**: `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`.
-  - **S5 Formatting & Axis**: `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`.
-  - **S6 System & Debug**: `debug`.
-- **FR-908-Z (Inline field rows)**: In the **Basic Settings** section, `show_title` renders in the **same horizontal row** as `title` (to its right), and `show_icon` renders in the **same horizontal row** as `icon` (to its right). Each row keeps the boolean field's label-above-switch layout; the primary field (`title` / `icon`) takes the available width, and the boolean field is compact. All other fields render as standalone rows. The row grouping is **declarative** (an `inlineWith` reference in the field registry), so pairing or unpairing a field is a data change, not a template change (consistent with FR-908-A/B).
+  - **S1 General**: `entity` (required), `show_title` (inline with `title`), `title`, `show_icon` (inline with `icon`), `icon`, `interpretation` (inline with `neutral_interpretation`), `neutral_interpretation`, `aggregation`.
+  - **S2 Time windows**: `comparison_preset`, and the **Custom settings** subsection `time_window` sub-block `anchor`, `duration`, `step`, `count`, `offset` (custom mode only).
+  - **S3 Panels**: `show_comparison_summary`, `show_chart` (dummy — always ON + disabled, never written to config), `show_forecast_total_panel`, `show_narrative_comment`.
+  - **S4 Formatting & Localization**: `language`, **Unit** subsection `force_prefix`, `number_format`, `precision`, **Dates** subsection `x_axis_format`, `tooltip_format`.
+  - **S5 Chart settings**: `show_forecast`, `connect_nulls`, `show_legend`.
+  - **S6 Style**: **Current series** subsection `primary_color`, `fill_current`, `fill_current_opacity`, **Reference series** subsection `fill_reference`, `fill_reference_opacity`.
+  - **S7 Diagnostics**: `debug`.
+- **FR-908-Z (Inline field rows)**: In the **General** section, `show_title` renders in the **same horizontal row** as `title` (to its right), `show_icon` renders in the **same horizontal row** as `icon` (to its right), and `interpretation` renders in the **same horizontal row** as `neutral_interpretation` (to its right). Each row keeps the boolean/select field's label-above-control layout; the primary field takes the available width, and the paired field is compact. All other fields render as standalone rows. The row grouping is **declarative** (an `inlineWith` reference in the field registry), so pairing or unpairing a field is a data change, not a template change (consistent with FR-908-A/B).
 
 #### Conditional Rendering & Cascading
 
-- **FR-908-G (Preset ↔ time_window visibility)**: When `comparison_preset == "custom"`, the editor MUST hide `period_offset` and show the `time_window` sub-block. When `comparison_preset != "custom"`, it MUST show `period_offset` and hide the `time_window` sub-block.
+- **FR-908-G (Preset ↔ time_window visibility)**: When `comparison_preset == "custom"`, the editor MUST show the `time_window` sub-block (under the **Custom settings** subsection). When `comparison_preset != "custom"`, it MUST hide the `time_window` sub-block. `period_offset` is YAML-only and is never rendered as a control, so it has no visibility rule.
 - **FR-908-H (Forecast line / panel independence)**: `show_forecast` controls **only** the forecast line visibility on the chart. The `show_forecast_total_panel` control is **always enabled** (independent of `show_forecast`); the Forecast | Total panel is shown when forecast data is available, not in single-window mode, and `show_forecast_total_panel` is not `false`.
 - **FR-908-I (Deprecated `comparison_mode`)**: The editor MUST NOT render a `comparison_mode` field. On load, if `comparison_mode` is present and `comparison_preset` is empty, the editor MUST pre-fill `comparison_preset` from it. On save, the emitted config MUST use `comparison_preset` and replace (not duplicate) the deprecated key.
 - **FR-908-V (Legacy `forecast` alias normalization)**: The editor MUST NOT render a `forecast` field. On load, the `show_forecast` control MUST resolve its value as `config.show_forecast ?? config.forecast ?? true` (alias fallback for display). On save, the emitted config MUST use `show_forecast` as the canonical key and MUST drop the `forecast` alias key (the alias is a temporary legacy key scheduled for future removal; the editor normalizes it away, same pattern as FR-908-I).
@@ -264,8 +269,8 @@ Each standard field is a data object, e.g. conceptually:
 ```ts
 // Illustrative shape — final types decided in /speckit-plan.
 type FieldDescriptor = {
-  key: string;                 // YAML path, e.g. "fill_current_opacity" or "time_window.count"
-  section: SectionId;          // "basic" | "time" | "layout" | "visuals" | "formatting" | "system"
+  key: string;                 // YAML path, e.g. "fill_current_opacity" or "time_window.count" (or a UX-only dummy key)
+  section: SectionId;          // "general" | "time" | "panels" | "formatting" | "chart" | "style" | "diagnostics"
   control:
     | { kind: "entity"; domain: string }
     | { kind: "text" }
@@ -280,6 +285,9 @@ type FieldDescriptor = {
   labelKey: string;            // "editor.<name>"
   visibleWhen?: (cfg: CardConfig) => boolean;   // e.g. preset === "custom"
   disabledWhen?: (cfg: CardConfig) => boolean;  // e.g. !show_forecast
+  inlineWith?: string;         // same-row pairing (FR-908-Z)
+  subsection?: string;         // i18n key for a non-collapsible subsection header
+  dummy?: boolean;             // UX-only: always ON + disabled, never written to config
 };
 ```
 
@@ -324,7 +332,7 @@ dispatchEvent(new CustomEvent("config-changed", {
 **Editor preset options (v1.2.0)**: `comparison_preset` select offers `year_over_year`, `month_over_year`, `month_over_month`, `custom`.
 
 **Editor invariants**:
-- Renders six sections (FR-908-E) from the `FieldRegistry`.
+- Renders seven sections (FR-908-E) from the `FieldRegistry`.
 - Keeps `EditorUiState` independent of `config` (FR-908-J).
 - Emits the full `CardConfig` on change; never drops unmodeled keys (FR-908-P).
 - Visual/YAML toggle: shown when `window.jsyaml` is present (hidden when absent, unchanged). In YAML mode, the textarea is a **first-class input path** (FR-908-Y): edits emit live (debounced) and the last valid YAML **values** are the saved config (HA re-serializes the config, so values persist but text formatting is canonicalized). `setConfig()` preserves the editor mode (does not reset to Visual).
@@ -366,13 +374,13 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 
 ### `README.md` (project overview)
 
-- Update the **feature list / highlights** to state that the visual editor now covers the **full** configuration surface (all six sections), not a subset.
+- Update the **feature list / highlights** to state that the visual editor now covers the **full** configuration surface (all seven sections), not a subset.
 - Add a short **"Visual editor"** note: the editor exposes every parameter; advanced users can still use YAML mode.
 - Bump the documented version reference to **1.2.0**.
 
 ### `README.advanced.md` (authoritative reference)
 
-- **Rewrite the "Lovelace editor" section** (currently lists only the v1.1.0 subset) to describe the **six sections**, the **conditional rendering** (`custom` ↔ `time_window`), the **forecast line / panel independence**, and the **lifecycle guarantees** (expanded panels persist, focus/caret preserved, no spurious re-emit).
+- **Rewrite the "Lovelace editor" section** (currently lists only the v1.1.0 subset) to describe the **seven sections** (and their subsections), the **conditional rendering** (`custom` ↔ `time_window`), the **forecast line / panel independence**, and the **lifecycle guarantees** (expanded panels persist, focus/caret preserved, no spurious re-emit).
 - **Visual ↔ YAML round-trip**: document that Visual and YAML modes are two views of the same config — switching to YAML dumps the full current config (every field, including those set in the form), and switching back re-populates every field from the YAML (lossless; the YAML is authoritative). Replace the v1.1.0 framing ("YAML mode: all other fields are set in YAML") — with 100% coverage, both modes expose the full surface.
 - **YAML live-edit (FR-908-Y)**: document that YAML mode is a **first-class input path** — edits update the preview live (debounced) and the last valid YAML **values** are the saved config, with no switch to Visual required; a YAML syntax error is shown inline without changing the preview. Note that HA re-serializes the config on save, so the *values* persist but the exact text formatting (comments, key order, indentation) is canonicalized — do not promise verbatim text preservation.
 - **YAML parameters table**: add a column or note marking which fields are **GUI-editable** (now all of them) vs. the deprecated `comparison_mode` / `forecast` alias (not standalone fields).
@@ -382,8 +390,8 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 
 ### `wiki-publish/` (Diátaxis quadrants)
 
-- **`Configuration-and-Customization.md`** (Reference): update the `comparison_preset` row to include `custom`; update `neutral_interpretation` gotcha from "YAML-only in v1" to "GUI-editable in v1.2.0"; add a short "Visual editor" reference block listing the six sections and which keys map to which.
-- **`Getting-Started.md`** (Tutorial): add a brief "Configure with the visual editor" step (open Edit → six sections → live preview) so first-time users know they need not touch YAML.
+- **`Configuration-and-Customization.md`** (Reference): update the `comparison_preset` row to include `custom`; update `neutral_interpretation` gotcha from "YAML-only in v1" to "GUI-editable in v1.2.0"; add a short "Visual editor" reference block listing the seven sections (and their subsections) and which keys map to which.
+- **`Getting-Started.md`** (Tutorial): add a brief "Configure with the visual editor" step (open Edit → seven sections → live preview) so first-time users know they need not touch YAML.
 - **`Releases-and-Migration.md`**: add a **1.2.0** entry — editor full coverage, new `custom` preset, lifecycle stability; note the `comparison_mode` → `comparison_preset` migration is now also handled in the GUI.
 - **`Troubleshooting-and-FAQ.md`**: add an entry — "My expanded sections collapse / focus jumps while editing" → explain the v1.2.0 lifecycle fix (UI state independent of config).
 - **`Home.md` / `_Sidebar.md`**: no structural change expected (no new pages); verify links still resolve.
@@ -391,14 +399,14 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 ### `changelog.md`
 
 - Add a **`[1.2.0]`** section with:
-  - **Added**: full-coverage visual editor (six sections); `custom` comparison preset; GUI controls for `time_window.*`, colors/opacities, formatting, Luxon patterns, forecast, debug.
+  - **Added**: full-coverage visual editor (seven sections); `custom` comparison preset; GUI controls for `time_window.*`, colors/opacities, formatting, Luxon patterns, forecast, debug.
   - **Changed**: editor lifecycle — expanded panels, focus, and scroll now persist across re-renders; text-input emits are debounced; YAML mode is now a first-class input path (live preview, last valid YAML values are saved, no switch to Visual required).
   - **Fixed**: deprecated `comparison_mode` is migrated to `comparison_preset` in the GUI on save.
   - **Documentation**: README/wiki updated for the new editor coverage.
 
 ### Consistency rules (must hold across all docs)
 
-- The **`custom`** preset value, the **six section names**, and the **field→section mapping** must be identical in `README.advanced.md`, the wiki, and the changelog.
+- The **`custom`** preset value, the **seven section names** (and their subsections), and the **field→section mapping** must be identical in `README.advanced.md`, the wiki, and the changelog.
 - The **Visual ↔ YAML round-trip** (both modes show the full config; switching is lossless in both directions) must be stated consistently, and the v1.1.0 "YAML is authoritative for the full config / switch to YAML for advanced fields" framing MUST be retired wherever it appears (`README.advanced.md`, `First-Comparisons-Quick-Recipes.md`, `Configuration-and-Customization.md`).
 - Any field described as "YAML-only" in v1.1.0 docs MUST be updated to reflect v1.2.0 GUI coverage.
 - Docs MUST not promise inline validation (Non-Goal); they should state that invalid values surface as the standard card error.

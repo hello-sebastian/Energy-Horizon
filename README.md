@@ -14,7 +14,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 - **Readable timelines**: smart axis labels that stay legible on mobile.
 - **Always-usable charts**: automatic aggregation keeps the chart clean.
 - **Optional forecast**: a dashed estimate for the period total when it’s meaningful.
-- **Full-coverage visual editor** (v1.2.0): every configuration parameter is editable in the Lovelace editor across six sections — no YAML required.
+- **Full-coverage visual editor** (v1.2.0): every configuration parameter is editable in the Lovelace editor across seven sections — no YAML required.
 
 > This card is built for **long-term statistics** (energy history), not live power charts.
 
@@ -72,7 +72,7 @@ These are the options most people adjust first. Everything else is in the Wiki a
 | `primary_color` | Current series line/fill color; default is the card’s brand teal (`#119894`). Use `ha-primary` or `var(--primary-color)` to follow your HA theme. | [`README.advanced.md`](./README.advanced.md) |
 | `show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment` | Hide specific card sections (comparison panel, Forecast \| Total panel, narrative comment). | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 | `interpretation` | `consumption` (default) or `production` — controls whether “higher than reference” reads as **bad** (usage) or **good** (generation) for the **narrative row**, **trend icon**, and **chart delta** colors. Period wording in the narrative follows merged **`time_window.step`** (not calendar heuristics). Does **not** change delta chip `+/−` math or Forecast \| Total copy. | [`README.advanced.md`](./README.advanced.md) |
-| `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. GUI-editable in v1.2.0 (Basic Settings section). | [`README.advanced.md`](./README.advanced.md) |
+| `neutral_interpretation` | Optional percent band **T** (default **2**): when the chip’s signed percent **p** satisfies **|p| ≤ T**, narrative + chart delta use **neutral** “similar” styling. Invalid values fall back to **2**. GUI-editable in v1.2.0 (General section). | [`README.advanced.md`](./README.advanced.md) |
 | `title`, `icon` | Card header customization. | [Configuration and Customization](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization) |
 
 **Custom period anchor (optional YAML)** — e.g. a **12‑month “year” from 5 May** (not 1 Jan): merge `time_window` with a compound ISO `offset` such as `P4M4D` on `start_of_year`. Invalid `offset` strings fail with the **same** card error as other invalid `time_window` fields. See [`README.advanced.md`](./README.advanced.md) and [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows).
@@ -88,7 +88,7 @@ time_window:
 
 ## Visual editor (v1.2.0)
 
-The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into six sections: **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, and **System & Debug**. You do not need to touch YAML to configure the card. In **Basic Settings**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
+The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into seven sections: **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, and **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, and **Reference series**). **General** and **Time windows** are expanded by default; the rest are collapsed. You do not need to touch YAML to configure the card. In **General**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
 
 Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
 

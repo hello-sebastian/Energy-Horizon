@@ -16,15 +16,19 @@ The card exposes a Lovelace visual configuration editor via `getConfigElement()`
 
 ### Editor fields (Visual mode)
 
-| Field | Type | YAML key |
-|---|---|---|
-| Entity | `entity` selector (sensor domain) | `entity` |
-| Title | Free text | `title` |
-| Comparison preset | Dropdown | `comparison_preset` |
-| Force prefix | Dropdown | `force_prefix` |
-| Interpretation | Two-option control (Consumption / Production) | `interpretation` |
+The visual editor provides **full coverage** of the card's YAML configuration, organized into **seven sections** (with non-collapsible subsections inside some sections). The authoritative field inventory, section membership, and render-loop contract live in `specs/908-editor-full-coverage/` (data-model.md §4, contracts/field-registry.md). The sections, in order, are:
 
-Deprecated `comparison_mode` is still accepted by the card for backward compatibility but the editor always uses `comparison_preset`.
+| # | Section | Default | Fields (YAML keys) |
+|---|---|---|---|
+| 1 | General | expanded | `entity` (required), `show_title`+`title`, `show_icon`+`icon`, `interpretation`+`neutral_interpretation`, `aggregation` |
+| 2 | Time windows | expanded | `comparison_preset`; **Custom settings** subsection: `time_window.{anchor,duration,step,count,offset}` (custom mode only) |
+| 3 | Panels | collapsed | `show_comparison_summary`, `show_chart` (UX-only dummy, always ON + disabled), `show_forecast_total_panel`, `show_narrative_comment` |
+| 4 | Formatting & Localization | collapsed | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
+| 5 | Chart settings | collapsed | `show_forecast`, `connect_nulls`, `show_legend` |
+| 6 | Style | collapsed | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
+| 7 | Diagnostics | collapsed | `debug` |
+
+`period_offset` is a **YAML-only** (legacy) value: it is managed at the config level by the preset switch but is not a registry field and is never rendered as a control. Deprecated `comparison_mode` is still accepted by the card for backward compatibility but the editor always uses `comparison_preset`.
 
 ### Localization of labels
 
@@ -48,7 +52,7 @@ Returns a minimal valid default config (at minimum `entity: ""`) allowing the ca
 
 ### Advanced YAML and card-level errors
 
-`time_window` and nested fields (including `offset`) are **not** exposed in the visual form and are **not** semantically validated in the editor (see Non-Goals). When the user edits raw YAML, invalid `time_window` / `offset` values are detected in the main card at `setConfig` and MUST surface as the **standard card error state** (user-visible message; no chart) per `900-time-model-windows` — in particular **US-900-8** (invalid offset format) and **FR-900-E** / **FR-900-Q**. The editor does not need to parse ISO offsets itself.
+`time_window` and its nested fields (including `offset`) are exposed in the visual form under the **Time windows → Custom settings** subsection (visible only when `comparison_preset` is `custom`), but they are **not** semantically validated in the editor (see Non-Goals). When the user edits raw YAML, invalid `time_window` / `offset` values are detected in the main card at `setConfig` and MUST surface as the **standard card error state** (user-visible message; no chart) per `900-time-model-windows` — in particular **US-900-8** (invalid offset format) and **FR-900-E** / **FR-900-Q**. The editor does not need to parse ISO offsets itself.
 
 ---
 
@@ -77,7 +81,7 @@ const SCHEMA = [
 ];
 ```
 
-Editor presentation: the `interpretation` field MUST be shown as **two radio-style mutually exclusive options** (labels localized), default **Consumption**, matching shallow-merge semantics in “Config preservation”.
+Editor presentation: the editor renders the seven sections above (see `specs/908-editor-full-coverage/` for the authoritative render-loop contract, subsection headers, and the `show_chart` dummy). The `interpretation` field is shown as a two-option control (Consumption / Production), default **Consumption**, in the same row as `neutral_interpretation`, matching the preservative-merge semantics in “Config preservation”.
 
 ---
 

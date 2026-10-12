@@ -217,6 +217,30 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ---
 
+## Post-implementation refinements (section reorganization, subsections, YAML-only `period_offset`)
+
+> These refinements were made after the v1.2.0 feature was built, to reorganize
+> the editor into **seven** sections (General, Time windows, Panels, Formatting
+> & Localization, Chart settings, Style, Diagnostics) with non-collapsible
+> **subsections** (Custom settings, Unit, Dates, Current series, Reference
+> series), to make `general` + `time` expanded by default, to add a UX-only
+> `show_chart` dummy control, and to make `period_offset` **YAML-only** (managed
+> at the config level by the preset switch, never rendered as a control). The
+> field-registry architecture is unchanged; only the `SectionId`/`SECTION_ORDER`,
+> the `FieldDescriptor` (`subsection?`, `dummy?`), the `FIELD_REGISTRY`
+> membership, the render loop (subsection headers + dummy handling), the
+> `EditorUiState` defaults, the translation dictionaries, and the tests were
+> corrected.
+
+- [X] T040 [P] Reorganize `src/card/editor/field-registry.ts`: `SectionId` = `general | time | panels | formatting | chart | style | diagnostics`; `SECTION_ORDER` in that order; add `subsection?` and `dummy?` to `FieldDescriptor`; rewrite `FIELD_REGISTRY` to the new 7-section membership (32 config-backed fields + 1 UX-only `show_chart` dummy); remove `period_offset` from the registry and delete the now-unused `IS_STANDARD` predicate
+- [X] T041 [P] Update `src/card/editor/editor-ui-state.ts`: `defaultUiState()` expands `general` + `time` by default; `panels`, `formatting`, `chart`, `style`, `diagnostics` collapsed by default
+- [X] T042 [P] Update `src/card/energy-horizon-card-editor.ts`: emit non-collapsible subsection headers in a single pass over each section's visible fields (header on subsection change to a defined value); render `dummy` boolean fields as permanently ON + disabled with no change handler; `_applyFieldChange` returns early for `field.dummy`; add `.subsection-header` CSS
+- [X] T043 [P] Update all four translation dictionaries (`en`, `pl`, `de`, `fr`): 7 section titles, 5 subsection titles, `editor.show_chart`, the corrected Style labels; remove `editor.section.{basic,layout,visuals,system}` and `editor.period_offset` (SC-908-7 — full parity across all four)
+- [X] T044 [P] Update tests to the new structure: `editor-field-registry.test.ts` (7 sections, 32 keys, dummy, no `period_offset`), `editor-sections.test.ts` (7 sections, subsection headers, dummy, default expansion), `editor-smoke.test.ts`, `editor-ui-state.test.ts`, `editor-lifecycle.test.ts`, `editor-coverage.test.ts`, `editor-i18n.test.ts`, `editor-label-language.test.ts`, `editor-preset-switch.test.ts` + `editor-preset-switch-integration.test.ts` (remove `[data-field="period_offset"]` DOM assertions; keep config-level `cfg.period_offset` assertions), `editor-accessibility.test.ts` + `editor-degradation.test.ts` (collapsed-by-default section, 7 sections)
+- [X] T045 Update SpecKit docs (`specs/908-editor-full-coverage/` data-model, contracts, spec, tasks) and user docs (`README.md`, `README.advanced.md`, `wiki-publish/`) to the seven-section structure with subsections and YAML-only `period_offset` (present tense)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

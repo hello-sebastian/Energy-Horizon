@@ -14,7 +14,10 @@ import type { SectionId } from "./field-registry";
  */
 
 export interface EditorUiState {
-  /** Per-section expansion. S1 (`basic`) defaults to `true`; S2–S6 to `false`. */
+  /**
+   * Per-section expansion. `general` and `time` default to `true`; the rest
+   * (`panels`, `formatting`, `chart`, `style`, `diagnostics`) to `false`.
+   */
   expanded: Record<SectionId, boolean>;
   /** Registry `key` of the last focused text/number field. */
   lastFocusedField?: string;
@@ -25,18 +28,19 @@ export interface EditorUiState {
 }
 
 /**
- * The default UI state: S1 (`basic`) expanded, S2–S6 collapsed (FR-908-E,
- * User Story 4). No focus or scroll anchor yet.
+ * The default UI state: `general` and `time` expanded, the remaining sections
+ * collapsed (FR-908-E, User Story 4). No focus or scroll anchor yet.
  */
 export function defaultUiState(): EditorUiState {
   return {
     expanded: {
-      basic: true,
-      time: false,
-      layout: false,
-      visuals: false,
+      general: true,
+      time: true,
+      panels: false,
       formatting: false,
-      system: false
+      chart: false,
+      style: false,
+      diagnostics: false
     }
   };
 }

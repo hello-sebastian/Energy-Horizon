@@ -2,14 +2,17 @@
  * T018 — User Story 4: Progressive disclosure through sections (FR-908-E/F).
  *
  * Asserts (spec US4 acceptance 1–4):
- * 1. The six sections render in the fixed order
- *    `basic → time → layout → visuals → formatting → system`, with S1
- *    (`basic`) expanded and S2–S6 collapsed by default.
- * 2. Expanding "Formatting & Axis" shows exactly `precision`, `force_prefix`,
- *    `number_format`, `language`, `x_axis_format`, `tooltip_format`.
- * 3. Expanding "System & Debug" shows exactly `debug`.
+ * 1. The seven sections render in the fixed order
+ *    `general → time → panels → formatting → chart → style → diagnostics`,
+ *    with `general` and `time` expanded and the rest collapsed by default.
+ * 2. Expanding "Formatting & Localization" shows exactly `language`,
+ *    `force_prefix`, `number_format`, `precision`, `x_axis_format`,
+ *    `tooltip_format`.
+ * 3. Expanding "Diagnostics" shows exactly `debug`.
  * 4. An in-session expansion survives re-renders, but a fresh editor instance
  *    reopens collapsed (default).
+ *
+ * Also covers non-collapsible subsection headers and the `show_chart` dummy.
  *
  * jsdom notes: `ha-expansion-panel` is not defined, so the editor renders the
  * `<div>` fallback; a section is expanded by clicking its `.section-header`.
@@ -45,12 +48,13 @@ function mountEditor(config: CardConfigInput): EditorEl {
 }
 
 const EXPECTED_ORDER = [
-  "basic",
+  "general",
   "time",
-  "layout",
-  "visuals",
+  "panels",
   "formatting",
-  "system"
+  "chart",
+  "style",
+  "diagnostics"
 ];
 
 /** The `data-field` keys rendered inside a section's body. */
@@ -86,7 +90,7 @@ describe("editor sections (T018, US4)", () => {
     document.body.innerHTML = "";
   });
 
-  it("renders the six sections in the fixed order, S1 expanded and S2–S6 collapsed (acceptance 1)", async () => {
+  it("renders the seven sections in the fixed order, general+time expanded and the rest collapsed (acceptance 1)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
@@ -95,13 +99,14 @@ describe("editor sections (T018, US4)", () => {
     );
     expect(ids).toEqual(EXPECTED_ORDER);
 
-    expect(isExpanded(el, "basic")).toBe(true);
-    for (const section of EXPECTED_ORDER.slice(1)) {
+    expect(isExpanded(el, "general")).toBe(true);
+    expect(isExpanded(el, "time")).toBe(true);
+    for (const section of EXPECTED_ORDER.slice(2)) {
       expect(isExpanded(el, section), `${section} should be collapsed`).toBe(false);
     }
   });
 
-  it("expanding Formatting & Axis shows exactly its six fields (acceptance 2)", async () => {
+  it("expanding Formatting & Localization shows exactly its six fields (acceptance 2)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
@@ -110,24 +115,24 @@ describe("editor sections (T018, US4)", () => {
 
     expect(isExpanded(el, "formatting")).toBe(true);
     expect(fieldKeys(el, "formatting")).toEqual([
-      "precision",
+      "language",
       "force_prefix",
       "number_format",
-      "language",
+      "precision",
       "x_axis_format",
       "tooltip_format"
     ]);
   });
 
-  it("expanding System & Debug shows exactly `debug` (acceptance 3)", async () => {
+  it("expanding Diagnostics shows exactly `debug` (acceptance 3)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
-    expandSection(el, "system");
+    expandSection(el, "diagnostics");
     await el.updateComplete;
 
-    expect(isExpanded(el, "system")).toBe(true);
-    expect(fieldKeys(el, "system")).toEqual(["debug"]);
+    expect(isExpanded(el, "diagnostics")).toBe(true);
+    expect(fieldKeys(el, "diagnostics")).toEqual(["debug"]);
   });
 
   it("renders each section title from its `editor.section.*` key (FR-908-E)", async () => {
@@ -136,12 +141,13 @@ describe("editor sections (T018, US4)", () => {
 
     // The en dictionary is the reference (FR-908-E titles).
     const expectedTitles: Record<string, string> = {
-      basic: "Basic",
-      time: "Time & Comparison",
-      layout: "Layout",
-      visuals: "Visuals",
-      formatting: "Formatting",
-      system: "System"
+      general: "General",
+      time: "Time windows",
+      panels: "Panels",
+      formatting: "Formatting & Localization",
+      chart: "Chart settings",
+      style: "Style",
+      diagnostics: "Diagnostics"
     };
     for (const section of EXPECTED_ORDER) {
       const header = el.shadowRoot!.querySelector<HTMLElement>(
@@ -158,19 +164,19 @@ describe("editor sections (T018, US4)", () => {
     await el.updateComplete;
 
     // Expand a section in-session.
-    expandSection(el, "visuals");
+    expandSection(el, "style");
     await el.updateComplete;
-    expect(isExpanded(el, "visuals")).toBe(true);
+    expect(isExpanded(el, "style")).toBe(true);
 
     // A passive re-render (setConfig with the same config) must preserve it.
     el.setConfig(MINIMAL);
     await el.updateComplete;
-    expect(isExpanded(el, "visuals"), "in-session expansion must survive re-render").toBe(true);
+    expect(isExpanded(el, "style"), "in-session expansion must survive re-render").toBe(true);
 
     // A fresh editor instance reopens collapsed (default).
     const fresh = mountEditor(MINIMAL);
     await fresh.updateComplete;
-    expect(isExpanded(fresh, "visuals"), "fresh instance must reopen collapsed").toBe(false);
+    expect(isExpanded(fresh, "style"), "fresh instance must reopen collapsed").toBe(false);
   });
 
   it("renders show_title in the same row as title (FR-908-Z)", async () => {
@@ -203,16 +209,26 @@ describe("editor sections (T018, US4)", () => {
     ).not.toBeNull();
   });
 
-  it("keeps the other basic fields as standalone rows (FR-908-Z)", async () => {
+  it("renders neutral_interpretation in the same row as interpretation (FR-908-Z)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
-    for (const key of [
-      "entity",
-      "comparison_preset",
-      "interpretation",
-      "neutral_interpretation"
-    ]) {
+    const neutral = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-field="neutral_interpretation"]'
+    )!;
+    const row = neutral.closest<HTMLElement>(".field-row");
+    expect(row, "neutral_interpretation must live inside a .field-row").not.toBeNull();
+    expect(
+      row!.querySelector<HTMLElement>('[data-field="interpretation"]'),
+      "the row must contain the interpretation field"
+    ).not.toBeNull();
+  });
+
+  it("keeps the other general fields as standalone rows (FR-908-Z)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    for (const key of ["entity", "aggregation"]) {
       const field = el.shadowRoot!.querySelector<HTMLElement>(
         `[data-field="${key}"]`
       )!;
@@ -223,13 +239,103 @@ describe("editor sections (T018, US4)", () => {
     }
   });
 
-  it("still renders all eight basic fields (regression)", async () => {
+  it("still renders all eight general fields (regression)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
-    const basic = el.shadowRoot!.querySelector<HTMLElement>(
-      '[data-section="basic"]'
+    const general = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="general"]'
     )!;
-    expect(basic.querySelectorAll(".field").length).toBe(8);
+    expect(general.querySelectorAll(".field").length).toBe(8);
+  });
+
+  it("renders the Custom settings subsection header only for the custom preset", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    // Standard preset: no custom time_window fields, so no subsection header.
+    const timeBody = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="time"] .section-body'
+    )!;
+    expect(
+      timeBody.querySelector(".subsection-header"),
+      "no subsection header for the standard preset"
+    ).toBeNull();
+
+    // Custom preset: the time_window.* fields appear under a subsection header.
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "custom"
+    });
+    await el.updateComplete;
+
+    const liveTimeBody = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="time"] .section-body'
+    )!;
+    const headers = [...liveTimeBody.querySelectorAll<HTMLElement>(".subsection-header")];
+    expect(headers).toHaveLength(1);
+    expect(headers[0].textContent).toBe("Custom settings");
+    // comparison_preset stays visible; the custom fields follow the header.
+    expect(fieldKeys(el, "time")).toEqual([
+      "comparison_preset",
+      "time_window.anchor",
+      "time_window.duration",
+      "time_window.step",
+      "time_window.count",
+      "time_window.offset"
+    ]);
+  });
+
+  it("renders the Unit and Dates subsection headers in the formatting section", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    expandSection(el, "formatting");
+    await el.updateComplete;
+
+    const body = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="formatting"] .section-body'
+    )!;
+    const headers = [...body.querySelectorAll<HTMLElement>(".subsection-header")].map(
+      (h) => h.textContent
+    );
+    expect(headers).toEqual(["Unit", "Dates"]);
+  });
+
+  it("renders the Current series and Reference series subsection headers in the style section", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    expandSection(el, "style");
+    await el.updateComplete;
+
+    const body = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="style"] .section-body'
+    )!;
+    const headers = [...body.querySelectorAll<HTMLElement>(".subsection-header")].map(
+      (h) => h.textContent
+    );
+    expect(headers).toEqual(["Current series", "Reference series"]);
+  });
+
+  it("renders show_chart as a permanently ON, disabled dummy switch", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    expandSection(el, "panels");
+    await el.updateComplete;
+
+    const dummy = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-field="show_chart"]'
+    )!;
+    const control =
+      dummy.querySelector<HTMLElement>("ha-switch") ??
+      dummy.querySelector<HTMLElement>('input[type="checkbox"]');
+    expect(control, "show_chart must render a switch control").not.toBeNull();
+    expect(control!.hasAttribute("disabled"), "dummy must be disabled").toBe(true);
+    if (control!.tagName.toLowerCase() === "input") {
+      expect((control as HTMLInputElement).checked).toBe(true);
+    }
   });
 });

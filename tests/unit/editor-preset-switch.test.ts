@@ -2,12 +2,16 @@
  * T010 — Preset ↔ custom state cleanup (FR-908-Q, data-model.md §7).
  *
  * Asserts both directions of the `comparison_preset` family switch:
- * - standard → `custom`: removes `period_offset`, initializes `time_window`
- *   with the documented defaults, shows the `time_window` sub-block, hides
- *   `period_offset`.
- * - `custom` → standard: removes `time_window`, restores `period_offset: -1`,
- *   hides the sub-block.
+ * - standard → `custom`: removes `period_offset` from the config, initializes
+ *   `time_window` with the documented defaults, and shows the `time_window`
+ *   sub-block.
+ * - `custom` → standard: removes `time_window` from the config, restores
+ *   `period_offset: -1`, and hides the sub-block.
  * - The section's expanded state is preserved across the switch.
+ *
+ * `period_offset` is a YAML-only (legacy) value: it is managed at the config
+ * level by the preset switch but is NOT rendered as a control in the visual
+ * editor, so no `[data-field="period_offset"]` DOM assertions are made.
  */
 import { describe, expect, it, beforeEach } from "vitest";
 import "../helpers/setup-dom";
@@ -86,7 +90,7 @@ describe("preset ↔ custom cleanup (T010)", () => {
     });
   });
 
-  it("standard → custom: shows the time_window sub-block, hides period_offset", async () => {
+  it("standard → custom: shows the time_window sub-block", async () => {
     const el = mountEditor(STANDARD);
     await el.updateComplete;
 
@@ -95,6 +99,7 @@ describe("preset ↔ custom cleanup (T010)", () => {
 
     expect(el.shadowRoot!.querySelector('[data-field="time_window.anchor"]')).not.toBeNull();
     expect(el.shadowRoot!.querySelector('[data-field="time_window.count"]')).not.toBeNull();
+    // period_offset is YAML-only — it is never rendered as a control.
     expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).toBeNull();
   });
 
@@ -118,7 +123,7 @@ describe("preset ↔ custom cleanup (T010)", () => {
     expect(cfg.period_offset).toBe(-1);
   });
 
-  it("custom → standard: hides the time_window sub-block, shows period_offset", async () => {
+  it("custom → standard: hides the time_window sub-block", async () => {
     const el = mountEditor({
       type: "custom:energy-horizon-card",
       entity: "sensor.energy",
@@ -131,7 +136,8 @@ describe("preset ↔ custom cleanup (T010)", () => {
     await el.updateComplete;
 
     expect(el.shadowRoot!.querySelector('[data-field="time_window.anchor"]')).toBeNull();
-    expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).not.toBeNull();
+    // period_offset is YAML-only — it is never rendered as a control.
+    expect(el.shadowRoot!.querySelector('[data-field="period_offset"]')).toBeNull();
   });
 
   it("preserves the section's expanded state across the switch", async () => {

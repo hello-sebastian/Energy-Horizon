@@ -97,12 +97,12 @@ describe("editor accessibility (T028, Constitution IV)", () => {
     await el.updateComplete;
 
     const header = el.shadowRoot!.querySelector<HTMLElement>(
-      '[data-section="time"] .section-header'
+      '[data-section="panels"] .section-header'
     )!;
     expect(header).not.toBeNull();
     expect(header.getAttribute("role")).toBe("button");
     expect(header.getAttribute("tabindex")).toBe("0");
-    // "time" is collapsed by default.
+    // "panels" is collapsed by default.
     expect(header.getAttribute("aria-expanded")).toBe("false");
 
     // Keyboard: Enter toggles the section open.

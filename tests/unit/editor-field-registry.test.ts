@@ -12,94 +12,96 @@ import {
 } from "../../src/card/editor/field-registry";
 import type { CardConfig } from "../../src/card/types";
 
-/** The full FR-908-D v1.1.0 YAML surface (33 user-configurable parameters). */
+/**
+ * The FR-908-D YAML surface (32 user-configurable parameters). The registry
+ * additionally carries one UX-only dummy (`show_chart`) that has no config
+ * representation and is excluded from this surface.
+ */
 const FR_908_D_KEYS = [
-  // S1 basic
+  // S1 general
   "entity",
   "title",
   "show_title",
   "icon",
   "show_icon",
-  "comparison_preset",
   "interpretation",
   "neutral_interpretation",
-  // S2 time
   "aggregation",
-  "period_offset",
+  // S2 time
+  "comparison_preset",
   "time_window.anchor",
   "time_window.duration",
   "time_window.step",
   "time_window.count",
   "time_window.offset",
-  // S3 layout
+  // S3 panels
   "show_comparison_summary",
-  "show_forecast",
   "show_forecast_total_panel",
   "show_narrative_comment",
-  // S4 visuals
+  // S4 formatting
+  "force_prefix",
+  "number_format",
+  "precision",
+  "language",
+  "x_axis_format",
+  "tooltip_format",
+  // S5 chart
+  "show_forecast",
+  "connect_nulls",
+  "show_legend",
+  // S6 style
   "primary_color",
   "fill_current",
   "fill_current_opacity",
   "fill_reference",
   "fill_reference_opacity",
-  "connect_nulls",
-  "show_legend",
-  // S5 formatting
-  "precision",
-  "force_prefix",
-  "number_format",
-  "language",
-  "x_axis_format",
-  "tooltip_format",
-  // S6 system
+  // S7 diagnostics
   "debug"
 ] as const;
 
-/** FR-908-F section membership. */
+/** FR-908-F section membership (includes the `show_chart` dummy in panels). */
 const SECTION_MEMBERSHIP: Record<SectionId, string[]> = {
-  basic: [
+  general: [
     "entity",
     "title",
     "show_title",
     "icon",
     "show_icon",
-    "comparison_preset",
     "interpretation",
-    "neutral_interpretation"
+    "neutral_interpretation",
+    "aggregation"
   ],
   time: [
-    "aggregation",
-    "period_offset",
+    "comparison_preset",
     "time_window.anchor",
     "time_window.duration",
     "time_window.step",
     "time_window.count",
     "time_window.offset"
   ],
-  layout: [
+  panels: [
     "show_comparison_summary",
-    "show_forecast",
+    "show_chart",
     "show_forecast_total_panel",
     "show_narrative_comment"
   ],
-  visuals: [
+  formatting: [
+    "language",
+    "force_prefix",
+    "number_format",
+    "precision",
+    "x_axis_format",
+    "tooltip_format"
+  ],
+  chart: ["show_forecast", "connect_nulls", "show_legend"],
+  style: [
     "primary_color",
     "fill_current",
     "fill_current_opacity",
     "fill_reference",
-    "fill_reference_opacity",
-    "connect_nulls",
-    "show_legend"
+    "fill_reference_opacity"
   ],
-  formatting: [
-    "precision",
-    "force_prefix",
-    "number_format",
-    "language",
-    "x_axis_format",
-    "tooltip_format"
-  ],
-  system: ["debug"]
+  diagnostics: ["debug"]
 };
 
 function keysOfSection(section: SectionId): string[] {
@@ -108,7 +110,11 @@ function keysOfSection(section: SectionId): string[] {
 
 describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
   it("covers every FR-908-D key exactly once (SC-908-1)", () => {
-    const registryKeys = FIELD_REGISTRY.map((f) => f.key);
+    // The registry carries one UX-only dummy (`show_chart`) with no config
+    // representation; the FR-908-D surface covers the config-backed fields.
+    const registryKeys = FIELD_REGISTRY.filter((f) => !f.dummy).map(
+      (f) => f.key
+    );
     expect(registryKeys).toHaveLength(FR_908_D_KEYS.length);
     // Every FR-908-D key appears.
     for (const key of FR_908_D_KEYS) {
@@ -118,6 +124,15 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     for (const key of registryKeys) {
       expect((FR_908_D_KEYS as readonly string[])).toContain(key);
     }
+  });
+
+  it("carries exactly one UX-only dummy (show_chart) with no config role", () => {
+    const dummies = FIELD_REGISTRY.filter((f) => f.dummy);
+    expect(dummies.map((f) => f.key)).toEqual(["show_chart"]);
+    // The dummy lives in the panels section and is a boolean control.
+    const dummy = dummies[0];
+    expect(dummy.section).toBe("panels");
+    expect(dummy.control.kind).toBe("boolean");
   });
 
   it("section membership matches FR-908-F", () => {
@@ -136,16 +151,16 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
   });
 
   it("changing a descriptor's section re-groups it with no template edit (FR-908-B, SC-908-8)", () => {
-    // Simulate a data-only relocation: move `debug` from system → basic.
+    // Simulate a data-only relocation: move `debug` from diagnostics → general.
     const relocated = FIELD_REGISTRY.map((f) =>
-      f.key === "debug" ? { ...f, section: "basic" as SectionId } : f
+      f.key === "debug" ? { ...f, section: "general" as SectionId } : f
     );
     const grouped = groupBySection(relocated);
-    expect(grouped.basic.map((f) => f.key)).toContain("debug");
-    expect(grouped.system.map((f) => f.key)).not.toContain("debug");
+    expect(grouped.general.map((f) => f.key)).toContain("debug");
+    expect(grouped.diagnostics.map((f) => f.key)).not.toContain("debug");
     // The grouping helper is the only consumer — no template change needed.
-    expect(grouped.basic).toHaveLength(9);
-    expect(grouped.system).toHaveLength(0);
+    expect(grouped.general).toHaveLength(9);
+    expect(grouped.diagnostics).toHaveLength(0);
   });
 
   it("required is true only for entity (FR-908-R)", () => {
@@ -190,7 +205,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(resolveFieldValue(duration, cfg)).toBe("1y");
   });
 
-  it("visibleWhen: period_offset only for standard, time_window.* only for custom", () => {
+  it("visibleWhen: time_window.* only for custom (period_offset is YAML-only)", () => {
     const standard = {
       type: "custom:energy-horizon-card",
       entity: "sensor.e",
@@ -203,13 +218,12 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     } as CardConfig;
 
     const timeStandard = visibleFields("time", standard).map((f) => f.key);
-    expect(timeStandard).toContain("aggregation");
-    expect(timeStandard).toContain("period_offset");
+    expect(timeStandard).toContain("comparison_preset");
     expect(timeStandard).not.toContain("time_window.anchor");
+    expect(timeStandard).not.toContain("time_window.count");
 
     const timeCustom = visibleFields("time", custom).map((f) => f.key);
-    expect(timeCustom).toContain("aggregation");
-    expect(timeCustom).not.toContain("period_offset");
+    expect(timeCustom).toContain("comparison_preset");
     expect(timeCustom).toContain("time_window.anchor");
     expect(timeCustom).toContain("time_window.count");
   });
@@ -253,7 +267,6 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(byKey.get("comparison_preset")!.default).toBe("year_over_year");
     expect(byKey.get("interpretation")!.default).toBe("consumption");
     expect(byKey.get("neutral_interpretation")!.default).toBe(2);
-    expect(byKey.get("period_offset")!.default).toBe(-1);
     expect(byKey.get("time_window.anchor")!.default).toBe("start_of_year");
     expect(byKey.get("time_window.duration")!.default).toBe("1y");
     expect(byKey.get("time_window.step")!.default).toBe("1y");

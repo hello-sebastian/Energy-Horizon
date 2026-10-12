@@ -54,6 +54,10 @@ describe("editor i18n dictionaries", () => {
     const referenced = new Set<string>();
     for (const field of FIELD_REGISTRY) {
       referenced.add(field.labelKey);
+      // Non-collapsible subsection headers are i18n keys too.
+      if (field.subsection) {
+        referenced.add(field.subsection);
+      }
       // Select options live in `field.control` when kind === "select".
       if (field.control.kind === "select") {
         for (const opt of field.control.options) {
@@ -81,11 +85,11 @@ describe("editor i18n dictionaries", () => {
     const missingKey = "editor.__definitely_missing__";
     expect(localize(missingKey)).toBe(missingKey); // falls back to the key itself
     // Existing keys resolve in fr:
-    expect(localize("editor.section.basic")).toBe(fr["editor.section.basic"]);
-    expect(localize("editor.section.basic")).not.toBe("editor.section.basic");
+    expect(localize("editor.section.general")).toBe(fr["editor.section.general"]);
+    expect(localize("editor.section.general")).not.toBe("editor.section.general");
   });
 
-  it("all six section title keys exist in all dictionaries", () => {
+  it("all seven section title keys exist in all dictionaries", () => {
     for (const [lang, dict] of Object.entries(DICTS)) {
       for (const section of SECTION_ORDER) {
         const key = `editor.section.${section}`;

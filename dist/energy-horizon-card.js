@@ -286,7 +286,7 @@ yi.elementStyles = [], yi.shadowRootOptions = { mode: "open" }, yi[Ua("elementPr
  */
 const Ya = globalThis, dv = (r) => r, sl = Ya.trustedTypes, vv = sl ? sl.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, Qy = "$lit$", Br = `lit$${Math.random().toFixed(9).slice(2)}$`, e_ = "?" + Br, h1 = `<${e_}>`, zn = document, uo = () => zn.createComment(""), co = (r) => r === null || typeof r != "object" && typeof r != "function", $h = Array.isArray, d1 = (r) => $h(r) || typeof (r == null ? void 0 : r[Symbol.iterator]) == "function", Au = `[ 	
 \f\r]`, sa = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, pv = /-->/g, mv = />/g, rn = RegExp(`>|${Au}(?:([^\\s"'>=/]+)(${Au}*=${Au}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), gv = /'/g, yv = /"/g, t_ = /^(?:script|style|textarea|title)$/i, v1 = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), W = v1(1), $i = Symbol.for("lit-noChange"), Re = Symbol.for("lit-nothing"), _v = /* @__PURE__ */ new WeakMap(), kn = zn.createTreeWalker(zn, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), gv = /'/g, yv = /"/g, t_ = /^(?:script|style|textarea|title)$/i, v1 = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), H = v1(1), $i = Symbol.for("lit-noChange"), Re = Symbol.for("lit-nothing"), _v = /* @__PURE__ */ new WeakMap(), kn = zn.createTreeWalker(zn, 129);
 function r_(r, e) {
   if (!$h(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return vv !== void 0 ? vv.createHTML(e) : e;
@@ -7129,7 +7129,7 @@ function z(r) {
 function q(r) {
   return typeof r == "function";
 }
-function H(r) {
+function W(r) {
   return typeof r == "string";
 }
 function Df(r) {
@@ -8928,7 +8928,7 @@ function yl(r, e) {
 }
 var mp = new Ro(100);
 function gp(r) {
-  if (H(r)) {
+  if (W(r)) {
     var e = mp.get(r);
     return e || (e = pp(r, -0.1), mp.put(r, e)), e;
   } else if (ql(r)) {
@@ -9059,7 +9059,7 @@ var da = [0, 0, 0, 0], DC = (function() {
       s = u, (u === 1 && !Te(t[0]) || u === 2 && !Te(t[0][0])) && (o = !0);
     } else if (Te(t) && !hl(t))
       s = ns;
-    else if (H(t))
+    else if (W(t))
       if (!isNaN(+t))
         s = ns;
       else {
@@ -10411,7 +10411,7 @@ function Fe(r, e) {
       r = "100%";
       break;
   }
-  return H(r) ? qC(r).match(/%$/) ? parseFloat(r) / 100 * e : parseFloat(r) : r == null ? NaN : +r;
+  return W(r) ? qC(r).match(/%$/) ? parseFloat(r) / 100 * e : parseFloat(r) : r == null ? NaN : +r;
 }
 function Ee(r, e, t) {
   return e == null && (e = 10), e = Math.min(Math.max(0, e), N0), r = (+r).toFixed(e), t ? r : +r;
@@ -10449,7 +10449,7 @@ var JC = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d{1
 function _r(r) {
   if (r instanceof Date)
     return r;
-  if (H(r)) {
+  if (W(r)) {
     var e = JC.exec(r);
     if (!e)
       return /* @__PURE__ */ new Date(NaN);
@@ -10477,7 +10477,7 @@ function z0(r, e) {
 }
 function bl(r) {
   var e = parseFloat(r);
-  return e == r && (e !== 0 || !H(r) || r.indexOf("x") <= 0) ? e : NaN;
+  return e == r && (e !== 0 || !W(r) || r.indexOf("x") <= 0) ? e : NaN;
 }
 function eD(r) {
   return !isNaN(bl(r));
@@ -10630,7 +10630,7 @@ function ja(r) {
   return nr(r, "");
 }
 function nr(r, e) {
-  return r == null ? e : H(r) ? r : Te(r) || Df(r) ? r + "" : e;
+  return r == null ? e : W(r) ? r : Te(r) || Df(r) ? r + "" : e;
 }
 function fd(r) {
   var e = r.name;
@@ -10681,7 +10681,7 @@ function sc(r, e, t) {
 }
 function hd(r, e) {
   var t;
-  if (H(r)) {
+  if (W(r)) {
     var n = {};
     n[r + "Index"] = 0, t = n;
   } else
@@ -10743,7 +10743,7 @@ function pD(r, e, t, n, i) {
     var o = Pp(t || 0, n, i);
     return Ee(o, a ? Math.max(tr(t || 0), tr(n)) : e);
   } else {
-    if (H(n))
+    if (W(n))
       return i < 1 ? t : n;
     for (var s = [], l = t, u = n, c = Math.max(l ? l.length : 0, u.length), f = 0; f < c; ++f) {
       var d = r.getDimensionInfo(f);
@@ -11858,7 +11858,7 @@ var j0 = ge({
   }, e.prototype.getInsideTextFill = function() {
     var t = this.style.fill;
     if (t !== "none") {
-      if (H(t)) {
+      if (W(t)) {
         var n = yl(t, 0);
         return n > 0.5 ? Hf : n > 0.2 ? NC : Wf;
       } else if (t)
@@ -11867,7 +11867,7 @@ var j0 = ge({
     return Hf;
   }, e.prototype.getInsideTextStroke = function(t) {
     var n = this.style.fill;
-    if (H(n)) {
+    if (W(n)) {
       var i = this.__zr, a = !!(i && i.isDarkMode()), o = yl(t, 0) < Vf;
       if (a === o)
         return n;
@@ -13579,7 +13579,7 @@ function Mk(r) {
   return r <= 1e-6 && r >= -1e-6;
 }
 function lu(r) {
-  var e = r.itemTooltipOption, t = r.componentModel, n = r.itemName, i = H(e) ? {
+  var e = r.itemTooltipOption, t = r.componentModel, n = r.itemName, i = W(e) ? {
     formatter: e
   } : e, a = t.mainType, o = t.componentIndex, s = {
     componentType: a,
@@ -14250,7 +14250,7 @@ function Cw(r, e) {
   r = r.toUpperCase(), Ad[r] = new Ie(e), tl[r] = e;
 }
 function Wk(r) {
-  if (H(r)) {
+  if (W(r)) {
     var e = tl[r.toUpperCase()] || {};
     return r === Al || r === Dd ? ae(e) : le(ae(e), ae(tl[Ri]), !1);
   } else
@@ -14320,7 +14320,7 @@ function du(r, e, t, n) {
 }
 function qk(r, e, t, n, i) {
   var a = null;
-  if (H(t))
+  if (W(t))
     a = t;
   else if (q(t))
     a = t(r.value, e, {
@@ -14422,7 +14422,7 @@ function Ow(r) {
 }
 function Rw(r) {
   if (!eD(r))
-    return H(r) ? r : "-";
+    return W(r) ? r : "-";
   var e = (r + "").split(".");
   return e[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, "$1,") + (e.length > 1 ? "." + e[1] : "");
 }
@@ -14473,7 +14473,7 @@ function Fw(r, e, t) {
   return r;
 }
 function Kk(r, e) {
-  var t = H(r) ? {
+  var t = W(r) ? {
     color: r,
     extraCssText: e
   } : r || {}, n = t.color, i = t.type;
@@ -14501,7 +14501,7 @@ function Kk(r, e) {
   };
 }
 function Gn(r, e) {
-  return e = e || "transparent", H(r) ? r : X(r) && r.colorStops && (r.colorStops[0] || {}).color || e;
+  return e = e || "transparent", W(r) ? r : X(r) && r.colorStops && (r.colorStops[0] || {}).color || e;
 }
 var rl = D, jk = ["left", "right", "top", "bottom", "width", "height"], ps = [["width", "left", "right"], ["height", "top", "bottom"]];
 function Pd(r, e, t, n, i) {
@@ -14824,7 +14824,7 @@ function aI(r, e, t, n, i, a) {
   var l, u;
   if (n) {
     var c = n[a];
-    X(c) ? (l = c.name, u = c.type) : H(c) && (l = c);
+    X(c) ? (l = c.name, u = c.type) : W(c) && (l = c);
   }
   if (u != null)
     return u === "ordinal" ? dt.Must : dt.Not;
@@ -14868,7 +14868,7 @@ function aI(r, e, t, n, i, a) {
         return o;
     }
   function w(S) {
-    var b = H(S);
+    var b = W(S);
     if (S != null && Number.isFinite(Number(S)) && S !== "")
       return b ? dt.Might : dt.Not;
     if (b && S !== "-")
@@ -15068,7 +15068,7 @@ var ms, ga, Dm, Am = "\0_ec_inner", fI = 1, Od = (
           }
         });
       } else
-        for (var l = H(t) ? a.get(t) : X(t) ? this.findComponents(t) : null, u = 0; l && u < l.length; u++) {
+        for (var l = W(t) ? a.get(t) : X(t) ? this.findComponents(t) : null, u = 0; l && u < l.length; u++) {
           var c = l[u];
           c && n.call(i, c, c.componentIndex);
         }
@@ -15625,7 +15625,7 @@ function LI(r, e, t, n, i) {
   if (e === ct) {
     var s = r;
     n === "auto" || n == null ? zm(function(u) {
-      u != null && u !== "-" && (H(u) ? o == null && (o = 1) : o = 0);
+      u != null && u !== "-" && (W(u) ? o == null && (o = 1) : o = 0);
     }, t, s, 10) : o = Te(n) ? n : n ? 1 : 0, !i && o === 1 && (i = [], zm(function(u, c) {
       i[c] = u != null ? u + "" : "";
     }, t, s, 1 / 0)), a = i ? i.length : t === na ? s.length : s[0] ? s[0].length : null;
@@ -15875,7 +15875,7 @@ var NI = /\{@(.+?)\}/g, zd = (
       }
       if (q(a))
         return l.status = t, l.dimensionIndex = i, a(l);
-      if (H(a)) {
+      if (W(a)) {
         var c = Fw(a, l);
         return c.replace(NI, function(f, d) {
           var h = d.length, v = d;
@@ -16000,7 +16000,7 @@ ne({
     return +_r(r);
   },
   trim: function(r) {
-    return H(r) ? er(r) : r;
+    return W(r) ? er(r) : r;
   }
 });
 var zI = (
@@ -16013,7 +16013,7 @@ var zI = (
     return r.prototype.evaluate = function(e, t) {
       var n = Te(e) ? e : bl(e), i = Te(t) ? t : bl(t), a = isNaN(n), o = isNaN(i);
       if (a && (n = this._incomparable), o && (i = this._incomparable), a && o) {
-        var s = H(e), l = H(t);
+        var s = W(e), l = W(t);
         s && (n = l ? e : 0), l && (i = s ? t : 0);
       }
       return n < i ? this._resultLT : n > i ? -this._resultLT : 0;
@@ -16871,7 +16871,7 @@ var Ec = (
         renderMode: n,
         markerId: i
       });
-      return H(a) ? a : (this.richTextStyles[i] = a.style, a.content);
+      return W(a) ? a : (this.richTextStyles[i] = a.style, a.content);
     }, r.prototype.wrapRichTextStyle = function(e, t) {
       var n = {};
       z(t) ? D(t, function(a) {
@@ -17864,7 +17864,7 @@ var RL = (
     }
     return r.prototype.normalizeQuery = function(e) {
       var t = {}, n = {}, i = {};
-      if (H(e)) {
+      if (W(e)) {
         var a = rr(e);
         t.mainType = a.main || null, t.subType = a.sub || null;
       } else {
@@ -17991,7 +17991,7 @@ function hi(r, e, t, n, i) {
           type: a,
           seriesId: o.id,
           name: z(d) ? f.getName(d[0]) : f.getName(d),
-          selected: H(l) ? l : O({}, l)
+          selected: W(l) ? l : O({}, l)
         });
       }
   });
@@ -18432,7 +18432,7 @@ function hh(r, e) {
   function l(u) {
     for (var c = [t], f = !0, d = 0; d < yg.length; ++d) {
       var h = o[yg[d]];
-      if (h != null && !z(h) && !H(h) && !Te(h) && typeof h != "boolean") {
+      if (h != null && !z(h) && !W(h) && !Te(h) && typeof h != "boolean") {
         f = !1;
         break;
       }
@@ -18500,17 +18500,17 @@ function hh(r, e) {
 function Tb(r) {
   if (!r || r.length === 0)
     return [["rect"]];
-  if (H(r))
+  if (W(r))
     return [[r]];
   for (var e = !0, t = 0; t < r.length; ++t)
-    if (!H(r[t])) {
+    if (!W(r[t])) {
       e = !1;
       break;
     }
   if (e)
     return Tb([r]);
   for (var n = [], t = 0; t < r.length; ++t)
-    H(r[t]) ? n.push([r[t]]) : n.push(r[t]);
+    W(r[t]) ? n.push([r[t]]) : n.push(r[t]);
   return n;
 }
 function Mb(r) {
@@ -18645,7 +18645,7 @@ var di, Fc, xs, Lr, zc, $c, Bc, wa, ba, bg, Sg, Vc, xg, Ts, Tg, Nb, yt, Mg, Fb =
     F(e, r);
     function e(t, n, i) {
       var a = r.call(this, new RL()) || this;
-      a._chartsViews = [], a._chartsMap = {}, a._componentsViews = [], a._componentsMap = {}, a._pendingActions = [], i = i || {}, H(n) && (n = zb[n]), a._dom = t;
+      a._chartsViews = [], a._chartsMap = {}, a._componentsViews = [], a._componentsMap = {}, a._pendingActions = [], i = i || {}, W(n) && (n = zb[n]), a._dom = t;
       var o = "canvas", s = "auto", l = !1;
       i.ssr;
       var u = a._zr = Ap(t, {
@@ -19759,7 +19759,7 @@ var xa = X, Pr = Y, YP = typeof Int32Array > "u" ? Array : Int32Array, ZP = "e\0
       var n, i = !1;
       Gb(e) ? (n = e.dimensions, this._dimOmitted = e.isDimensionOmitted(), this._schema = e) : (i = !0, n = e), n = n || ["x", "y"];
       for (var a = {}, o = [], s = {}, l = !1, u = {}, c = 0; c < n.length; c++) {
-        var f = n[c], d = H(f) ? new nl({
+        var f = n[c], d = W(f) ? new nl({
           name: f
         }) : f instanceof nl ? f : new nl(f), h = d.name;
         d.type = d.type || "float", d.coordDim || (d.coordDim = h, d.coordDimIndex = 0);
@@ -20087,20 +20087,20 @@ function KP(r, e) {
       v(h);
   f.each(function(M, C) {
     var A = Qe(M).slice();
-    if (A.length === 1 && !H(A[0]) && A[0] < 0) {
+    if (A.length === 1 && !W(A[0]) && A[0] < 0) {
       f.set(C, !1);
       return;
     }
     var k = f.set(C, []);
     D(A, function(I, L) {
-      var P = H(I) ? u.get(I) : I;
+      var P = W(I) ? u.get(I) : I;
       P != null && P < o && (k[L] = P, m(v(P), C, L));
     });
   });
   var p = 0;
   D(t, function(M) {
     var C, A, k, I;
-    if (H(M))
+    if (W(M))
       C = M, I = {};
     else {
       I = M, C = I.name;
@@ -20222,7 +20222,7 @@ function nE(r, e, t) {
   iE(e) ? a = e : (o = e.schema, a = o.dimensions, s = e.store);
   var l = !!(r && r.get("stack")), u, c, f, d;
   if (D(a, function(y, _) {
-    H(y) && (a[_] = y = {
+    W(y) && (a[_] = y = {
       name: y
     }), l && !y.isExtraCoord && (!n && !u && y.ordinalMeta && (u = y), !c && y.type !== "ordinal" && y.type !== "time" && (!i || i === y.coordDim) && (c = y));
   }), c && !n && !u && (n = !0), c) {
@@ -20371,7 +20371,7 @@ var cE = 0, mh = (
       return this._getOrCreateMap().get(e);
     }, r.prototype.parseAndCollect = function(e) {
       var t, n = this._needCollect;
-      if (!H(e) && !n)
+      if (!W(e) && !n)
         return e;
       if (n && !this._deduplication)
         return t = this.categories.length, this.categories[t] = e, t;
@@ -20431,7 +20431,7 @@ var Zd = (
       })), n._ordinalMeta = i, n._extent = n.getSetting("extent") || [0, i.categories.length - 1], n;
     }
     return e.prototype.parse = function(t) {
-      return t == null ? NaN : H(t) ? this._ordinalMeta.getOrdinal(t) : Math.round(t);
+      return t == null ? NaN : W(t) ? this._ordinalMeta.getOrdinal(t) : Math.round(t);
     }, e.prototype.contain = function(t) {
       return t = this.parse(t), Tu(t, this._extent) && this._ordinalMeta.categories[t] != null;
     }, e.prototype.normalize = function(t) {
@@ -21172,7 +21172,7 @@ function oa(r) {
     return function(i, a) {
       return r.scale.getFormattedLabel(i, a, n);
     };
-  })(e) : H(e) ? /* @__PURE__ */ (function(n) {
+  })(e) : W(e) ? /* @__PURE__ */ (function(n) {
     return function(i) {
       var a = r.scale.getLabel(i), o = n.replace("{value}", a ?? "");
       return o;
@@ -22814,7 +22814,7 @@ function k2(r) {
         if (isFinite(h) && h > 1) {
           a === "lttb" ? e.setData(i.lttbDownSample(i.mapDimension(u.dim), 1 / h)) : a === "minmax" && e.setData(i.minmaxDownSample(i.mapDimension(u.dim), 1 / h));
           var v = void 0;
-          H(a) ? v = D2[a] : q(a) && (v = a), v && e.setData(i.downSample(i.mapDimension(u.dim), 1 / h, v, A2));
+          W(a) ? v = D2[a] : q(a) && (v = a), v && e.setData(i.downSample(i.mapDimension(u.dim), 1 / h, v, A2));
         }
       }
     }
@@ -23511,7 +23511,7 @@ var Wr = Math.PI, Xr = (
       var d = e.get(["axisLine", "symbol"]);
       if (d != null) {
         var h = e.get(["axisLine", "symbolSize"]);
-        H(d) && (d = [d, d]), (H(h) || Te(h)) && (h = [h, h]);
+        W(d) && (d = [d, d]), (W(h) || Te(h)) && (h = [h, h]);
         var v = Su(e.get(["axisLine", "symbolOffset"]) || 0, h), p = h[0], m = h[1];
         D([{
           rotate: r.rotation + Math.PI / 2,
@@ -24602,7 +24602,7 @@ function xS(r, e, t, n, i) {
     D(n, function(l) {
       var u = t.getSeriesByIndex(l.seriesIndex), c = l.dataIndexInside, f = u && u.getDataParams(c);
       f && s.seriesData.push(f);
-    }), H(o) ? a = o.replace("{value}", a) : q(o) && (a = o(s));
+    }), W(o) ? a = o.replace("{value}", a) : q(o) && (a = o(s));
   }
   return a;
 }
@@ -25217,7 +25217,7 @@ function UO(r) {
   return r = r === "left" ? "right" : r === "right" ? "left" : r === "top" ? "bottom" : "top", r;
 }
 function YO(r, e, t) {
-  if (!H(t) || t === "inside")
+  if (!W(t) || t === "inside")
     return "";
   var n = r.get("backgroundColor"), i = r.get("borderWidth");
   e = Gn(e);
@@ -25277,7 +25277,7 @@ var KO = (
         return null;
       var n = document.createElement("div");
       n.domBelongToZr = !0, this.el = n;
-      var i = this._zr = e.getZr(), a = t.appendTo, o = a && (H(a) ? document.querySelector(a) : vo(a) ? a : q(a) && a(e.getDom()));
+      var i = this._zr = e.getZr(), a = t.appendTo, o = a && (W(a) ? document.querySelector(a) : vo(a) ? a : q(a) && a(e.getDom()));
       wy(this._styleCoord, i, o, e.getWidth() / 2, e.getHeight() / 2), (o || e.getDom()).appendChild(n), this._api = e, this._container = o;
       var s = this;
       n.onmouseenter = function() {
@@ -25309,7 +25309,7 @@ var KO = (
         return;
       }
       var s = "";
-      if (H(a) && n.get("trigger") === "item" && !AS(n) && (s = YO(n, i, a)), H(e))
+      if (W(a) && n.get("trigger") === "item" && !AS(n) && (s = YO(n, i, a)), W(e))
         o.innerHTML = e + s;
       else if (e) {
         o.innerHTML = "", z(e) || (e = [e]);
@@ -25645,7 +25645,7 @@ var JO = new He({
       }
     }, e.prototype._showComponentItemTooltip = function(t, n, i) {
       var a = this._renderMode === "html", o = de(n), s = o.tooltipConfig, l = s.option || {}, u = l.encodeHTMLContent;
-      if (H(l)) {
+      if (W(l)) {
         var c = l;
         l = {
           content: c,
@@ -25676,7 +25676,7 @@ var JO = new He({
         l = l || t.get("position");
         var h = n, v = this._getNearestPoint([o, s], i, t.get("trigger"), t.get("borderColor")), p = v.color;
         if (d)
-          if (H(d)) {
+          if (W(d)) {
             var m = t.ecModel.get("useUTC"), g = z(i) ? i[0] : i, y = g && g.axisType && g.axisType.indexOf("time") >= 0;
             h = d, y && (h = du(g.axisValue, h, m)), h = Fw(h, i, !0);
           } else if (q(d)) {
@@ -25714,7 +25714,7 @@ var JO = new He({
           height: c
         });
         i = m.x, a = m.y, d = null, h = null;
-      } else if (H(n) && l) {
+      } else if (W(n) && l) {
         var g = rR(n, v, f, t.get("borderWidth"));
         i = g[0], a = g[1];
       } else {
@@ -25756,7 +25756,7 @@ function Da(r, e, t) {
   t ? (i = new Ie(t, n, n), i = new Ie(e.option, i, n)) : i = e;
   for (var a = r.length - 1; a >= 0; a--) {
     var o = r[a];
-    o && (o instanceof Ie && (o = o.get("tooltip", !0)), H(o) && (o = {
+    o && (o instanceof Ie && (o = o.get("tooltip", !0)), W(o) && (o = {
       formatter: o
     }), o && (i = new Ie(o, i, n)));
   }
@@ -26358,7 +26358,7 @@ var yR = function(r, e) {
     }, e.prototype._updateSelector = function(t) {
       var n = t.selector, i = this.ecModel;
       n === !0 && (n = t.selector = ["all", "inverse"]), z(n) && D(n, function(a, o) {
-        H(a) && (a = {
+        W(a) && (a = {
           type: a
         }), n[o] = le(a, yR(i, a.type));
       });
@@ -26389,7 +26389,7 @@ var yR = function(r, e) {
         c && fd(l) && n.push(l.name);
       }), this._availableNames = i;
       var a = this.get("data") || n, o = ne(), s = Y(a, function(l) {
-        return (H(l) || Te(l)) && (l = {
+        return (W(l) || Te(l)) && (l = {
           name: l
         }), o.get(l.name) ? null : (o.set(l.name, !0), new Ie(l, this, this.ecModel));
       }, this);
@@ -26631,7 +26631,7 @@ var yR = function(r, e) {
         }));
       }
       var T = s === "left" ? v + 5 : -5, M = s, C = o.get("formatter"), A = n;
-      H(C) && C ? A = C.replace("{name}", n ?? "") : q(C) && (A = C(n));
+      W(C) && C ? A = C.replace("{name}", n ?? "") : q(C) && (A = C(n));
       var k = m ? b.getTextColor() : a.get("inactiveColor");
       S.add(new ut({
         style: Ui(b, {
@@ -26952,7 +26952,7 @@ var Iy = ze, sf = ["width", "height"], lf = ["x", "y"], TR = (
         h && (h.setStyle("fill", d ? t.get("pageIconColor", !0) : t.get("pageIconInactiveColor", !0)), h.cursor = d ? "pointer" : "default");
       });
       var a = i.childOfName("pageText"), o = t.get("pageFormatter"), s = n.pageIndex, l = s != null ? s + 1 : 0, u = n.pageCount;
-      a && o && a.setStyle("text", H(o) ? o.replace("{current}", l == null ? "" : l + "").replace("{total}", u == null ? "" : u + "") : o({
+      a && o && a.setStyle("text", W(o) ? o.replace("{current}", l == null ? "" : l + "").replace("{total}", u == null ? "" : u + "") : o({
         current: l,
         total: u
       }));
@@ -28544,18 +28544,24 @@ const qR = {
   "editor.interpretation": "Interpretation",
   "editor.interpretation_consumption": "Verbrauch (weniger ist besser)",
   "editor.interpretation_production": "Produktion (mehr ist besser)",
-  "editor.section.basic": "Grundlegend",
-  "editor.section.time": "Zeit & Vergleich",
-  "editor.section.layout": "Layout",
-  "editor.section.visuals": "Darstellung",
-  "editor.section.formatting": "Formatierung",
-  "editor.section.system": "System",
+  "editor.section.general": "Allgemein",
+  "editor.section.time": "Zeitfenster",
+  "editor.section.panels": "Panels",
+  "editor.section.formatting": "Formatierung & Lokalisierung",
+  "editor.section.chart": "Diagrammeinstellungen",
+  "editor.section.style": "Stil",
+  "editor.section.diagnostics": "Diagnose",
+  "editor.subsection.custom_settings": "Eigene Einstellungen",
+  "editor.subsection.unit": "Einheit",
+  "editor.subsection.dates": "Datumsformate",
+  "editor.subsection.current_series": "Aktuelle Serie",
+  "editor.subsection.reference_series": "Referenzserie",
+  "editor.show_chart": "Diagramm anzeigen",
   "editor.show_title": "Titel anzeigen",
   "editor.icon": "Symbol",
   "editor.show_icon": "Symbol anzeigen",
   "editor.neutral_interpretation": "Neutrale Interpretation (T)",
   "editor.aggregation": "Aggregation",
-  "editor.period_offset": "Periodenversatz",
   "editor.time_window": "Zeitfenster",
   "editor.time_window.anchor": "Anker",
   "editor.time_window.duration": "Dauer",
@@ -28563,11 +28569,11 @@ const qR = {
   "editor.time_window.count": "Anzahl",
   "editor.time_window.offset": "Versatz",
   "editor.show_forecast": "Prognose auf dem Diagramm anzeigen",
-  "editor.primary_color": "Primärfarbe",
-  "editor.fill_current": "Aktuelle Serie füllen",
-  "editor.fill_current_opacity": "Fülldeckkraft (aktuell)",
-  "editor.fill_reference": "Referenzserie füllen",
-  "editor.fill_reference_opacity": "Fülldeckkraft (Referenz)",
+  "editor.primary_color": "Farbe",
+  "editor.fill_current": "Serie füllen",
+  "editor.fill_current_opacity": "Fülldeckkraft",
+  "editor.fill_reference": "Referenzserie",
+  "editor.fill_reference_opacity": "Referenz-Deckkraft",
   "editor.connect_nulls": "Nullwerte verbinden",
   "editor.show_legend": "Legende anzeigen",
   "editor.precision": "Präzision (Dezimalstellen)",
@@ -28672,18 +28678,24 @@ const qR = {
   "editor.interpretation": "Interpretation",
   "editor.interpretation_consumption": "Consumption (less is better)",
   "editor.interpretation_production": "Production (more is better)",
-  "editor.section.basic": "Basic",
-  "editor.section.time": "Time & Comparison",
-  "editor.section.layout": "Layout",
-  "editor.section.visuals": "Visuals",
-  "editor.section.formatting": "Formatting",
-  "editor.section.system": "System",
+  "editor.section.general": "General",
+  "editor.section.time": "Time windows",
+  "editor.section.panels": "Panels",
+  "editor.section.formatting": "Formatting & Localization",
+  "editor.section.chart": "Chart settings",
+  "editor.section.style": "Style",
+  "editor.section.diagnostics": "Diagnostics",
+  "editor.subsection.custom_settings": "Custom settings",
+  "editor.subsection.unit": "Unit",
+  "editor.subsection.dates": "Dates",
+  "editor.subsection.current_series": "Current series",
+  "editor.subsection.reference_series": "Reference series",
+  "editor.show_chart": "Show chart",
   "editor.show_title": "Show title",
   "editor.icon": "Icon",
   "editor.show_icon": "Show icon",
   "editor.neutral_interpretation": "Neutral interpretation (T)",
   "editor.aggregation": "Aggregation",
-  "editor.period_offset": "Period offset",
   "editor.time_window": "Time window",
   "editor.time_window.anchor": "Anchor",
   "editor.time_window.duration": "Duration",
@@ -28691,11 +28703,11 @@ const qR = {
   "editor.time_window.count": "Count",
   "editor.time_window.offset": "Offset",
   "editor.show_forecast": "Show forecast on chart",
-  "editor.primary_color": "Primary color",
-  "editor.fill_current": "Fill current series",
-  "editor.fill_current_opacity": "Current fill opacity",
-  "editor.fill_reference": "Fill reference series",
-  "editor.fill_reference_opacity": "Reference fill opacity",
+  "editor.primary_color": "Color",
+  "editor.fill_current": "Fill series",
+  "editor.fill_current_opacity": "Fill opacity",
+  "editor.fill_reference": "Reference series",
+  "editor.fill_reference_opacity": "Reference opacity",
   "editor.connect_nulls": "Connect nulls",
   "editor.show_legend": "Show legend",
   "editor.precision": "Precision (decimals)",
@@ -28800,18 +28812,24 @@ const qR = {
   "editor.interpretation": "Interprétation",
   "editor.interpretation_consumption": "Consommation (moins est mieux)",
   "editor.interpretation_production": "Production (plus est mieux)",
-  "editor.section.basic": "Base",
-  "editor.section.time": "Temps & comparaison",
-  "editor.section.layout": "Mise en page",
-  "editor.section.visuals": "Apparence",
-  "editor.section.formatting": "Formatage",
-  "editor.section.system": "Système",
+  "editor.section.general": "Général",
+  "editor.section.time": "Fenêtres temporelles",
+  "editor.section.panels": "Panneaux",
+  "editor.section.formatting": "Formatage et localisation",
+  "editor.section.chart": "Paramètres du graphique",
+  "editor.section.style": "Style",
+  "editor.section.diagnostics": "Diagnostics",
+  "editor.subsection.custom_settings": "Paramètres personnalisés",
+  "editor.subsection.unit": "Unité",
+  "editor.subsection.dates": "Dates",
+  "editor.subsection.current_series": "Série actuelle",
+  "editor.subsection.reference_series": "Série de référence",
+  "editor.show_chart": "Afficher le graphique",
   "editor.show_title": "Afficher le titre",
   "editor.icon": "Icône",
   "editor.show_icon": "Afficher l'icône",
   "editor.neutral_interpretation": "Interprétation neutre (T)",
   "editor.aggregation": "Agrégation",
-  "editor.period_offset": "Décalage de période",
   "editor.time_window": "Fenêtre temporelle",
   "editor.time_window.anchor": "Ancrage",
   "editor.time_window.duration": "Durée",
@@ -28819,11 +28837,11 @@ const qR = {
   "editor.time_window.count": "Nombre",
   "editor.time_window.offset": "Décalage",
   "editor.show_forecast": "Afficher la prévision sur le graphique",
-  "editor.primary_color": "Couleur principale",
-  "editor.fill_current": "Remplir la série actuelle",
-  "editor.fill_current_opacity": "Opacité du remplissage (actuel)",
-  "editor.fill_reference": "Remplir la série de référence",
-  "editor.fill_reference_opacity": "Opacité du remplissage (référence)",
+  "editor.primary_color": "Couleur",
+  "editor.fill_current": "Remplir la série",
+  "editor.fill_current_opacity": "Opacité du remplissage",
+  "editor.fill_reference": "Série de référence",
+  "editor.fill_reference_opacity": "Opacité de référence",
   "editor.connect_nulls": "Relier les valeurs nulles",
   "editor.show_legend": "Afficher la légende",
   "editor.precision": "Précision (décimales)",
@@ -28928,18 +28946,24 @@ const qR = {
   "editor.interpretation": "Interpretacja",
   "editor.interpretation_consumption": "Zużycie (mniej jest lepiej)",
   "editor.interpretation_production": "Produkcja (więcej jest lepiej)",
-  "editor.section.basic": "Podstawowe",
-  "editor.section.time": "Czas i porównanie",
-  "editor.section.layout": "Układ",
-  "editor.section.visuals": "Wygląd",
-  "editor.section.formatting": "Formatowanie",
-  "editor.section.system": "System",
+  "editor.section.general": "Ogólne",
+  "editor.section.time": "Okna czasowe",
+  "editor.section.panels": "Panele",
+  "editor.section.formatting": "Formatowanie i lokalizacja",
+  "editor.section.chart": "Ustawienia wykresu",
+  "editor.section.style": "Styl",
+  "editor.section.diagnostics": "Diagnostyka",
+  "editor.subsection.custom_settings": "Ustawienia własne",
+  "editor.subsection.unit": "Jednostka",
+  "editor.subsection.dates": "Daty",
+  "editor.subsection.current_series": "Seria bieżąca",
+  "editor.subsection.reference_series": "Seria referencyjna",
+  "editor.show_chart": "Pokaż wykres",
   "editor.show_title": "Pokaż tytuł",
   "editor.icon": "Ikona",
   "editor.show_icon": "Pokaż ikonę",
   "editor.neutral_interpretation": "Neutralna interpretacja (T)",
   "editor.aggregation": "Agregacja",
-  "editor.period_offset": "Przesunięcie okresu",
   "editor.time_window": "Okno czasowe",
   "editor.time_window.anchor": "Kotwica",
   "editor.time_window.duration": "Czas trwania",
@@ -28947,11 +28971,11 @@ const qR = {
   "editor.time_window.count": "Liczba",
   "editor.time_window.offset": "Przesunięcie",
   "editor.show_forecast": "Pokaż prognozę na wykresie",
-  "editor.primary_color": "Kolor główny",
-  "editor.fill_current": "Wypełnij serię bieżącą",
-  "editor.fill_current_opacity": "Przezroczystość wypełnienia bieżącego",
-  "editor.fill_reference": "Wypełnij serię referencyjną",
-  "editor.fill_reference_opacity": "Przezroczystość wypełnienia referencyjnego",
+  "editor.primary_color": "Kolor",
+  "editor.fill_current": "Wypełnienie serii",
+  "editor.fill_current_opacity": "Przezroczystość wypełnienia",
+  "editor.fill_reference": "Seria referencyjna",
+  "editor.fill_reference_opacity": "Przezroczystość referencyjna",
   "editor.connect_nulls": "Łącz wartości null",
   "editor.show_legend": "Pokaż legendę",
   "editor.precision": "Dokładność (dziesiętne)",
@@ -29810,12 +29834,13 @@ function $s(r) {
   return US({ ...r, state: !0, attribute: !1 });
 }
 const MN = [
-  "basic",
+  "general",
   "time",
-  "layout",
-  "visuals",
+  "panels",
   "formatting",
-  "system"
+  "chart",
+  "style",
+  "diagnostics"
 ], CN = [
   { value: "year_over_year", labelKey: "editor.year_over_year" },
   { value: "month_over_year", labelKey: "editor.month_over_year" },
@@ -29857,11 +29882,11 @@ const MN = [
     value: r,
     labelKey: `editor.language.${r}`
   }))
-], Ia = (r) => r.comparison_preset === "custom", EN = (r) => r.comparison_preset !== "custom", rv = [
-  // S1 — Basic (always expanded)
+], Ia = (r) => r.comparison_preset === "custom", rv = [
+  // S1 — General (expanded by default)
   {
     key: "entity",
-    section: "basic",
+    section: "general",
     control: { kind: "entity", domain: "sensor" },
     labelKey: "editor.entity",
     default: "",
@@ -29869,13 +29894,13 @@ const MN = [
   },
   {
     key: "title",
-    section: "basic",
+    section: "general",
     control: { kind: "text" },
     labelKey: "editor.title"
   },
   {
     key: "show_title",
-    section: "basic",
+    section: "general",
     control: { kind: "boolean" },
     labelKey: "editor.show_title",
     default: !0,
@@ -29883,43 +29908,36 @@ const MN = [
   },
   {
     key: "icon",
-    section: "basic",
+    section: "general",
     control: { kind: "icon" },
     labelKey: "editor.icon"
   },
   {
     key: "show_icon",
-    section: "basic",
+    section: "general",
     control: { kind: "boolean" },
     labelKey: "editor.show_icon",
     default: !0,
     inlineWith: "icon"
   },
   {
-    key: "comparison_preset",
-    section: "basic",
-    control: { kind: "select", options: CN },
-    labelKey: "editor.comparison_preset",
-    default: "year_over_year"
-  },
-  {
     key: "interpretation",
-    section: "basic",
+    section: "general",
     control: { kind: "select", options: AN },
     labelKey: "editor.interpretation",
     default: "consumption"
   },
   {
     key: "neutral_interpretation",
-    section: "basic",
+    section: "general",
     control: { kind: "number", min: 0, max: 100 },
     labelKey: "editor.neutral_interpretation",
-    default: 2
+    default: 2,
+    inlineWith: "interpretation"
   },
-  // S2 — Time & Aggregation
   {
     key: "aggregation",
-    section: "time",
+    section: "general",
     control: {
       kind: "select",
       options: DN,
@@ -29929,13 +29947,13 @@ const MN = [
     labelKey: "editor.aggregation",
     default: "auto"
   },
+  // S2 — Time windows (expanded by default)
   {
-    key: "period_offset",
+    key: "comparison_preset",
     section: "time",
-    control: { kind: "number", min: -10, max: 10 },
-    labelKey: "editor.period_offset",
-    default: -1,
-    visibleWhen: EN
+    control: { kind: "select", options: CN },
+    labelKey: "editor.comparison_preset",
+    default: "year_over_year"
   },
   {
     key: "time_window.anchor",
@@ -29943,7 +29961,8 @@ const MN = [
     control: { kind: "select", options: LN },
     labelKey: "editor.time_window.anchor",
     default: "start_of_year",
-    visibleWhen: Ia
+    visibleWhen: Ia,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.duration",
@@ -29951,7 +29970,8 @@ const MN = [
     control: { kind: "text" },
     labelKey: "editor.time_window.duration",
     default: "1y",
-    visibleWhen: Ia
+    visibleWhen: Ia,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.step",
@@ -29959,7 +29979,8 @@ const MN = [
     control: { kind: "text" },
     labelKey: "editor.time_window.step",
     default: "1y",
-    visibleWhen: Ia
+    visibleWhen: Ia,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.count",
@@ -29967,115 +29988,48 @@ const MN = [
     control: { kind: "number", min: 1, max: 24 },
     labelKey: "editor.time_window.count",
     default: 2,
-    visibleWhen: Ia
+    visibleWhen: Ia,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.offset",
     section: "time",
     control: { kind: "text" },
     labelKey: "editor.time_window.offset",
-    visibleWhen: Ia
+    visibleWhen: Ia,
+    subsection: "editor.subsection.custom_settings"
   },
-  // S3 — Layout & Visibility
+  // S3 — Panels
   {
     key: "show_comparison_summary",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_comparison_summary",
     default: !0
   },
   {
-    key: "show_forecast",
-    section: "layout",
+    key: "show_chart",
+    section: "panels",
     control: { kind: "boolean" },
-    labelKey: "editor.show_forecast",
-    default: !0
+    labelKey: "editor.show_chart",
+    default: !0,
+    dummy: !0
   },
   {
     key: "show_forecast_total_panel",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_forecast_total_panel",
     default: !0
   },
   {
     key: "show_narrative_comment",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_narrative_comment",
     default: !0
   },
-  // S4 — Visuals & Chart Styling
-  {
-    key: "primary_color",
-    section: "visuals",
-    control: { kind: "color" },
-    labelKey: "editor.primary_color"
-  },
-  {
-    key: "fill_current",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.fill_current",
-    default: !0
-  },
-  {
-    key: "fill_current_opacity",
-    section: "visuals",
-    control: { kind: "slider", min: 0, max: 100, step: 1 },
-    labelKey: "editor.fill_current_opacity",
-    default: 30
-  },
-  {
-    key: "fill_reference",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.fill_reference",
-    default: !1
-  },
-  {
-    key: "fill_reference_opacity",
-    section: "visuals",
-    control: { kind: "slider", min: 0, max: 100, step: 1 },
-    labelKey: "editor.fill_reference_opacity",
-    default: 30
-  },
-  {
-    key: "connect_nulls",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.connect_nulls",
-    default: !0
-  },
-  {
-    key: "show_legend",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.show_legend",
-    default: !1
-  },
-  // S5 — Formatting & Axis
-  {
-    key: "precision",
-    section: "formatting",
-    control: { kind: "number", min: 0, max: 6 },
-    labelKey: "editor.precision",
-    default: 2
-  },
-  {
-    key: "force_prefix",
-    section: "formatting",
-    control: { kind: "select", options: kN },
-    labelKey: "editor.force_prefix",
-    default: "auto"
-  },
-  {
-    key: "number_format",
-    section: "formatting",
-    control: { kind: "select", options: IN },
-    labelKey: "editor.number_format",
-    default: "system"
-  },
+  // S4 — Formatting & Localization
   {
     key: "language",
     section: "formatting",
@@ -30089,49 +30043,138 @@ const MN = [
     labelKey: "editor.language"
   },
   {
+    key: "force_prefix",
+    section: "formatting",
+    control: { kind: "select", options: kN },
+    labelKey: "editor.force_prefix",
+    default: "auto",
+    subsection: "editor.subsection.unit"
+  },
+  {
+    key: "number_format",
+    section: "formatting",
+    control: { kind: "select", options: IN },
+    labelKey: "editor.number_format",
+    default: "system",
+    subsection: "editor.subsection.unit"
+  },
+  {
+    key: "precision",
+    section: "formatting",
+    control: { kind: "number", min: 0, max: 6 },
+    labelKey: "editor.precision",
+    default: 2,
+    subsection: "editor.subsection.unit"
+  },
+  {
     key: "x_axis_format",
     section: "formatting",
     control: { kind: "text" },
-    labelKey: "editor.x_axis_format"
+    labelKey: "editor.x_axis_format",
+    subsection: "editor.subsection.dates"
   },
   {
     key: "tooltip_format",
     section: "formatting",
     control: { kind: "text" },
-    labelKey: "editor.tooltip_format"
+    labelKey: "editor.tooltip_format",
+    subsection: "editor.subsection.dates"
   },
-  // S6 — System & Debug
+  // S5 — Chart settings
+  {
+    key: "show_forecast",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_forecast",
+    default: !0
+  },
+  {
+    key: "connect_nulls",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.connect_nulls",
+    default: !0
+  },
+  {
+    key: "show_legend",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_legend",
+    default: !1
+  },
+  // S6 — Style
+  {
+    key: "primary_color",
+    section: "style",
+    control: { kind: "color" },
+    labelKey: "editor.primary_color",
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_current",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_current",
+    default: !0,
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_current_opacity",
+    section: "style",
+    control: { kind: "slider", min: 0, max: 100, step: 1 },
+    labelKey: "editor.fill_current_opacity",
+    default: 30,
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_reference",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_reference",
+    default: !1,
+    subsection: "editor.subsection.reference_series"
+  },
+  {
+    key: "fill_reference_opacity",
+    section: "style",
+    control: { kind: "slider", min: 0, max: 100, step: 1 },
+    labelKey: "editor.fill_reference_opacity",
+    default: 30,
+    subsection: "editor.subsection.reference_series"
+  },
+  // S7 — Diagnostics
   {
     key: "debug",
-    section: "system",
+    section: "diagnostics",
     control: { kind: "boolean" },
     labelKey: "editor.debug",
     default: !1
   }
 ];
-function ON(r = rv) {
+function EN(r = rv) {
   const e = {
-    basic: [],
+    general: [],
     time: [],
-    layout: [],
-    visuals: [],
+    panels: [],
     formatting: [],
-    system: []
+    chart: [],
+    style: [],
+    diagnostics: []
   };
   for (const t of r)
     e[t.section].push(t);
   return e;
 }
-function RN(r, e, t = rv) {
-  return ON(t)[r].filter(
+function ON(r, e, t = rv) {
+  return EN(t)[r].filter(
     (n) => n.visibleWhen === void 0 || n.visibleWhen(e)
   );
 }
-function NN(r, e) {
-  const t = FN(e, r.key);
+function RN(r, e) {
+  const t = NN(e, r.key);
   return t !== void 0 ? t : r.default;
 }
-function FN(r, e) {
+function NN(r, e) {
   const t = e.split(".");
   let n = r;
   for (const i of t) {
@@ -30141,7 +30184,7 @@ function FN(r, e) {
   }
   return n;
 }
-function zN(r, e) {
+function FN(r, e) {
   if (r.control.kind === "select" && r.control.valueToConfig)
     return r.control.valueToConfig(String(e ?? ""));
   if (r.control.kind === "number") {
@@ -30152,22 +30195,22 @@ function zN(r, e) {
   }
   return e;
 }
-const $N = 300, BN = 150, VN = 1e3;
-function HN(r) {
+const zN = 300, $N = 150, BN = 1e3;
+function VN(r) {
   if (r !== void 0 && !(typeof r == "string" && r.trim() === ""))
     return r;
 }
-function WN(r, e, t) {
-  const n = HN(t), i = e.split("."), a = { ...r };
+function HN(r, e, t) {
+  const n = VN(t), i = e.split("."), a = { ...r };
   if (i.length === 1)
     return n === void 0 ? delete a[i[0]] : a[i[0]] = n, a;
   const [o, ...s] = i, l = a[o], u = l !== null && typeof l == "object" && !Array.isArray(l) ? { ...l } : {}, c = s[s.length - 1];
   return n === void 0 ? delete u[c] : u[c] = n, a[o] = u, a;
 }
-function GN(r, e) {
+function WN(r, e) {
   let t = { ...r };
   for (const [n, i] of Object.entries(e))
-    t = WN(t, n, i);
+    t = HN(t, n, i);
   return t;
 }
 function Bs(r) {
@@ -30200,7 +30243,7 @@ function $l(r, e) {
     (l) => Object.prototype.hasOwnProperty.call(a, l) && $l(i[l], a[l])
   );
 }
-function UN(r, e) {
+function GN(r, e) {
   return !$l(r, e);
 }
 function Uy(r) {
@@ -30235,15 +30278,16 @@ function hf(r) {
     show_forecast: a
   };
 }
-function YN() {
+function UN() {
   return {
     expanded: {
-      basic: !0,
-      time: !1,
-      layout: !1,
-      visuals: !1,
+      general: !0,
+      time: !0,
+      panels: !1,
       formatting: !1,
-      system: !1
+      chart: !1,
+      style: !1,
+      diagnostics: !1
     }
   };
 }
@@ -30256,10 +30300,10 @@ function Yy(r, e, t) {
 function df(r, e, t) {
   return e === void 0 ? { ...r, lastFocusedField: void 0, lastCaret: void 0 } : { ...r, lastFocusedField: e, lastCaret: t };
 }
-function ZN(r, e) {
+function YN(r, e) {
   return { ...r, scrollAnchor: e };
 }
-function qN(r) {
+function ZN(r) {
   return {
     expanded: { ...r.expanded },
     lastFocusedField: r.lastFocusedField,
@@ -30267,32 +30311,32 @@ function qN(r) {
     scrollAnchor: r.scrollAnchor
   };
 }
-const XN = {
+const qN = {
   anchor: "start_of_year",
   duration: "1y",
   step: "1y",
   count: 2
-}, KN = -1;
-function jN(r, e) {
+}, XN = -1;
+function KN(r, e) {
   const t = r.comparison_preset, n = { ...r };
   n.comparison_preset = e;
   const i = t === "custom", a = e === "custom";
   if (i && !a)
-    delete n.time_window, n.period_offset = KN;
+    delete n.time_window, n.period_offset = XN;
   else if (!i && a) {
     delete n.period_offset;
     const o = n.time_window, s = o !== null && typeof o == "object" && !Array.isArray(o) ? o : {};
     n.time_window = {
-      ...XN,
+      ...qN,
       ...s
     };
   }
   return n;
 }
-function JN(r, e) {
+function jN(r, e) {
   return bi(r, e).language;
 }
-function QN(r) {
+function JN(r) {
   const e = typeof window < "u" ? window.jsyaml : void 0;
   if (!e)
     return { ok: !1, error: "yaml-unavailable" };
@@ -30315,30 +30359,30 @@ function Eh(r) {
   const e = Object.getPrototypeOf(r);
   return e !== Object.prototype && e !== null ? !1 : Object.values(r).every(Eh);
 }
-var eF = Object.create, YS = Object.defineProperty, tF = Object.getOwnPropertyDescriptor, ZS = (r, e) => (e = Symbol[r]) ? e : Symbol.for("Symbol." + r), Bo = (r) => {
+var QN = Object.create, YS = Object.defineProperty, eF = Object.getOwnPropertyDescriptor, ZS = (r, e) => (e = Symbol[r]) ? e : Symbol.for("Symbol." + r), Bo = (r) => {
   throw TypeError(r);
-}, rF = (r, e, t) => e in r ? YS(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t, nF = (r) => [, , , eF((r == null ? void 0 : r[ZS("metadata")]) ?? null)], qS = ["class", "method", "getter", "setter", "accessor", "field", "value", "get", "set"], Ga = (r) => r !== void 0 && typeof r != "function" ? Bo("Function expected") : r, iF = (r, e, t, n, i) => ({ kind: qS[r], name: e, metadata: n, addInitializer: (a) => t._ ? Bo("Already initialized") : i.push(Ga(a || null)) }), aF = (r, e) => rF(e, ZS("metadata"), r[3]), Jt = (r, e, t, n) => {
+}, tF = (r, e, t) => e in r ? YS(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t, rF = (r) => [, , , QN((r == null ? void 0 : r[ZS("metadata")]) ?? null)], qS = ["class", "method", "getter", "setter", "accessor", "field", "value", "get", "set"], Ga = (r) => r !== void 0 && typeof r != "function" ? Bo("Function expected") : r, nF = (r, e, t, n, i) => ({ kind: qS[r], name: e, metadata: n, addInitializer: (a) => t._ ? Bo("Already initialized") : i.push(Ga(a || null)) }), iF = (r, e) => tF(e, ZS("metadata"), r[3]), Jt = (r, e, t, n) => {
   for (var i = 0, a = r[e >> 1], o = a && a.length; i < o; i++) e & 1 ? a[i].call(t) : n = a[i].call(t, n);
   return n;
 }, Vo = (r, e, t, n, i, a) => {
-  for (var o, s, l, u, c, f = e & 7, d = !1, h = !1, v = r.length + 1, p = qS[f + 5], m = r[v - 1] = [], g = r[v] || (r[v] = []), y = (i = i.prototype, tF({ get [t]() {
-    return oF(this, a);
+  for (var o, s, l, u, c, f = e & 7, d = !1, h = !1, v = r.length + 1, p = qS[f + 5], m = r[v - 1] = [], g = r[v] || (r[v] = []), y = (i = i.prototype, eF({ get [t]() {
+    return aF(this, a);
   }, set [t](w) {
-    return sF(this, a, w);
+    return oF(this, a, w);
   } }, t)), _ = n.length - 1; _ >= 0; _--)
-    u = iF(f, t, l = {}, r[3], g), u.static = d, u.private = h, c = u.access = { has: (w) => t in w }, c.get = (w) => w[t], c.set = (w, S) => w[t] = S, s = (0, n[_])({ get: y.get, set: y.set }, u), l._ = 1, s === void 0 ? Ga(s) && (y[p] = s) : typeof s != "object" || s === null ? Bo("Object expected") : (Ga(o = s.get) && (y.get = o), Ga(o = s.set) && (y.set = o), Ga(o = s.init) && m.unshift(o));
+    u = nF(f, t, l = {}, r[3], g), u.static = d, u.private = h, c = u.access = { has: (w) => t in w }, c.get = (w) => w[t], c.set = (w, S) => w[t] = S, s = (0, n[_])({ get: y.get, set: y.set }, u), l._ = 1, s === void 0 ? Ga(s) && (y[p] = s) : typeof s != "object" || s === null ? Bo("Object expected") : (Ga(o = s.get) && (y.get = o), Ga(o = s.set) && (y.set = o), Ga(o = s.init) && m.unshift(o));
   return y && YS(i, t, y), i;
-}, XS = (r, e, t) => e.has(r) || Bo("Cannot " + t), oF = (r, e, t) => (XS(r, e, "read from private field"), e.get(r)), La = (r, e, t) => e.has(r) ? Bo("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(r) : e.set(r, t), sF = (r, e, t, n) => (XS(r, e, "write to private field"), e.set(r, t), t), KS, jS, JS, QS, e1, Oh, Be, nv, iv, av, ov, sv;
+}, XS = (r, e, t) => e.has(r) || Bo("Cannot " + t), aF = (r, e, t) => (XS(r, e, "read from private field"), e.get(r)), La = (r, e, t) => e.has(r) ? Bo("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(r) : e.set(r, t), oF = (r, e, t, n) => (XS(r, e, "write to private field"), e.set(r, t), t), KS, jS, JS, QS, e1, Oh, Be, nv, iv, av, ov, sv;
 class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()], jS = [$s()], KS = [$s()], Oh) {
   constructor() {
-    super(...arguments), La(this, nv, Jt(Be, 8, this)), Jt(Be, 11, this), this._config = void 0, this._lastEmitted = void 0, La(this, iv, Jt(Be, 12, this, "visual")), Jt(Be, 15, this), La(this, av, Jt(Be, 16, this, "")), Jt(Be, 19, this), La(this, ov, Jt(Be, 20, this, null)), Jt(Be, 23, this), La(this, sv, Jt(Be, 24, this, YN())), Jt(Be, 27, this), this._pendingFocusRestore = !1, this._emitTimer = null, this._parseTimer = null, this._yamlEmitTimer = null;
+    super(...arguments), La(this, nv, Jt(Be, 8, this)), Jt(Be, 11, this), this._config = void 0, this._lastEmitted = void 0, La(this, iv, Jt(Be, 12, this, "visual")), Jt(Be, 15, this), La(this, av, Jt(Be, 16, this, "")), Jt(Be, 19, this), La(this, ov, Jt(Be, 20, this, null)), Jt(Be, 23, this), La(this, sv, Jt(Be, 24, this, UN())), Jt(Be, 27, this), this._pendingFocusRestore = !1, this._emitTimer = null, this._parseTimer = null, this._yamlEmitTimer = null;
   }
   // -------------------------------------------------------------------------
   // Public API (contracts/editor-public-api.md)
   // -------------------------------------------------------------------------
   setConfig(e) {
     const t = Uy(e), n = hf(t), i = this._lastEmitted !== void 0 && $l(n, this._lastEmitted);
-    this._config = t, this._uiState = qN(this._uiState), this._pendingFocusRestore = !0, this._editorMode === "yaml" && this._hasYamlSupport() && (i || (this._yamlText = this._dumpConfig(t))), this._yamlError = null, this.requestUpdate();
+    this._config = t, this._uiState = ZN(this._uiState), this._pendingFocusRestore = !0, this._editorMode === "yaml" && this._hasYamlSupport() && (i || (this._yamlText = this._dumpConfig(t))), this._yamlError = null, this.requestUpdate();
   }
   disconnectedCallback() {
     super.disconnectedCallback(), this._flushYaml(), this._flushEmit();
@@ -30362,7 +30406,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
   // Label language chain (FR-908-X)
   // -------------------------------------------------------------------------
   _labelLanguage() {
-    return JN(this.hass, this._config ?? {});
+    return jN(this.hass, this._config ?? {});
   }
   // -------------------------------------------------------------------------
   // Emit pipeline (FR-908-N/O, research R1/R5)
@@ -30378,24 +30422,24 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
    * cleanup), then routes to the emit pipeline per the field's policy.
    */
   _applyFieldChange(e, t, n) {
-    if (!this._config)
+    if (!this._config || e.dummy)
       return;
     let i;
     if (e.key === "comparison_preset")
-      i = jN(
+      i = KN(
         this._config,
         String(t ?? "")
       );
     else {
-      const a = zN(e, t);
-      i = GN(this._config, { [e.key]: a });
+      const a = FN(e, t);
+      i = WN(this._config, { [e.key]: a });
     }
     this._config = i, this._emitPolicy(e) === "debounced" ? ((e.control.kind === "text" || e.control.kind === "number") && (this._uiState = df(this._uiState, e.key, n)), this._scheduleEmit()) : this._flushEmit(), this._pendingFocusRestore = e.control.kind === "text" || e.control.kind === "number", this.requestUpdate();
   }
   _scheduleEmit() {
     this._emitTimer && clearTimeout(this._emitTimer), this._emitTimer = setTimeout(() => {
       this._emitTimer = null, this._flushEmit();
-    }, $N);
+    }, zN);
   }
   /**
    * The emit gate (FR-908-N): dispatch `config-changed` only when the would-be
@@ -30405,7 +30449,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
     if (this._emitTimer && (clearTimeout(this._emitTimer), this._emitTimer = null), !this._config)
       return;
     const e = hf(this._config);
-    UN(e, this._lastEmitted ?? {}) && (this._lastEmitted = e, this.dispatchEvent(
+    GN(e, this._lastEmitted ?? {}) && (this._lastEmitted = e, this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: e },
         bubbles: !0,
@@ -30422,12 +30466,12 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
   _scheduleYamlParse() {
     this._parseTimer && clearTimeout(this._parseTimer), this._parseTimer = setTimeout(() => {
       this._parseTimer = null, this._runYamlParse();
-    }, BN);
+    }, $N);
   }
   _scheduleYamlEmit() {
     this._yamlEmitTimer && clearTimeout(this._yamlEmitTimer), this._yamlEmitTimer = setTimeout(() => {
       this._yamlEmitTimer = null, this._flushEmit();
-    }, VN);
+    }, BN);
   }
   /**
    * Runs the (safe-mode) YAML parse. On success `_config` is **replaced
@@ -30435,7 +30479,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
    * the last valid `_config` is kept and an inline error is shown.
    */
   _runYamlParse() {
-    const e = QN(this._yamlText);
+    const e = JN(this._yamlText);
     e.ok ? (this._config = Uy(e.config), this._yamlError = null) : this._yamlError = e.error, this.requestUpdate();
   }
   /**
@@ -30535,7 +30579,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
   }
   _onScroll(e) {
     const t = e.target;
-    this._uiState = ZN(this._uiState, t.scrollTop);
+    this._uiState = YN(this._uiState, t.scrollTop);
   }
   // -------------------------------------------------------------------------
   // Post-render restore (FR-908-K/L/M)
@@ -30609,7 +30653,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
     const a = this._fieldId(e), o = e.control, s = (l) => l == null ? "" : String(l);
     switch (o.kind) {
       case "entity":
-        return this._haAvailable("ha-entity-picker") ? W`
+        return this._haAvailable("ha-entity-picker") ? H`
               <ha-entity-picker
                 id=${a}
                 .hass=${this.hass}
@@ -30619,7 +30663,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 ?disabled=${n}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-entity-picker>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="text"
@@ -30629,7 +30673,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               />
             `;
       case "icon":
-        return this._haAvailable("ha-icon-picker") ? W`
+        return this._haAvailable("ha-icon-picker") ? H`
               <ha-icon-picker
                 id=${a}
                 .hass=${this.hass}
@@ -30638,7 +30682,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 ?disabled=${n}
                 @value-changed=${(l) => this._onFieldValueChanged(e, l)}
               ></ha-icon-picker>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="text"
@@ -30648,7 +30692,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               />
             `;
       case "text":
-        return this._haAvailable("ha-input") ? W`
+        return this._haAvailable("ha-input") ? H`
               <ha-input
                 id=${a}
                 .label=${i(e.labelKey)}
@@ -30658,7 +30702,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 @focusin=${(l) => this._onFieldFocus(e, l)}
                 @focusout=${() => this._onFieldBlur(e)}
               ></ha-input>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="text"
@@ -30670,7 +30714,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               />
             `;
       case "number":
-        return this._haAvailable("ha-input") ? W`
+        return this._haAvailable("ha-input") ? H`
               <ha-input
                 id=${a}
                 type="number"
@@ -30683,7 +30727,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 @focusin=${(l) => this._onFieldFocus(e, l)}
                 @focusout=${() => this._onFieldBlur(e)}
               ></ha-input>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="number"
@@ -30698,13 +30742,13 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
             `;
       case "select": {
         const l = o.options.map(
-          (u) => W`
+          (u) => H`
             <option value=${u.value} ?selected=${s(t) === u.value}>
               ${i(u.labelKey)}
             </option>
           `
         );
-        return this._haAvailable("ha-select") ? W`
+        return this._haAvailable("ha-select") ? H`
               <ha-select
                 id=${a}
                 .label=${i(e.labelKey)}
@@ -30716,7 +30760,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 ?disabled=${n}
                 @selected=${(u) => this._onFieldSelect(e, u)}
               ></ha-select>
-            ` : W`
+            ` : H`
               <select
                 id=${a}
                 .value=${s(t)}
@@ -30728,14 +30772,27 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
             `;
       }
       case "boolean":
-        return this._haAvailable("ha-switch") ? W`
+        return e.dummy ? this._haAvailable("ha-switch") ? H`
+                <ha-switch
+                  id=${a}
+                  .checked=${!0}
+                  ?disabled=${!0}
+                ></ha-switch>
+              ` : H`
+                <input
+                  id=${a}
+                  type="checkbox"
+                  .checked=${!0}
+                  ?disabled=${!0}
+                />
+              ` : this._haAvailable("ha-switch") ? H`
               <ha-switch
                 id=${a}
                 .checked=${!!t}
                 ?disabled=${n}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-switch>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="checkbox"
@@ -30745,7 +30802,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               />
             `;
       case "slider":
-        return this._haAvailable("ha-slider") ? W`
+        return this._haAvailable("ha-slider") ? H`
               <ha-slider
                 id=${a}
                 .value=${Number(t ?? o.min ?? 0)}
@@ -30755,7 +30812,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 ?disabled=${n}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-slider>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="range"
@@ -30768,7 +30825,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               />
             `;
       case "color":
-        return this._haAvailable("ha-color-picker") ? W`
+        return this._haAvailable("ha-color-picker") ? H`
               <ha-color-picker
                 id=${a}
                 .label=${i(e.labelKey)}
@@ -30776,7 +30833,7 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 ?disabled=${n}
                 @value-changed=${(l) => this._onFieldValueChanged(e, l)}
               ></ha-color-picker>
-            ` : W`
+            ` : H`
               <input
                 id=${a}
                 type="text"
@@ -30806,61 +30863,66 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
    */
   _renderFieldLabel(e, t) {
     const n = e.control.kind, i = this._haTagForKind(n);
-    return i !== null && this._haAvailable(i) && this._hasBuiltInLabel(n) ? Re : W`
+    return i !== null && this._haAvailable(i) && this._hasBuiltInLabel(n) ? Re : H`
       <label class="field-label" for=${this._fieldId(e)}>
         ${t(e.labelKey)}
-        ${e.required ? W`<span class="req">*</span>` : ""}
+        ${e.required ? H`<span class="req">*</span>` : ""}
       </label>
     `;
   }
   _renderSection(e, t, n) {
-    const i = this._uiState.expanded[e], a = n(`editor.section.${e}`), o = RN(e, t, rv), s = /* @__PURE__ */ new Map();
-    for (const f of o)
-      if (f.inlineWith) {
-        const d = s.get(f.inlineWith) ?? [];
-        d.push(f), s.set(f.inlineWith, d);
+    const i = this._uiState.expanded[e], a = n(`editor.section.${e}`), o = ON(e, t, rv), s = /* @__PURE__ */ new Map();
+    for (const h of o)
+      if (h.inlineWith) {
+        const v = s.get(h.inlineWith) ?? [];
+        v.push(h), s.set(h.inlineWith, v);
       }
-    const l = (f, d = "") => {
-      var h;
-      return W`
+    const l = (h, v = "") => {
+      var p;
+      return H`
       <div
-        class=${d ? `field ${d}` : "field"}
-        data-field=${f.key}
+        class=${v ? `field ${v}` : "field"}
+        data-field=${h.key}
       >
-        ${this._renderFieldLabel(f, n)}
+        ${this._renderFieldLabel(h, n)}
         ${this._renderControl(
-        f,
-        NN(f, t),
-        ((h = f.disabledWhen) == null ? void 0 : h.call(f, t)) ?? !1,
+        h,
+        RN(h, t),
+        ((p = h.disabledWhen) == null ? void 0 : p.call(h, t)) ?? !1,
         n
       )}
       </div>
     `;
-    }, u = W`
-      ${o.map((f) => {
-      if (f.inlineWith)
-        return Re;
-      const d = s.get(f.key) ?? [];
-      return d.length === 0 ? l(f) : W`
-          <div class="field-row">
-            ${l(f, "field-main")}
-            ${d.map((h) => l(h, "field-inline"))}
-          </div>
-        `;
-    })}
-    `;
-    return this._haAvailable("ha-expansion-panel") ? W`
+    }, u = [];
+    let c;
+    for (const h of o) {
+      if (h.subsection !== c && (c = h.subsection, h.subsection && u.push(
+        H`<div class="subsection-header">${n(h.subsection)}</div>`
+      )), h.inlineWith)
+        continue;
+      const v = s.get(h.key) ?? [];
+      v.length === 0 ? u.push(l(h)) : u.push(
+        H`
+            <div class="field-row">
+              ${l(h, "field-main")}
+              ${v.map((p) => l(p, "field-inline"))}
+            </div>
+          `
+      );
+    }
+    const f = H`${u}`;
+    return this._haAvailable("ha-expansion-panel") ? H`
           <ha-expansion-panel
             class="editor-section"
             data-section=${e}
             data-expanded=${i ? "true" : "false"}
             .header=${a}
             .expanded=${i}
-            @expanded-changed=${(f) => this._onSectionExpandedChanged(e, f)}
+            @expanded-changed=${(h) => this._onSectionExpandedChanged(e, h)}
           >
-            ${u}
+            ${f}
           </ha-expansion-panel>
-        ` : W`
+        ` : H`
           <div
             class="editor-section"
             data-section=${e}
@@ -30871,22 +30933,22 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
               role="button"
               tabindex="0"
               aria-expanded=${i ? "true" : "false"}
-              @click=${(f) => this._onSectionToggle(e, f)}
-              @keydown=${(f) => this._onSectionHeaderKeydown(e, f)}
+              @click=${(h) => this._onSectionToggle(e, h)}
+              @keydown=${(h) => this._onSectionHeaderKeydown(e, h)}
             >
               ${a}
             </div>
-            <div class="section-body" ?hidden=${!i}>${u}</div>
+            <div class="section-body" ?hidden=${!i}>${f}</div>
           </div>
         `;
   }
   render() {
     if (!this._config)
-      return W``;
+      return H``;
     const e = Wa(this._labelLanguage()), t = e("editor.visual_mode"), n = e("editor.yaml_mode");
-    return W`
+    return H`
       <div class="editor">
-        ${this._hasYamlSupport() ? W`
+        ${this._hasYamlSupport() ? H`
               <div class="toggle-row">
                 <button
                   type="button"
@@ -30904,26 +30966,26 @@ class tn extends (Oh = Ai, e1 = [US({ attribute: !1 })], QS = [$s()], JS = [$s()
                 </button>
               </div>
             ` : ""}
-        ${this._editorMode === "visual" ? W`
+        ${this._editorMode === "visual" ? H`
               <div class="sections" @scroll=${this._onScroll}>
                 ${MN.map(
       (i) => this._renderSection(i, this._config, e)
     )}
               </div>
-            ` : W`
+            ` : H`
               <textarea
                 class="yaml-editor"
                 .value=${this._yamlText}
                 @input=${this._onYamlInput}
                 @blur=${() => this._flushYaml()}
               ></textarea>
-              ${this._yamlError ? W`<p class="error">${e("editor.yaml_error")}: ${this._yamlError}</p>` : ""}
+              ${this._yamlError ? H`<p class="error">${e("editor.yaml_error")}: ${this._yamlError}</p>` : ""}
             `}
       </div>
     `;
   }
 }
-Be = nF(Oh);
+Be = rF(Oh);
 nv = /* @__PURE__ */ new WeakMap();
 iv = /* @__PURE__ */ new WeakMap();
 av = /* @__PURE__ */ new WeakMap();
@@ -30934,7 +30996,7 @@ Vo(Be, 4, "_editorMode", QS, tn, iv);
 Vo(Be, 4, "_yamlText", JS, tn, av);
 Vo(Be, 4, "_yamlError", jS, tn, ov);
 Vo(Be, 4, "_uiState", KS, tn, sv);
-aF(Be, tn);
+iF(Be, tn);
 tn.styles = Jy`
     :host {
       display: block;
@@ -30981,6 +31043,14 @@ tn.styles = Jy`
     .section-header:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: -2px;
+    }
+    .subsection-header {
+      padding: 8px 12px 0;
+      font-size: 0.8em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--secondary-text-color, #555);
     }
     .section-body[hidden] {
       display: none;
@@ -31029,18 +31099,18 @@ customElements.define("energy-horizon-card-editor", tn);
 function Zy(r, e, t) {
   return r > 0 ? `+${e.format(r)} ${t}` : r < 0 ? `−${e.format(Math.abs(r))} ${t}` : `${e.format(0)} ${t}`;
 }
-const lF = /\{\{(\w+)\}\}/g;
+const sF = /\{\{(\w+)\}\}/g;
 function qy(r, e) {
   const t = [];
   let n = 0;
-  const i = new RegExp(lF.source, "g");
+  const i = new RegExp(sF.source, "g");
   let a;
   for (; (a = i.exec(r)) !== null; ) {
     a.index > n && t.push(r.slice(n, a.index));
     const o = a[1], s = e[o] ?? a[0];
-    t.push(W`<span class="ebc-comment-emphasis">${s}</span>`), n = a.index + a[0].length;
+    t.push(H`<span class="ebc-comment-emphasis">${s}</span>`), n = a.index + a[0].length;
   }
-  return t.push(r.slice(n)), W`<div class="ebc-comment-text">${t}</div>`;
+  return t.push(r.slice(n)), H`<div class="ebc-comment-text">${t}</div>`;
 }
 function Xy(r) {
   return r.show_forecast !== !1;
@@ -31415,10 +31485,10 @@ const Bl = class Bl extends Ai {
   render() {
     var be, ue, G, j, $e, De, lr, Tr, Ho, Kn, ft;
     if (!this._config || !this.hass)
-      return W``;
+      return H``;
     const e = bi(this.hass, this._config), t = Wa(e.language);
     if (this._state.status === "loading")
-      return W`<ha-card class="ebc-card">
+      return H`<ha-card class="ebc-card">
         <div class="loading">
           <ha-circular-progress active size="small"></ha-circular-progress>
           <span>${this._localizeOrError(t, "status.loading")}</span>
@@ -31426,7 +31496,7 @@ const Bl = class Bl extends Ai {
       </ha-card>`;
     if (this._state.status === "error") {
       const ht = this._state.errorMessage ?? "status.error_generic";
-      return W`<ha-card class="ebc-card">
+      return H`<ha-card class="ebc-card">
         <ha-alert alert-type="error">
           ${this._localizeOrError(
         t,
@@ -31437,7 +31507,7 @@ const Bl = class Bl extends Ai {
       </ha-card>`;
     }
     if (this._state.status === "no-data")
-      return W`<ha-card class="ebc-card">
+      return H`<ha-card class="ebc-card">
         <ha-alert alert-type="info">
           ${this._localizeOrError(t, "status.no_data")}
         </ha-alert>
@@ -31474,7 +31544,7 @@ const Bl = class Bl extends Ai {
     if (n && !k) {
       const ht = n.diffValue != null ? `${m.format(n.diffValue)} ${y}` : `— ${y}`, Et = (i == null ? void 0 : i.differencePercent) != null ? `${g.format(Math.abs(i.differencePercent))}%` : "—";
       if (oe.outcome === "insufficient_data")
-        re = W`<div class="ebc-comment-text ebc-comment-text--muted">
+        re = H`<div class="ebc-comment-text ebc-comment-text--muted">
           ${this._localizeOrError(t, "text_summary.insufficient_data")}
         </div>`;
       else if (oe.outcome === "neutral" && oe.neutralKind === "percent_band") {
@@ -31483,7 +31553,7 @@ const Bl = class Bl extends Ai {
           K,
           "neutral_band"
         ), Zt = Ph(e.language, Xe);
-        Zt === void 0 ? re = W`<div class="ebc-comment-text">
+        Zt === void 0 ? re = H`<div class="ebc-comment-text">
             ${this._localizeOrError(t, Xe)}
           </div>` : re = qy(Zt, {
           deltaUnit: ht,
@@ -31496,7 +31566,7 @@ const Bl = class Bl extends Ai {
           K,
           "similar"
         );
-        re = W`<div class="ebc-comment-text ebc-comment-text--muted">
+        re = H`<div class="ebc-comment-text ebc-comment-text--muted">
           ${this._localizeOrError(t, Xe, { referencePeriod: J })}
         </div>`;
       } else {
@@ -31505,7 +31575,7 @@ const Bl = class Bl extends Ai {
           K,
           Zt
         ), Mr = Ph(e.language, jn);
-        Mr === void 0 ? re = W`<div class="ebc-comment-text">
+        Mr === void 0 ? re = H`<div class="ebc-comment-text">
             ${this._localizeOrError(t, jn)}
           </div>` : re = qy(Mr, {
           deltaUnit: ht,
@@ -31515,29 +31585,29 @@ const Bl = class Bl extends Ai {
       }
     }
     const V = !k && i != null && i.difference != null ? Zy(i.difference, m, y) : !k && i != null ? `--- ${y}` : "", Z = !k && i != null && i.differencePercent != null ? Zy(i.differencePercent, g, "%") : !k && i != null ? "--- %" : "", _e = !k && i != null && i.reference_cumulative == null;
-    return W`<ha-card class="ebc-card">
+    return H`<ha-card class="ebc-card">
       <div class="content ebc-content">
-        ${d ? W`<div
+        ${d ? H`<div
               class="ebc-section ebc-section--header"
               role="region"
               aria-label=${this._localizeOrError(t, "section.header")}
             >
               <div class="ebc-header-row">
-                ${u ? W`<div class="ebc-header-icon-wrap">
-                      ${c ? W`<ha-icon class="ebc-icon" .icon=${c}></ha-icon>` : s ? W`<ha-state-icon
+                ${u ? H`<div class="ebc-header-icon-wrap">
+                      ${c ? H`<ha-icon class="ebc-icon" .icon=${c}></ha-icon>` : s ? H`<ha-state-icon
                               class="ebc-icon"
                               .hass=${this.hass}
                               .stateObj=${s}
                             ></ha-state-icon>` : null}
                     </div>` : null}
                 <div class="ebc-header-text">
-                  ${o && l ? W`<div class="ebc-header-title">${l}</div>` : null}
+                  ${o && l ? H`<div class="ebc-header-title">${l}</div>` : null}
                   <div class="ebc-header-entity">${this._config.entity}</div>
                 </div>
               </div>
             </div>` : null}
 
-        ${i && this._config.show_comparison_summary !== !1 ? W`<div
+        ${i && this._config.show_comparison_summary !== !1 ? H`<div
               class="ebc-section ebc-section--comparison"
               role="region"
               aria-label=${this._localizeOrError(t, "section.comparison")}
@@ -31561,7 +31631,7 @@ const Bl = class Bl extends Ai {
                     <span class="ebc-value-num--current">${A}</span>
                     <span class="ebc-value-unit">${y}</span>
                   </div>
-                  ${k ? null : W`<div
+                  ${k ? null : H`<div
                         class="ebc-delta-chip ${se}"
                         aria-label=${this._localizeOrError(
       t,
@@ -31589,17 +31659,17 @@ const Bl = class Bl extends Ai {
                     ${this._localizeOrError(t, "summary.to_this_day")}
                   </div>
                   <div class="ebc-value-row">
-                    ${I != null ? W`<span class="ebc-value-num--reference"
+                    ${I != null ? H`<span class="ebc-value-num--reference"
                             >${I}</span
                           >
-                          <span class="ebc-value-unit">${y}</span>` : W`<span class="ebc-value-num--reference">—</span>
+                          <span class="ebc-value-unit">${y}</span>` : H`<span class="ebc-value-num--reference">—</span>
                           <span class="ebc-value-unit">${y}</span>`}
                   </div>
                 </div>
               </div>
             </div>` : null}
 
-        ${P && a ? W`<div
+        ${P && a ? H`<div
               class="ebc-section ebc-section--forecast-total"
               role="region"
               aria-label=${this._localizeOrError(
@@ -31630,10 +31700,10 @@ const Bl = class Bl extends Ai {
                     ${this._localizeOrError(t, "forecast.panel_total")}
                   </div>
                   <div class="ebc-surface-value-row">
-                    ${a.reference_total != null ? W`<span class="ebc-surface-value-num"
+                    ${a.reference_total != null ? H`<span class="ebc-surface-value-num"
                             >${m.format(a.reference_total)}</span
                           >
-                          <span class="ebc-surface-value-unit">${E}</span>` : W`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                          <span class="ebc-surface-value-unit">${E}</span>` : H`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
                             >---</span
                           >
                           <span class="ebc-surface-value-unit">${E}</span>`}
@@ -31650,7 +31720,7 @@ const Bl = class Bl extends Ai {
           <div class="chart-container ebc-chart"></div>
         </div>
 
-        ${re && this._config.show_narrative_comment !== !1 ? W`<div
+        ${re && this._config.show_narrative_comment !== !1 ? H`<div
               class="ebc-section ebc-section--comment"
               role="region"
               aria-label=${this._localizeOrError(t, "section.comment")}
@@ -31664,7 +31734,7 @@ const Bl = class Bl extends Ai {
               ${re}
             </div>` : null}
 
-        ${_e ? W`<div
+        ${_e ? H`<div
               class="ebc-section ebc-section--warning"
               role="region"
               aria-label=${this._localizeOrError(t, "section.warning")}

@@ -16,16 +16,29 @@ The language used for editor labels follows this chain, recomputed from the **cu
 
 ## New keys added by v1.2.0
 
-### Section titles (6)
+### Section titles (7)
 
 | Key | en |
 |---|---|
-| `editor.section.basic` | Basic Settings |
-| `editor.section.time` | Time & Aggregation |
-| `editor.section.layout` | Layout & Visibility |
-| `editor.section.visuals` | Visuals & Chart Styling |
-| `editor.section.formatting` | Formatting & Axis |
-| `editor.section.system` | System & Debug |
+| `editor.section.general` | General |
+| `editor.section.time` | Time windows |
+| `editor.section.panels` | Panels |
+| `editor.section.formatting` | Formatting & Localization |
+| `editor.section.chart` | Chart settings |
+| `editor.section.style` | Style |
+| `editor.section.diagnostics` | Diagnostics |
+
+### Subsection titles (5)
+
+Non-collapsible headers emitted within a section (see [field-registry.md](./field-registry.md) render-loop step 7).
+
+| Key | en |
+|---|---|
+| `editor.subsection.custom_settings` | Custom settings |
+| `editor.subsection.unit` | Unit |
+| `editor.subsection.dates` | Dates |
+| `editor.subsection.current_series` | Current series |
+| `editor.subsection.reference_series` | Reference series |
 
 ### New field labels
 
@@ -36,7 +49,7 @@ The language used for editor labels follows this chain, recomputed from the **cu
 | `editor.show_icon` | Show icon |
 | `editor.neutral_interpretation` | Neutral band (±%) |
 | `editor.aggregation` | Aggregation |
-| `editor.period_offset` | Period offset (years) |
+| `editor.show_chart` | Show chart |
 | `editor.time_window` | Custom time window |
 | `editor.time_window.anchor` | Anchor |
 | `editor.time_window.duration` | Duration (ISO 8601) |
@@ -44,11 +57,11 @@ The language used for editor labels follows this chain, recomputed from the **cu
 | `editor.time_window.count` | Window count |
 | `editor.time_window.offset` | Offset (ISO 8601) |
 | `editor.show_forecast` | Show forecast on chart |
-| `editor.primary_color` | Primary color |
-| `editor.fill_current` | Fill current series |
-| `editor.fill_current_opacity` | Current fill opacity |
-| `editor.fill_reference` | Fill reference series |
-| `editor.fill_reference_opacity` | Reference fill opacity |
+| `editor.primary_color` | Color |
+| `editor.fill_current` | Fill series |
+| `editor.fill_current_opacity` | Fill opacity |
+| `editor.fill_reference` | Reference series |
+| `editor.fill_reference_opacity` | Reference opacity |
 | `editor.connect_nulls` | Connect nulls |
 | `editor.show_legend` | Show legend |
 | `editor.precision` | Precision (decimals) |

@@ -42,8 +42,8 @@ function mountEditor(config: CardConfigInput, hass?: HomeAssistant): EditorEl {
   return el;
 }
 
-function basicSectionLabel(el: EditorEl): string {
-  const section = el.shadowRoot!.querySelector<HTMLElement>('[data-section="basic"]')!;
+function generalSectionLabel(el: EditorEl): string {
+  const section = el.shadowRoot!.querySelector<HTMLElement>('[data-section="general"]')!;
   // The section title lives in the clickable header (`.section-header` in the
   // `<div>` fallback, `slot="title"` in `ha-expansion-panel`).
   const header =
@@ -66,19 +66,19 @@ describe("label language chain (T011)", () => {
   it("renders labels in the card `language` when set", async () => {
     const el = mountEditor({ ...BASE, language: "pl" });
     await el.updateComplete;
-    expect(basicSectionLabel(el)).toBe("Podstawowe");
+    expect(generalSectionLabel(el)).toBe("Ogólne");
   });
 
   it("falls back to hass.locale.language when the card language is unset", async () => {
     const el = mountEditor(BASE, makeHass("de"));
     await el.updateComplete;
-    expect(basicSectionLabel(el)).toBe("Grundlegend");
+    expect(generalSectionLabel(el)).toBe("Allgemein");
   });
 
   it("re-labels the whole form live when the language field changes", async () => {
     const el = mountEditor({ ...BASE, language: "pl" });
     await el.updateComplete;
-    expect(basicSectionLabel(el)).toBe("Podstawowe");
+    expect(generalSectionLabel(el)).toBe("Ogólne");
 
     // Edit the language field to German (a select — native <select> in jsdom,
     // which listens for `change`).
@@ -88,13 +88,13 @@ describe("label language chain (T011)", () => {
     await el.updateComplete;
 
     // The form re-labels live (no cached language from editor open).
-    expect(basicSectionLabel(el)).toBe("Grundlegend");
+    expect(generalSectionLabel(el)).toBe("Allgemein");
   });
 
   it("re-labels back to English when the language field is cleared", async () => {
     const el = mountEditor({ ...BASE, language: "pl" });
     await el.updateComplete;
-    expect(basicSectionLabel(el)).toBe("Podstawowe");
+    expect(generalSectionLabel(el)).toBe("Ogólne");
 
     const language = el.shadowRoot!.querySelector<HTMLSelectElement>("#eh-field-language")!;
     language.value = "";
@@ -102,6 +102,6 @@ describe("label language chain (T011)", () => {
     await el.updateComplete;
 
     // Cleared → falls back to hass.locale.language (en).
-    expect(basicSectionLabel(el)).toBe("Basic");
+    expect(generalSectionLabel(el)).toBe("General");
   });
 });

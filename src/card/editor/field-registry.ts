@@ -14,20 +14,22 @@ import { AVAILABLE_LANGUAGES } from "../localize";
 
 /** Fixed section order (FR-908-E). The render loop iterates in this order. */
 export type SectionId =
-  | "basic"
+  | "general"
   | "time"
-  | "layout"
-  | "visuals"
+  | "panels"
   | "formatting"
-  | "system";
+  | "chart"
+  | "style"
+  | "diagnostics";
 
 export const SECTION_ORDER: readonly SectionId[] = [
-  "basic",
+  "general",
   "time",
-  "layout",
-  "visuals",
+  "panels",
   "formatting",
-  "system"
+  "chart",
+  "style",
+  "diagnostics"
 ];
 
 /** Declarative control metadata (data-model.md §2). */
@@ -82,9 +84,25 @@ export interface FieldDescriptor {
   /**
    * When set, this field renders in the same horizontal row as the field
    * with this key (to its right), instead of as its own row. Used for the
-   * `show_title`/`title` and `show_icon`/`icon` pairs (FR-908-Z).
+   * `show_title`/`title`, `show_icon`/`icon`, and
+   * `neutral_interpretation`/`interpretation` pairs (FR-908-Z).
    */
   inlineWith?: string;
+  /**
+   * i18n key of the non-collapsible subsection header this field belongs to
+   * (e.g. `editor.subsection.custom_settings`). Fields without `subsection`
+   * render at the top level of their section. The render loop emits a
+   * subsection header whenever the `subsection` of consecutive visible fields
+   * changes.
+   */
+  subsection?: string;
+  /**
+   * `true` for UX/UI-only fields that have **no** representation in the card
+   * config (e.g. `show_chart`). Rendered as a permanently ON, disabled switch
+   * that explains an always-true behavior; changes are ignored and never
+   * written to the config.
+   */
+  dummy?: boolean;
 }
 
 /** The full registry (data-model.md §4). */
@@ -161,18 +179,17 @@ const LANGUAGE_OPTIONS: { value: string; labelKey: string }[] = [
 
 const IS_CUSTOM = (cfg: CardConfig): boolean =>
   cfg.comparison_preset === "custom";
-const IS_STANDARD = (cfg: CardConfig): boolean =>
-  cfg.comparison_preset !== "custom";
 
 // ---------------------------------------------------------------------------
-// The full 33-field registry (contracts/field-registry.md inventory).
+// The full field registry (contracts/field-registry.md inventory): 32
+// config-backed fields + 1 UX-only dummy (`show_chart`).
 // ---------------------------------------------------------------------------
 
 export const FIELD_REGISTRY: FieldRegistry = [
-  // S1 — Basic (always expanded)
+  // S1 — General (expanded by default)
   {
     key: "entity",
-    section: "basic",
+    section: "general",
     control: { kind: "entity", domain: "sensor" },
     labelKey: "editor.entity",
     default: "",
@@ -180,13 +197,13 @@ export const FIELD_REGISTRY: FieldRegistry = [
   },
   {
     key: "title",
-    section: "basic",
+    section: "general",
     control: { kind: "text" },
     labelKey: "editor.title"
   },
   {
     key: "show_title",
-    section: "basic",
+    section: "general",
     control: { kind: "boolean" },
     labelKey: "editor.show_title",
     default: true,
@@ -194,44 +211,36 @@ export const FIELD_REGISTRY: FieldRegistry = [
   },
   {
     key: "icon",
-    section: "basic",
+    section: "general",
     control: { kind: "icon" },
     labelKey: "editor.icon"
   },
   {
     key: "show_icon",
-    section: "basic",
+    section: "general",
     control: { kind: "boolean" },
     labelKey: "editor.show_icon",
     default: true,
     inlineWith: "icon"
   },
   {
-    key: "comparison_preset",
-    section: "basic",
-    control: { kind: "select", options: COMPARISON_PRESET_OPTIONS },
-    labelKey: "editor.comparison_preset",
-    default: "year_over_year"
-  },
-  {
     key: "interpretation",
-    section: "basic",
+    section: "general",
     control: { kind: "select", options: INTERPRETATION_OPTIONS },
     labelKey: "editor.interpretation",
     default: "consumption"
   },
   {
     key: "neutral_interpretation",
-    section: "basic",
+    section: "general",
     control: { kind: "number", min: 0, max: 100 },
     labelKey: "editor.neutral_interpretation",
-    default: 2
+    default: 2,
+    inlineWith: "interpretation"
   },
-
-  // S2 — Time & Aggregation
   {
     key: "aggregation",
-    section: "time",
+    section: "general",
     control: {
       kind: "select",
       options: AGGREGATION_OPTIONS,
@@ -241,13 +250,14 @@ export const FIELD_REGISTRY: FieldRegistry = [
     labelKey: "editor.aggregation",
     default: "auto"
   },
+
+  // S2 — Time windows (expanded by default)
   {
-    key: "period_offset",
+    key: "comparison_preset",
     section: "time",
-    control: { kind: "number", min: -10, max: 10 },
-    labelKey: "editor.period_offset",
-    default: -1,
-    visibleWhen: IS_STANDARD
+    control: { kind: "select", options: COMPARISON_PRESET_OPTIONS },
+    labelKey: "editor.comparison_preset",
+    default: "year_over_year"
   },
   {
     key: "time_window.anchor",
@@ -255,7 +265,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "select", options: ANCHOR_OPTIONS },
     labelKey: "editor.time_window.anchor",
     default: "start_of_year",
-    visibleWhen: IS_CUSTOM
+    visibleWhen: IS_CUSTOM,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.duration",
@@ -263,7 +274,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "text" },
     labelKey: "editor.time_window.duration",
     default: "1y",
-    visibleWhen: IS_CUSTOM
+    visibleWhen: IS_CUSTOM,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.step",
@@ -271,7 +283,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "text" },
     labelKey: "editor.time_window.step",
     default: "1y",
-    visibleWhen: IS_CUSTOM
+    visibleWhen: IS_CUSTOM,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.count",
@@ -279,118 +292,50 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "number", min: 1, max: 24 },
     labelKey: "editor.time_window.count",
     default: 2,
-    visibleWhen: IS_CUSTOM
+    visibleWhen: IS_CUSTOM,
+    subsection: "editor.subsection.custom_settings"
   },
   {
     key: "time_window.offset",
     section: "time",
     control: { kind: "text" },
     labelKey: "editor.time_window.offset",
-    visibleWhen: IS_CUSTOM
+    visibleWhen: IS_CUSTOM,
+    subsection: "editor.subsection.custom_settings"
   },
 
-  // S3 — Layout & Visibility
+  // S3 — Panels
   {
     key: "show_comparison_summary",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_comparison_summary",
     default: true
   },
   {
-    key: "show_forecast",
-    section: "layout",
+    key: "show_chart",
+    section: "panels",
     control: { kind: "boolean" },
-    labelKey: "editor.show_forecast",
-    default: true
+    labelKey: "editor.show_chart",
+    default: true,
+    dummy: true
   },
   {
     key: "show_forecast_total_panel",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_forecast_total_panel",
     default: true
   },
   {
     key: "show_narrative_comment",
-    section: "layout",
+    section: "panels",
     control: { kind: "boolean" },
     labelKey: "editor.show_narrative_comment",
     default: true
   },
 
-  // S4 — Visuals & Chart Styling
-  {
-    key: "primary_color",
-    section: "visuals",
-    control: { kind: "color" },
-    labelKey: "editor.primary_color"
-  },
-  {
-    key: "fill_current",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.fill_current",
-    default: true
-  },
-  {
-    key: "fill_current_opacity",
-    section: "visuals",
-    control: { kind: "slider", min: 0, max: 100, step: 1 },
-    labelKey: "editor.fill_current_opacity",
-    default: 30
-  },
-  {
-    key: "fill_reference",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.fill_reference",
-    default: false
-  },
-  {
-    key: "fill_reference_opacity",
-    section: "visuals",
-    control: { kind: "slider", min: 0, max: 100, step: 1 },
-    labelKey: "editor.fill_reference_opacity",
-    default: 30
-  },
-  {
-    key: "connect_nulls",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.connect_nulls",
-    default: true
-  },
-  {
-    key: "show_legend",
-    section: "visuals",
-    control: { kind: "boolean" },
-    labelKey: "editor.show_legend",
-    default: false
-  },
-
-  // S5 — Formatting & Axis
-  {
-    key: "precision",
-    section: "formatting",
-    control: { kind: "number", min: 0, max: 6 },
-    labelKey: "editor.precision",
-    default: 2
-  },
-  {
-    key: "force_prefix",
-    section: "formatting",
-    control: { kind: "select", options: FORCE_PREFIX_OPTIONS },
-    labelKey: "editor.force_prefix",
-    default: "auto"
-  },
-  {
-    key: "number_format",
-    section: "formatting",
-    control: { kind: "select", options: NUMBER_FORMAT_OPTIONS },
-    labelKey: "editor.number_format",
-    default: "system"
-  },
+  // S4 — Formatting & Localization
   {
     key: "language",
     section: "formatting",
@@ -404,22 +349,112 @@ export const FIELD_REGISTRY: FieldRegistry = [
     labelKey: "editor.language"
   },
   {
+    key: "force_prefix",
+    section: "formatting",
+    control: { kind: "select", options: FORCE_PREFIX_OPTIONS },
+    labelKey: "editor.force_prefix",
+    default: "auto",
+    subsection: "editor.subsection.unit"
+  },
+  {
+    key: "number_format",
+    section: "formatting",
+    control: { kind: "select", options: NUMBER_FORMAT_OPTIONS },
+    labelKey: "editor.number_format",
+    default: "system",
+    subsection: "editor.subsection.unit"
+  },
+  {
+    key: "precision",
+    section: "formatting",
+    control: { kind: "number", min: 0, max: 6 },
+    labelKey: "editor.precision",
+    default: 2,
+    subsection: "editor.subsection.unit"
+  },
+  {
     key: "x_axis_format",
     section: "formatting",
     control: { kind: "text" },
-    labelKey: "editor.x_axis_format"
+    labelKey: "editor.x_axis_format",
+    subsection: "editor.subsection.dates"
   },
   {
     key: "tooltip_format",
     section: "formatting",
     control: { kind: "text" },
-    labelKey: "editor.tooltip_format"
+    labelKey: "editor.tooltip_format",
+    subsection: "editor.subsection.dates"
   },
 
-  // S6 — System & Debug
+  // S5 — Chart settings
+  {
+    key: "show_forecast",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_forecast",
+    default: true
+  },
+  {
+    key: "connect_nulls",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.connect_nulls",
+    default: true
+  },
+  {
+    key: "show_legend",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_legend",
+    default: false
+  },
+
+  // S6 — Style
+  {
+    key: "primary_color",
+    section: "style",
+    control: { kind: "color" },
+    labelKey: "editor.primary_color",
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_current",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_current",
+    default: true,
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_current_opacity",
+    section: "style",
+    control: { kind: "slider", min: 0, max: 100, step: 1 },
+    labelKey: "editor.fill_current_opacity",
+    default: 30,
+    subsection: "editor.subsection.current_series"
+  },
+  {
+    key: "fill_reference",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_reference",
+    default: false,
+    subsection: "editor.subsection.reference_series"
+  },
+  {
+    key: "fill_reference_opacity",
+    section: "style",
+    control: { kind: "slider", min: 0, max: 100, step: 1 },
+    labelKey: "editor.fill_reference_opacity",
+    default: 30,
+    subsection: "editor.subsection.reference_series"
+  },
+
+  // S7 — Diagnostics
   {
     key: "debug",
-    section: "system",
+    section: "diagnostics",
     control: { kind: "boolean" },
     labelKey: "editor.debug",
     default: false
@@ -435,12 +470,13 @@ export function groupBySection(
   registry: FieldRegistry = FIELD_REGISTRY
 ): Record<SectionId, FieldDescriptor[]> {
   const out: Record<SectionId, FieldDescriptor[]> = {
-    basic: [],
+    general: [],
     time: [],
-    layout: [],
-    visuals: [],
+    panels: [],
     formatting: [],
-    system: []
+    chart: [],
+    style: [],
+    diagnostics: []
   };
   for (const field of registry) {
     out[field.section].push(field);

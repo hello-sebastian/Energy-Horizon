@@ -1,9 +1,10 @@
 /**
  * T008 — Editor smoke test.
  *
- * Asserts the registry-driven render loop produces six sections in the fixed
- * order `basic → time → layout → visuals → formatting → system`, with S1
- * (`basic`) expanded and S2–S6 collapsed by default (FR-908-E, User Story 4).
+ * Asserts the registry-driven render loop produces seven sections in the fixed
+ * order `general → time → panels → formatting → chart → style → diagnostics`,
+ * with `general` and `time` expanded and the rest collapsed by default
+ * (FR-908-E, User Story 4).
  */
 import { describe, expect, it, beforeAll } from "vitest";
 import "../helpers/setup-dom";
@@ -37,7 +38,15 @@ function mountEditor(config: CardConfigInput): EditorEl {
   return el;
 }
 
-const EXPECTED_ORDER = ["basic", "time", "layout", "visuals", "formatting", "system"];
+const EXPECTED_ORDER = [
+  "general",
+  "time",
+  "panels",
+  "formatting",
+  "chart",
+  "style",
+  "diagnostics"
+];
 
 describe("editor smoke (T008)", () => {
   beforeAll(() => {
@@ -45,7 +54,7 @@ describe("editor smoke (T008)", () => {
     void EnergyHorizonCardEditor;
   });
 
-  it("renders six sections in the fixed order", async () => {
+  it("renders seven sections in the fixed order", async () => {
     const el = mountEditor({ type: "custom:energy-horizon-card", entity: "sensor.energy" });
     await el.updateComplete;
 
@@ -54,7 +63,7 @@ describe("editor smoke (T008)", () => {
     expect(ids).toEqual(EXPECTED_ORDER);
   });
 
-  it("expands S1 (basic) and collapses S2–S6 by default", async () => {
+  it("expands general+time and collapses the rest by default", async () => {
     const el = mountEditor({ type: "custom:energy-horizon-card", entity: "sensor.energy" });
     await el.updateComplete;
 
@@ -62,15 +71,15 @@ describe("editor smoke (T008)", () => {
     for (const section of sections) {
       const id = section.dataset.section!;
       const expanded = section.dataset.expanded === "true";
-      if (id === "basic") {
-        expect(expanded, `basic should be expanded`).toBe(true);
+      if (id === "general" || id === "time") {
+        expect(expanded, `${id} should be expanded`).toBe(true);
       } else {
         expect(expanded, `${id} should be collapsed`).toBe(false);
       }
     }
   });
 
-  it("renders the entity field as required in the basic section", async () => {
+  it("renders the entity field as required in the general section", async () => {
     const el = mountEditor({ type: "custom:energy-horizon-card", entity: "sensor.energy" });
     await el.updateComplete;
 
@@ -84,15 +93,15 @@ describe("editor smoke (T008)", () => {
     const el = mountEditor({ type: "custom:energy-horizon-card", entity: "sensor.energy" });
     await el.updateComplete;
 
-    // basic section should contain its 8 fields (all visible by default).
-    const basic = el.shadowRoot!.querySelector<HTMLElement>('[data-section="basic"]');
-    const fields = basic!.querySelectorAll(".field");
+    // general section should contain its 8 fields (all visible by default).
+    const general = el.shadowRoot!.querySelector<HTMLElement>('[data-section="general"]');
+    const fields = general!.querySelectorAll(".field");
     expect(fields.length).toBe(8);
   });
 
   it("opens without error on the minimal stub config", async () => {
     const el = mountEditor({ type: "custom:energy-horizon-card", entity: "" });
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelectorAll(".editor-section").length).toBe(6);
+    expect(el.shadowRoot!.querySelectorAll(".editor-section").length).toBe(7);
   });
 });

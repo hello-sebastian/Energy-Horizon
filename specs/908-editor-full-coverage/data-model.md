@@ -8,15 +8,16 @@ Entities and validation rules for the v1.2.0 editor. The editor is the UI *for* 
 
 ```ts
 type SectionId =
-  | "basic"        // S1 — always expanded
-  | "time"         // S2 Time & Aggregation
-  | "layout"       // S3 Layout & Visibility
-  | "visuals"      // S4 Visuals & Chart Styling
-  | "formatting"   // S5 Formatting & Axis
-  | "system";      // S6 System & Debug
+  | "general"      // S1 General — expanded by default
+  | "time"         // S2 Time windows — expanded by default
+  | "panels"       // S3 Panels
+  | "formatting"   // S4 Formatting & Localization
+  | "chart"        // S5 Chart settings
+  | "style"        // S6 Style
+  | "diagnostics"; // S7 Diagnostics
 ```
 
-Fixed order: `basic → time → layout → visuals → formatting → system` (FR-908-E). The render loop iterates in this order; the order is a constant, not data.
+Fixed order: `general → time → panels → formatting → chart → style → diagnostics` (FR-908-E). The render loop iterates in this order; the order is a constant, not data. Sections may contain non-collapsible **subsections** (see §3 `FieldDescriptor.subsection`); a subsection is a visual grouping within a section, not a `SectionId`.
 
 ## 2. `ControlSpec` (declarative control metadata)
 
@@ -51,15 +52,21 @@ interface FieldDescriptor {
   emit?: "debounced" | "immediate";
   /** Renders in the same horizontal row as the field with this key (FR-908-Z). */
   inlineWith?: string;
+  /** i18n key for a non-collapsible subsection header emitted before this field (e.g. "editor.subsection.unit"). */
+  subsection?: string;
+  /** UX-only field: rendered as a permanently ON + disabled control, never written to the config. */
+  dummy?: boolean;
 }
 ```
 
 **Validation rules**:
-- `key` MUST be a valid YAML path of a v1.1.0 `CardConfig` field (or a `time_window.*` sub-field). The fixed `type` key is NOT a field.
+- `key` MUST be a valid YAML path of a v1.1.0 `CardConfig` field (or a `time_window.*` sub-field), **or** a UX-only dummy key (see `dummy`). The fixed `type` key is NOT a field.
 - `required` is `true` only for `entity`; all others optional (FR-908-R).
 - `visibleWhen`/`disabledWhen` are pure predicates over `CardConfig` (no side effects, no I/O).
 - `labelKey` MUST exist in all four shipped dictionaries (SC-908-7).
-- `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set only for `show_title` (`title`) and `show_icon` (`icon`) (FR-908-Z).
+- `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set for `show_title` (`title`), `show_icon` (`icon`), and `interpretation` (`neutral_interpretation`) (FR-908-Z).
+- `subsection` (when set) MUST be an i18n key present in all four dictionaries (SC-908-7). The render loop emits a subsection header the first time a visible field with that `subsection` value appears, and again whenever the value changes; a subsection with no visible fields emits no header.
+- `dummy` fields are rendered as a permanently ON + disabled control with no change handler; `_applyFieldChange` returns early for them, so they are never written to the config. In v1.2.0 the only dummy is `show_chart` (the chart is always shown; the control documents that there is no per-card toggle).
 
 ## 4. `FieldRegistry`
 
@@ -71,14 +78,19 @@ The single source of truth for what the editor renders and where. The render loo
 
 ### Field → Section map (FR-908-D coverage, FR-908-F membership)
 
+32 config-backed fields + 1 UX-only dummy (`show_chart`). Subsections are marked with `▸`.
+
 | Section | Fields (YAML key → control) |
 |---|---|
-| **S1 Basic** (expanded) | `entity`→entity(sensor, required) · `title`→text · `show_title`→boolean (inline with `title`) · `icon`→icon · `show_icon`→boolean (inline with `icon`) · `comparison_preset`→select(4) · `interpretation`→select(2) · `neutral_interpretation`→number |
-| **S2 Time & Aggregation** | `aggregation`→select(5) · `period_offset`→number (visibleWhen: preset≠custom) · `time_window.anchor`→select(6) · `time_window.duration`→text · `time_window.step`→text · `time_window.count`→number · `time_window.offset`→text (all `time_window.*` visibleWhen: preset=custom) |
-| **S3 Layout & Visibility** | `show_comparison_summary`→boolean · `show_forecast`→boolean · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
-| **S4 Visuals** | `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) · `connect_nulls`→boolean · `show_legend`→boolean |
-| **S5 Formatting & Axis** | `precision`→number · `force_prefix`→select(8) · `number_format`→select(4) · `language`→select(5) · `x_axis_format`→text · `tooltip_format`→text |
-| **S6 System & Debug** | `debug`→boolean |
+| **S1 General** (expanded) | `entity`→entity(sensor, required) · `show_title`→boolean (inline with `title`) · `title`→text · `show_icon`→boolean (inline with `icon`) · `icon`→icon · `interpretation`→select(2) (inline with `neutral_interpretation`) · `neutral_interpretation`→number · `aggregation`→select(5) |
+| **S2 Time windows** (expanded) | `comparison_preset`→select(4) · ▸ *Custom settings*: `time_window.anchor`→select(6) · `time_window.duration`→text · `time_window.step`→text · `time_window.count`→number · `time_window.offset`→text (all `time_window.*` visibleWhen: preset=custom) |
+| **S3 Panels** | `show_comparison_summary`→boolean · `show_chart`→boolean (**dummy**, always ON + disabled) · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
+| **S4 Formatting & Localization** | `language`→select(5) · ▸ *Unit*: `force_prefix`→select(8) · `number_format`→select(4) · `precision`→number · ▸ *Dates*: `x_axis_format`→text · `tooltip_format`→text |
+| **S5 Chart settings** | `show_forecast`→boolean · `connect_nulls`→boolean · `show_legend`→boolean |
+| **S6 Style** | ▸ *Current series*: `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · ▸ *Reference series*: `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) |
+| **S7 Diagnostics** | `debug`→boolean |
+
+**`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (standard→`custom` removes it; `custom`→standard restores `period_offset: -1`) but it is **not** a registry field and is never rendered as a control in the visual editor.
 
 **Select option sets** (values are the YAML values; labels are `editor.*` keys):
 - `comparison_preset`: `year_over_year`, `month_over_year`, `month_over_month`, **`custom`** (v1.2.0 adds `custom`).
@@ -94,7 +106,7 @@ The single source of truth for what the editor renders and where. The render loo
 
 ```ts
 interface EditorUiState {
-  expanded: Record<SectionId, boolean>;   // S1 default true; S2–S6 default false
+  expanded: Record<SectionId, boolean>;   // general + time default true; panels, formatting, chart, style, diagnostics default false
   lastFocusedField?: string;              // registry `key` of the focused text/number field
   lastCaret?: number;                     // caret offset within that field
   scrollAnchor?: number;                  // scrollTop of the editor scroll container
