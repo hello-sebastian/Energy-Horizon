@@ -91,6 +91,8 @@ Forecast requires a meaningful comparison context and a minimum amount of progre
 
 If any condition fails, forecast is **disabled** even if `show_forecast: true`.
 
+> **Line vs. panel:** `show_forecast` controls **only** the forecast **line on the chart**. The **Forecast | Total** panel is gated by the same data conditions plus `show_forecast_total_panel` (not `false`) — it is **independent** of `show_forecast`. Hiding the line does not hide the panel, and vice versa.
+
 ### Confidence tiers
 
 When enabled, confidence is derived from period progress:

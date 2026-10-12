@@ -51,7 +51,7 @@ comparison_preset: year_over_year
 | **X-axis** | Shared axis length = **max nominal bucket count** across windows at the chart aggregation (window 0’s grain), not wall‑clock span alone; shorter series end earlier on that axis. |
 | **Numeric summary** | Cumulative values at the end of the current timeline vs reference, using the same alignment as the chart. |
 | **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_interpretation`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
-| **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode or with `show_forecast: false`. |
+| **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode. The chart **line** is hidden with `show_forecast: false`; the **Forecast \| Total** panel is controlled separately by `show_forecast_total_panel`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
 
 ---
@@ -73,11 +73,11 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `time_window` | object | — | Overrides preset template fields; see [dedicated section](#custom-windows-time_window). |
 | `period_offset` | number | `-1` | Reference year shift in legacy YoY / MoY presets (years relative to current). |
 | `aggregation` | `hour` \| `day` \| `week` \| `month` | see [aggregation](#aggregation-aggregation-and-automatic-selection) | LTS step; merged with preset / `time_window`. |
-| `show_forecast` | boolean | `true` (line on when forecast is computed) | Explicit `false` turns off the forecast line. |
+| `show_forecast` | boolean | `true` (line on when forecast is computed) | Explicit `false` turns off the forecast **line on the chart** only. The **Forecast \| Total** panel is independent (see `show_forecast_total_panel`). |
 | `forecast` | boolean | — | **Alias** for `show_forecast` (merged in `setConfig`). |
 | `precision` | number | **`2`** | Decimal places in UI numbers (implementation: `?? 2`). |
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
-| `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. |
+| `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. In the editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
 | `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (Basic Settings). |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
@@ -89,7 +89,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `connect_nulls` | boolean | `true` | Dashed visual interpolation across `null` gaps; `false` = gaps on the chart. |
 | `show_legend` | boolean | `false` | Legend **only** with explicit `show_legend: true`. |
 | `show_comparison_summary` | boolean | `true` (visible when not `false`) | Hides the **comparison** panel (current vs reference “to this day” + delta chip) when `false`. |
-| `show_forecast_total_panel` | boolean | `true` | Hides the **Forecast \| Total** panel when `false`. Still requires forecast gating: if `show_forecast` is `false`, the panel stays absent regardless of this flag. |
+| `show_forecast_total_panel` | boolean | `true` | Hides the **Forecast \| Total** panel when `false`. Independent of `show_forecast` (which controls only the forecast line on the chart); the panel still requires forecast data to be available and not single-window mode. |
 | `show_narrative_comment` | boolean | `true` | Hides the **narrative comment** block (trend icon + text) when `false`. |
 | `x_axis_format` | string | — | Luxon pattern for X-axis labels; disables adaptive label mode. |
 | `tooltip_format` | string | — | Luxon pattern for tooltip header (first line). Validated like `x_axis_format`. |
@@ -224,6 +224,8 @@ The **period progress denominator** is the bucket count of the **current window*
 
 **Forecast line on chart:** on by default (`show_forecast` is not `false`), but the renderer **disables** it in **single-window** mode (`windows.length < 2`).
 
+**Forecast | Total panel:** shown when forecast data is available, not in single-window mode, and `show_forecast_total_panel` is not `false`. It is **independent** of `show_forecast` — hiding the forecast line does not hide the panel (and vice versa).
+
 ---
 
 ## Unit scaling (`force_prefix`)
@@ -311,10 +313,12 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 | **Formatting & Axis** | `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` |
 | **System & Debug** | `debug` |
 
+**Inline rows:** in **Basic Settings**, `show_title` renders in the same row as `title` (to its right) and `show_icon` in the same row as `icon` (to its right); each keeps its label-above-switch layout, the primary field takes the available width, and the toggle is compact. All other fields are standalone rows.
+
 ### Conditional rendering & cascading
 
 - **`custom` ↔ `time_window`:** when `comparison_preset` is **`custom`**, the editor hides `period_offset` and shows the `time_window` sub-block (five fields: `anchor`, `duration`, `step`, `count`, `offset`). When a standard preset is selected, `period_offset` is shown and the `time_window` sub-block is hidden. Switching standard → `custom` removes `period_offset` and initializes `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`); switching back removes `time_window` and restores `period_offset: -1`.
-- **Forecast cascade:** when `show_forecast` is `false`, the `show_forecast_total_panel` control is rendered **disabled** (the panel cannot appear without the forecast line).
+- **Forecast line / panel independence:** `show_forecast` controls **only** the forecast line on the chart. The `show_forecast_total_panel` control is **always enabled** (independent of `show_forecast`), so the line and the Forecast | Total panel can be toggled separately.
 
 ### Lifecycle guarantees
 

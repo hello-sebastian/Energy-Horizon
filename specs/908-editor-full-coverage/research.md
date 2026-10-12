@@ -141,9 +141,9 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 **Decision**: Declarative `visibleWhen` / `disabledWhen` predicates on registry descriptors:
 - `period_offset`: `visibleWhen: cfg => cfg.comparison_preset !== "custom"`.
 - `time_window.*`: `visibleWhen: cfg => cfg.comparison_preset === "custom"`.
-- `show_forecast_total_panel`: `disabledWhen: cfg => cfg.show_forecast === false`.
+- `show_forecast_total_panel`: no `disabledWhen` — the control is always enabled (FR-908-H: `show_forecast` controls only the forecast line on the chart).
 
-**Rationale**: Implements FR-908-G (preset↔time_window visibility) and FR-908-H (forecast cascade) declaratively, so the render loop applies them uniformly. The card (not the editor) still owns the actual gating of the Forecast|Total panel (domain 903).
+**Rationale**: Implements FR-908-G (preset↔time_window visibility) and FR-908-H (forecast line / panel independence) declaratively, so the render loop applies them uniformly. The card (not the editor) still owns the actual gating of the Forecast|Total panel (domain 903).
 
 **Alternatives considered**:
 - *Imperative show/hide in the render template* — rejected: scatters the dependency logic; declarative predicates keep it in the registry (data).

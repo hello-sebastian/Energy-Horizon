@@ -885,11 +885,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         ? numberFormatter.format(summary.reference_cumulative)
         : null;
 
+    // The Forecast | Total panel is gated by forecast data availability and
+    // `show_forecast_total_panel` only — it is independent of `show_forecast`
+    // (which controls the forecast line on the chart, see
+    // `isForecastLineVisible` in `_buildRendererConfig`).
     const shouldShowForecast =
       !singleWindow &&
       forecast != null &&
-      forecast.enabled &&
-      isForecastLineVisible(this._config);
+      forecast.enabled;
 
     const showForecastTotalPanel =
       shouldShowForecast && this._config.show_forecast_total_panel !== false;

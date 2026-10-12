@@ -43,7 +43,7 @@ The language used for editor labels follows this chain, recomputed from the **cu
 | `editor.time_window.step` | Step (ISO 8601) |
 | `editor.time_window.count` | Window count |
 | `editor.time_window.offset` | Offset (ISO 8601) |
-| `editor.show_forecast` | Show forecast |
+| `editor.show_forecast` | Show forecast on chart |
 | `editor.primary_color` | Primary color |
 | `editor.fill_current` | Fill current series |
 | `editor.fill_current_opacity` | Current fill opacity |
@@ -54,6 +54,11 @@ The language used for editor labels follows this chain, recomputed from the **cu
 | `editor.precision` | Precision (decimals) |
 | `editor.number_format` | Number format |
 | `editor.language` | Language |
+| `editor.language.auto` | Auto (HA profile) |
+| `editor.language.en` | English |
+| `editor.language.pl` | Polski |
+| `editor.language.de` | Deutsch |
+| `editor.language.fr` | Français |
 | `editor.x_axis_format` | X-axis format (Luxon) |
 | `editor.tooltip_format` | Tooltip format (Luxon) |
 | `editor.debug` | Debug |

@@ -106,19 +106,19 @@ As a user, I need the form grouped into six clearly-labeled sections — with th
 
 ---
 
-### User Story 5 — Cascading and dependent controls (Priority: P2)
+### User Story 5 — Forecast line / panel independence (Priority: P2)
 
-As a user, I need dependent controls to reflect their parent's state — e.g. the forecast-total panel toggle is disabled when the forecast itself is off — so I cannot configure an impossible combination.
+As a user, I need `show_forecast` to control **only** the forecast line on the chart, so I can hide the line while keeping the Forecast | Total panel (or vice versa) without the editor disabling any control.
 
-**Why this priority**: Prevents invalid/contradictory configs and communicates the dependency model; it is a correctness/UX refinement.
+**Why this priority**: Keeps the two forecast-related toggles orthogonal and predictable; it is a correctness/UX refinement.
 
-**Independent Test**: Turn `show_forecast` off → `show_forecast_total_panel` becomes disabled (greyed). Turn it back on → the dependent control re-enables.
+**Independent Test**: Turn `show_forecast` off → the forecast line disappears from the chart, but `show_forecast_total_panel` stays enabled and the Forecast | Total panel stays visible (when forecast data is available). Toggling `show_forecast` back on restores the line only.
 
 **Acceptance Scenarios**:
 
-1. **Given** `show_forecast` is `true`, **When** the user toggles it to `false`, **Then** `show_forecast_total_panel` is rendered in a disabled state.
-2. **Given** `show_forecast` is `false` (dependent disabled), **When** the user toggles `show_forecast` back to `true`, **Then** `show_forecast_total_panel` becomes enabled again.
-3. **Given** `show_forecast` is `false`, **When** the user saves, **Then** the card omits the Forecast | Total panel regardless of the `show_forecast_total_panel` value (consistent with domain `903` gating).
+1. **Given** `show_forecast` is `false`, **When** the editor renders, **Then** `show_forecast_total_panel` is rendered in an **enabled** state (no cascade).
+2. **Given** `show_forecast` is toggled in either direction, **When** the editor re-renders, **Then** `show_forecast_total_panel` stays enabled in both directions.
+3. **Given** `show_forecast` is `false` and `show_forecast_total_panel` is not `false`, **When** the user saves, **Then** the card hides the forecast line on the chart but keeps the Forecast | Total panel (consistent with domain `903` gating).
 
 ---
 
@@ -180,11 +180,12 @@ As a user with an existing config that uses deprecated or out-of-range values, I
   - **S4 Visuals**: `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`.
   - **S5 Formatting & Axis**: `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`.
   - **S6 System & Debug**: `debug`.
+- **FR-908-Z (Inline field rows)**: In the **Basic Settings** section, `show_title` renders in the **same horizontal row** as `title` (to its right), and `show_icon` renders in the **same horizontal row** as `icon` (to its right). Each row keeps the boolean field's label-above-switch layout; the primary field (`title` / `icon`) takes the available width, and the boolean field is compact. All other fields render as standalone rows. The row grouping is **declarative** (an `inlineWith` reference in the field registry), so pairing or unpairing a field is a data change, not a template change (consistent with FR-908-A/B).
 
 #### Conditional Rendering & Cascading
 
 - **FR-908-G (Preset ↔ time_window visibility)**: When `comparison_preset == "custom"`, the editor MUST hide `period_offset` and show the `time_window` sub-block. When `comparison_preset != "custom"`, it MUST show `period_offset` and hide the `time_window` sub-block.
-- **FR-908-H (Forecast cascade)**: When `show_forecast == false`, the editor MUST render `show_forecast_total_panel` in a **disabled** state. When `show_forecast` is `true`/omitted, the control MUST be enabled.
+- **FR-908-H (Forecast line / panel independence)**: `show_forecast` controls **only** the forecast line visibility on the chart. The `show_forecast_total_panel` control is **always enabled** (independent of `show_forecast`); the Forecast | Total panel is shown when forecast data is available, not in single-window mode, and `show_forecast_total_panel` is not `false`.
 - **FR-908-I (Deprecated `comparison_mode`)**: The editor MUST NOT render a `comparison_mode` field. On load, if `comparison_mode` is present and `comparison_preset` is empty, the editor MUST pre-fill `comparison_preset` from it. On save, the emitted config MUST use `comparison_preset` and replace (not duplicate) the deprecated key.
 - **FR-908-V (Legacy `forecast` alias normalization)**: The editor MUST NOT render a `forecast` field. On load, the `show_forecast` control MUST resolve its value as `config.show_forecast ?? config.forecast ?? true` (alias fallback for display). On save, the emitted config MUST use `show_forecast` as the canonical key and MUST drop the `forecast` alias key (the alias is a temporary legacy key scheduled for future removal; the editor normalizes it away, same pattern as FR-908-I).
 
@@ -371,7 +372,7 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 
 ### `README.advanced.md` (authoritative reference)
 
-- **Rewrite the "Lovelace editor" section** (currently lists only the v1.1.0 subset) to describe the **six sections**, the **conditional rendering** (`custom` ↔ `time_window`), the **forecast cascade**, and the **lifecycle guarantees** (expanded panels persist, focus/caret preserved, no spurious re-emit).
+- **Rewrite the "Lovelace editor" section** (currently lists only the v1.1.0 subset) to describe the **six sections**, the **conditional rendering** (`custom` ↔ `time_window`), the **forecast line / panel independence**, and the **lifecycle guarantees** (expanded panels persist, focus/caret preserved, no spurious re-emit).
 - **Visual ↔ YAML round-trip**: document that Visual and YAML modes are two views of the same config — switching to YAML dumps the full current config (every field, including those set in the form), and switching back re-populates every field from the YAML (lossless; the YAML is authoritative). Replace the v1.1.0 framing ("YAML mode: all other fields are set in YAML") — with 100% coverage, both modes expose the full surface.
 - **YAML live-edit (FR-908-Y)**: document that YAML mode is a **first-class input path** — edits update the preview live (debounced) and the last valid YAML **values** are the saved config, with no switch to Visual required; a YAML syntax error is shown inline without changing the preview. Note that HA re-serializes the config on save, so the *values* persist but the exact text formatting (comments, key order, indentation) is canonicalized — do not promise verbatim text preservation.
 - **YAML parameters table**: add a column or note marking which fields are **GUI-editable** (now all of them) vs. the deprecated `comparison_mode` / `forecast` alias (not standalone fields).

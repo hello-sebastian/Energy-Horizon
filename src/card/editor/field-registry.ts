@@ -1,5 +1,6 @@
 import type { TemplateResult } from "lit";
 import type { CardConfig } from "../types";
+import { AVAILABLE_LANGUAGES } from "../localize";
 
 /**
  * Full-Coverage Visual Editor (v1.2.0) — declarative field registry.
@@ -78,6 +79,12 @@ export interface FieldDescriptor {
   disabledWhen?: (cfg: CardConfig) => boolean;
   /** Emit policy; defaults by control kind (text/number → debounced). */
   emit?: "debounced" | "immediate";
+  /**
+   * When set, this field renders in the same horizontal row as the field
+   * with this key (to its right), instead of as its own row. Used for the
+   * `show_title`/`title` and `show_icon`/`icon` pairs (FR-908-Z).
+   */
+  inlineWith?: string;
 }
 
 /** The full registry (data-model.md §4). */
@@ -134,6 +141,20 @@ const ANCHOR_OPTIONS: { value: string; labelKey: string }[] = [
   { value: "now", labelKey: "editor.anchor.now" }
 ];
 
+/**
+ * Language picker options: an empty "Auto (HA profile)" option (maps to an
+ * omitted `language` key) plus one option per shipped translation dictionary
+ * (derived from `AVAILABLE_LANGUAGES` — adding a dictionary file adds the
+ * option automatically, no registry edit needed).
+ */
+const LANGUAGE_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: "", labelKey: "editor.language.auto" },
+  ...AVAILABLE_LANGUAGES.map((lang) => ({
+    value: lang,
+    labelKey: `editor.language.${lang}`
+  }))
+];
+
 // ---------------------------------------------------------------------------
 // Visibility / dependency predicates (research R11).
 // ---------------------------------------------------------------------------
@@ -168,7 +189,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "basic",
     control: { kind: "boolean" },
     labelKey: "editor.show_title",
-    default: true
+    default: true,
+    inlineWith: "title"
   },
   {
     key: "icon",
@@ -181,7 +203,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "basic",
     control: { kind: "boolean" },
     labelKey: "editor.show_icon",
-    default: true
+    default: true,
+    inlineWith: "icon"
   },
   {
     key: "comparison_preset",
@@ -286,8 +309,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "layout",
     control: { kind: "boolean" },
     labelKey: "editor.show_forecast_total_panel",
-    default: true,
-    disabledWhen: (cfg) => cfg.show_forecast === false
+    default: true
   },
   {
     key: "show_narrative_comment",
@@ -372,7 +394,13 @@ export const FIELD_REGISTRY: FieldRegistry = [
   {
     key: "language",
     section: "formatting",
-    control: { kind: "text" },
+    control: {
+      kind: "select",
+      options: LANGUAGE_OPTIONS,
+      // Empty ("Auto") maps to an omitted `language` key — the card then
+      // inherits the HA profile language (FR-908-X chain step 2).
+      valueToConfig: (value) => (value === "" ? undefined : value)
+    },
     labelKey: "editor.language"
   },
   {

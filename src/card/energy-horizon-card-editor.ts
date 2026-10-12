@@ -850,20 +850,53 @@ export class EnergyHorizonCardEditor extends LitElement {
     const label = localize(`editor.section.${section}`);
     const fields = visibleFields(section, cfg, FIELD_REGISTRY);
 
+    // Group fields into rows (FR-908-Z): a field with `inlineWith` renders in
+    // the same horizontal row as the field it references (to its right), not
+    // as its own row. The primary field takes the available width
+    // (`.field-main`); the inline field is compact (`.field-inline`).
+    const inlineByPrimary = new Map<string, FieldDescriptor[]>();
+    for (const f of fields) {
+      if (f.inlineWith) {
+        const list = inlineByPrimary.get(f.inlineWith) ?? [];
+        list.push(f);
+        inlineByPrimary.set(f.inlineWith, list);
+      }
+    }
+
+    const renderField = (
+      field: FieldDescriptor,
+      extraClass = ""
+    ): TemplateResult => html`
+      <div
+        class=${extraClass ? `field ${extraClass}` : "field"}
+        data-field=${field.key}
+      >
+        ${this._renderFieldLabel(field, localize)}
+        ${this._renderControl(
+          field,
+          resolveFieldValue(field, cfg),
+          field.disabledWhen?.(cfg) ?? false,
+          localize
+        )}
+      </div>
+    `;
+
     const body = html`
-      ${fields.map(
-        (field) => html`
-          <div class="field" data-field=${field.key}>
-            ${this._renderFieldLabel(field, localize)}
-            ${this._renderControl(
-              field,
-              resolveFieldValue(field, cfg),
-              field.disabledWhen?.(cfg) ?? false,
-              localize
-            )}
+      ${fields.map((field) => {
+        if (field.inlineWith) {
+          return nothing; // rendered inside its primary field's row
+        }
+        const inlines = inlineByPrimary.get(field.key) ?? [];
+        if (inlines.length === 0) {
+          return renderField(field);
+        }
+        return html`
+          <div class="field-row">
+            ${renderField(field, "field-main")}
+            ${inlines.map((inline) => renderField(inline, "field-inline"))}
           </div>
-        `
-      )}
+        `;
+      })}
     `;
 
     // NOTE: the fallback is a `<div>`-based panel (NOT `<details>`). A
@@ -972,6 +1005,22 @@ export class EnergyHorizonCardEditor extends LitElement {
       flex-direction: column;
       gap: 4px;
       padding: 8px 12px;
+    }
+    .field-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 8px 12px;
+    }
+    .field-row .field {
+      padding: 0;
+    }
+    .field-main {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .field-inline {
+      flex: 0 0 auto;
     }
     .field-label {
       font-size: 0.85em;

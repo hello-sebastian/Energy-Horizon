@@ -105,8 +105,9 @@ export interface CardConfig {
   show_comparison_summary?: boolean;
   /**
    * Figma **Surface Container** — Forecast | Total panel (`.ebc-section--forecast-total`).
-   * Omitted or not `false` → shown when forecast panel logic applies; still suppressed when
-   * `show_forecast` is `false` (entire panel absent, same as pre–v0.5.1).
+   * Omitted or not `false` → shown when forecast data is available and not in
+   * single-window mode. Independent of `show_forecast` (which controls only the
+   * forecast line on the chart).
    */
   show_forecast_total_panel?: boolean;
   /**

@@ -42,6 +42,9 @@ for (const path of Object.keys(translationModules)) {
   }
 }
 
+/** All available translation languages (keys of the loaded dictionaries), sorted. */
+export const AVAILABLE_LANGUAGES: readonly string[] = Object.keys(DICTIONARIES).sort();
+
 const VALID_NUMBER_FORMATS: readonly NumberFormat[] = [
   "comma",
   "decimal",

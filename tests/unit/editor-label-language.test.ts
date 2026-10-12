@@ -80,10 +80,11 @@ describe("label language chain (T011)", () => {
     await el.updateComplete;
     expect(basicSectionLabel(el)).toBe("Podstawowe");
 
-    // Edit the language field to German.
-    const language = el.shadowRoot!.querySelector<HTMLInputElement>("#eh-field-language")!;
+    // Edit the language field to German (a select — native <select> in jsdom,
+    // which listens for `change`).
+    const language = el.shadowRoot!.querySelector<HTMLSelectElement>("#eh-field-language")!;
     language.value = "de";
-    language.dispatchEvent(new Event("input", { bubbles: true }));
+    language.dispatchEvent(new Event("change", { bubbles: true }));
     await el.updateComplete;
 
     // The form re-labels live (no cached language from editor open).
@@ -95,9 +96,9 @@ describe("label language chain (T011)", () => {
     await el.updateComplete;
     expect(basicSectionLabel(el)).toBe("Podstawowe");
 
-    const language = el.shadowRoot!.querySelector<HTMLInputElement>("#eh-field-language")!;
+    const language = el.shadowRoot!.querySelector<HTMLSelectElement>("#eh-field-language")!;
     language.value = "";
-    language.dispatchEvent(new Event("input", { bubbles: true }));
+    language.dispatchEvent(new Event("change", { bubbles: true }));
     await el.updateComplete;
 
     // Cleared → falls back to hass.locale.language (en).

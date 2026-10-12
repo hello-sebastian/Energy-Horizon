@@ -529,7 +529,7 @@ describe("energy-horizon-card integration", () => {
     document.body.removeChild(el);
   });
 
-  it("ready: show_forecast false hides forecast panel even when show_forecast_total_panel is true", async () => {
+  it("ready: show_forecast false hides forecast line only, panel still visible when show_forecast_total_panel is true", async () => {
     const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
     document.body.appendChild(el);
     if (typeof el.setConfig !== "function") return;
@@ -546,7 +546,8 @@ describe("energy-horizon-card integration", () => {
     await el.updateComplete;
 
     const root = el.shadowRoot!;
-    expect(root.querySelector(".ebc-section--forecast-total")).toBeNull();
+    // The Forecast | Total panel is independent of show_forecast.
+    expect(root.querySelector(".ebc-section--forecast-total")).not.toBeNull();
     document.body.removeChild(el);
   });
 });

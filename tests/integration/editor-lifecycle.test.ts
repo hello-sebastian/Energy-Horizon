@@ -390,8 +390,8 @@ describe("editor lifecycle (T014, US2)", () => {
     await changeSelect("number_format", "comma");
     await reRender();
 
-    // 17. Type in language (text, formatting).
-    await typeText("language", "pl", 2);
+    // 17. Change language (select, formatting).
+    await changeSelect("language", "pl");
     await reRender();
 
     // 18. Toggle show_narrative_comment (switch, layout).

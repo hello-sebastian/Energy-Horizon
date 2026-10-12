@@ -1,17 +1,16 @@
 /**
- * T020 — User Story 5: Cascading and dependent controls (FR-908-H).
+ * T020 — User Story 5: Forecast line / panel independence (FR-908-H).
  *
- * The `show_forecast_total_panel` descriptor carries
- * `disabledWhen: (cfg) => cfg.show_forecast === false`, applied uniformly by
- * the registry-driven render loop (research R11). Asserts (spec US5
- * acceptance 1–3):
- * 1. `show_forecast: true` → `show_forecast_total_panel` enabled; toggling
- *    `show_forecast` to `false` → the dependent control renders disabled.
- * 2. Toggling `show_forecast` back to `true` → the dependent control
- *    re-enables.
- * 3. Saving with `show_forecast: false` keeps the emitted config consistent
- *    with domain 903 gating (the editor emits the config as-is; the card
- *    omits the Forecast | Total panel when `show_forecast` is false).
+ * `show_forecast` controls **only** the forecast line on the chart; the
+ * `show_forecast_total_panel` control is **always enabled** (independent of
+ * `show_forecast`). Asserts (spec US5 acceptance 1–3):
+ * 1. `show_forecast: false` → `show_forecast_total_panel` is rendered in an
+ *    **enabled** state (no cascade).
+ * 2. Toggling `show_forecast` never disables or enables the control — it
+ *    stays enabled in both directions.
+ * 3. Saving with `show_forecast: false` emits the config as-is; the card
+ *    (domain 903) hides the forecast line but keeps the Forecast | Total
+ *    panel when `show_forecast_total_panel` is not `false`.
  *
  * jsdom notes: `ha-switch` is not defined, so booleans render as native
  * `<input type="checkbox">`; the `disabled` attribute is the disabled state.
@@ -69,35 +68,33 @@ const BASE: CardConfigInput = {
   entity: "sensor.energy"
 };
 
-describe("forecast cascade (T020, US5)", () => {
+describe("forecast line / panel independence (T020, US5)", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
   });
 
-  it("show_forecast true → total panel enabled; toggling show_forecast off disables it (acceptance 1)", async () => {
-    const el = mountEditor({ ...BASE, show_forecast: true });
+  it("show_forecast false → total panel control stays enabled (acceptance 1)", async () => {
+    const el = mountEditor({ ...BASE, show_forecast: false });
     await el.updateComplete;
 
+    expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(false);
+  });
+
+  it("toggling show_forecast never disables the total panel control (acceptance 2)", async () => {
+    const el = mountEditor({ ...BASE, show_forecast: true });
+    await el.updateComplete;
     expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(false);
 
     toggle(el, "show_forecast", false);
     await el.updateComplete;
-
-    expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(true);
-  });
-
-  it("toggling show_forecast back on re-enables the total panel (acceptance 2)", async () => {
-    const el = mountEditor({ ...BASE, show_forecast: false });
-    await el.updateComplete;
-    expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(true);
+    expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(false);
 
     toggle(el, "show_forecast", true);
     await el.updateComplete;
-
     expect(checkbox(el, "show_forecast_total_panel").disabled).toBe(false);
   });
 
-  it("saving with show_forecast false emits a config consistent with domain 903 gating (acceptance 3)", async () => {
+  it("saving with show_forecast false emits the config as-is (acceptance 3)", async () => {
     const el = mountEditor({
       ...BASE,
       show_forecast: true,
@@ -111,8 +108,9 @@ describe("forecast cascade (T020, US5)", () => {
 
     const emitted = el.__emitted![el.__emitted!.length - 1];
     expect(emitted.show_forecast).toBe(false);
-    // The editor emits the config as-is; the card (domain 903) omits the
-    // Forecast | Total panel when show_forecast is false.
+    // The editor emits the config as-is; the card (domain 903) hides the
+    // forecast line but keeps the Forecast | Total panel when
+    // show_forecast_total_panel is not false.
     expect(emitted.show_forecast_total_panel).toBe(true);
   });
 });

@@ -46,9 +46,11 @@ interface FieldDescriptor {
   default?: unknown;                    // documented default (rendered when value absent)
   required?: boolean;                   // true only for `entity` (FR-908-R)
   visibleWhen?: (cfg: CardConfig) => boolean;   // e.g. preset === "custom" (FR-908-G)
-  disabledWhen?: (cfg: CardConfig) => boolean;  // e.g. !show_forecast (FR-908-H)
+  disabledWhen?: (cfg: CardConfig) => boolean;  // optional predicate (no v1.2.0 field uses it)
   /** Emit policy: "debounced" (text/number) or "immediate" (discrete). Default by control kind. */
   emit?: "debounced" | "immediate";
+  /** Renders in the same horizontal row as the field with this key (FR-908-Z). */
+  inlineWith?: string;
 }
 ```
 
@@ -57,6 +59,7 @@ interface FieldDescriptor {
 - `required` is `true` only for `entity`; all others optional (FR-908-R).
 - `visibleWhen`/`disabledWhen` are pure predicates over `CardConfig` (no side effects, no I/O).
 - `labelKey` MUST exist in all four shipped dictionaries (SC-908-7).
+- `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set only for `show_title` (`title`) and `show_icon` (`icon`) (FR-908-Z).
 
 ## 4. `FieldRegistry`
 
@@ -70,11 +73,11 @@ The single source of truth for what the editor renders and where. The render loo
 
 | Section | Fields (YAML key → control) |
 |---|---|
-| **S1 Basic** (expanded) | `entity`→entity(sensor, required) · `title`→text · `show_title`→boolean · `icon`→icon · `show_icon`→boolean · `comparison_preset`→select(4) · `interpretation`→select(2) · `neutral_interpretation`→number |
+| **S1 Basic** (expanded) | `entity`→entity(sensor, required) · `title`→text · `show_title`→boolean (inline with `title`) · `icon`→icon · `show_icon`→boolean (inline with `icon`) · `comparison_preset`→select(4) · `interpretation`→select(2) · `neutral_interpretation`→number |
 | **S2 Time & Aggregation** | `aggregation`→select(5) · `period_offset`→number (visibleWhen: preset≠custom) · `time_window.anchor`→select(6) · `time_window.duration`→text · `time_window.step`→text · `time_window.count`→number · `time_window.offset`→text (all `time_window.*` visibleWhen: preset=custom) |
-| **S3 Layout & Visibility** | `show_comparison_summary`→boolean · `show_forecast`→boolean · `show_forecast_total_panel`→boolean (disabledWhen: !show_forecast) · `show_narrative_comment`→boolean |
+| **S3 Layout & Visibility** | `show_comparison_summary`→boolean · `show_forecast`→boolean · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
 | **S4 Visuals** | `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) · `connect_nulls`→boolean · `show_legend`→boolean |
-| **S5 Formatting & Axis** | `precision`→number · `force_prefix`→select(8) · `number_format`→select(4) · `language`→text · `x_axis_format`→text · `tooltip_format`→text |
+| **S5 Formatting & Axis** | `precision`→number · `force_prefix`→select(8) · `number_format`→select(4) · `language`→select(5) · `x_axis_format`→text · `tooltip_format`→text |
 | **S6 System & Debug** | `debug`→boolean |
 
 **Select option sets** (values are the YAML values; labels are `editor.*` keys):

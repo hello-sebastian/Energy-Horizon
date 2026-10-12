@@ -172,4 +172,64 @@ describe("editor sections (T018, US4)", () => {
     await fresh.updateComplete;
     expect(isExpanded(fresh, "visuals"), "fresh instance must reopen collapsed").toBe(false);
   });
+
+  it("renders show_title in the same row as title (FR-908-Z)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    const showTitle = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-field="show_title"]'
+    )!;
+    const row = showTitle.closest<HTMLElement>(".field-row");
+    expect(row, "show_title must live inside a .field-row").not.toBeNull();
+    expect(
+      row!.querySelector<HTMLElement>('[data-field="title"]'),
+      "the row must contain the title field"
+    ).not.toBeNull();
+  });
+
+  it("renders show_icon in the same row as icon (FR-908-Z)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    const showIcon = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-field="show_icon"]'
+    )!;
+    const row = showIcon.closest<HTMLElement>(".field-row");
+    expect(row, "show_icon must live inside a .field-row").not.toBeNull();
+    expect(
+      row!.querySelector<HTMLElement>('[data-field="icon"]'),
+      "the row must contain the icon field"
+    ).not.toBeNull();
+  });
+
+  it("keeps the other basic fields as standalone rows (FR-908-Z)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    for (const key of [
+      "entity",
+      "comparison_preset",
+      "interpretation",
+      "neutral_interpretation"
+    ]) {
+      const field = el.shadowRoot!.querySelector<HTMLElement>(
+        `[data-field="${key}"]`
+      )!;
+      expect(
+        field.closest(".field-row"),
+        `${key} must not be inside a .field-row`
+      ).toBeNull();
+    }
+  });
+
+  it("still renders all eight basic fields (regression)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    const basic = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="basic"]'
+    )!;
+    expect(basic.querySelectorAll(".field").length).toBe(8);
+  });
 });

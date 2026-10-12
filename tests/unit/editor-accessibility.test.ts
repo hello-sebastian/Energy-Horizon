@@ -7,8 +7,8 @@
  *  2. Sections are **keyboard-operable**: the (fallback) section header is a
  *     focusable `role="button"` with `tabindex="0"` and `aria-expanded`, and
  *     Enter / Space toggle the section.
- *  3. A **disabled dependent control** (`show_forecast_total_panel` when
- *     `show_forecast` is off) exposes a `disabled` state to assistive tech.
+ *  3. The `show_forecast_total_panel` control is **always enabled**
+ *     (independent of `show_forecast`) — no disabled state is exposed.
  *
  * jsdom notes:
  *  - `ha-expansion-panel` / `ha-switch` / `ha-select` are not defined, so the
@@ -120,7 +120,7 @@ describe("editor accessibility (T028, Constitution IV)", () => {
     expect(header.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("a disabled dependent control exposes a disabled state to assistive tech", async () => {
+  it("show_forecast_total_panel stays enabled when show_forecast is off (no cascade)", async () => {
     const el = mountEditor({ ...BASE, show_forecast: false });
     await el.updateComplete;
 
@@ -128,34 +128,14 @@ describe("editor accessibility (T028, Constitution IV)", () => {
       "#eh-field-show_forecast_total_panel"
     )!;
     expect(panel).not.toBeNull();
-    // The `disabled` attribute is exposed to assistive tech.
-    expect(panel.hasAttribute("disabled")).toBe(true);
-    expect(panel.disabled).toBe(true);
+    // No disabled attribute — the panel control is independent of show_forecast.
+    expect(panel.hasAttribute("disabled")).toBe(false);
+    expect(panel.disabled).toBe(false);
 
-    // The parent control (show_forecast) is enabled.
+    // The show_forecast control itself is enabled.
     const forecast = el.shadowRoot!.querySelector<HTMLInputElement>(
       "#eh-field-show_forecast"
     )!;
     expect(forecast.hasAttribute("disabled")).toBe(false);
-  });
-
-  it("re-enabling the parent re-enables the dependent control", async () => {
-    const el = mountEditor({ ...BASE, show_forecast: false });
-    await el.updateComplete;
-
-    const panel = el.shadowRoot!.querySelector<HTMLInputElement>(
-      "#eh-field-show_forecast_total_panel"
-    )!;
-    expect(panel.hasAttribute("disabled")).toBe(true);
-
-    // Turn show_forecast back on.
-    const forecast = el.shadowRoot!.querySelector<HTMLInputElement>(
-      "#eh-field-show_forecast"
-    )!;
-    forecast.checked = true;
-    forecast.dispatchEvent(new Event("change", { bubbles: true }));
-    await el.updateComplete;
-
-    expect(panel.hasAttribute("disabled")).toBe(false);
   });
 });

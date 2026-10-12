@@ -105,9 +105,11 @@ Since **v1.2.0** every option is editable in the visual editor, so you can chang
 **Checklist:**
 
 1. Ensure you have a reference series (count ≥ 2).
-2. Ensure `show_forecast` is not `false` (remember alias `forecast`).
+2. Ensure `show_forecast` is not `false` (remember alias `forecast`) — this controls the **line on the chart**.
 3. Check gating rules: ≥ 3 completed buckets and ≥ 5% of the current period.
 4. If data is sparse or inconsistent, forecast suppression can be normal.
+
+> If the **line** is missing but the **Forecast | Total** panel is still visible, that is expected: `show_forecast` hides only the line. To hide the panel too, set `show_forecast_total_panel: false`.
 
 **Expected outcome:** Either the forecast line appears, or you can explain why it is disabled.
 
@@ -163,6 +165,10 @@ No. It requires an entity with long-term statistics.
 ### Is forecast guaranteed to show?
 
 No. It’s gated by data coverage and requires a reference window.
+
+### Why is the Forecast | Total panel still visible when I set `show_forecast: false`?
+
+Because `show_forecast` controls **only the forecast line on the chart**. The **Forecast | Total** panel is controlled separately by `show_forecast_total_panel` (shown when forecast data is available, not in single-window mode, and the flag is not `false`). To hide the panel, set `show_forecast_total_panel: false`.
 
 ### Can I use minute-level granularity?
 

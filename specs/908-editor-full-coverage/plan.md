@@ -72,7 +72,7 @@ src/card/
 ├── time-windows/
 │   └── presets.ts                  # getPresetTemplate: add "custom" branch → generic shape (no legacy flags)
 ├── editor/                         # NEW: pure, unit-testable editor modules
-│   ├── field-registry.ts           # FieldDescriptor type + the full registry (33 fields, 6 sections; time_window.* are declarative fields)
+│   ├── field-registry.ts           # FieldDescriptor type + the full registry (33 fields, 6 sections; time_window.* are declarative fields; language is a select built from AVAILABLE_LANGUAGES)
 │   ├── editor-ui-state.ts          # EditorUiState type + expand/collapse/focus/scroll helpers
 │   ├── config-merge.ts             # preservative deep merge (field-path aware; time_window key-by-key)
 │   └── config-normalize.ts         # load/save normalization: comparison_mode→comparison_preset, forecast→show_forecast
@@ -97,7 +97,7 @@ tests/integration/
 
 > **Note (test files):** the tree above lists the *core* test files. The user-story phases in `tasks.md` create **additional** test files: `editor-coverage.test.ts` (T012), `editor-preset-switch-integration.test.ts` (T016), `editor-sections.test.ts` (T018), `editor-cascade.test.ts` (T020), `editor-degradation.test.ts` (T022), `editor-accessibility.test.ts` (T028), `editor-yaml-mode.test.ts` (T029), plus the T008 smoke test and the T011 language-chain test. The full set is defined by `tasks.md`; this tree is not exhaustive.
 
-**Structure Decision**: Single-package layout (unchanged). New pure editor logic is isolated under `src/card/editor/` so the merge/normalization/registry/state rules are unit-testable without the Lit element (Constitution III). The Lit element itself (`energy-horizon-card-editor.ts`) becomes a thin shell: it owns `EditorUiState`, the debounce timer, and the registry-driven render loop. Domain 900 receives exactly one minimal, backward-compatible change (`ComparisonMode` + `custom` template branch). Documentation files (README/wiki/changelog) are **not** authored here — they are owned by domain `907` per the spec's Documentation Plan.
+**Structure Decision**: Single-package layout (unchanged). New pure editor logic is isolated under `src/card/editor/` so the merge/normalization/registry/state rules are unit-testable without the Lit element (Constitution III). The Lit element itself (`energy-horizon-card-editor.ts`) becomes a thin shell: it owns `EditorUiState`, the debounce timer, and the registry-driven render loop. The render loop groups fields into rows: a field with `inlineWith` renders in the same horizontal row (`.field-row`) as the field it references — the `title`/`show_title` and `icon`/`show_icon` pairs (FR-908-Z) — with the primary field taking the available width and the inline field compact. Domain 900 receives exactly one minimal, backward-compatible change (`ComparisonMode` + `custom` template branch). Documentation files (README/wiki/changelog) are **not** authored here — they are owned by domain `907` per the spec's Documentation Plan.
 
 ## Phase 0: Research — **COMPLETE**
 
@@ -120,7 +120,7 @@ Re-evaluated after Phase 1: still **PASS**. The design adds no dependencies, no 
 ### Cross-domain sync
 
 - **`900-time-model-windows`**: `ComparisonMode` gains `"custom"`; `getPresetTemplate` gains a `custom` branch returning the generic shape (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`, **no** `currentEndIsNow`/`referenceFullPeriod`/`periodOffsetYears` flags) so `resolveTimeWindows` takes the `resolveGeneric` path. The editor's preset↔custom cleanup (FR-908-Q) stays consistent with this.
-- **`905-localization-formatting`**: new `editor.*` keys consumed via the existing `localize()`; label language follows the FR-908-X chain (card `language` → `hass.locale.language` → fallback).
+- **`905-localization-formatting`**: new `editor.*` keys consumed via the existing `localize()`; label language follows the FR-908-X chain (card `language` → `hass.locale.language` → fallback). The `language` field is a **select** whose options are derived from `AVAILABLE_LANGUAGES` (exported by `localize.ts`); the option labels use the `editor.language.auto` and `editor.language.{en,pl,de,fr}` keys, and the empty "Auto" option maps to an omitted `language` key.
 - **`907-docs-product-knowledge`**: the spec's Documentation Plan (README / README.advanced / wiki / changelog `[1.2.0]`) is owned by domain 907 and is **not** authored in this feature's code tasks.
 
 ## Phase 2 — **OUT OF SCOPE for `/speckit-plan`**

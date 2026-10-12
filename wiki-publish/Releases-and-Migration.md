@@ -29,6 +29,9 @@ Cross-check option names against [Configuration and Customization](Configuration
 - **YAML mode is a first-class input path:** live preview (debounced), the last valid YAML **values** are saved without switching to Visual, and syntax errors are shown inline. HA re-serializes the config on save, so values persist but text formatting is canonicalized.
 - **`comparison_mode` → `comparison_preset` migration in the GUI:** a legacy `comparison_mode` is migrated to `comparison_preset` when saving from the visual editor.
 - **`neutral_interpretation`** is now GUI-editable (Basic Settings) — no longer YAML-only.
+- **`show_forecast` scope narrowed to the forecast line:** `show_forecast` now controls **only** the forecast **line on the chart**. The **Forecast | Total** panel is controlled independently by `show_forecast_total_panel` (shown when forecast data is available, not in single-window mode, and the flag is not `false`). The editor's `show_forecast_total_panel` control is always enabled (no longer disabled when `show_forecast` is off). **Migration note:** if you relied on `show_forecast: false` to hide the Forecast | Total panel, also set `show_forecast_total_panel: false`.
+- **`language` editor field is a dropdown:** the editor's `language` field is now a picker over the available card dictionaries (en, pl, de, fr) plus an **Auto (HA profile)** option, instead of a free-text input. Selecting **Auto** omits the `language` key so the card inherits the HA profile language.
+- **`show_forecast` editor label renamed** to **"Show forecast on chart"** to make clear it toggles the chart line, not the panel.
 
 ### 1.1.0 — `interpretation` and `neutral_interpretation` (903)
 
@@ -37,13 +40,13 @@ Cross-check option names against [Configuration and Customization](Configuration
 
 ### Forecast line default (`show_forecast`)
 
-The forecast overlay is **shown by default** when a forecast can be computed. To hide it:
+The forecast **line on the chart** is **shown by default** when a forecast can be computed. To hide the line:
 
 ```yaml
 show_forecast: false
 ```
 
-The boolean alias `forecast` is accepted and merged into `show_forecast` at load time (same meaning — prefer `show_forecast` in docs).
+The boolean alias `forecast` is accepted and merged into `show_forecast` at load time (same meaning — prefer `show_forecast` in docs). Note that `show_forecast` affects **only the chart line** — the **Forecast | Total** panel is controlled separately by `show_forecast_total_panel` (see [Configuration and Customization](Configuration-and-Customization)).
 
 ### `comparison_preset` vs legacy `comparison_mode`
 

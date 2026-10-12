@@ -130,19 +130,19 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ---
 
-## Phase 7: User Story 5 — Cascading and dependent controls (Priority: P2)
+## Phase 7: User Story 5 — Forecast line / panel independence (Priority: P2)
 
-**Goal**: Dependent controls reflect their parent's state — `show_forecast_total_panel` is disabled when `show_forecast` is off (FR-908-H).
+**Goal**: `show_forecast` controls **only** the forecast line on the chart; the `show_forecast_total_panel` control is **always enabled** (independent of `show_forecast`) (FR-908-H).
 
-**Independent Test**: Turn `show_forecast` off → `show_forecast_total_panel` becomes disabled (greyed). Turn it back on → the dependent control re-enables.
+**Independent Test**: Turn `show_forecast` off → the forecast line disappears from the chart, but `show_forecast_total_panel` stays enabled and the Forecast | Total panel stays visible (when forecast data is available). Toggling `show_forecast` back on restores the line only.
 
 ### Tests for User Story 5 ⚠️
 
-- [X] T020 [P] [US5] Add `tests/unit/editor-cascade.test.ts`: `show_forecast: true` → `show_forecast_total_panel` enabled; toggling `show_forecast` to `false` → `show_forecast_total_panel` rendered disabled; toggling back to `true` → re-enabled (spec US5 acceptance 1–2); saving with `show_forecast: false` keeps the emitted config consistent with domain 903 gating (acceptance 3)
+- [X] T020 [P] [US5] Add `tests/unit/editor-cascade.test.ts`: `show_forecast: false` → `show_forecast_total_panel` rendered **enabled** (no cascade); toggling `show_forecast` in either direction keeps the control enabled (spec US5 acceptance 1–2); saving with `show_forecast: false` emits the config as-is and the card hides the forecast line but keeps the Forecast | Total panel when `show_forecast_total_panel` is not `false` (acceptance 3)
 
 ### Implementation for User Story 5
 
-- [X] T021 [US5] Verify and fix the `disabledWhen` application in `src/card/energy-horizon-card-editor.ts` against the test (the `show_forecast_total_panel` descriptor's `disabledWhen: cfg => cfg.show_forecast === false` is applied uniformly by the render loop, research R11)
+- [X] T021 [US5] Ensure the `show_forecast_total_panel` descriptor carries **no** `disabledWhen` (independent of `show_forecast`), and that `shouldShowForecast` in `src/card/cumulative-comparison-chart.ts` gates the Forecast | Total panel on forecast data availability + `show_forecast_total_panel` only (not on `isForecastLineVisible`)
 
 **Checkpoint**: At this point, User Stories 1–5 should all work independently.
 
@@ -174,8 +174,9 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 - [X] T025 [P] Run the quickstart.md validation: all seven automated checks (SC-908-1 coverage, SC-908-3 no churn, SC-908-2 stability, SC-908-7 i18n, SC-908-5 mode switching, SC-908-6 backward compat, SC-908-9 YAML live-edit) and the eleven manual Home Assistant scenarios from `specs/908-editor-full-coverage/quickstart.md` §5 (including the YAML safe-mode and external-change-while-editing scenarios)
 - [X] T026 [P] Verify the spec's Documentation Plan is reflected in the v1.2.0 release docs owned by domain 907: `README.md` (full-coverage editor note, version 1.2.0), `README.advanced.md` (Lovelace editor rewrite: six sections, `custom` preset, lifecycle guarantees, GUI-editable markers, Visual ↔ YAML round-trip), `wiki-publish/` pages (`Configuration-and-Customization.md`, `Getting-Started.md`, `Releases-and-Migration.md`, `Troubleshooting-and-FAQ.md`), and `changelog.md` `[1.2.0]` — consistency rules: identical `custom` value, six section names, and field→section mapping across all docs; Visual ↔ YAML round-trip documented (both directions lossless) and the v1.1.0 "YAML is authoritative for the full config" framing retired; no promise of inline validation
 - [X] T027 [P] Final code cleanup in `src/card/energy-horizon-card-editor.ts` and `src/card/editor/`: no `any` (Constitution III), no dead code from the v1.1.0 editor, consistent naming with the contracts, and a bounded bundle (no new deps, no lazy chunk — Constitution V, domain 904 FR-904-F)
-- [X] T028 [P] Add `tests/unit/editor-accessibility.test.ts` (Constitution IV): every rendered control carries an accessible name (localized label via `aria-label`/`<label>` association), sections are keyboard-operable `ha-expansion-panel`s, and disabled dependent controls (e.g. `show_forecast_total_panel` when `show_forecast` is off) expose a disabled state to assistive tech
+- [X] T028 [P] Add `tests/unit/editor-accessibility.test.ts` (Constitution IV): every rendered control carries an accessible name (localized label via `aria-label`/`<label>` association), sections are keyboard-operable `ha-expansion-panel`s, and the `show_forecast_total_panel` control is always enabled (independent of `show_forecast`) — no disabled state is exposed
 - [X] T029 [P] Add `tests/unit/editor-yaml-mode.test.ts` (FR-908-Y, SC-908-9): YAML keystroke → debounced parse (short interval, **safe mode**) → debounced emit (longer interval) with no-op suppression (reformatting / key reordering → 0 emits; value change → 1 emit); a successful parse **replaces** `_config` wholesale (not a preservative merge); hostile YAML tags (`!!python/object`) → rejected in safe mode, no code execution, no emit; invalid YAML → inline error, `_config` unchanged, no emit; flush on blur/switch/close is **atomic and ordered** (parse first, then emit if valid; a failed parse on flush keeps the last valid `_config` and emits nothing); `setConfig` self-echo (config == lastEmitted) → textarea NOT re-serialized, with the self-echo/external classification robust to HA round-trip normalizations (key order, scalar type coercion); `setConfig` external change (config ≠ lastEmitted) → textarea re-serialized; Save without switching to Visual → last valid YAML **values** are saved (HA re-serializes the config, so values persist but text formatting is canonicalized); `setConfig` preserves `_editorMode` (does not reset to Visual)
+- [X] T035 [P] Add inline field rows to the basic section of `src/card/energy-horizon-card-editor.ts` (FR-908-Z): `show_title` renders in the same horizontal row as `title`, and `show_icon` in the same row as `icon` (each keeping its label-above-switch layout; the primary field takes the available width, the boolean field is compact). The row grouping is declarative — an `inlineWith` reference on the `show_title`/`show_icon` descriptors in `src/card/editor/field-registry.ts` — so pairing/unpairing a field is a data change, not a template change. Add the `.field-row` / `.field-main` / `.field-inline` styles. Add row-grouping tests to `tests/unit/editor-sections.test.ts` (both pairs share a `.field-row`; the other basic fields stay standalone; the basic section still renders all eight fields)
 
 ---
 
@@ -195,6 +196,24 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 - [X] T032 [P] Make field labels HA-native: components with a built-in `label` (`ha-input`, `ha-select`, `ha-entity-picker`, `ha-icon-picker`, `ha-color-picker`) render the label inside their shadow DOM, so the editor renders **no** external `<label for>` for them (it cannot cross the shadow boundary and would duplicate the label); `ha-switch` / `ha-slider` (no built-in label) and all standard fallback controls keep the external `<label for>` (Constitution IV — every control still carries an accessible name)
 - [X] T033 [P] Add `preview: true` and `documentationURL` to the `window.customCards` declaration in `src/index.ts` and extend `CustomCardDeclaration` in `src/ha-types.ts` so the card is offered with a live preview and a documentation link in the HA card picker
 - [X] T034 Re-run the full suite (`TZ=UTC npm test`) and `npm run lint`; update the two field-control tests that dispatched a non-composed `blur` to dispatch the composed `focusout` the editor now listens for (the YAML textarea still uses `@blur` and is unaffected)
+
+---
+
+## Post-implementation refinements (language picker, forecast label, forecast/panel independence)
+
+> These refinements were made after the v1.2.0 feature was built, to align the
+> editor with the requested UX: the `language` field is a picker over the
+> available card dictionaries (not a free-text input), the `show_forecast`
+> label clarifies that it toggles the forecast **line on the chart**, and
+> `show_forecast` no longer cascades into the Forecast | Total panel (the two
+> toggles are independent). The field-registry architecture is unchanged; only
+> the `language` control, the `show_forecast_total_panel` descriptor, the
+> panel gating in the card, and the translation dictionaries were corrected.
+
+- [X] T036 [P] Change the `language` field in `src/card/editor/field-registry.ts` from `text` to `select` with options derived from `AVAILABLE_LANGUAGES` (exported from `src/card/localize.ts`); add an empty "Auto (HA profile)" option that maps to `undefined` via `valueToConfig`; add `editor.language.auto` and `editor.language.{en,pl,de,fr}` keys to all four translation dictionaries
+- [X] T037 [P] Update the `editor.show_forecast` label in all four translation dictionaries from "Show forecast" to "Show forecast on chart" (en: "Show forecast on chart", pl: "Pokaż prognozę na wykresie", de: "Prognose auf dem Diagramm anzeigen", fr: "Afficher la prévision sur le graphique")
+- [X] T038 Remove `isForecastLineVisible(this._config)` from `shouldShowForecast` in `src/card/cumulative-comparison-chart.ts` so that `show_forecast` controls only the forecast line on the chart, not the Forecast | Total panel; remove `disabledWhen` from the `show_forecast_total_panel` descriptor in `src/card/editor/field-registry.ts`; update the `show_forecast_total_panel` JSDoc in `src/card/types.ts`
+- [X] T039 [P] Update tests: `card-render.test.ts` (show_forecast false → panel still visible), `editor-cascade.test.ts` (rewrite as independence test), `editor-field-registry.test.ts` (remove disabledWhen test, add language select test), `editor-accessibility.test.ts` (remove cascade assertions), `editor-label-language.test.ts` (select change event instead of text input), `editor-lifecycle.test.ts` (language edited via select), `editor-coverage.test.ts` (language renders as a `<select>`)
 
 ---
 
@@ -288,7 +307,7 @@ With multiple developers:
 2. Once Foundational is done:
    - Developer A: User Story 1 (coverage)
    - Developer B: User Story 2 (lifecycle integration)
-   - Developer C: User Stories 3–6 (preset switching, sections, cascade, degradation)
+   - Developer C: User Stories 3–6 (preset switching, sections, forecast independence, degradation)
 3. Stories complete and integrate independently
 
 ---

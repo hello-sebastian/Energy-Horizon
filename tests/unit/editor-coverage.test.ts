@@ -223,6 +223,17 @@ describe("editor coverage (T012, US1)", () => {
     expect(el.shadowRoot!.querySelectorAll(".editor-section").length).toBe(6);
   });
 
+  it("renders the language field as a <select> in the formatting section", async () => {
+    const el = mountEditor(MINIMAL_CONFIG);
+    await el.updateComplete;
+
+    const control = controlFor(el, "language");
+    expect(control).not.toBeNull();
+    // In jsdom the select fallback is a native <select>.
+    expect(control!.tagName.toLowerCase()).toBe("select");
+    expect(sectionOf(el, "language")).toBe("formatting");
+  });
+
   it("round-trips a full config with zero keys lost (acceptance 4, SC-908-1)", async () => {
     const el = mountEditor(FULL_CONFIG);
     await el.updateComplete;

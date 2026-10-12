@@ -15,6 +15,7 @@ interface FieldDescriptor {
   visibleWhen?: (cfg: CardConfig) => boolean;
   disabledWhen?: (cfg: CardConfig) => boolean;
   emit?: "debounced" | "immediate";     // default derived from control kind
+  inlineWith?: string;                  // same-row pairing (FR-908-Z)
 }
 ```
 
@@ -26,6 +27,7 @@ The render loop MUST:
 3. Render each visible control from its declarative `control` metadata, or invoke the `custom` renderer (which MUST read/write through the same merge + event pipeline).
 4. Bind each control's value from `_config` (resolved by `key` path) and its label from `localize(labelKey)`.
 5. On a control change, route through `preservativeMerge` → emit gate (debounced/immediate per `emit`).
+6. Group fields into rows: a field with `inlineWith` renders in the same horizontal row as the field it references (to its right), not as its own row (FR-908-Z). The primary field takes the available width; the inline field is compact.
 
 **Consequences** (FR-908-A/B, SC-908-8):
 - **Adding a field** = adding one descriptor. No template change.
@@ -47,9 +49,9 @@ A descriptor may override `emit` explicitly.
 |---|---|---|---|---|---|---|
 | `entity` | basic | entity(sensor) | `""` | **yes** | — | — |
 | `title` | basic | text | — | no | — | — |
-| `show_title` | basic | boolean | `true` | no | — | — |
+| `show_title` | basic | boolean | `true` | no | — | — (inline with `title`) |
 | `icon` | basic | icon | — | no | — | — |
-| `show_icon` | basic | boolean | `true` | no | — | — |
+| `show_icon` | basic | boolean | `true` | no | — | — (inline with `icon`) |
 | `comparison_preset` | basic | select(4) | `year_over_year` | no | — | — |
 | `interpretation` | basic | select(2) | `consumption` | no | — | — |
 | `neutral_interpretation` | basic | number | `2` | no | — | — |
@@ -62,7 +64,7 @@ A descriptor may override `emit` explicitly.
 | `time_window.offset` | time | text | — | no | preset = `custom` | — |
 | `show_comparison_summary` | layout | boolean | `true` | no | — | — |
 | `show_forecast` | layout | boolean | `true` | no | — | — |
-| `show_forecast_total_panel` | layout | boolean | `true` | no | — | `show_forecast === false` |
+| `show_forecast_total_panel` | layout | boolean | `true` | no | — | — |
 | `show_narrative_comment` | layout | boolean | `true` | no | — | — |
 | `primary_color` | visuals | color | — | no | — | — |
 | `fill_current` | visuals | boolean | `true` | no | — | — |
@@ -74,7 +76,7 @@ A descriptor may override `emit` explicitly.
 | `precision` | formatting | number | `2` | no | — | — |
 | `force_prefix` | formatting | select(8) | `auto` | no | — | — |
 | `number_format` | formatting | select(4) | `system` | no | — | — |
-| `language` | formatting | text | — | no | — | — |
+| `language` | formatting | select(5) | — (auto) | no | — | — |
 | `x_axis_format` | formatting | text | — | no | — | — |
 | `tooltip_format` | formatting | text | — | no | — | — |
 | `debug` | system | boolean | `false` | no | — | — |

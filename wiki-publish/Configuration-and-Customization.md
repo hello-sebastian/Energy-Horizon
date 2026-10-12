@@ -43,7 +43,7 @@ If you came here from the project README:
 
 | Key | Type | Default | Mental model | Common failure / gotcha | Related |
 |-----|------|---------|--------------|-------------------------|---------|
-| `show_forecast` | boolean | `true` | Show the forecast overlay *when forecast can be computed* | Forecast can be hidden even when true (data gating rules) | [Forecast and Data Internals](Forecast-and-Data-Internals) |
+| `show_forecast` | boolean | `true` | Show the forecast **line on the chart** *when forecast can be computed* | Controls the chart line only — the Forecast \| Total panel is separate (`show_forecast_total_panel`). The line can be hidden even when true (data gating rules) | [Forecast and Data Internals](Forecast-and-Data-Internals) |
 | `forecast` | boolean | — | Alias for `show_forecast` | Prefer `show_forecast` to avoid ambiguity | [Releases and Migration](Releases-and-Migration) |
 
 ---
@@ -67,7 +67,7 @@ Optional **visibility** flags (default **on**: omit the key or use any value oth
 | Key | Figma layer (reference) | Effect |
 |-----|-------------------------|--------|
 | `show_comparison_summary` | **Data series info** (current vs reference “to this day”) | When `false`, the comparison panel (`.ebc-section--comparison`) is not rendered. |
-| `show_forecast_total_panel` | **Surface Container** (Forecast \| Total) | When `false`, hides that panel **only** if it would otherwise show. Still requires `show_forecast` not to be `false` and forecast data gating — if forecast is off, the whole panel stays absent (same as before these flags). |
+| `show_forecast_total_panel` | **Surface Container** (Forecast \| Total) | When `false`, hides that panel **only** if it would otherwise show. Independent of `show_forecast` (which controls only the chart line); the panel still requires forecast data gating and not single-window mode. |
 | `show_narrative_comment` | **Inteligent comment** | When `false`, the comment block (icon + narrative) is not rendered. |
 
 Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration surface** — every key on this page is GUI-editable. **`neutral_interpretation`** is GUI-editable in v1.2.0 (Basic Settings). See the [Visual editor](#visual-editor-v120) block below and [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md#lovelace-editor) for the full section mapping.
@@ -102,7 +102,7 @@ Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration 
 
 | Key | Type | Default | Mental model | Common failure / gotcha |
 |-----|------|---------|--------------|-------------------------|
-| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English. The consumption summary uses full-sentence templates with `{{deltaUnit}}` and `{{deltaPercent}}` (see `src/translations/en.json`). |
+| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English. In the visual editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). The consumption summary uses full-sentence templates with `{{deltaUnit}}` and `{{deltaPercent}}` (see `src/translations/en.json`). |
 | `number_format` | `comma \| decimal \| language \| system` | HA/system | Controls which locale `Intl` uses for numbers | Use `decimal` for “always English-style decimals” |
 
 Time zone is taken from **`hass.config.time_zone`** (fallback UTC).
@@ -165,7 +165,9 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | **Formatting & Axis** | `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format` |
 | **System & Debug** | `debug` |
 
-**Conditional rendering:** `comparison_preset: custom` hides `period_offset` and shows the `time_window` sub-block; a standard preset does the reverse. **Forecast cascade:** `show_forecast: false` disables the `show_forecast_total_panel` control.
+**Inline rows:** in **Basic Settings**, `show_title` renders in the same row as `title` (to its right) and `show_icon` in the same row as `icon` (to its right); each keeps its label-above-switch layout, the primary field takes the available width, and the toggle is compact.
+
+**Conditional rendering:** `comparison_preset: custom` hides `period_offset` and shows the `time_window` sub-block; a standard preset does the reverse. **Forecast line / panel independence:** `show_forecast` controls only the forecast line on the chart; the `show_forecast_total_panel` control is always enabled (independent of `show_forecast`), so the line and the panel can be toggled separately.
 
 **Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions. YAML mode is a first-class input path (live preview, last valid values saved). The editor does not perform inline validation — invalid values surface as the standard card error.
 

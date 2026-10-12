@@ -88,7 +88,7 @@ time_window:
 
 ## Visual editor (v1.2.0)
 
-The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into six sections: **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, and **System & Debug**. You do not need to touch YAML to configure the card.
+The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into six sections: **Basic Settings**, **Time & Aggregation**, **Layout & Visibility**, **Visuals & Chart Styling**, **Formatting & Axis**, and **System & Debug**. You do not need to touch YAML to configure the card. In **Basic Settings**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
 
 Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
 

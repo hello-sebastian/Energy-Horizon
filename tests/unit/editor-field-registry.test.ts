@@ -214,27 +214,27 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(timeCustom).toContain("time_window.count");
   });
 
-  it("disabledWhen: show_forecast_total_panel disabled when show_forecast is false (FR-908-H)", () => {
+  it("show_forecast_total_panel has no disabledWhen (independent of show_forecast, FR-908-H)", () => {
     const field = FIELD_REGISTRY.find(
       (f) => f.key === "show_forecast_total_panel"
     )!;
-    expect(field.disabledWhen).toBeDefined();
-    expect(
-      field.disabledWhen!({
-        type: "x",
-        entity: "e",
-        comparison_preset: "year_over_year",
-        show_forecast: false
-      } as CardConfig)
-    ).toBe(true);
-    expect(
-      field.disabledWhen!({
-        type: "x",
-        entity: "e",
-        comparison_preset: "year_over_year",
-        show_forecast: true
-      } as CardConfig)
-    ).toBe(false);
+    expect(field.disabledWhen).toBeUndefined();
+  });
+
+  it("language is a select with an auto option plus one option per available dictionary", () => {
+    const field = FIELD_REGISTRY.find((f) => f.key === "language")!;
+    expect(field.control.kind).toBe("select");
+    if (field.control.kind !== "select") return;
+    const values = field.control.options.map((o) => o.value);
+    // First option is the empty "Auto (HA profile)" value.
+    expect(values[0]).toBe("");
+    // Every available dictionary is offered as an option.
+    for (const lang of ["en", "pl", "de", "fr"]) {
+      expect(values).toContain(lang);
+    }
+    // The empty option maps to an omitted (undefined) config value.
+    expect(toConfigValue(field, "")).toBeUndefined();
+    expect(toConfigValue(field, "pl")).toBe("pl");
   });
 
   it("every descriptor has a non-empty labelKey and a valid section", () => {
