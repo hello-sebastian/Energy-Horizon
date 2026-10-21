@@ -950,7 +950,17 @@ export class EnergyHorizonCardEditor extends LitElement {
           html`
             <div class="field-row">
               ${renderField(field, "field-main")}
-              ${inlines.map((inline) => renderField(inline, "field-inline"))}
+              ${inlines.map((inline) =>
+                renderField(
+                  inline,
+                  // A number field with a unit suffix (e.g. `%`) needs a wider
+                  // inline slot; plain switches stay compact so the main field
+                  // keeps the full remaining width.
+                  inline.control.kind === "number" && inline.control.suffix
+                    ? "field-inline field-inline-wide"
+                    : "field-inline"
+                )
+              )}
             </div>
           `
         );
@@ -1103,6 +1113,9 @@ export class EnergyHorizonCardEditor extends LitElement {
       min-width: 0;
     }
     .field-inline {
+      flex: 0 0 auto;
+    }
+    .field-inline-wide {
       flex: 1 1 160px;
       min-width: 140px;
     }
