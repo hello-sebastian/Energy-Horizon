@@ -677,47 +677,46 @@ export class EnergyHorizonCardEditor extends LitElement {
             `;
 
       case "number": {
-        // `ha-input` has no suffix slot, so a unit suffix (e.g. `%`) is
-        // rendered as a sibling in a flex row that keeps the control and the
-        // unit on the same baseline.
-        const suffix = control.suffix
-          ? html`<span class="field-suffix">${control.suffix}</span>`
-          : nothing;
-        const inputEl = this._haAvailable("ha-input")
-          ? html`
-              <ha-input
-                id=${id}
-                type="number"
-                .label=${localize(field.labelKey)}
-                .value=${str(value)}
-                min=${control.min ?? undefined}
-                max=${control.max ?? undefined}
-                ?disabled=${disabled}
-                @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @focusout=${() => this._onFieldBlur(field)}
-              ></ha-input>
-            `
-          : html`
-              <input
-                id=${id}
-                type="number"
-                .value=${str(value)}
-                min=${control.min ?? undefined}
-                max=${control.max ?? undefined}
-                ?disabled=${disabled}
-                @input=${(e: Event) => this._onFieldInput(field, e)}
-                @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
-                @focusout=${() => this._onFieldBlur(field)}
-              />
-            `;
-        if (!control.suffix) {
-          return inputEl;
+        // The unit suffix (e.g. `%`) is rendered INSIDE the input box, like a
+        // MUI InputAdornment. `ha-input` exposes an `end` slot that renders
+        // within the field; the native fallback wraps the input and the unit
+        // in a bordered box so the unit sits inside the field too.
+        if (this._haAvailable("ha-input")) {
+          return html`
+            <ha-input
+              id=${id}
+              type="number"
+              .label=${localize(field.labelKey)}
+              .value=${str(value)}
+              min=${control.min ?? undefined}
+              max=${control.max ?? undefined}
+              ?disabled=${disabled}
+              @input=${(e: Event) => this._onFieldInput(field, e)}
+              @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+              @focusout=${() => this._onFieldBlur(field)}
+            >
+              ${control.suffix
+                ? html`<span slot="end" class="field-suffix">${control.suffix}</span>`
+                : nothing}
+            </ha-input>
+          `;
         }
         return html`
-          <div class="field-number-row">
-            ${inputEl}
-            ${suffix}
+          <div class="field-number-box">
+            <input
+              id=${id}
+              type="number"
+              .value=${str(value)}
+              min=${control.min ?? undefined}
+              max=${control.max ?? undefined}
+              ?disabled=${disabled}
+              @input=${(e: Event) => this._onFieldInput(field, e)}
+              @focusin=${(e: FocusEvent) => this._onFieldFocus(field, e)}
+              @focusout=${() => this._onFieldBlur(field)}
+            />
+            ${control.suffix
+              ? html`<span class="field-suffix">${control.suffix}</span>`
+              : nothing}
           </div>
         `;
       }
@@ -1107,14 +1106,26 @@ export class EnergyHorizonCardEditor extends LitElement {
       flex: 1 1 160px;
       min-width: 140px;
     }
-    .field-number-row {
+    .field-number-box {
       display: flex;
       align-items: center;
       gap: 6px;
+      background-color: var(--secondary-background-color, #f5f5f5);
+      border: 1px solid var(--divider-color, #ccc);
+      border-radius: 4px;
+      padding: 0 12px;
+      min-height: 40px;
+      box-sizing: border-box;
     }
-    .field-number-row > * {
+    .field-number-box input {
       flex: 1 1 auto;
       min-width: 0;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 1em;
+      color: var(--primary-text-color, #000);
+      padding: 8px 0;
     }
     .field-suffix {
       flex: 0 0 auto;

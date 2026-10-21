@@ -286,7 +286,7 @@ yi.elementStyles = [], yi.shadowRootOptions = { mode: "open" }, yi[Ua("elementPr
  */
 const Ya = globalThis, vv = (r) => r, sl = Ya.trustedTypes, pv = sl ? sl.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, t_ = "$lit$", Br = `lit$${Math.random().toFixed(9).slice(2)}$`, r_ = "?" + Br, d1 = `<${r_}>`, zn = document, uo = () => zn.createComment(""), co = (r) => r === null || typeof r != "object" && typeof r != "function", $h = Array.isArray, v1 = (r) => $h(r) || typeof (r == null ? void 0 : r[Symbol.iterator]) == "function", Au = `[ 	
 \f\r]`, sa = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, mv = /-->/g, gv = />/g, rn = RegExp(`>|${Au}(?:([^\\s"'>=/]+)(${Au}*=${Au}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), yv = /'/g, _v = /"/g, n_ = /^(?:script|style|textarea|title)$/i, p1 = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), H = p1(1), $i = Symbol.for("lit-noChange"), Re = Symbol.for("lit-nothing"), wv = /* @__PURE__ */ new WeakMap(), kn = zn.createTreeWalker(zn, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), yv = /'/g, _v = /"/g, n_ = /^(?:script|style|textarea|title)$/i, p1 = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), H = p1(1), $i = Symbol.for("lit-noChange"), Ee = Symbol.for("lit-nothing"), wv = /* @__PURE__ */ new WeakMap(), kn = zn.createTreeWalker(zn, 129);
 function i_(r, e) {
   if (!$h(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return pv !== void 0 ? pv.createHTML(e) : e;
@@ -381,7 +381,7 @@ class ko {
     return ((e = this._$AM) == null ? void 0 : e._$AU) ?? this._$Cv;
   }
   constructor(e, t, n, i) {
-    this.type = 2, this._$AH = Re, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = i, this._$Cv = (i == null ? void 0 : i.isConnected) ?? !0;
+    this.type = 2, this._$AH = Ee, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = i, this._$Cv = (i == null ? void 0 : i.isConnected) ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -395,7 +395,7 @@ class ko {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    e = Bi(this, e, t), co(e) ? e === Re || e == null || e === "" ? (this._$AH !== Re && this._$AR(), this._$AH = Re) : e !== this._$AH && e !== $i && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : v1(e) ? this.k(e) : this._(e);
+    e = Bi(this, e, t), co(e) ? e === Ee || e == null || e === "" ? (this._$AH !== Ee && this._$AR(), this._$AH = Ee) : e !== this._$AH && e !== $i && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : v1(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -404,7 +404,7 @@ class ko {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== Re && co(this._$AH) ? this._$AA.nextSibling.data = e : this.T(zn.createTextNode(e)), this._$AH = e;
+    this._$AH !== Ee && co(this._$AH) ? this._$AA.nextSibling.data = e : this.T(zn.createTextNode(e)), this._$AH = e;
   }
   $(e) {
     var a;
@@ -446,7 +446,7 @@ class Vl {
     return this._$AM._$AU;
   }
   constructor(e, t, n, i, a) {
-    this.type = 1, this._$AH = Re, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = a, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(new String()), this.strings = n) : this._$AH = Re;
+    this.type = 1, this._$AH = Ee, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = a, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(new String()), this.strings = n) : this._$AH = Ee;
   }
   _$AI(e, t = this, n, i) {
     const a = this.strings;
@@ -455,12 +455,12 @@ class Vl {
     else {
       const s = e;
       let l, u;
-      for (e = a[0], l = 0; l < a.length - 1; l++) u = Bi(this, s[n + l], t, l), u === $i && (u = this._$AH[l]), o || (o = !co(u) || u !== this._$AH[l]), u === Re ? e = Re : e !== Re && (e += (u ?? "") + a[l + 1]), this._$AH[l] = u;
+      for (e = a[0], l = 0; l < a.length - 1; l++) u = Bi(this, s[n + l], t, l), u === $i && (u = this._$AH[l]), o || (o = !co(u) || u !== this._$AH[l]), u === Ee ? e = Ee : e !== Ee && (e += (u ?? "") + a[l + 1]), this._$AH[l] = u;
     }
     o && !i && this.j(e);
   }
   j(e) {
-    e === Re ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+    e === Ee ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
 class y1 extends Vl {
@@ -468,7 +468,7 @@ class y1 extends Vl {
     super(...arguments), this.type = 3;
   }
   j(e) {
-    this.element[this.name] = e === Re ? void 0 : e;
+    this.element[this.name] = e === Ee ? void 0 : e;
   }
 }
 class _1 extends Vl {
@@ -476,7 +476,7 @@ class _1 extends Vl {
     super(...arguments), this.type = 4;
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== Re);
+    this.element.toggleAttribute(this.name, !!e && e !== Ee);
   }
 }
 class w1 extends Vl {
@@ -484,8 +484,8 @@ class w1 extends Vl {
     super(e, t, n, i, a), this.type = 5;
   }
   _$AI(e, t = this) {
-    if ((e = Bi(this, e, t, 0) ?? Re) === $i) return;
-    const n = this._$AH, i = e === Re && n !== Re || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, a = e !== Re && (n === Re || i);
+    if ((e = Bi(this, e, t, 0) ?? Ee) === $i) return;
+    const n = this._$AH, i = e === Ee && n !== Ee || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, a = e !== Ee && (n === Ee || i);
     i && this.element.removeEventListener(this.name, this, n), a && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
@@ -1219,7 +1219,7 @@ class X1 {
       return this.inf.format(t);
     } else {
       const t = this.floor ? Math.floor(e) : Yh(e, 3);
-      return Oe(t, this.padTo);
+      return Re(t, this.padTo);
     }
   }
 }
@@ -1930,7 +1930,7 @@ function kt(r, e, t) {
 function lx(r, e) {
   return r - e * Math.floor(r / e);
 }
-function Oe(r, e = 2) {
+function Re(r, e = 2) {
   const t = r < 0;
   let n;
   return t ? n = "-" + ("" + -r).padStart(e, "0") : n = ("" + r).padStart(e, "0"), n;
@@ -2037,11 +2037,11 @@ function Za(r, e) {
   const t = Math.trunc(Math.abs(r / 60)), n = Math.trunc(Math.abs(r % 60)), i = r >= 0 ? "+" : "-";
   switch (e) {
     case "short":
-      return `${i}${Oe(t, 2)}:${Oe(n, 2)}`;
+      return `${i}${Re(t, 2)}:${Re(n, 2)}`;
     case "narrow":
       return `${i}${t}${n > 0 ? `:${n}` : ""}`;
     case "techie":
-      return `${i}${Oe(t, 2)}${Oe(n, 2)}`;
+      return `${i}${Re(t, 2)}${Re(n, 2)}`;
     default:
       throw new RangeError(`Value format ${e} is out of range for property format`);
   }
@@ -2235,7 +2235,7 @@ class qe {
   }
   num(e, t = 0, n = void 0) {
     if (this.opts.forceSimple)
-      return Oe(e, t);
+      return Re(e, t);
     const i = { ...this.opts };
     return t > 0 && (i.padTo = t), n && (i.signDisplay = n), this.loc.numberFormatter(i).format(e);
   }
@@ -4439,12 +4439,12 @@ function qo(r, e, t = !0) {
 function $u(r, e, t) {
   const n = r.c.year > 9999 || r.c.year < 0;
   let i = "";
-  if (n && r.c.year >= 0 && (i += "+"), i += Oe(r.c.year, n ? 6 : 4), t === "year") return i;
+  if (n && r.c.year >= 0 && (i += "+"), i += Re(r.c.year, n ? 6 : 4), t === "year") return i;
   if (e) {
-    if (i += "-", i += Oe(r.c.month), t === "month") return i;
+    if (i += "-", i += Re(r.c.month), t === "month") return i;
     i += "-";
-  } else if (i += Oe(r.c.month), t === "month") return i;
-  return i += Oe(r.c.day), i;
+  } else if (i += Re(r.c.month), t === "month") return i;
+  return i += Re(r.c.day), i;
 }
 function Zv(r, e, t, n, i, a, o) {
   let s = !t || r.c.millisecond !== 0 || r.c.second !== 0, l = "";
@@ -4454,18 +4454,18 @@ function Zv(r, e, t, n, i, a, o) {
     case "year":
       break;
     default:
-      if (l += Oe(r.c.hour), o === "hour") break;
+      if (l += Re(r.c.hour), o === "hour") break;
       if (e) {
-        if (l += ":", l += Oe(r.c.minute), o === "minute") break;
-        s && (l += ":", l += Oe(r.c.second));
+        if (l += ":", l += Re(r.c.minute), o === "minute") break;
+        s && (l += ":", l += Re(r.c.second));
       } else {
-        if (l += Oe(r.c.minute), o === "minute") break;
-        s && (l += Oe(r.c.second));
+        if (l += Re(r.c.minute), o === "minute") break;
+        s && (l += Re(r.c.second));
       }
       if (o === "second") break;
-      s && (!n || r.c.millisecond !== 0) && (l += ".", l += Oe(r.c.millisecond, 3));
+      s && (!n || r.c.millisecond !== 0) && (l += ".", l += Re(r.c.millisecond, 3));
   }
-  return i && (r.isOffsetFixed && r.offset === 0 && !a ? l += "Z" : r.o < 0 ? (l += "-", l += Oe(Math.trunc(-r.o / 60)), l += ":", l += Oe(Math.trunc(-r.o % 60))) : (l += "+", l += Oe(Math.trunc(r.o / 60)), l += ":", l += Oe(Math.trunc(r.o % 60)))), a && (l += "[" + r.zone.ianaName + "]"), l;
+  return i && (r.isOffsetFixed && r.offset === 0 && !a ? l += "Z" : r.o < 0 ? (l += "-", l += Re(Math.trunc(-r.o / 60)), l += ":", l += Re(Math.trunc(-r.o % 60))) : (l += "+", l += Re(Math.trunc(r.o / 60)), l += ":", l += Re(Math.trunc(r.o % 60)))), a && (l += "[" + r.zone.ianaName + "]"), l;
 }
 const s0 = {
   month: 1,
@@ -10417,7 +10417,7 @@ function Fe(r, e) {
   }
   return W(r) ? KC(r).match(/%$/) ? parseFloat(r) / 100 * e : parseFloat(r) : r == null ? NaN : +r;
 }
-function Ee(r, e, t) {
+function Oe(r, e, t) {
   return e == null && (e = 10), e = Math.min(Math.max(0, e), F0), r = (+r).toFixed(e), t ? r : +r;
 }
 function tr(r) {
@@ -10440,7 +10440,7 @@ function JC(r, e) {
 }
 function QC(r, e) {
   var t = Math.max(tr(r), tr(e)), n = r + e;
-  return t > F0 ? n : Ee(n, t);
+  return t > F0 ? n : Oe(n, t);
 }
 function z0(r) {
   var e = Math.PI * 2;
@@ -10745,7 +10745,7 @@ function gD(r, e, t, n, i) {
     return n;
   if (Te(n)) {
     var o = Ep(t || 0, n, i);
-    return Ee(o, a ? Math.max(tr(t || 0), tr(n)) : e);
+    return Oe(o, a ? Math.max(tr(t || 0), tr(n)) : e);
   } else {
     if (W(n))
       return i < 1 ? t : n;
@@ -10755,7 +10755,7 @@ function gD(r, e, t, n, i) {
         s[f] = (i < 1 && l ? l : u)[f];
       else {
         var h = l && l[f] ? l[f] : 0, v = u[f], o = Ep(h, v, i);
-        s[f] = Ee(o, a ? Math.max(tr(h), tr(v)) : e);
+        s[f] = Oe(o, a ? Math.max(tr(h), tr(v)) : e);
       }
     }
     return s;
@@ -20395,12 +20395,12 @@ function gh(r) {
 function vE(r, e, t, n) {
   var i = {}, a = r[1] - r[0], o = i.interval = $0(a / e);
   t != null && o < t && (o = i.interval = t), n != null && o > n && (o = i.interval = n);
-  var s = i.intervalPrecision = Kb(o), l = i.niceTickExtent = [Ee(Math.ceil(r[0] / o) * o, s), Ee(Math.floor(r[1] / o) * o, s)];
+  var s = i.intervalPrecision = Kb(o), l = i.niceTickExtent = [Oe(Math.ceil(r[0] / o) * o, s), Oe(Math.floor(r[1] / o) * o, s)];
   return pE(l, r), i;
 }
 function Uc(r) {
   var e = Math.pow(10, fd(r)), t = r / e;
-  return t ? t === 2 ? t = 3 : t === 3 ? t = 5 : t *= 2 : t = 1, Ee(t * e);
+  return t ? t === 2 ? t = 3 : t === 3 ? t = 5 : t *= 2 : t = 1, Oe(t * e);
 }
 function Kb(r) {
   return tr(r) + 2;
@@ -20488,7 +20488,7 @@ var qd = (
   })(sr)
 );
 sr.registerClass(qd);
-var Cn = Ee, aa = (
+var Cn = Oe, aa = (
   /** @class */
   (function(r) {
     F(e, r);
@@ -20972,7 +20972,7 @@ function EE(r, e, t, n) {
   return M;
 }
 sr.registerClass(Qb);
-var Og = sr.prototype, lo = aa.prototype, OE = Ee, RE = Math.floor, NE = Math.ceil, Ds = Math.pow, Ft = Math.log, Xd = (
+var Og = sr.prototype, lo = aa.prototype, OE = Oe, RE = Math.floor, NE = Math.ceil, Ds = Math.pow, Ft = Math.log, Xd = (
   /** @class */
   (function(r) {
     F(e, r);
@@ -20983,7 +20983,7 @@ var Og = sr.prototype, lo = aa.prototype, OE = Ee, RE = Math.floor, NE = Math.ce
     return e.prototype.getTicks = function(t) {
       var n = this._originalScale, i = this._extent, a = n.getExtent(), o = lo.getTicks.call(this, t);
       return Y(o, function(s) {
-        var l = s.value, u = Ee(Ds(this.base, l));
+        var l = s.value, u = Oe(Ds(this.base, l));
         return u = l === i[0] && this._fixMin ? As(u, a[0]) : u, u = l === i[1] && this._fixMax ? As(u, a[1]) : u, {
           value: u
         };
@@ -21009,7 +21009,7 @@ var Og = sr.prototype, lo = aa.prototype, OE = Ee, RE = Math.floor, NE = Math.ce
         var a = tD(i), o = t / i * a;
         for (o <= 0.5 && (a *= 10); !isNaN(a) && Math.abs(a) < 1 && Math.abs(a) > 0; )
           a *= 10;
-        var s = [Ee(NE(n[0] / a) * a), Ee(RE(n[1] / a) * a)];
+        var s = [Oe(NE(n[0] / a) * a), Oe(RE(n[1] / a) * a)];
         this._interval = a, this._niceExtent = s;
       }
     }, e.prototype.calcNiceExtent = function(t) {
@@ -21553,7 +21553,7 @@ function i2(r, e, t, n) {
     coord: a[1]
   });
   function d(h, v) {
-    return h = Ee(h), v = Ee(v), f ? h > v : h < v;
+    return h = Oe(h), v = Oe(v), f ? h > v : h < v;
   }
 }
 function a2(r) {
@@ -22222,10 +22222,10 @@ function m2(r, e, t, n, i) {
   return f;
 }
 function g2(r, e, t) {
-  var n = r.getArea(), i = Ee(n.r0, 1), a = Ee(n.r, 1), o = new au({
+  var n = r.getArea(), i = Oe(n.r0, 1), a = Oe(n.r, 1), o = new au({
     shape: {
-      cx: Ee(r.cx, 1),
-      cy: Ee(r.cy, 1),
+      cx: Oe(r.cx, 1),
+      cy: Oe(r.cy, 1),
       r0: i,
       r: a,
       startAngle: n.startAngle,
@@ -23227,7 +23227,7 @@ function H2(r, e, t) {
     var g = r.getTicks().length - 1;
     g > o && (v = Uc(v));
     var y = v * o;
-    m = Math.ceil(u[1] / v) * v, p = Ee(m - y), p < 0 && u[0] >= 0 ? (p = 0, m = Ee(y)) : m > 0 && u[1] <= 0 && (m = 0, p = -Ee(y));
+    m = Math.ceil(u[1] / v) * v, p = Oe(m - y), p < 0 && u[0] >= 0 ? (p = 0, m = Oe(y)) : m > 0 && u[1] <= 0 && (m = 0, p = -Oe(y));
   }
   var _ = (i[0].value - a[0].value) / s, w = (i[o].value - a[o].value) / s;
   n.setExtent.call(r, p + v * _, m + v * w), n.setInterval.call(r, v), (_ || w) && n.setNiceExtent.call(r, p + v, m - v);
@@ -24201,7 +24201,7 @@ var dO = (
         },
         inheritColor: g || "#000",
         defaultOpacity: m.opacity,
-        defaultText: (y == null ? t.getName(n) : isFinite(y) ? Ee(y) : y) + ""
+        defaultText: (y == null ? t.getName(n) : isFinite(y) ? Oe(y) : y) + ""
       });
       var _ = this.getTextContent();
       if (_) {
@@ -30725,40 +30725,38 @@ class tn extends (Oh = Ai, t1 = [YS({ attribute: !1 })], e1 = [$s()], QS = [$s()
                 @focusout=${() => this._onFieldBlur(e)}
               />
             `;
-      case "number": {
-        const l = o.suffix ? H`<span class="field-suffix">${o.suffix}</span>` : Re, u = this._haAvailable("ha-input") ? H`
-              <ha-input
-                id=${a}
-                type="number"
-                .label=${i(e.labelKey)}
-                .value=${s(t)}
-                min=${o.min ?? void 0}
-                max=${o.max ?? void 0}
-                ?disabled=${n}
-                @input=${(c) => this._onFieldInput(e, c)}
-                @focusin=${(c) => this._onFieldFocus(e, c)}
-                @focusout=${() => this._onFieldBlur(e)}
-              ></ha-input>
-            ` : H`
-              <input
-                id=${a}
-                type="number"
-                .value=${s(t)}
-                min=${o.min ?? void 0}
-                max=${o.max ?? void 0}
-                ?disabled=${n}
-                @input=${(c) => this._onFieldInput(e, c)}
-                @focusin=${(c) => this._onFieldFocus(e, c)}
-                @focusout=${() => this._onFieldBlur(e)}
-              />
-            `;
-        return o.suffix ? H`
-          <div class="field-number-row">
-            ${u}
-            ${l}
+      case "number":
+        return this._haAvailable("ha-input") ? H`
+            <ha-input
+              id=${a}
+              type="number"
+              .label=${i(e.labelKey)}
+              .value=${s(t)}
+              min=${o.min ?? void 0}
+              max=${o.max ?? void 0}
+              ?disabled=${n}
+              @input=${(l) => this._onFieldInput(e, l)}
+              @focusin=${(l) => this._onFieldFocus(e, l)}
+              @focusout=${() => this._onFieldBlur(e)}
+            >
+              ${o.suffix ? H`<span slot="end" class="field-suffix">${o.suffix}</span>` : Ee}
+            </ha-input>
+          ` : H`
+          <div class="field-number-box">
+            <input
+              id=${a}
+              type="number"
+              .value=${s(t)}
+              min=${o.min ?? void 0}
+              max=${o.max ?? void 0}
+              ?disabled=${n}
+              @input=${(l) => this._onFieldInput(e, l)}
+              @focusin=${(l) => this._onFieldFocus(e, l)}
+              @focusout=${() => this._onFieldBlur(e)}
+            />
+            ${o.suffix ? H`<span class="field-suffix">${o.suffix}</span>` : Ee}
           </div>
-        ` : u;
-      }
+        `;
       case "select": {
         const l = o.options.map(
           (u) => H`
@@ -30882,7 +30880,7 @@ class tn extends (Oh = Ai, t1 = [YS({ attribute: !1 })], e1 = [$s()], QS = [$s()
    */
   _renderFieldLabel(e, t) {
     const n = e.control.kind, i = this._haTagForKind(n);
-    return i !== null && this._haAvailable(i) && this._hasBuiltInLabel(n) ? Re : H`
+    return i !== null && this._haAvailable(i) && this._hasBuiltInLabel(n) ? Ee : H`
       <label class="field-label" for=${this._fieldId(e)}>
         ${t(e.labelKey)}
         ${e.required ? H`<span class="req">*</span>` : ""}
@@ -31113,14 +31111,26 @@ tn.styles = e_`
       flex: 1 1 160px;
       min-width: 140px;
     }
-    .field-number-row {
+    .field-number-box {
       display: flex;
       align-items: center;
       gap: 6px;
+      background-color: var(--secondary-background-color, #f5f5f5);
+      border: 1px solid var(--divider-color, #ccc);
+      border-radius: 4px;
+      padding: 0 12px;
+      min-height: 40px;
+      box-sizing: border-box;
     }
-    .field-number-row > * {
+    .field-number-box input {
       flex: 1 1 auto;
       min-width: 0;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 1em;
+      color: var(--primary-text-color, #000);
+      padding: 8px 0;
     }
     .field-suffix {
       flex: 0 0 auto;

@@ -260,6 +260,7 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 - [X] T051 [P] Render the number `suffix` as a flex sibling in `src/card/energy-horizon-card-editor.ts` (`.field-number-row` / `.field-suffix`) and widen the inline field (`.field-inline` `flex: 1 1 160px; min-width: 140px`) so the label does not overlap the value/unit; rename the `editor.neutral_threshold` label in all four translation dictionaries to "Neutral threshold (%)"
 - [X] T052 [P] Update tests: `editor-field-registry.test.ts` (key, `suffix === "%"`, `inlineWith`), `editor-normalize.test.ts` (alias fallback on load, alias dropped on save, new-key precedence), `interpretation-semantics.test.ts` (`parseNeutralThresholdT`), `editor-sections.test.ts` + `editor-coverage.test.ts` (renamed `data-field` / config key)
 - [X] T053 Update SpecKit docs (`specs/903-card-ui-composition/`, `specs/904-configuration-surface/`, `specs/908-editor-full-coverage/` spec, contracts, data-model, research, tasks) and user docs (`README.md`, `README.advanced.md`, `wiki-publish/`, `changelog.md`) to the `neutral_threshold` state with a single deprecation note (present tense)
+- [X] T054 [P] Render the number `suffix` **inside** the input box (MUI `InputAdornment` style) in `src/card/energy-horizon-card-editor.ts`: for `ha-input` use its `end` slot (`<span slot="end" class="field-suffix">`), and for the native `<input>` fallback wrap the input + unit in a bordered `.field-number-box`; replace the old `.field-number-row` sibling layout
 
 ---
 
