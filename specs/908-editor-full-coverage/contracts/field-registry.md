@@ -18,6 +18,7 @@ interface FieldDescriptor {
   inlineWith?: string;                  // same-row pairing (FR-908-Z)
   subsection?: string;                  // i18n key for a non-collapsible subsection header
   dummy?: boolean;                      // UX-only: always ON + disabled, never written to config
+  column?: number;                      // 1-based column in a two-column section grid (Style)
 }
 ```
 
@@ -45,6 +46,7 @@ The render loop MUST:
 5. On a control change, route through `preservativeMerge` → emit gate (debounced/immediate per `emit`). A `dummy` field has no change handler and `_applyFieldChange` returns early for it, so it is never written to the config.
 6. Group fields into rows: a field with `inlineWith` renders in the same horizontal row as the field it references (to its right), not as its own row (FR-908-Z). The primary field takes the available width; the inline field is compact.
 7. Emit subsection headers: in a single pass over the section's visible fields, track the current `subsection` value; when it changes to a defined value, emit a non-collapsible subsection header (`localize(subsection)`) before the field. A subsection with no visible fields emits no header.
+8. Two-column grid: when any visible field in a section declares `column`, the section body renders as a CSS grid (`.section-columns`, `1fr 1fr`); each field is placed in its declared column, columns are bottom-aligned so same-feature fields share a row, and a subsection header occupies row 1 of its column. Sections without `column` fields render unchanged.
 
 **Consequences** (FR-908-A/B, SC-908-8):
 - **Adding a field** = adding one descriptor. No template change.
@@ -84,7 +86,7 @@ A descriptor may override `emit` explicitly.
 | `show_chart` | panels | — | boolean | `true` | no | — | **dummy** (always ON + disabled) |
 | `show_forecast_total_panel` | panels | — | boolean | `true` | no | — | — |
 | `show_narrative_comment` | panels | — | boolean | `true` | no | — | — |
-| `language` | formatting | — | select(5) | — (auto) | no | — | — |
+| `language` | formatting | — | select(5) | `auto` (sentinel ⇒ omitted in config) | no | — | Auto is always displayed when the key is absent |
 | `force_prefix` | formatting | Unit | select(8) | `auto` | no | — | — |
 | `number_format` | formatting | Unit | select(4) | `system` | no | — | — |
 | `precision` | formatting | Unit | number | `2` | no | — | — |
@@ -93,11 +95,11 @@ A descriptor may override `emit` explicitly.
 | `show_forecast` | chart | — | boolean | `true` | no | — | — |
 | `connect_nulls` | chart | — | boolean | `true` | no | — | — |
 | `show_legend` | chart | — | boolean | `false` | no | — | — |
-| `primary_color` | style | Current series | color | — | no | — | — |
-| `fill_current` | style | Current series | boolean | `true` | no | — | — |
-| `fill_current_opacity` | style | Current series | slider(0–100) | `30` | no | — | — |
-| `fill_reference` | style | Reference series | boolean | `false` | no | — | — |
-| `fill_reference_opacity` | style | Reference series | slider(0–100) | `30` | no | — | — |
+| `primary_color` | style | Current series | color | — | no | — | column 1 |
+| `fill_current` | style | Current series | boolean | `true` | no | — | column 1 |
+| `fill_current_opacity` | style | Current series | slider(0–100) | `30` | no | — | column 1 |
+| `fill_reference` | style | Reference series | boolean | `false` | no | — | column 2 |
+| `fill_reference_opacity` | style | Reference series | slider(0–100) | `30` | no | — | column 2 |
 | `debug` | diagnostics | — | boolean | `false` | no | — | — |
 
 **Excluded from the registry** (not standalone fields):

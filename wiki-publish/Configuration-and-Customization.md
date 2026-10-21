@@ -102,7 +102,7 @@ Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration 
 
 | Key | Type | Default | Mental model | Common failure / gotcha |
 |-----|------|---------|--------------|-------------------------|
-| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English. In the visual editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). The consumption summary uses full-sentence templates with `{{deltaUnit}}` and `{{deltaPercent}}` (see `src/translations/en.json`). |
+| `language` | string | HA language | Chooses translation dictionary for labels | Missing dictionary → fallback to English. In the visual editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). **Auto** is the default and is always displayed when the `language` key is omitted. The consumption summary uses full-sentence templates with `{{deltaUnit}}` and `{{deltaPercent}}` (see `src/translations/en.json`). |
 | `number_format` | `comma \| decimal \| language \| system` | HA/system | Controls which locale `Intl` uses for numbers | Use `decimal` for “always English-style decimals” |
 
 Time zone is taken from **`hass.config.time_zone`** (fallback UTC).
@@ -163,7 +163,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
 | **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend` |
-| **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
+| **Style** | **two-column grid** — **Current series** subsection (first column): `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection (second column): `fill_reference`, `fill_reference_opacity`; components of the same feature sit in the same row |
 | **Diagnostics** | `debug` |
 
 **Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_threshold`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact.

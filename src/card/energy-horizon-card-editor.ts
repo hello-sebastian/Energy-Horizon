@@ -893,6 +893,44 @@ export class EnergyHorizonCardEditor extends LitElement {
     const label = localize(`editor.section.${section}`);
     const fields = visibleFields(section, cfg, FIELD_REGISTRY);
 
+    // Two-column grid (Style section): when any visible field declares
+    // `column`, the section body renders as a CSS grid with two equal
+    // columns. Columns are bottom-aligned — a field's row is set by its
+    // distance from the bottom of its column — so same-feature fields
+    // (equal distance from the bottom) share a row even when the columns
+    // hold different field counts (e.g. `primary_color` has no reference
+    // counterpart). Row 1 is reserved for subsection headers when any
+    // column is headed.
+    const isGrid = fields.some((f) => f.column !== undefined);
+    const gridRow = new Map<string, number>();
+    const gridHeaderColumn = new Map<string, number>();
+    if (isGrid) {
+      const headedColumns = new Set<number>();
+      for (const f of fields) {
+        if (f.column !== undefined && f.subsection) {
+          headedColumns.add(f.column);
+          gridHeaderColumn.set(f.subsection, f.column);
+        }
+      }
+      const colCounts = new Map<number, number>();
+      for (const f of fields) {
+        if (f.column !== undefined) {
+          colCounts.set(f.column, (colCounts.get(f.column) ?? 0) + 1);
+        }
+      }
+      const maxCount = Math.max(...colCounts.values());
+      const bottomRow = (headedColumns.size > 0 ? 1 : 0) + maxCount;
+      const colIndex = new Map<number, number>();
+      for (const f of fields) {
+        if (f.column !== undefined) {
+          const idx = colIndex.get(f.column) ?? 0;
+          colIndex.set(f.column, idx + 1);
+          const count = colCounts.get(f.column)!;
+          gridRow.set(f.key, bottomRow - (count - 1 - idx));
+        }
+      }
+    }
+
     // Group fields into rows (FR-908-Z): a field with `inlineWith` renders in
     // the same horizontal row as the field it references (to its right), not
     // as its own row. The primary field takes the available width
@@ -909,10 +947,17 @@ export class EnergyHorizonCardEditor extends LitElement {
     const renderField = (
       field: FieldDescriptor,
       extraClass = ""
-    ): TemplateResult => html`
+    ): TemplateResult => {
+      const gridStyle = isGrid
+        ? field.column
+          ? `grid-column: ${field.column}; grid-row: ${gridRow.get(field.key)}`
+          : "grid-column: 1 / -1"
+        : "";
+      return html`
       <div
         class=${extraClass ? `field ${extraClass}` : "field"}
         data-field=${field.key}
+        style=${gridStyle || nothing}
       >
         ${this._renderFieldLabel(field, localize)}
         ${this._renderControl(
@@ -923,6 +968,7 @@ export class EnergyHorizonCardEditor extends LitElement {
         )}
       </div>
     `;
+    };
 
     // Single pass over the visible fields (registry order). A non-collapsible
     // subsection header is emitted whenever the `subsection` of consecutive
@@ -934,8 +980,16 @@ export class EnergyHorizonCardEditor extends LitElement {
       if (field.subsection !== currentSubsection) {
         currentSubsection = field.subsection;
         if (field.subsection) {
+          const headerColumn = gridHeaderColumn.get(field.subsection);
+          const headerStyle =
+            isGrid && headerColumn !== undefined
+              ? `grid-column: ${headerColumn}; grid-row: 1`
+              : "";
           bodyParts.push(
-            html`<div class="subsection-header">${localize(field.subsection)}</div>`
+            html`<div
+              class="subsection-header"
+              style=${headerStyle || nothing}
+            >${localize(field.subsection)}</div>`
           );
         }
       }
@@ -966,7 +1020,9 @@ export class EnergyHorizonCardEditor extends LitElement {
         );
       }
     }
-    const body = html`${bodyParts}`;
+    const body = isGrid
+      ? html`<div class="section-columns">${bodyParts}</div>`
+      : html`${bodyParts}`;
 
     // NOTE: the fallback is a `<div>`-based panel (NOT `<details>`). A
     // `<details>` + `?open` binding fires the native `toggle` event whenever
@@ -1063,7 +1119,10 @@ export class EnergyHorizonCardEditor extends LitElement {
     }
     .editor-section {
       border: 1px solid var(--divider-color, #ccc);
-      border-radius: 4px;
+      border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg));
+    }
+    ha-expansion-panel.editor-section {
+      --expansion-panel-content-padding: 0 12px 12px;
     }
     .section-header {
       cursor: pointer;
@@ -1089,6 +1148,9 @@ export class EnergyHorizonCardEditor extends LitElement {
       text-transform: uppercase;
       letter-spacing: 0.03em;
       color: var(--secondary-text-color, #555);
+    }
+    .section-body {
+      padding-bottom: 12px;
     }
     .section-body[hidden] {
       display: none;
@@ -1118,6 +1180,18 @@ export class EnergyHorizonCardEditor extends LitElement {
     .field-inline-wide {
       flex: 1 1 160px;
       min-width: 140px;
+    }
+    .section-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 12px;
+    }
+    .section-columns .field {
+      padding-left: 0;
+      padding-right: 0;
+    }
+    .section-columns .subsection-header {
+      padding: 8px 0 0;
     }
     .field-number-box {
       display: flex;

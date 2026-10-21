@@ -252,15 +252,17 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(field.control.kind).toBe("select");
     if (field.control.kind !== "select") return;
     const values = field.control.options.map((o) => o.value);
-    // First option is the empty "Auto (HA profile)" value.
-    expect(values[0]).toBe("");
+    // First option is the "auto" sentinel ("Auto (HA profile)").
+    expect(values[0]).toBe("auto");
     // Every available dictionary is offered as an option.
     for (const lang of ["en", "pl", "de", "fr"]) {
       expect(values).toContain(lang);
     }
-    // The empty option maps to an omitted (undefined) config value.
-    expect(toConfigValue(field, "")).toBeUndefined();
+    // The sentinel maps to an omitted (undefined) config value.
+    expect(toConfigValue(field, "auto")).toBeUndefined();
     expect(toConfigValue(field, "pl")).toBe("pl");
+    // The field defaults to the sentinel so "Auto" is always displayed.
+    expect(field.default).toBe("auto");
   });
 
   it("every descriptor has a non-empty labelKey and a valid section", () => {
@@ -307,6 +309,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(byKey.get("precision")!.default).toBe(2);
     expect(byKey.get("force_prefix")!.default).toBe("auto");
     expect(byKey.get("number_format")!.default).toBe("system");
+    expect(byKey.get("language")!.default).toBe("auto");
     expect(byKey.get("debug")!.default).toBe(false);
   });
 });

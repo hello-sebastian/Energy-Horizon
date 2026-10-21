@@ -58,6 +58,8 @@ interface FieldDescriptor {
   subsection?: string;
   /** UX-only field: rendered as a permanently ON + disabled control, never written to the config. */
   dummy?: boolean;
+  /** 1-based column (1 or 2) in a two-column section grid; set on the Style fields. */
+  column?: number;
 }
 ```
 
@@ -69,6 +71,7 @@ interface FieldDescriptor {
 - `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set for `show_title` (`title`), `show_icon` (`icon`), and `interpretation` (`neutral_threshold`) (FR-908-Z).
 - `subsection` (when set) MUST be an i18n key present in all four dictionaries (SC-908-7). The render loop emits a subsection header the first time a visible field with that `subsection` value appears, and again whenever the value changes; a subsection with no visible fields emits no header.
 - `dummy` fields are rendered as a permanently ON + disabled control with no change handler; `_applyFieldChange` returns early for them, so they are never written to the config. In v1.2.0 the only dummy is `show_chart` (the chart is always shown; the control documents that there is no per-card toggle).
+- `column` (when set) places the field in the given column of a two-column section grid. When any visible field in a section declares `column`, the section body renders as a CSS grid (`1fr 1fr`); columns are bottom-aligned so same-feature fields share a row, and a subsection header occupies row 1 of its column. In v1.2.0 only the Style section uses it: `primary_color`, `fill_current`, `fill_current_opacity` → column 1; `fill_reference`, `fill_reference_opacity` → column 2.
 
 ## 4. `FieldRegistry`
 
@@ -89,7 +92,7 @@ The single source of truth for what the editor renders and where. The render loo
 | **S3 Panels** | `show_comparison_summary`→boolean · `show_chart`→boolean (**dummy**, always ON + disabled) · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
 | **S4 Formatting & Localization** | `language`→select(5) · ▸ *Unit*: `force_prefix`→select(8) · `number_format`→select(4) · `precision`→number · ▸ *Dates*: `x_axis_format`→text · `tooltip_format`→text |
 | **S5 Chart settings** | `show_forecast`→boolean · `connect_nulls`→boolean · `show_legend`→boolean |
-| **S6 Style** | ▸ *Current series*: `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · ▸ *Reference series*: `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) |
+| **S6 Style** (two-column grid) | ▸ *Current series* (column 1): `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · ▸ *Reference series* (column 2): `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) |
 | **S7 Diagnostics** | `debug`→boolean |
 
 **`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (standard→`custom` removes it; `custom`→standard restores `period_offset: -1`) but it is **not** a registry field and is never rendered as a control in the visual editor.
@@ -97,6 +100,7 @@ The single source of truth for what the editor renders and where. The render loo
 **Select option sets** (values are the YAML values; labels are `editor.*` keys):
 - `comparison_preset`: `year_over_year`, `month_over_year`, `month_over_month`, **`custom`** (v1.2.0 adds `custom`).
 - `aggregation`: `auto`, `hour`, `day`, `week`, `month` (`auto` = adaptive, the documented default). **Note**: the `WindowAggregation` type is `"day"|"week"|"month"|"hour"` (no `"auto"`); the `auto` option maps to an **omitted/undefined** `aggregation` in the config, never a literal `"auto"` string.
+- `language`: `auto` (sentinel ⇒ omitted `language` key, inherits the HA profile language; the field's `default`), then one option per shipped dictionary (`en`, `pl`, `de`, `fr` — derived from `AVAILABLE_LANGUAGES`).
 - `interpretation`: `consumption`, `production`.
 - `force_prefix`: `auto`, `none`, `G`, `M`, `k`, `m`, `µ`, `` (empty = adaptive) — mirrors the v1.1.0 editor options.
 - `number_format`: `system`, `comma`, `decimal`, `language`.

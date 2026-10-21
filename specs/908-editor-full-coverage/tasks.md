@@ -264,6 +264,17 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ---
 
+## Post-implementation refinements (editor visual polish)
+
+> Four visual-editor refinements: (1) the `language` select's **Auto** option is backed by the sentinel value `"auto"` with `default: "auto"` (mapped to an omitted `language` key on save — same pattern as `aggregation`), so Auto is always displayed when the key is absent; (2) section corner radius follows the HA card token (`--ha-card-border-radius`, matching `ha-expansion-panel`'s header fill) and the last component keeps a 12px bottom inset (`--expansion-panel-content-padding: 0 12px 12px` on the panel, `padding-bottom: 12px` on the fallback `.section-body`); (3) the Style section renders its *Current series* / *Reference series* subsections in a **two-column grid** (`.section-columns`, `1fr 1fr`) with same-feature fields in the same row — declarative via a new `column?: number` on `FieldDescriptor` (column 1: `primary_color`, `fill_current`, `fill_current_opacity`; column 2: `fill_reference`, `fill_reference_opacity`).
+
+- [X] T055 [P] `src/card/editor/field-registry.ts`: `LANGUAGE_OPTIONS` first option `{ value: "auto", labelKey: "editor.language.auto" }`; `language` field gains `default: "auto"` and `valueToConfig: (v) => (v === "auto" ? undefined : v)`; add `column?: number` to `FieldDescriptor`; set `column: 1` on `primary_color`/`fill_current`/`fill_current_opacity` and `column: 2` on `fill_reference`/`fill_reference_opacity`
+- [X] T056 [P] `src/card/energy-horizon-card-editor.ts` static styles: `.editor-section` `border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg))`; `ha-expansion-panel.editor-section` `--expansion-panel-content-padding: 0 12px 12px`; `.section-body` `padding-bottom: 12px`; new `.section-columns` grid CSS (`1fr 1fr`, `column-gap: 12px`, zeroed field side padding, header `padding: 8px 0 0`)
+- [X] T057 [P] `src/card/energy-horizon-card-editor.ts` `_renderSection()`: when any visible field declares `column`, wrap the body in `.section-columns` and place fields via inline `grid-column`/`grid-row` (columns bottom-aligned so same-feature fields share a row; subsection headers occupy row 1 of their column); sections without `column` fields render unchanged
+- [X] T058 [P] Update tests (`editor-field-registry.test.ts` — `auto` sentinel + `default`; `editor-sections.test.ts` — two-column grid rows/columns + HA token CSS; `editor-coverage.test.ts` — Auto selected when the key is absent) and SpecKit docs (spec FR-908-F/X + Style acceptance, data-model, contracts/field-registry.md, plan.md) and user docs (`wiki-publish/Configuration-and-Customization.md`, `changelog.md` `[1.2.0]` Fixed) to the refined state (present tense)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

@@ -333,6 +333,54 @@ describe("editor sections (T018, US4)", () => {
     expect(headers).toEqual(["Current series", "Reference series"]);
   });
 
+  it("renders the style section as a two-column grid with same-feature fields in the same row", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    expandSection(el, "style");
+    await el.updateComplete;
+
+    const grid = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="style"] .section-body .section-columns'
+    );
+    expect(grid, "style section body must be a .section-columns grid").not.toBeNull();
+
+    const rowOf = (key: string): number => {
+      const field = grid!.querySelector<HTMLElement>(`[data-field="${key}"]`)!;
+      expect(field, `${key} must render in the style grid`).not.toBeNull();
+      return Number.parseInt(field.style.gridRow, 10);
+    };
+    const columnOf = (key: string): number => {
+      const field = grid!.querySelector<HTMLElement>(`[data-field="${key}"]`)!;
+      return Number.parseInt(field.style.gridColumn, 10);
+    };
+
+    // Current series fields sit in column 1, reference fields in column 2.
+    expect(columnOf("primary_color")).toBe(1);
+    expect(columnOf("fill_current")).toBe(1);
+    expect(columnOf("fill_current_opacity")).toBe(1);
+    expect(columnOf("fill_reference")).toBe(2);
+    expect(columnOf("fill_reference_opacity")).toBe(2);
+
+    // Same-feature fields share a row; primary_color (no counterpart) sits
+    // above the fill pair.
+    expect(rowOf("fill_current")).toBe(rowOf("fill_reference"));
+    expect(rowOf("fill_current_opacity")).toBe(rowOf("fill_reference_opacity"));
+    expect(rowOf("primary_color")).toBeLessThan(rowOf("fill_current"));
+    expect(rowOf("fill_current")).toBeLessThan(rowOf("fill_current_opacity"));
+
+    // Subsection headers occupy row 1 of their column.
+    const headerColumn = (text: string): number => {
+      const header = [...grid!.querySelectorAll<HTMLElement>(".subsection-header")].find(
+        (h) => h.textContent === text
+      )!;
+      expect(header, `header ${text} must render in the style grid`).not.toBeNull();
+      return Number.parseInt(header.style.gridColumn, 10);
+    };
+    expect(headerColumn("Current series")).toBe(1);
+    expect(headerColumn("Reference series")).toBe(2);
+  });
+
   it("renders show_chart as a permanently ON, disabled dummy switch", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
@@ -351,5 +399,21 @@ describe("editor sections (T018, US4)", () => {
     if (control!.tagName.toLowerCase() === "input") {
       expect((control as HTMLInputElement).checked).toBe(true);
     }
+  });
+
+  it("uses HA design tokens for section corner radius and bottom padding", () => {
+    const cssText = EnergyHorizonCardEditor.elementStyles
+      .map((s) => (s as CSSStyleSheet).cssText)
+      .join("\n");
+
+    // Corner radius follows the HA card token (matches ha-expansion-panel's
+    // header fill) instead of a hard-coded 4px.
+    expect(cssText).toContain(
+      "border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg))"
+    );
+    // The panel content gets 12px bottom padding via the HA CSS property.
+    expect(cssText).toContain("--expansion-panel-content-padding: 0 12px 12px");
+    // The div fallback body gets the same 12px bottom padding.
+    expect(cssText).toContain("padding-bottom: 12px");
   });
 });

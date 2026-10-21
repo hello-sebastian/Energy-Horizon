@@ -114,6 +114,15 @@ export interface FieldDescriptor {
    * written to the config.
    */
   dummy?: boolean;
+  /**
+   * 1-based column index (1 or 2) for sections rendered as a two-column
+   * grid. When any visible field in a section declares `column`, the section
+   * body renders as a CSS grid with two equal columns; fields without
+   * `column` span both columns. Subsection headers span both columns and
+   * appear at the first field that declares them. Used by the Style section
+   * so that the Current series / Reference series fields align row by row.
+   */
+  column?: number;
 }
 
 /** The full registry (data-model.md §4). */
@@ -171,13 +180,13 @@ const ANCHOR_OPTIONS: { value: string; labelKey: string }[] = [
 ];
 
 /**
- * Language picker options: an empty "Auto (HA profile)" option (maps to an
- * omitted `language` key) plus one option per shipped translation dictionary
- * (derived from `AVAILABLE_LANGUAGES` — adding a dictionary file adds the
- * option automatically, no registry edit needed).
+ * Language picker options: an "Auto (HA profile)" sentinel option (maps to an
+ * omitted `language` key — same pattern as `aggregation`) plus one option per
+ * shipped translation dictionary (derived from `AVAILABLE_LANGUAGES` — adding
+ * a dictionary file adds the option automatically, no registry edit needed).
  */
 const LANGUAGE_OPTIONS: { value: string; labelKey: string }[] = [
-  { value: "", labelKey: "editor.language.auto" },
+  { value: "auto", labelKey: "editor.language.auto" },
   ...AVAILABLE_LANGUAGES.map((lang) => ({
     value: lang,
     labelKey: `editor.language.${lang}`
@@ -353,11 +362,12 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: {
       kind: "select",
       options: LANGUAGE_OPTIONS,
-      // Empty ("Auto") maps to an omitted `language` key — the card then
+      // The "auto" sentinel maps to an omitted `language` key — the card then
       // inherits the HA profile language (FR-908-X chain step 2).
-      valueToConfig: (value) => (value === "" ? undefined : value)
+      valueToConfig: (value) => (value === "auto" ? undefined : value)
     },
-    labelKey: "editor.language"
+    labelKey: "editor.language",
+    default: "auto"
   },
   {
     key: "force_prefix",
@@ -427,7 +437,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "style",
     control: { kind: "color" },
     labelKey: "editor.primary_color",
-    subsection: "editor.subsection.current_series"
+    subsection: "editor.subsection.current_series",
+    column: 1
   },
   {
     key: "fill_current",
@@ -435,7 +446,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "boolean" },
     labelKey: "editor.fill_current",
     default: true,
-    subsection: "editor.subsection.current_series"
+    subsection: "editor.subsection.current_series",
+    column: 1
   },
   {
     key: "fill_current_opacity",
@@ -443,7 +455,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "slider", min: 0, max: 100, step: 1 },
     labelKey: "editor.fill_current_opacity",
     default: 30,
-    subsection: "editor.subsection.current_series"
+    subsection: "editor.subsection.current_series",
+    column: 1
   },
   {
     key: "fill_reference",
@@ -451,7 +464,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "boolean" },
     labelKey: "editor.fill_reference",
     default: false,
-    subsection: "editor.subsection.reference_series"
+    subsection: "editor.subsection.reference_series",
+    column: 2
   },
   {
     key: "fill_reference_opacity",
@@ -459,7 +473,8 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "slider", min: 0, max: 100, step: 1 },
     labelKey: "editor.fill_reference_opacity",
     default: 30,
-    subsection: "editor.subsection.reference_series"
+    subsection: "editor.subsection.reference_series",
+    column: 2
   },
 
   // S7 — Diagnostics

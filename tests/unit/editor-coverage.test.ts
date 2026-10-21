@@ -237,6 +237,18 @@ describe("editor coverage (T012, US1)", () => {
     expect(sectionOf(el, "language")).toBe("formatting");
   });
 
+  it("shows the Auto option selected when the language key is absent", async () => {
+    const el = mountEditor(MINIMAL_CONFIG);
+    await el.updateComplete;
+
+    const select = controlFor(el, "language") as HTMLSelectElement;
+    expect(select.tagName.toLowerCase()).toBe("select");
+    // The "auto" sentinel is selected (the key is absent from the config).
+    expect(select.value).toBe("auto");
+    const selectedOption = select.options[select.selectedIndex];
+    expect(selectedOption?.value).toBe("auto");
+  });
+
   it("round-trips a full config with zero keys lost (acceptance 4, SC-908-1)", async () => {
     const el = mountEditor(FULL_CONFIG);
     await el.updateComplete;
