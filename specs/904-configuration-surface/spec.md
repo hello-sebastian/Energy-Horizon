@@ -20,7 +20,7 @@ The visual editor provides **full coverage** of the card's YAML configuration, o
 
 | # | Section | Default | Fields (YAML keys) |
 |---|---|---|---|
-| 1 | General | expanded | `entity` (required), `show_title`+`title`, `show_icon`+`icon`, `interpretation`+`neutral_interpretation`, `aggregation` |
+| 1 | General | expanded | `entity` (required), `show_title`+`title`, `show_icon`+`icon`, `interpretation`+`neutral_threshold`, `aggregation` |
 | 2 | Time windows | expanded | `comparison_preset`; **Custom settings** subsection: `time_window.{anchor,duration,step,count,offset}` (custom mode only) |
 | 3 | Panels | collapsed | `show_comparison_summary`, `show_chart` (UX-only dummy, always ON + disabled), `show_forecast_total_panel`, `show_narrative_comment` |
 | 4 | Formatting & Localization | collapsed | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
@@ -81,7 +81,7 @@ const SCHEMA = [
 ];
 ```
 
-Editor presentation: the editor renders the seven sections above (see `specs/908-editor-full-coverage/` for the authoritative render-loop contract, subsection headers, and the `show_chart` dummy). The `interpretation` field is shown as a two-option control (Consumption / Production), default **Consumption**, in the same row as `neutral_interpretation`, matching the preservative-merge semantics in “Config preservation”.
+Editor presentation: the editor renders the seven sections above (see `specs/908-editor-full-coverage/` for the authoritative render-loop contract, subsection headers, and the `show_chart` dummy). The `interpretation` field is shown as a two-option control (Consumption / Production), default **Consumption**, in the same row as `neutral_threshold`, matching the preservative-merge semantics in “Config preservation”.
 
 ---
 
@@ -90,7 +90,7 @@ Editor presentation: the editor renders the seven sections above (see `specs/908
 **Publishes to**:
 - `900-time-model-windows`: `comparison_preset` + `time_window` YAML block.
 - `902-chart-rendering-interaction`: `primary_color`, `fill_*`, `show_forecast`, `x_axis_format`, `tooltip_format`, `aggregation`.
-- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`, `interpretation` (`consumption` \| `production`; omit → consumption per `903-card-ui-composition`), `neutral_interpretation` (optional; YAML-only in v1 per `903-card-ui-composition`).
+- `903-card-ui-composition`: `title`, `show_title`, `icon`, `show_icon`, `show_forecast`, `language`, `interpretation` (`consumption` \| `production`; omit → consumption per `903-card-ui-composition`), `neutral_threshold` (optional; YAML-only in v1 per `903-card-ui-composition`).
 - `906-units-numeric-scaling`: `force_prefix`.
 - All domains: the full `CardConfig` object on every `config-changed` event.
 

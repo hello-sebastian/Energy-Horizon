@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import {
   computeInterpretationSemantics,
   parseInterpretationMode,
-  parseNeutralInterpretationT
+  parseNeutralInterpretationT,
+  parseNeutralThresholdT
 } from "../../src/card/interpretation-semantics";
 import { semanticToneClass } from "../../src/card/trend-visual";
 
@@ -37,6 +38,30 @@ describe("parseNeutralInterpretationT", () => {
     expect(parseNeutralInterpretationT(0)).toBe(0);
     expect(parseNeutralInterpretationT(5)).toBe(5);
     expect(parseNeutralInterpretationT(100)).toBe(100);
+  });
+});
+
+describe("parseNeutralThresholdT", () => {
+  it("reads neutral_threshold when present", () => {
+    expect(parseNeutralThresholdT({ neutral_threshold: 5 })).toBe(5);
+  });
+
+  it("falls back to the deprecated neutral_interpretation alias", () => {
+    expect(parseNeutralThresholdT({ neutral_interpretation: 5 })).toBe(5);
+  });
+
+  it("prefers neutral_threshold over the alias when both are set", () => {
+    expect(
+      parseNeutralThresholdT({ neutral_threshold: 7, neutral_interpretation: 5 })
+    ).toBe(7);
+  });
+
+  it("falls back to 2 when neither key is present or both are invalid", () => {
+    expect(parseNeutralThresholdT({})).toBe(2);
+    expect(parseNeutralThresholdT({ neutral_interpretation: -3 })).toBe(2);
+    expect(
+      parseNeutralThresholdT({ neutral_threshold: "abc", neutral_interpretation: -1 })
+    ).toBe(2);
   });
 });
 

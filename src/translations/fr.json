@@ -79,7 +79,7 @@
   "editor.show_title": "Afficher le titre",
   "editor.icon": "Icône",
   "editor.show_icon": "Afficher l'icône",
-  "editor.neutral_interpretation": "Interprétation neutre (T)",
+  "editor.neutral_threshold": "Seuil neutre (%)",
   "editor.aggregation": "Agrégation",
   "editor.time_window": "Fenêtre temporelle",
   "editor.time_window.anchor": "Ancrage",

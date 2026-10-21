@@ -20,6 +20,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import "../helpers/setup-dom";
 import { EnergyHorizonCardEditor } from "../../src/card/energy-horizon-card-editor";
+import { SECTION_ICONS } from "../../src/card/editor/field-registry";
 import type { HomeAssistant } from "../../src/ha-types";
 import type { CardConfigInput } from "../../src/card/types";
 
@@ -159,6 +160,19 @@ describe("editor sections (T018, US4)", () => {
     }
   });
 
+  it("renders the section icon from SECTION_ICONS in every section header", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    for (const section of EXPECTED_ORDER) {
+      const icon = el.shadowRoot!.querySelector<HTMLElement>(
+        `[data-section="${section}"] .section-header ha-icon.section-icon`
+      ) as (HTMLElement & { icon?: string }) | null;
+      expect(icon, `section icon of ${section}`).not.toBeNull();
+      expect(icon!.icon, `icon of ${section}`).toBe(SECTION_ICONS[section as keyof typeof SECTION_ICONS]);
+    }
+  });
+
   it("an in-session expansion survives re-renders, but a fresh instance reopens collapsed (acceptance 4)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
@@ -209,15 +223,15 @@ describe("editor sections (T018, US4)", () => {
     ).not.toBeNull();
   });
 
-  it("renders neutral_interpretation in the same row as interpretation (FR-908-Z)", async () => {
+  it("renders neutral_threshold in the same row as interpretation (FR-908-Z)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;
 
     const neutral = el.shadowRoot!.querySelector<HTMLElement>(
-      '[data-field="neutral_interpretation"]'
+      '[data-field="neutral_threshold"]'
     )!;
     const row = neutral.closest<HTMLElement>(".field-row");
-    expect(row, "neutral_interpretation must live inside a .field-row").not.toBeNull();
+    expect(row, "neutral_threshold must live inside a .field-row").not.toBeNull();
     expect(
       row!.querySelector<HTMLElement>('[data-field="interpretation"]'),
       "the row must contain the interpretation field"

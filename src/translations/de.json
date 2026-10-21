@@ -79,7 +79,7 @@
   "editor.show_title": "Titel anzeigen",
   "editor.icon": "Symbol",
   "editor.show_icon": "Symbol anzeigen",
-  "editor.neutral_interpretation": "Neutrale Interpretation (T)",
+  "editor.neutral_threshold": "Neutral-Schwelle (%)",
   "editor.aggregation": "Aggregation",
   "editor.time_window": "Zeitfenster",
   "editor.time_window.anchor": "Anker",

@@ -72,7 +72,7 @@ src/card/
 ├── time-windows/
 │   └── presets.ts                  # getPresetTemplate: add "custom" branch → generic shape (no legacy flags)
 ├── editor/                         # NEW: pure, unit-testable editor modules
-│   ├── field-registry.ts           # FieldDescriptor type + the full registry (33 fields, 6 sections; time_window.* are declarative fields; language is a select built from AVAILABLE_LANGUAGES)
+│   ├── field-registry.ts           # FieldDescriptor type + the full registry (33 fields, 6 sections; time_window.* are declarative fields; language is a select built from AVAILABLE_LANGUAGES) + SECTION_ICONS (MDI icon per section header)
 │   ├── editor-ui-state.ts          # EditorUiState type + expand/collapse/focus/scroll helpers
 │   ├── config-merge.ts             # preservative deep merge (field-path aware; time_window key-by-key)
 │   └── config-normalize.ts         # load/save normalization: comparison_mode→comparison_preset, forecast→show_forecast

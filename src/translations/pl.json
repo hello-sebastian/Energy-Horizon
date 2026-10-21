@@ -79,7 +79,7 @@
   "editor.show_title": "Pokaż tytuł",
   "editor.icon": "Ikona",
   "editor.show_icon": "Pokaż ikonę",
-  "editor.neutral_interpretation": "Neutralna interpretacja (T)",
+  "editor.neutral_threshold": "Próg neutralny (%)",
   "editor.aggregation": "Agregacja",
   "editor.time_window": "Okno czasowe",
   "editor.time_window.anchor": "Kotwica",

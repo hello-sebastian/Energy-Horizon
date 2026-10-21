@@ -21,6 +21,7 @@ import { createLocalize } from "./localize";
 import {
   FIELD_REGISTRY,
   SECTION_ORDER,
+  SECTION_ICONS,
   visibleFields,
   resolveFieldValue,
   toConfigValue,
@@ -675,8 +676,14 @@ export class EnergyHorizonCardEditor extends LitElement {
               />
             `;
 
-      case "number":
-        return this._haAvailable("ha-input")
+      case "number": {
+        // `ha-input` has no suffix slot, so a unit suffix (e.g. `%`) is
+        // rendered as a sibling in a flex row that keeps the control and the
+        // unit on the same baseline.
+        const suffix = control.suffix
+          ? html`<span class="field-suffix">${control.suffix}</span>`
+          : nothing;
+        const inputEl = this._haAvailable("ha-input")
           ? html`
               <ha-input
                 id=${id}
@@ -704,6 +711,16 @@ export class EnergyHorizonCardEditor extends LitElement {
                 @focusout=${() => this._onFieldBlur(field)}
               />
             `;
+        if (!control.suffix) {
+          return inputEl;
+        }
+        return html`
+          <div class="field-number-row">
+            ${inputEl}
+            ${suffix}
+          </div>
+        `;
+      }
 
       case "select": {
         const options = control.options.map(
@@ -962,6 +979,11 @@ export class EnergyHorizonCardEditor extends LitElement {
             @expanded-changed=${(e: CustomEvent) =>
               this._onSectionExpandedChanged(section, e)}
           >
+            <ha-icon
+              slot="leading-icon"
+              class="section-icon"
+              .icon=${SECTION_ICONS[section]}
+            ></ha-icon>
             ${body}
           </ha-expansion-panel>
         `
@@ -980,6 +1002,10 @@ export class EnergyHorizonCardEditor extends LitElement {
               @keydown=${(e: KeyboardEvent) =>
                 this._onSectionHeaderKeydown(section, e)}
             >
+              <ha-icon
+                class="section-icon"
+                .icon=${SECTION_ICONS[section]}
+              ></ha-icon>
               ${label}
             </div>
             <div class="section-body" ?hidden=${!expanded}>${body}</div>
@@ -1035,10 +1061,17 @@ export class EnergyHorizonCardEditor extends LitElement {
       padding: 8px;
       font-weight: 600;
       user-select: none;
+      display: flex;
+      align-items: center;
     }
     .section-header:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: -2px;
+    }
+    .section-icon {
+      color: var(--secondary-text-color, #555);
+      margin-inline-end: 8px;
+      flex: none;
     }
     .subsection-header {
       padding: 8px 12px 0;
@@ -1071,7 +1104,22 @@ export class EnergyHorizonCardEditor extends LitElement {
       min-width: 0;
     }
     .field-inline {
+      flex: 1 1 160px;
+      min-width: 140px;
+    }
+    .field-number-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .field-number-row > * {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .field-suffix {
       flex: 0 0 auto;
+      font-size: 0.85em;
+      color: var(--secondary-text-color, #555);
     }
     .field-label {
       font-size: 0.85em;

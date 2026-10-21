@@ -72,26 +72,60 @@ describe("normalizeForLoad (research R8, FR-908-I/V)", () => {
     ).toBe(true);
   });
 
-  it("parses interpretation and neutral_interpretation to canonical values", () => {
+  it("parses interpretation and neutral_threshold to canonical values", () => {
     const out = normalizeForLoad({
       type: "x",
       entity: "e",
       comparison_preset: "year_over_year",
       interpretation: "production",
-      neutral_interpretation: 5
+      neutral_threshold: 5
     } as CardConfigInput);
     expect(out.interpretation).toBe("production");
-    expect(out.neutral_interpretation).toBe(5);
+    expect(out.neutral_threshold).toBe(5);
 
     const invalid = normalizeForLoad({
       type: "x",
       entity: "e",
       comparison_preset: "year_over_year",
       interpretation: "bogus",
-      neutral_interpretation: -3
+      neutral_threshold: -3
     } as CardConfigInput);
     expect(invalid.interpretation).toBe("consumption");
-    expect(invalid.neutral_interpretation).toBe(2);
+    expect(invalid.neutral_threshold).toBe(2);
+  });
+
+  it("resolves neutral_threshold from the deprecated neutral_interpretation alias", () => {
+    const out = normalizeForLoad({
+      type: "x",
+      entity: "e",
+      comparison_preset: "year_over_year",
+      neutral_interpretation: 5
+    } as CardConfigInput);
+    expect(out.neutral_threshold).toBe(5);
+    // The deprecated key is preserved in the loaded object (preservative merge).
+    expect(out.neutral_interpretation).toBe(5);
+  });
+
+  it("prefers neutral_threshold over the deprecated alias when both are set", () => {
+    const out = normalizeForLoad({
+      type: "x",
+      entity: "e",
+      comparison_preset: "year_over_year",
+      neutral_threshold: 7,
+      neutral_interpretation: 5
+    } as CardConfigInput);
+    expect(out.neutral_threshold).toBe(7);
+  });
+
+  it("normalizeForSave drops the deprecated neutral_interpretation and emits neutral_threshold", () => {
+    const out = normalizeForSave({
+      type: "x",
+      entity: "e",
+      comparison_preset: "year_over_year",
+      neutral_interpretation: 5
+    } as CardConfig);
+    expect(out.neutral_threshold).toBe(5);
+    expect("neutral_interpretation" in out).toBe(false);
   });
 
   it("preserves the legacy keys in the loaded object (for the preservative merge)", () => {

@@ -19,6 +19,8 @@ type SectionId =
 
 Fixed order: `general → time → panels → formatting → chart → style → diagnostics` (FR-908-E). The render loop iterates in this order; the order is a constant, not data. Sections may contain non-collapsible **subsections** (see §3 `FieldDescriptor.subsection`); a subsection is a visual grouping within a section, not a `SectionId`.
 
+`SECTION_ICONS` is a constant `Record<SectionId, string>` mapping each section to the MDI icon id rendered in its header (decorative; see contracts/field-registry.md "Section icons").
+
 ## 2. `ControlSpec` (declarative control metadata)
 
 ```ts
@@ -64,7 +66,7 @@ interface FieldDescriptor {
 - `required` is `true` only for `entity`; all others optional (FR-908-R).
 - `visibleWhen`/`disabledWhen` are pure predicates over `CardConfig` (no side effects, no I/O).
 - `labelKey` MUST exist in all four shipped dictionaries (SC-908-7).
-- `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set for `show_title` (`title`), `show_icon` (`icon`), and `interpretation` (`neutral_interpretation`) (FR-908-Z).
+- `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set for `show_title` (`title`), `show_icon` (`icon`), and `interpretation` (`neutral_threshold`) (FR-908-Z).
 - `subsection` (when set) MUST be an i18n key present in all four dictionaries (SC-908-7). The render loop emits a subsection header the first time a visible field with that `subsection` value appears, and again whenever the value changes; a subsection with no visible fields emits no header.
 - `dummy` fields are rendered as a permanently ON + disabled control with no change handler; `_applyFieldChange` returns early for them, so they are never written to the config. In v1.2.0 the only dummy is `show_chart` (the chart is always shown; the control documents that there is no per-card toggle).
 
@@ -82,7 +84,7 @@ The single source of truth for what the editor renders and where. The render loo
 
 | Section | Fields (YAML key → control) |
 |---|---|
-| **S1 General** (expanded) | `entity`→entity(sensor, required) · `show_title`→boolean (inline with `title`) · `title`→text · `show_icon`→boolean (inline with `icon`) · `icon`→icon · `interpretation`→select(2) (inline with `neutral_interpretation`) · `neutral_interpretation`→number · `aggregation`→select(5) |
+| **S1 General** (expanded) | `entity`→entity(sensor, required) · `show_title`→boolean (inline with `title`) · `title`→text · `show_icon`→boolean (inline with `icon`) · `icon`→icon · `interpretation`→select(2) (inline with `neutral_threshold`) · `neutral_threshold`→number (suffix `%`) · `aggregation`→select(5) |
 | **S2 Time windows** (expanded) | `comparison_preset`→select(4) · ▸ *Custom settings*: `time_window.anchor`→select(6) · `time_window.duration`→text · `time_window.step`→text · `time_window.count`→number · `time_window.offset`→text (all `time_window.*` visibleWhen: preset=custom) |
 | **S3 Panels** | `show_comparison_summary`→boolean · `show_chart`→boolean (**dummy**, always ON + disabled) · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
 | **S4 Formatting & Localization** | `language`→select(5) · ▸ *Unit*: `force_prefix`→select(8) · `number_format`→select(4) · `precision`→number · ▸ *Dates*: `x_axis_format`→text · `tooltip_format`→text |

@@ -32,12 +32,23 @@ export const SECTION_ORDER: readonly SectionId[] = [
   "diagnostics"
 ];
 
+/** MDI icon per section header (rendered in the panel's `leading-icon` slot). */
+export const SECTION_ICONS: Readonly<Record<SectionId, string>> = {
+  general: "mdi:application-cog-outline",
+  time: "mdi:chart-gantt",
+  panels: "mdi:view-day-outline",
+  formatting: "mdi:counter",
+  chart: "mdi:chart-timeline-variant-shimmer",
+  style: "mdi:palette-outline",
+  diagnostics: "mdi:bug-outline"
+};
+
 /** Declarative control metadata (data-model.md §2). */
 export type ControlSpec =
   | { kind: "entity"; domain: string }
   | { kind: "icon" }
   | { kind: "text" }
-  | { kind: "number"; min?: number; max?: number }
+  | { kind: "number"; min?: number; max?: number; suffix?: string }
   | {
       kind: "select";
       options: { value: string; labelKey: string }[];
@@ -85,7 +96,7 @@ export interface FieldDescriptor {
    * When set, this field renders in the same horizontal row as the field
    * with this key (to its right), instead of as its own row. Used for the
    * `show_title`/`title`, `show_icon`/`icon`, and
-   * `neutral_interpretation`/`interpretation` pairs (FR-908-Z).
+   * `neutral_threshold`/`interpretation` pairs (FR-908-Z).
    */
   inlineWith?: string;
   /**
@@ -231,10 +242,10 @@ export const FIELD_REGISTRY: FieldRegistry = [
     default: "consumption"
   },
   {
-    key: "neutral_interpretation",
+    key: "neutral_threshold",
     section: "general",
-    control: { kind: "number", min: 0, max: 100 },
-    labelKey: "editor.neutral_interpretation",
+    control: { kind: "number", min: 0, max: 100, suffix: "%" },
+    labelKey: "editor.neutral_threshold",
     default: 2,
     inlineWith: "interpretation"
   },

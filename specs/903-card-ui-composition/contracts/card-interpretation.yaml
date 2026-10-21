@@ -4,10 +4,12 @@
 # interpretation: optional. Case-insensitive. Omitted or invalid → consumption.
 interpretation: consumption   # consumption | production
 
-# neutral_interpretation: optional non-negative number = percent threshold T.
+# neutral_threshold: optional non-negative number = percent threshold T.
 # Semantic neutral when |p| ≤ T, where p is the same signed % as the delta chip.
 # Omitted → 2
-neutral_interpretation: 2
+# (Previously `neutral_interpretation`; that key remains a deprecated alias for
+# backward compatibility and will be removed in a future release.)
+neutral_threshold: 2
 
 # Notes:
 # - Delta chip numeric values are not altered by these keys.

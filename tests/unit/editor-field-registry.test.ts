@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   FIELD_REGISTRY,
   SECTION_ORDER,
+  SECTION_ICONS,
   groupBySection,
   visibleFields,
   resolveFieldValue,
@@ -25,7 +26,7 @@ const FR_908_D_KEYS = [
   "icon",
   "show_icon",
   "interpretation",
-  "neutral_interpretation",
+  "neutral_threshold",
   "aggregation",
   // S2 time
   "comparison_preset",
@@ -68,7 +69,7 @@ const SECTION_MEMBERSHIP: Record<SectionId, string[]> = {
     "icon",
     "show_icon",
     "interpretation",
-    "neutral_interpretation",
+    "neutral_threshold",
     "aggregation"
   ],
   time: [
@@ -168,6 +169,17 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(required.map((f) => f.key)).toEqual(["entity"]);
   });
 
+  it("SECTION_ICONS covers every section with an MDI icon", () => {
+    for (const section of SECTION_ORDER) {
+      const icon = SECTION_ICONS[section];
+      expect(icon, `icon of ${section}`).toBeTruthy();
+      expect(icon.startsWith("mdi:"), `icon of ${section} must be an MDI id`).toBe(true);
+    }
+    expect(Object.keys(SECTION_ICONS).sort()).toEqual(
+      [...SECTION_ORDER].sort()
+    );
+  });
+
   it("aggregation `auto` maps to an omitted (undefined) config value", () => {
     const agg = FIELD_REGISTRY.find((f) => f.key === "aggregation")!;
     expect(toConfigValue(agg, "auto")).toBeUndefined();
@@ -258,6 +270,17 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     }
   });
 
+  it("neutral_threshold is a number field with a % suffix, inline with interpretation", () => {
+    const byKey = new Map<string, FieldDescriptor>(
+      FIELD_REGISTRY.map((f) => [f.key, f])
+    );
+    const field = byKey.get("neutral_threshold")!;
+    expect(field.control.kind).toBe("number");
+    expect(field.control.suffix).toBe("%");
+    expect(field.inlineWith).toBe("interpretation");
+    expect(field.labelKey).toBe("editor.neutral_threshold");
+  });
+
   it("defaults match the documented v1.1.0 card defaults", () => {
     const byKey = new Map<string, FieldDescriptor>(
       FIELD_REGISTRY.map((f) => [f.key, f])
@@ -266,7 +289,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(byKey.get("show_icon")!.default).toBe(true);
     expect(byKey.get("comparison_preset")!.default).toBe("year_over_year");
     expect(byKey.get("interpretation")!.default).toBe("consumption");
-    expect(byKey.get("neutral_interpretation")!.default).toBe(2);
+    expect(byKey.get("neutral_threshold")!.default).toBe(2);
     expect(byKey.get("time_window.anchor")!.default).toBe("start_of_year");
     expect(byKey.get("time_window.duration")!.default).toBe("1y");
     expect(byKey.get("time_window.step")!.default).toBe("1y");

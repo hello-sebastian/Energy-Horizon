@@ -127,7 +127,7 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 
 ## R10. Section layout & progressive disclosure (FR-908-E/F)
 
-**Decision**: Six sections in fixed order, rendered from the registry grouped by `section`: **S1 Basic** (always expanded) — `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_interpretation`; **S2 Time & Aggregation** — `aggregation`, `period_offset` (standard) / `time_window.*` (custom); **S3 Layout & Visibility** — `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment`; **S4 Visuals** — `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`; **S5 Formatting & Axis** — `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`; **S6 System & Debug** — `debug`. S1 expanded by default; S2–S6 collapsed.
+**Decision**: Six sections in fixed order, rendered from the registry grouped by `section`: **S1 Basic** (always expanded) — `entity`, `title`, `show_title`, `icon`, `show_icon`, `comparison_preset`, `interpretation`, `neutral_threshold`; **S2 Time & Aggregation** — `aggregation`, `period_offset` (standard) / `time_window.*` (custom); **S3 Layout & Visibility** — `show_comparison_summary`, `show_forecast`, `show_forecast_total_panel`, `show_narrative_comment`; **S4 Visuals** — `primary_color`, `fill_current`, `fill_current_opacity`, `fill_reference`, `fill_reference_opacity`, `connect_nulls`, `show_legend`; **S5 Formatting & Axis** — `precision`, `force_prefix`, `number_format`, `language`, `x_axis_format`, `tooltip_format`; **S6 System & Debug** — `debug`. S1 expanded by default; S2–S6 collapsed.
 
 **Rationale**: Directly implements FR-908-E/F and User Story 4. Section membership is data (the `section` property), so moving a field is a data change (FR-908-B, SC-908-8).
 
@@ -152,9 +152,9 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 
 ## R12. Graceful degradation & no blocking validation (FR-908-S/T)
 
-**Decision**: The editor opens without a JS error when (a) `hass` is absent, (b) a select's configured value is unknown/out-of-range (render empty/default selection), or (c) the config is the minimal stub. The editor performs **no** blocking semantic validation of `time_window`, `offset`, `x_axis_format`, `tooltip_format`, `neutral_interpretation`, or numeric ranges — invalid values are passed through and the **card** surfaces the standard error state (domains 900/902). Saving is never blocked by the editor.
+**Decision**: The editor opens without a JS error when (a) `hass` is absent, (b) a select's configured value is unknown/out-of-range (render empty/default selection), or (c) the config is the minimal stub. The editor performs **no** blocking semantic validation of `time_window`, `offset`, `x_axis_format`, `tooltip_format`, `neutral_threshold`, or numeric ranges — invalid values are passed through and the **card** surfaces the standard error state (domains 900/902). Saving is never blocked by the editor.
 
-**Rationale**: Implements FR-908-S/T and the spec's edge cases (out-of-range `count`, invalid Luxon tokens, negative `neutral_interpretation`, `var(...)` colors). Keeps the editor a faithful, non-blocking UI for the YAML (Constitution II: degrade, don't crash).
+**Rationale**: Implements FR-908-S/T and the spec's edge cases (out-of-range `count`, invalid Luxon tokens, negative `neutral_threshold`, `var(...)` colors). Keeps the editor a faithful, non-blocking UI for the YAML (Constitution II: degrade, don't crash).
 
 **Alternatives considered**:
 - *Inline validation that blocks save* — rejected: explicitly a Non-Goal for v1.2.0 (FR-908-S); the card owns error surfacing.

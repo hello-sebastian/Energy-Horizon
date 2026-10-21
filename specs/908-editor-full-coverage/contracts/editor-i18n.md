@@ -47,7 +47,7 @@ Non-collapsible headers emitted within a section (see [field-registry.md](./fiel
 | `editor.show_title` | Show title |
 | `editor.icon` | Icon |
 | `editor.show_icon` | Show icon |
-| `editor.neutral_interpretation` | Neutral band (±%) |
+| `editor.neutral_threshold` | Neutral threshold (%) |
 | `editor.aggregation` | Aggregation |
 | `editor.show_chart` | Show chart |
 | `editor.time_window` | Custom time window |

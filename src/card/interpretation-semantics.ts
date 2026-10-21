@@ -50,6 +50,23 @@ export function parseNeutralInterpretationT(raw: unknown): number {
   return n;
 }
 
+/**
+ * Resolves the neutral-band threshold `T` from a raw config.
+ *
+ * `neutral_threshold` is the canonical key; the deprecated `neutral_interpretation`
+ * alias is used only when `neutral_threshold` is absent (the new key wins when
+ * both are present). Invalid / negative / non-numeric values fall back to `2`.
+ */
+export function parseNeutralThresholdT(
+  raw: { neutral_threshold?: unknown; neutral_interpretation?: unknown }
+): number {
+  const value =
+    raw.neutral_threshold !== undefined
+      ? raw.neutral_threshold
+      : raw.neutral_interpretation;
+  return parseNeutralInterpretationT(value);
+}
+
 function signToSemantic(
   sign: number,
   interpretation: InterpretationMode

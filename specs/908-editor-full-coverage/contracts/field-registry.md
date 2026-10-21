@@ -21,11 +21,25 @@ interface FieldDescriptor {
 }
 ```
 
+## Section icons
+
+`SECTION_ICONS` is a `Record<SectionId, string>` of MDI icon ids rendered in each section header (decorative; the accessible name of the section is its localized title):
+
+| Section | Icon |
+|---|---|
+| `general` | `mdi:application-cog-outline` |
+| `time` | `mdi:chart-gantt` |
+| `panels` | `mdi:view-day-outline` |
+| `formatting` | `mdi:counter` |
+| `chart` | `mdi:chart-timeline-variant-shimmer` |
+| `style` | `mdi:palette-outline` |
+| `diagnostics` | `mdi:bug-outline` |
+
 ## Render-loop contract
 
 The render loop MUST:
 1. Iterate sections in the fixed order `general → time → panels → formatting → chart → style → diagnostics`.
-2. For each section, group descriptors by `section`, filter by `visibleWhen(cfg)`, and apply `disabledWhen(cfg)`.
+2. For each section, group descriptors by `section`, filter by `visibleWhen(cfg)`, and apply `disabledWhen(cfg)`. The section header renders the icon from `SECTION_ICONS[section]` — via the `ha-expansion-panel` `leading-icon` slot, or as a `.section-icon` element inside the fallback `.section-header`.
 3. Render each visible control from its declarative `control` metadata, or invoke the `custom` renderer (which MUST read/write through the same merge + event pipeline).
 4. Bind each control's value from `_config` (resolved by `key` path) and its label from `localize(labelKey)`.
 5. On a control change, route through `preservativeMerge` → emit gate (debounced/immediate per `emit`). A `dummy` field has no change handler and `_applyFieldChange` returns early for it, so it is never written to the config.
@@ -57,8 +71,8 @@ A descriptor may override `emit` explicitly.
 | `title` | general | — | text | — | no | — | — |
 | `show_icon` | general | — | boolean | `true` | no | — | inline with `icon` |
 | `icon` | general | — | icon | — | no | — | — |
-| `interpretation` | general | — | select(2) | `consumption` | no | — | inline with `neutral_interpretation` |
-| `neutral_interpretation` | general | — | number | `2` | no | — | — |
+| `interpretation` | general | — | select(2) | `consumption` | no | — | inline with `neutral_threshold` |
+| `neutral_threshold` | general | — | number (suffix `%`) | `2` | no | — | — |
 | `aggregation` | general | — | select(5) | `auto` (⇒ omitted in config) | no | — | — |
 | `comparison_preset` | time | — | select(4) | `year_over_year` | no | — | — |
 | `time_window.anchor` | time | Custom settings | select(6) | `start_of_year` | no | preset = `custom` | — |

@@ -137,6 +137,12 @@ export interface CardConfig {
    * Neutral band half-width in percentage points (same signed % as delta chip).
    * Set by `setConfig` when invalid → `2`.
    */
+  neutral_threshold?: number;
+  /**
+   * @deprecated Use `neutral_threshold`. Legacy alias still accepted for
+   * backward compatibility; `neutral_threshold` wins when both are present.
+   * Support will be removed in a future release.
+   */
   neutral_interpretation?: number;
 }
 
@@ -150,6 +156,8 @@ export type CardConfigInput = Omit<CardConfig, "comparison_preset"> & {
   comparison_mode?: ComparisonMode;
   /** Raw YAML may use any string; normalized in `setConfig`. */
   interpretation?: InterpretationMode | string;
+  neutral_threshold?: number;
+  /** @deprecated Use `neutral_threshold`. */
   neutral_interpretation?: number;
 };
 

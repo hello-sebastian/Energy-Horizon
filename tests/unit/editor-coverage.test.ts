@@ -106,7 +106,7 @@ const FULL_CONFIG: CardConfigInput = {
   icon: "mdi:flash",
   show_icon: true,
   interpretation: "consumption",
-  neutral_interpretation: 2,
+  neutral_threshold: 2,
   aggregation: "day",
   // S2 — Time windows
   comparison_preset: "custom",

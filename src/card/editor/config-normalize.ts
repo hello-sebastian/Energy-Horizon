@@ -2,7 +2,7 @@ import type { CardConfig, CardConfigInput } from "../types";
 import { resolveComparisonPreset } from "../types";
 import {
   parseInterpretationMode,
-  parseNeutralInterpretationT
+  parseNeutralThresholdT
 } from "../interpretation-semantics";
 
 /**
@@ -26,12 +26,15 @@ import {
  *
  * - `comparison_preset` is pre-filled from `comparison_mode` when empty.
  * - `show_forecast` resolves as `config.show_forecast ?? config.forecast ?? true`.
- * - `interpretation` / `neutral_interpretation` are parsed to their canonical
- *   values (same behavior as the v1.1.0 editor `setConfig`).
+ * - `interpretation` / `neutral_threshold` are parsed to their canonical
+ *   values (same behavior as the card `setConfig`). `neutral_threshold`
+ *   resolves from the canonical key, falling back to the deprecated
+ *   `neutral_interpretation` alias.
  *
- * The deprecated `comparison_mode` and legacy `forecast` keys are preserved in
- * the returned object (the preservative merge copies them through); they are
- * only removed on save by {@link normalizeForSave}.
+ * The deprecated `comparison_mode`, legacy `forecast`, and deprecated
+ * `neutral_interpretation` keys are preserved in the returned object (the
+ * preservative merge copies them through); they are only removed on save by
+ * {@link normalizeForSave}.
  */
 export function normalizeForLoad(config: CardConfigInput): CardConfig {
   // The deprecated `comparison_mode` and legacy `forecast` keys are KEPT in the
@@ -50,16 +53,14 @@ export function normalizeForLoad(config: CardConfigInput): CardConfig {
       console.warn(message);
     }
   });
-  const neutral_interpretation = parseNeutralInterpretationT(
-    config.neutral_interpretation
-  );
+  const neutral_threshold = parseNeutralThresholdT(config);
 
   return {
     ...config,
     comparison_preset,
     show_forecast,
     interpretation,
-    neutral_interpretation
+    neutral_threshold
   } as CardConfig;
 }
 
@@ -70,6 +71,8 @@ export function normalizeForLoad(config: CardConfigInput): CardConfig {
  *   (replaces, not duplicates — FR-908-I).
  * - Emits `show_forecast` and **removes** the legacy `forecast` alias
  *   (FR-908-V).
+ * - Emits `neutral_threshold` and **removes** the deprecated
+ *   `neutral_interpretation` alias (replaces, not duplicates).
  *
  * Every other key (including unknown / future keys) is copied through
  * unchanged. Pure: returns a new object.
@@ -78,13 +81,16 @@ export function normalizeForSave(config: CardConfig): CardConfig {
   const {
     comparison_mode: _legacyComparisonMode,
     forecast: _legacyForecast,
+    neutral_interpretation: _legacyNeutralInterpretation,
     ...rest
   } = config as CardConfig & {
     comparison_mode?: unknown;
     forecast?: unknown;
+    neutral_interpretation?: unknown;
   };
   void _legacyComparisonMode;
   void _legacyForecast;
+  void _legacyNeutralInterpretation;
 
   const comparison_preset = resolveComparisonPreset({
     comparison_preset: config.comparison_preset,
@@ -96,9 +102,12 @@ export function normalizeForSave(config: CardConfig): CardConfig {
     (config as CardConfigInput).forecast ??
     true;
 
+  const neutral_threshold = parseNeutralThresholdT(config);
+
   return {
     ...rest,
     comparison_preset,
-    show_forecast
+    show_forecast,
+    neutral_threshold
   } as CardConfig;
 }

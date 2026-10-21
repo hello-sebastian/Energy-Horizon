@@ -50,7 +50,7 @@ comparison_preset: year_over_year
 | **Chart** | Apache ECharts: current series (window 0), reference (window 1), optional background for windows ≥ 2. |
 | **X-axis** | Shared axis length = **max nominal bucket count** across windows at the chart aggregation (window 0’s grain), not wall‑clock span alone; shorter series end earlier on that axis. |
 | **Numeric summary** | Cumulative values at the end of the current timeline vs reference, using the same alignment as the chart. |
-| **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_interpretation`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
+| **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_threshold`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
 | **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode. The chart **line** is hidden with `show_forecast: false`; the **Forecast \| Total** panel is controlled separately by `show_forecast_total_panel`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
 
@@ -79,7 +79,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `debug` | boolean | `false` | Console logs (windows, LTS queries, diagnostics). |
 | `language` | string | HA language | Translation language code; missing dictionary → fallback `en`. In the editor this is a **dropdown** over the available card dictionaries (plus an **Auto** option that inherits the HA profile language). |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic polarity for **comparison narrative**, **trend icon**, and **chart delta** segment only. Case-insensitive; unknown → `consumption` (optional `debug` console note). |
-| `neutral_interpretation` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (General). |
+| `neutral_threshold` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (General). Previously `neutral_interpretation` (deprecated alias; backward compatibility will be removed in a future release). |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
@@ -306,7 +306,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 
 | Section | Keys |
 |---------|------|
-| **General** | `entity`, `show_title` + `title`, `show_icon` + `icon`, `interpretation` + `neutral_interpretation`, `aggregation` |
+| **General** | `entity`, `show_title` + `title`, `show_icon` + `icon`, `interpretation` + `neutral_threshold`, `aggregation` |
 | **Time windows** | `comparison_preset`; **Custom settings** subsection: `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset only) |
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
@@ -314,7 +314,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 | **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
 | **Diagnostics** | `debug` |
 
-**Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_interpretation`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact. All other fields are standalone rows.
+**Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_threshold`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact. All other fields are standalone rows.
 
 **`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (removed on standard → `custom`, restored to `-1` on `custom` → standard) but it is not a control in the visual editor.
 
@@ -373,7 +373,7 @@ type: custom:energy-horizon-card
 entity: sensor.solar_production_month
 comparison_preset: year_over_year
 interpretation: production
-# optional: neutral_interpretation: 2
+# optional: neutral_threshold: 2
 ```
 
 ### Window width override (e.g. year / year) — merge with YoY preset

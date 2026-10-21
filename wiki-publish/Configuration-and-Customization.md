@@ -35,7 +35,7 @@ If you came here from the project README:
 | `aggregation` | `hour \| day \| week \| month` | auto/derived | LTS bucket size used for *all* windows | Too fine + long window → point cap error; the “now” marker uses the bucket that contains the current instant **inside window 0** (HA time zone), mapped to the shared axis | [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance) |
 | `period_offset` | number | `-1` | Shifts **reference year** in legacy YoY/MoY presets | Only meaningful for YoY/MoY legacy semantics | [Mental Model](Mental-Model-Comparisons-and-Timelines) |
 | `interpretation` | `consumption` \| `production` | `consumption` | Semantic “better/worse” for **narrative + chart delta** only (not chip signs, not Forecast \| Total). Narrative **period** wording follows merged **`time_window.step`**, not window geometry. | Case-insensitive; unknown → `consumption` | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
-| `neutral_interpretation` | number (≥ 0) | `2` | **Neutral band** on chip percent **p**: **|p| ≤ T** → neutral styling | Invalid → `2`; GUI-editable in v1.2.0 (General) | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
+| `neutral_threshold` | number (≥ 0) | `2` | **Neutral band** on chip percent **p**: **|p| ≤ T** → neutral styling | Invalid → `2`; GUI-editable in v1.2.0 (General). Previously `neutral_interpretation` (deprecated alias; backward compatibility will be removed in a future release) | [README.advanced.md](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
 
 ---
 
@@ -70,7 +70,7 @@ Optional **visibility** flags (default **on**: omit the key or use any value oth
 | `show_forecast_total_panel` | **Surface Container** (Forecast \| Total) | When `false`, hides that panel **only** if it would otherwise show. Independent of `show_forecast` (which controls only the chart line); the panel still requires forecast data gating and not single-window mode. |
 | `show_narrative_comment` | **Inteligent comment** | When `false`, the comment block (icon + narrative) is not rendered. |
 
-Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration surface** — every key on this page is GUI-editable. **`neutral_interpretation`** is GUI-editable in v1.2.0 (General). See the [Visual editor](#visual-editor-v120) block below and [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md#lovelace-editor) for the full section mapping.
+Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration surface** — every key on this page is GUI-editable. **`neutral_threshold`** is GUI-editable in v1.2.0 (General). See the [Visual editor](#visual-editor-v120) block below and [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md#lovelace-editor) for the full section mapping.
 
 ---
 
@@ -158,7 +158,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 
 | Section | Keys |
 |---------|------|
-| **General** | `entity`, `show_title` + `title`, `show_icon` + `icon`, `interpretation` + `neutral_interpretation`, `aggregation` |
+| **General** | `entity`, `show_title` + `title`, `show_icon` + `icon`, `interpretation` + `neutral_threshold`, `aggregation` |
 | **Time windows** | `comparison_preset`; **Custom settings** subsection: `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset only) |
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
@@ -166,7 +166,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
 | **Diagnostics** | `debug` |
 
-**Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_interpretation`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact.
+**Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_threshold`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact.
 
 **`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (removed on standard → `custom`, restored to `-1` on `custom` → standard) but it is not a control in the visual editor.
 

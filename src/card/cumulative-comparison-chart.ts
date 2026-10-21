@@ -18,7 +18,7 @@ import {
 import {
   computeInterpretationSemantics,
   parseInterpretationMode,
-  parseNeutralInterpretationT,
+  parseNeutralThresholdT,
   type InterpretationSemanticsResult
 } from "./interpretation-semantics";
 import { DateTime } from "luxon";
@@ -189,14 +189,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         console.warn(message);
       }
     });
-    const neutral_interpretation = parseNeutralInterpretationT(
-      rest.neutral_interpretation
-    );
+    const neutral_threshold = parseNeutralThresholdT(rest);
     this._config = {
       ...rest,
       comparison_preset,
       interpretation,
-      neutral_interpretation,
+      neutral_threshold,
       ...(show_forecast !== undefined ? { show_forecast } : {})
     } as CardConfig;
 
@@ -569,7 +567,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       difference: summary.difference,
       p: summary.differencePercent,
       interpretation: this._config.interpretation ?? "consumption",
-      T: this._config.neutral_interpretation ?? 2
+      T: this._config.neutral_threshold ?? 2
     });
   }
 
@@ -1192,7 +1190,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       entity: "",
       comparison_preset: "year_over_year",
       interpretation: "consumption",
-      neutral_interpretation: 2
+      neutral_threshold: 2
     };
   }
 }
