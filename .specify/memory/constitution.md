@@ -1,3 +1,11 @@
+<!-- SYNC IMPACT REPORT (materiał roboczy — do usunięcia przed commit)
+- Version: 1.0.0 → 1.1.0 (MINOR: dodano nową zasadę)
+- Modified principles: brak (żadna istniejąca zasada nie została zmieniona ani przemianowana)
+- Added sections: "VI. Dbałość językowa i UX writing" (nowa zasada w Core Principles)
+- Removed sections: brak
+- Follow-up TODOs: brak
+-->
+
 # Energy Horizon Lovelace Card Constitution
 
 Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace dla Home Assistant, dystrybuowanych jako integracje HACS. Ma charakter ogólny i powinna być stosowana niezależnie od konkretnego typu karty czy wizualizowanych danych.
@@ -44,6 +52,13 @@ Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace d
 - Karta powinna w przejrzysty sposób reagować na typowe problemy (brak uprawnień, brak danych, błędna konfiguracja) i dostarczać sygnałów, które ułatwiają debugowanie (logi w konsoli, komunikaty w UI, sekcja „troubleshooting” w dokumentacji).
 - Wszelkie mechanizmy cache’owania, agregacji lub optymalizacji danych muszą być czytelnie zaimplementowane i łatwe do wyłączenia lub przeprojektowania w przyszłości.
 
+### VI. Dbałość językowa i UX writing
+
+- Każdy tekst skierowany do użytkownika — dokumentacja, README, wiki, etykiety w formularzach, komunikaty błędów, komunikaty w UI — musi być redagowany z pozycji specjalisty języka, w którym tekst ma być napisany: lingwisty, redaktora i specjalisty UX writing.
+- Agent traktuje każdy otrzymany szkic jako tekst wymagający redakcji: zbyt długie i złożone zdania, błędnie użyte spójniki, błędy odmiany oraz niezrozumiałe komunikaty i etykiety muszą zostać poprawione, a nie przeniesione do tekstu docelowego.
+- Tekst docelowy musi być zrozumiały po pierwszej lekturze, pisany prostym językiem, tonem życzliwym, ale profesjonalnym, zgodnie ze standardami UX writing.
+- Komunikaty błędów i etykiety muszą być krótkie i konkretne; żargon techniczny jest używany tylko tam, gdzie jest niezbędny dla zrozumienia.
+
 ## Dodatkowe wymagania i ograniczenia
 
 - Projekt utrzymuje spójny styl pracy z ekosystemem open‑source: przejrzysty `README`,`changelog`, wiki na github, jasne zasady zgłaszania problemów i kontrybucji, szacunek dla użytkowników i współtwórców.
@@ -65,4 +80,4 @@ Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace d
 - Każda większa decyzja projektowa (nowy typ wizualizacji, istotne rozszerzenie konfiguracji, zmiana domyślnych zachowań) powinna być weryfikowana pod kątem zgodności z tą konstytucją.
 - Przeglądy okresowe projektu (np. przy większych wydaniach) powinny zawierać punkt „zgodność z konstytucją” i identyfikować miejsca wymagające refaktoryzacji.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-03-05
+**Version**: 1.1.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-10-21
