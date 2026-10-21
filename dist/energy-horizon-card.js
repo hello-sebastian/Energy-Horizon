@@ -30922,7 +30922,15 @@ class tn extends (Oh = Ai, t1 = [YS({ attribute: !1 })], e1 = [$s()], QS = [$s()
         H`
             <div class="field-row">
               ${l(h, "field-main")}
-              ${v.map((p) => l(p, "field-inline"))}
+              ${v.map(
+          (p) => l(
+            p,
+            // A number field with a unit suffix (e.g. `%`) needs a wider
+            // inline slot; plain switches stay compact so the main field
+            // keeps the full remaining width.
+            p.control.kind === "number" && p.control.suffix ? "field-inline field-inline-wide" : "field-inline"
+          )
+        )}
             </div>
           `
       );
@@ -31108,6 +31116,9 @@ tn.styles = e_`
       min-width: 0;
     }
     .field-inline {
+      flex: 0 0 auto;
+    }
+    .field-inline-wide {
       flex: 1 1 160px;
       min-width: 140px;
     }
