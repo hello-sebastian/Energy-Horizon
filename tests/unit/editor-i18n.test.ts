@@ -2,10 +2,10 @@
  * T007 — i18n dictionary guard (SC-908-7).
  *
  * Guarantees:
- * 1. Every `editor.*` key in the English dictionary resolves in all four
- *    dictionaries (en/pl/de/fr) with a non-empty value — no key drift.
+ * 1. Every `editor.*` key in the English dictionary resolves in all five
+ *    dictionaries (en/pl/de/fr/nl) with a non-empty value — no key drift.
  * 2. Every `editor.*` key referenced by the field registry (labels, option
- *    labels, section titles) resolves in all four dictionaries.
+ *    labels, section titles) resolves in all five dictionaries.
  * 3. The FR-908-X language chain falls back to English for missing keys.
  */
 import { describe, expect, it } from "vitest";
@@ -13,23 +13,24 @@ import en from "../../src/translations/en.json";
 import pl from "../../src/translations/pl.json";
 import de from "../../src/translations/de.json";
 import fr from "../../src/translations/fr.json";
+import nl from "../../src/translations/nl.json";
 import { FIELD_REGISTRY, SECTION_ORDER } from "../../src/card/editor/field-registry";
 import { createLocalize } from "../../src/card/localize";
 
 type Dict = Record<string, string>;
 
-const DICTS: Record<string, Dict> = { en, pl, de, fr };
+const DICTS: Record<string, Dict> = { en, pl, de, fr, nl };
 
 function editorKeys(dict: Dict): string[] {
   return Object.keys(dict).filter((k) => k.startsWith("editor."));
 }
 
 describe("editor i18n dictionaries", () => {
-  it("every editor.* key in en exists in pl, de, fr with a non-empty value", () => {
+  it("every editor.* key in en exists in pl, de, fr, nl with a non-empty value", () => {
     const enKeys = editorKeys(en);
     expect(enKeys.length).toBeGreaterThanOrEqual(60);
 
-    for (const lang of ["pl", "de", "fr"] as const) {
+    for (const lang of ["pl", "de", "fr", "nl"] as const) {
       const dict = DICTS[lang];
       const missing = enKeys.filter((k) => !(k in dict));
       expect(missing, `missing in ${lang}`).toEqual([]);
@@ -39,9 +40,9 @@ describe("editor i18n dictionaries", () => {
     }
   });
 
-  it("all four dictionaries have the same editor.* key set", () => {
+  it("all five dictionaries have the same editor.* key set", () => {
     const enSet = new Set(editorKeys(en));
-    for (const lang of ["pl", "de", "fr"] as const) {
+    for (const lang of ["pl", "de", "fr", "nl"] as const) {
       const other = new Set(editorKeys(DICTS[lang]));
       const missingInOther = [...enSet].filter((k) => !other.has(k));
       const extraInOther = [...other].filter((k) => !enSet.has(k));
@@ -50,7 +51,7 @@ describe("editor i18n dictionaries", () => {
     }
   });
 
-  it("every registry-referenced editor.* key resolves in all four dictionaries", () => {
+  it("every registry-referenced editor.* key resolves in all five dictionaries", () => {
     const referenced = new Set<string>();
     for (const field of FIELD_REGISTRY) {
       referenced.add(field.labelKey);

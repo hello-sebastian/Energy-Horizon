@@ -63,6 +63,23 @@ describe("label language chain (T011)", () => {
     document.body.innerHTML = "";
   });
 
+  it("inherits Dutch from the HA profile", async () => {
+    const el = mountEditor(BASE, makeHass("nl"));
+    await el.updateComplete;
+    expect(generalSectionLabel(el)).toBe("Algemeen");
+  });
+
+  it("offers Nederlands and renders Dutch after selecting it", async () => {
+    const el = mountEditor(BASE);
+    await el.updateComplete;
+    const language = el.shadowRoot!.querySelector<HTMLSelectElement>("#eh-field-language")!;
+    expect(language.querySelector('option[value="nl"]')?.textContent?.trim()).toBe("Nederlands");
+    language.value = "nl";
+    language.dispatchEvent(new Event("change", { bubbles: true }));
+    await el.updateComplete;
+    expect(generalSectionLabel(el)).toBe("Algemeen");
+  });
+
   it("renders labels in the card `language` when set", async () => {
     const el = mountEditor({ ...BASE, language: "pl" });
     await el.updateComplete;
