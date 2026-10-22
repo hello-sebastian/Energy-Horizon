@@ -1034,8 +1034,8 @@ export class EnergyHorizonCardEditor extends LitElement {
     // expansion state is driven purely by `EditorUiState` and survives
     // re-renders. The body stays in the DOM (hidden when collapsed) so there
     // is no flash/reset and field counts are stable.
-    // Per-section documentation link (FR-908-AA): a book icon in the section
-    // header pointing to the wiki chapter covering the section's keys. It
+    // Per-section documentation link (FR-908-AA): a help-circle icon in the
+    // section header pointing to the wiki chapter covering the section's keys. It
     // opens in a new tab and MUST stop propagation — the header (the panel's
     // `#summary` in the HA path, the clickable `.section-header` in the
     // fallback) toggles the section on click, so without `stopPropagation()`
@@ -1050,7 +1050,7 @@ export class EnergyHorizonCardEditor extends LitElement {
         title=${localize("editor.docs_link")}
         @click=${(e: Event) => e.stopPropagation()}
       >
-        <ha-icon icon="mdi:book-open-variant"></ha-icon>
+        <ha-icon icon="mdi:help-circle-outline"></ha-icon>
       </a>
     `;
 

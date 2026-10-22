@@ -100,9 +100,9 @@ What each section configures:
 - **Style** — the current/reference series colors and fills (two-column layout).
 - **Diagnostics** — the `debug` flag for extra console output.
 
-**Jump straight to the docs:** every section header carries a small book icon that opens the wiki chapter covering that section's keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
+**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
 
-<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the book (documentation) icon visible in each section header. -->
+<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the help-circle (documentation) icon visible in each section header. -->
 
 Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
 

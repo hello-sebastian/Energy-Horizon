@@ -328,7 +328,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 - **Style** — the **Current series** and **Reference series** subsections in a two-column grid (`primary_color`, `fill_current`, `fill_current_opacity` / `fill_reference`, `fill_reference_opacity`).
 - **Diagnostics** — `debug`.
 
-**Per-section documentation links:** every section header carries a book icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
+**Per-section documentation links:** every section header carries a help-circle icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
 
 | Section | Wiki chapter |
 |---------|--------------|
@@ -382,7 +382,7 @@ fill_reference: true
 
 **Preservative merge & round-trip.** A visual edit is applied with a **preservative deep merge**: changed fields are updated, `time_window` is merged key-by-key (editing `count` does not wipe `offset`), and **every key not modeled by the editor is preserved verbatim** — nothing is silently dropped. Because of this, Visual and YAML modes are two lossless views of the same config (see [Visual ↔ YAML round-trip](#visual--yaml-round-trip)).
 
-<!-- IMAGE PLACEHOLDER: Screenshot of the expanded Style section showing the two-column Current series / Reference series grid, with the book (documentation) icon in the section header. -->
+<!-- IMAGE PLACEHOLDER: Screenshot of the expanded Style section showing the two-column Current series / Reference series grid, with the help-circle (documentation) icon in the section header. -->
 
 ### Conditional rendering & cascading
 

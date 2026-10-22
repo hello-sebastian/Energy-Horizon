@@ -38,7 +38,7 @@ interface FieldDescriptor {
 
 ## Section documentation links
 
-`SECTION_DOCS_URLS` is a `Record<SectionId, string>` of wiki URLs rendered as a documentation link in each section header (FR-908-AA). The link is a `mdi:book-open-variant` icon with:
+`SECTION_DOCS_URLS` is a `Record<SectionId, string>` of wiki URLs rendered as a documentation link in each section header (FR-908-AA). The link is a `mdi:help-circle-outline` icon with:
 
 - `href` = `SECTION_DOCS_URLS[section]` (the wiki chapter covering the section's keys);
 - `target="_blank"` and `rel="noopener noreferrer"` (opens in a new tab);

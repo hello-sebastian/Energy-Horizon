@@ -6,7 +6,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 ### Added
 
-- **Per-section documentation links in the visual editor:** each editor section header now shows a documentation icon (book) linking to the wiki chapter covering that section's keys. The link opens in a new tab and does not collapse the section when clicked.
+- **Per-section documentation links in the visual editor:** each editor section header now shows a documentation icon (help circle) linking to the wiki chapter covering that section's keys. The link opens in a new tab and does not collapse the section when clicked.
 
 ### Documentation
 

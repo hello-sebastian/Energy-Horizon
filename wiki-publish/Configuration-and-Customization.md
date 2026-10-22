@@ -172,7 +172,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 
 **Conditional rendering:** `comparison_preset: custom` shows the `time_window` sub-block (under the **Custom settings** subsection); a standard preset hides it. **Forecast line / panel independence:** `show_forecast` controls only the forecast line on the chart; the `show_forecast_total_panel` control is always enabled (independent of `show_forecast`), so the line and the panel can be toggled separately.
 
-**Per-section documentation links:** every section header carries a book icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
+**Per-section documentation links:** every section header carries a help-circle icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
 
 | Section | Wiki chapter |
 |---------|--------------|
