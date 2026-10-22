@@ -20,7 +20,10 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import "../helpers/setup-dom";
 import { EnergyHorizonCardEditor } from "../../src/card/energy-horizon-card-editor";
-import { SECTION_ICONS } from "../../src/card/editor/field-registry";
+import {
+  SECTION_ICONS,
+  SECTION_DOCS_URLS
+} from "../../src/card/editor/field-registry";
 import type { HomeAssistant } from "../../src/ha-types";
 import type { CardConfigInput } from "../../src/card/types";
 
@@ -171,6 +174,38 @@ describe("editor sections (T018, US4)", () => {
       expect(icon, `section icon of ${section}`).not.toBeNull();
       expect(icon!.icon, `icon of ${section}`).toBe(SECTION_ICONS[section as keyof typeof SECTION_ICONS]);
     }
+  });
+
+  it("renders a documentation link in every section header pointing to the section's wiki chapter (FR-908-AA)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    for (const section of EXPECTED_ORDER) {
+      const link = el.shadowRoot!.querySelector<HTMLAnchorElement>(
+        `[data-section="${section}"] .section-docs-link`
+      );
+      expect(link, `docs link of ${section}`).not.toBeNull();
+      expect(link!.href, `href of ${section}`).toBe(
+        SECTION_DOCS_URLS[section as keyof typeof SECTION_DOCS_URLS]
+      );
+      expect(link!.target).toBe("_blank");
+      expect(link!.rel).toBe("noopener noreferrer");
+      expect(link!.getAttribute("aria-label")).toBe("Documentation");
+    }
+  });
+
+  it("clicking the documentation link does not toggle the section (FR-908-AA)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    // `general` is expanded by default; clicking its docs link must keep it
+    // expanded (the link stops propagation, so the header toggle is skipped).
+    const link = el.shadowRoot!.querySelector<HTMLAnchorElement>(
+      '[data-section="general"] .section-docs-link'
+    )!;
+    link.dispatchEvent(new Event("click", { bubbles: true }));
+    await el.updateComplete;
+    expect(isExpanded(el, "general"), "docs link click must not collapse the section").toBe(true);
   });
 
   it("an in-session expansion survives re-renders, but a fresh instance reopens collapsed (acceptance 4)", async () => {

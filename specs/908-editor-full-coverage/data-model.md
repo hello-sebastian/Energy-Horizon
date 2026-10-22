@@ -21,6 +21,8 @@ Fixed order: `general → time → panels → formatting → chart → style →
 
 `SECTION_ICONS` is a constant `Record<SectionId, string>` mapping each section to the MDI icon id rendered in its header (decorative; see contracts/field-registry.md "Section icons").
 
+`SECTION_DOCS_URLS` is a constant `Record<SectionId, string>` mapping each section to the wiki URL of the chapter covering its keys. It is rendered as the section header's documentation link (FR-908-AA); the link's accessible name is the localized `editor.docs_link` key (see contracts/field-registry.md "Section documentation links").
+
 ## 2. `ControlSpec` (declarative control metadata)
 
 ```ts

@@ -90,6 +90,20 @@ time_window:
 
 The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into seven sections: **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, and **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, and **Reference series**). **General** and **Time windows** are expanded by default; the rest are collapsed. You do not need to touch YAML to configure the card. In **General**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
 
+What each section configures:
+
+- **General** — the entity, header title/icon, interpretation (consumption vs production), neutral threshold, and aggregation.
+- **Time windows** — the comparison preset; when the preset is **custom**, a **Custom settings** subsection exposes the `time_window` block (`anchor`, `duration`, `step`, `count`, `offset`).
+- **Panels** — which card panels are visible (comparison summary, forecast & reference total, narrative comment).
+- **Formatting & Localization** — the card language, unit prefix, number format, precision, and the Luxon date formats for the axis and tooltip.
+- **Chart settings** — the forecast line, null-gap bridging, and the legend.
+- **Style** — the current/reference series colors and fills (two-column layout).
+- **Diagnostics** — the `debug` flag for extra console output.
+
+**Jump straight to the docs:** every section header carries a small book icon that opens the wiki chapter covering that section's keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
+
+<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the book (documentation) icon visible in each section header. -->
+
 Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
 
 ## Key features (in plain words)

@@ -275,6 +275,18 @@ description: "Task list for the Full-Coverage Visual Editor (v1.2.0)"
 
 ---
 
+## Post-implementation refinements (per-section documentation links + visual→YAML docs)
+
+> Each editor section header carries a documentation link (a `mdi:book-open-variant` icon) pointing to the wiki chapter covering the section's keys (FR-908-AA). The link opens in a new tab, has a localized accessible name (`editor.docs_link`), and does not toggle the section (click propagation is stopped). The user documentation is expanded with per-section descriptions and a **Visual → YAML mapping** (control → key table + worked example + preservative-merge/round-trip notes); screenshots are added manually via image placeholders.
+
+- [X] T059 [P] `src/card/editor/field-registry.ts`: add `SECTION_DOCS_URLS` (`Record<SectionId, string>`) mapping each section to its wiki chapter URL (general → `Configuration-and-Customization#core-configuration`, time → `Time-Window-Reference`, panels → `#layout-sections-figma-aligned`, formatting → `#localization-and-number-formatting`, chart → `#forecast`, style → `#chart-styling-fills-colors-gaps`, diagnostics → `#debug`)
+- [X] T060 [P] `src/card/energy-horizon-card-editor.ts`: render the `.section-docs-link` (`target="_blank"`, `rel="noopener noreferrer"`, `aria-label`/`title` from `editor.docs_link`, `stopPropagation()` click handler) in the `ha-expansion-panel` `icons` slot (wrapped in `.section-header-actions`) and in the fallback `.section-header`; add `.section-header-actions` / `.section-docs-link` CSS
+- [X] T061 [P] `src/translations/{en,pl,de,fr}.json`: add `editor.docs_link` to all four dictionaries (en "Documentation", pl "Dokumentacja", de "Dokumentation", fr "Documentation")
+- [X] T062 [P] Update tests: `tests/unit/editor-sections.test.ts` (every section header renders `.section-docs-link` with `href` = `SECTION_DOCS_URLS[section]`, `target="_blank"`, `rel="noopener noreferrer"`, `aria-label` "Documentation"; clicking the link does not toggle the section), `tests/unit/editor-field-registry.test.ts` (`SECTION_DOCS_URLS` covers every `SECTION_ORDER` section with a project-wiki URL)
+- [X] T063 Update SpecKit docs (`specs/908-editor-full-coverage/` spec FR-908-AA + Key Entities + Documentation Plan, plan.md, data-model.md, contracts/field-registry.md, tasks.md) and user docs (`README.md`, `README.advanced.md`, `wiki-publish/Configuration-and-Customization.md`, `wiki-publish/Getting-Started.md`, `changelog.md` `[Unreleased]`) with per-section descriptions, the per-section documentation links, and the **Visual → YAML mapping** (present tense)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

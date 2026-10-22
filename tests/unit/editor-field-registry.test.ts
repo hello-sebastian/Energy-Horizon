@@ -3,6 +3,7 @@ import {
   FIELD_REGISTRY,
   SECTION_ORDER,
   SECTION_ICONS,
+  SECTION_DOCS_URLS,
   groupBySection,
   visibleFields,
   resolveFieldValue,
@@ -176,6 +177,20 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
       expect(icon.startsWith("mdi:"), `icon of ${section} must be an MDI id`).toBe(true);
     }
     expect(Object.keys(SECTION_ICONS).sort()).toEqual(
+      [...SECTION_ORDER].sort()
+    );
+  });
+
+  it("SECTION_DOCS_URLS covers every section with a wiki URL (FR-908-AA)", () => {
+    for (const section of SECTION_ORDER) {
+      const url = SECTION_DOCS_URLS[section];
+      expect(url, `docs URL of ${section}`).toBeTruthy();
+      expect(
+        url.startsWith("https://github.com/hello-sebastian/energy-horizon/wiki/"),
+        `docs URL of ${section} must point to the project wiki`
+      ).toBe(true);
+    }
+    expect(Object.keys(SECTION_DOCS_URLS).sort()).toEqual(
       [...SECTION_ORDER].sort()
     );
   });

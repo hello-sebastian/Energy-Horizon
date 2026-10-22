@@ -36,11 +36,32 @@ interface FieldDescriptor {
 | `style` | `mdi:palette-outline` |
 | `diagnostics` | `mdi:bug-outline` |
 
+## Section documentation links
+
+`SECTION_DOCS_URLS` is a `Record<SectionId, string>` of wiki URLs rendered as a documentation link in each section header (FR-908-AA). The link is a `mdi:book-open-variant` icon with:
+
+- `href` = `SECTION_DOCS_URLS[section]` (the wiki chapter covering the section's keys);
+- `target="_blank"` and `rel="noopener noreferrer"` (opens in a new tab);
+- `aria-label` / `title` = `localize("editor.docs_link")` (the localized accessible name);
+- a `stopPropagation()` click handler — the section header is the toggle target, so the link MUST NOT collapse/expand the section when clicked.
+
+It is rendered in the `ha-expansion-panel` `icons` slot (wrapped in a `.section-header-actions` container) or, in the fallback path, inside the `.section-header` after the section title.
+
+| Section | Wiki chapter |
+|---|---|
+| `general` | `Configuration-and-Customization#core-configuration` |
+| `time` | `Time-Window-Reference` |
+| `panels` | `Configuration-and-Customization#layout-sections-figma-aligned` |
+| `formatting` | `Configuration-and-Customization#localization-and-number-formatting` |
+| `chart` | `Configuration-and-Customization#forecast` |
+| `style` | `Configuration-and-Customization#chart-styling-fills-colors-gaps` |
+| `diagnostics` | `Configuration-and-Customization#debug` |
+
 ## Render-loop contract
 
 The render loop MUST:
 1. Iterate sections in the fixed order `general → time → panels → formatting → chart → style → diagnostics`.
-2. For each section, group descriptors by `section`, filter by `visibleWhen(cfg)`, and apply `disabledWhen(cfg)`. The section header renders the icon from `SECTION_ICONS[section]` — via the `ha-expansion-panel` `leading-icon` slot, or as a `.section-icon` element inside the fallback `.section-header`.
+2. For each section, group descriptors by `section`, filter by `visibleWhen(cfg)`, and apply `disabledWhen(cfg)`. The section header renders the icon from `SECTION_ICONS[section]` — via the `ha-expansion-panel` `leading-icon` slot, or as a `.section-icon` element inside the fallback `.section-header` — and the documentation link from `SECTION_DOCS_URLS[section]` (FR-908-AA) — via the `ha-expansion-panel` `icons` slot, or inside the fallback `.section-header`.
 3. Render each visible control from its declarative `control` metadata, or invoke the `custom` renderer (which MUST read/write through the same merge + event pipeline).
 4. Bind each control's value from `_config` (resolved by `key` path) and its label from `localize(labelKey)`.
 5. On a control change, route through `preservativeMerge` → emit gate (debounced/immediate per `emit`). A `dummy` field has no change handler and `_applyFieldChange` returns early for it, so it is never written to the config.

@@ -196,6 +196,7 @@ As a user with an existing config that uses deprecated or out-of-range values, I
   - **S6 Style**: rendered as a **two-column grid** — **Current series** subsection `primary_color`, `fill_current`, `fill_current_opacity` in column 1, **Reference series** subsection `fill_reference`, `fill_reference_opacity` in column 2, with same-feature fields in the same row (the column assignment is declarative via a `column` property in the field registry).
   - **S7 Diagnostics**: `debug`.
 - **FR-908-Z (Inline field rows)**: In the **General** section, `show_title` renders in the **same horizontal row** as `title` (to its right), `show_icon` renders in the **same horizontal row** as `icon` (to its right), and `interpretation` renders in the **same horizontal row** as `neutral_threshold` (to its right). Each row keeps the boolean/select field's label-above-control layout; the primary field takes the available width, and the paired field is compact. All other fields render as standalone rows. The row grouping is **declarative** (an `inlineWith` reference in the field registry), so pairing or unpairing a field is a data change, not a template change (consistent with FR-908-A/B).
+- **FR-908-AA (Section documentation links)**: Each of the seven section headers MUST render a **documentation link** (a `mdi:book-open-variant` icon) pointing to the wiki chapter that covers the section's keys (the mapping is the `SECTION_DOCS_URLS` constant in the field registry). The link MUST open in a new tab (`target="_blank"`, `rel="noopener noreferrer"`), carry a localized accessible name (`editor.docs_link`), and MUST NOT toggle the section when clicked (it stops click propagation, since the section header is the toggle target).
 
 #### Conditional Rendering & Cascading
 
@@ -242,7 +243,8 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 - **`_config`**: The editor's internal full `CardConfig`. A **visual field edit** updates it by preservative deep merge (incremental); a **YAML parse** replaces it wholesale (`_config = parsedConfig`).
 - **`EditorMode`**: `"visual" | "yaml"` — the current editor mode. `setConfig()` preserves the mode (does not reset to Visual). In YAML mode, the textarea is a first-class input path (FR-908-Y).
 - **`ComparisonPreset`** (extended): The v1.2.0 editor offers `year_over_year`, `month_over_year`, `month_over_month`, and **`custom`** as the four preset choices. `custom` is a new value (see Cross-domain Contracts → `900`).
-- **Translation keys** (`editor.*`): New i18n keys for the added sections/fields/options in `en.json`, `pl.json`, `de.json`, `fr.json`.
+- **`SECTION_DOCS_URLS`** (new): A constant `Record<SectionId, string>` mapping each section to the wiki URL of the chapter covering its keys. Rendered as the section header's documentation link (FR-908-AA).
+- **Translation keys** (`editor.*`): New i18n keys for the added sections/fields/options in `en.json`, `pl.json`, `de.json`, `fr.json` (including `editor.docs_link`, the accessible name of the section documentation link).
 
 ---
 
@@ -387,6 +389,9 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 - Update the **feature list / highlights** to state that the visual editor now covers the **full** configuration surface (all seven sections), not a subset.
 - Add a short **"Visual editor"** note: the editor exposes every parameter; advanced users can still use YAML mode.
 - Bump the documented version reference to **1.2.0**.
+- **Per-section documentation links (FR-908-AA):** note that each section header carries a documentation icon linking to the wiki chapter covering that section's keys.
+- **Visual → YAML note:** state that every control maps 1:1 to a YAML key, with the full mapping table in `README.advanced.md`.
+- **Illustration:** include an image placeholder (a screenshot of the editor showing all seven sections with the documentation icon in each header).
 
 ### `README.advanced.md` (authoritative reference)
 
@@ -397,11 +402,14 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 - **`comparison_preset` section**: document the new **`custom`** value (resolve windows generically from `time_window`; no legacy flags) alongside the three standard presets.
 - **`neutral_threshold`**: change the "YAML-only in v1" note to "GUI-editable in v1.2.0".
 - Keep the existing YAML examples; add one **`custom` preset** example.
+- **Per-section descriptions:** for each of the seven sections, a short paragraph stating what the section configures and which wiki chapter its header's documentation link (FR-908-AA) points to.
+- **Visual → YAML mapping:** a subsection with a control → YAML key table for all editor fields, a worked example (a config built visually → the resulting YAML), and the **preservative merge** / **round-trip** behavior (unmodeled keys are preserved; switching modes is lossless in both directions).
 
 ### `wiki-publish/` (Diátaxis quadrants)
 
-- **`Configuration-and-Customization.md`** (Reference): update the `comparison_preset` row to include `custom`; update `neutral_threshold` gotcha from "YAML-only in v1" to "GUI-editable in v1.2.0"; add a short "Visual editor" reference block listing the seven sections (and their subsections) and which keys map to which.
-- **`Getting-Started.md`** (Tutorial): add a brief "Configure with the visual editor" step (open Edit → seven sections → live preview) so first-time users know they need not touch YAML.
+- **`Configuration-and-Customization.md`** (Reference): update the `comparison_preset` row to include `custom`; update `neutral_threshold` gotcha from "YAML-only in v1" to "GUI-editable in v1.2.0"; add a short "Visual editor" reference block listing the seven sections (and their subsections) and which keys map to which. The block MUST also document the **per-section documentation links** (FR-908-AA) and include a **Visual → YAML mapping** subsection (control → key table + worked example + preservative-merge/round-trip notes).
+- **`Getting-Started.md`** (Tutorial): add a brief "Configure with the visual editor" step (open Edit → seven sections → live preview) so first-time users know they need not touch YAML. The step MUST include a **per-section walkthrough** (what to do in each section on first configuration), a note about the **documentation link** in each section header, and a **Visual → YAML** note (each control = a YAML key; link to the reference).
+- **Illustrations:** where a screenshot clarifies the editor (all sections, the Style two-column grid, the Time windows `custom` sub-block), include an image placeholder with a description of what the graphic must show (screenshots are added manually).
 - **`Releases-and-Migration.md`**: add a **1.2.0** entry — editor full coverage, new `custom` preset, lifecycle stability; note the `comparison_mode` → `comparison_preset` migration is now also handled in the GUI.
 - **`Troubleshooting-and-FAQ.md`**: add an entry — "My expanded sections collapse / focus jumps while editing" → explain the v1.2.0 lifecycle fix (UI state independent of config).
 - **`Home.md` / `_Sidebar.md`**: no structural change expected (no new pages); verify links still resolve.
@@ -409,10 +417,11 @@ The documentation updates below are **planned** as part of v1.2.0 and are **owne
 ### `changelog.md`
 
 - Add a **`[1.2.0]`** section with:
-  - **Added**: full-coverage visual editor (seven sections); `custom` comparison preset; GUI controls for `time_window.*`, colors/opacities, formatting, Luxon patterns, forecast, debug.
+  - **Added**: full-coverage visual editor (seven sections); `custom` comparison preset; GUI controls for `time_window.*`, colors/opacities, formatting, Luxon patterns, forecast, debug; **per-section documentation links** in the editor (FR-908-AA).
   - **Changed**: editor lifecycle — expanded panels, focus, and scroll now persist across re-renders; text-input emits are debounced; YAML mode is now a first-class input path (live preview, last valid YAML values are saved, no switch to Visual required).
   - **Fixed**: deprecated `comparison_mode` is migrated to `comparison_preset` in the GUI on save.
-  - **Documentation**: README/wiki updated for the new editor coverage.
+  - **Documentation**: README/wiki updated for the new editor coverage, including per-section descriptions and the **Visual → YAML mapping**.
+- The file keeps an **`[Unreleased]`** section at the top (domain `907` governance); pending post-release refinements (e.g. the per-section documentation links and the expanded Visual → YAML docs) are recorded there until the next release.
 
 ### Consistency rules (must hold across all docs)
 

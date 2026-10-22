@@ -22,6 +22,7 @@ import {
   FIELD_REGISTRY,
   SECTION_ORDER,
   SECTION_ICONS,
+  SECTION_DOCS_URLS,
   visibleFields,
   resolveFieldValue,
   toConfigValue,
@@ -1033,6 +1034,26 @@ export class EnergyHorizonCardEditor extends LitElement {
     // expansion state is driven purely by `EditorUiState` and survives
     // re-renders. The body stays in the DOM (hidden when collapsed) so there
     // is no flash/reset and field counts are stable.
+    // Per-section documentation link (FR-908-AA): a book icon in the section
+    // header pointing to the wiki chapter covering the section's keys. It
+    // opens in a new tab and MUST stop propagation — the header (the panel's
+    // `#summary` in the HA path, the clickable `.section-header` in the
+    // fallback) toggles the section on click, so without `stopPropagation()`
+    // the link would also collapse/expand the section.
+    const docsLink = html`
+      <a
+        class="section-docs-link"
+        href=${SECTION_DOCS_URLS[section]}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label=${localize("editor.docs_link")}
+        title=${localize("editor.docs_link")}
+        @click=${(e: Event) => e.stopPropagation()}
+      >
+        <ha-icon icon="mdi:book-open-variant"></ha-icon>
+      </a>
+    `;
+
     const panel = this._haAvailable("ha-expansion-panel")
       ? html`
           <ha-expansion-panel
@@ -1049,6 +1070,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               class="section-icon"
               .icon=${SECTION_ICONS[section]}
             ></ha-icon>
+            <div slot="icons" class="section-header-actions">${docsLink}</div>
             ${body}
           </ha-expansion-panel>
         `
@@ -1072,6 +1094,7 @@ export class EnergyHorizonCardEditor extends LitElement {
                 .icon=${SECTION_ICONS[section]}
               ></ha-icon>
               ${label}
+              <span class="section-header-actions">${docsLink}</span>
             </div>
             <div class="section-body" ?hidden=${!expanded}>${body}</div>
           </div>
@@ -1140,6 +1163,26 @@ export class EnergyHorizonCardEditor extends LitElement {
       color: var(--secondary-text-color, #555);
       margin-inline-end: 8px;
       flex: none;
+    }
+    .section-header-actions {
+      margin-inline-start: auto;
+      display: inline-flex;
+      align-items: center;
+      flex: none;
+    }
+    .section-docs-link {
+      display: inline-flex;
+      align-items: center;
+      color: var(--secondary-text-color, #555);
+      text-decoration: none;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    .section-docs-link:hover,
+    .section-docs-link:focus-visible {
+      color: var(--primary-text-color, #000);
+      outline: none;
     }
     .subsection-header {
       padding: 8px 12px 0;

@@ -82,6 +82,20 @@ Since **v1.2.0** you can configure the card entirely in the GUI:
 2. The editor shows **seven sections** — General, Time windows, Panels, Formatting & Localization, Chart settings, Style, Diagnostics (General and Time windows are expanded by default). Expand any section to edit its fields.
 3. The **live preview** updates as you change values; click **Done** to save.
 
+**A quick tour of the sections** (what to do in each on first configuration):
+
+- **General** — pick the **Entity** (a sensor with long-term statistics), optionally set the **Title**/**Icon**, choose **Interpretation** (consumption vs production), and leave **Aggregation** on auto unless you need a specific bucket size.
+- **Time windows** — choose the **Comparison preset** (year over year, month over year, month over month, or **custom**). Only with **custom** does the **Custom settings** subsection appear, where you set `anchor`, `duration`, `step`, `count`, and `offset`.
+- **Panels** — toggle which panels are visible (comparison summary, forecast & reference total, narrative comment). The chart itself is always shown.
+- **Formatting & Localization** — set the card **Language** (Auto inherits your HA profile), the **Unit** prefix, **Number format**, **Precision**, and the **Dates** formats for the axis and tooltip.
+- **Chart settings** — toggle the **forecast line**, **null-gap bridging**, and the **legend**.
+- **Style** — set the **Current series** and **Reference series** colors and fills (two-column layout).
+- **Diagnostics** — enable **Debug** for extra console output when troubleshooting.
+
+**Jump straight to the docs:** every section header carries a small book icon that opens the wiki chapter covering that section’s keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table and a worked example are in [Configuration and Customization — Visual → YAML mapping](Configuration-and-Customization#visual--yaml-mapping).
+
+<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor in its default state (General and Time windows expanded, the rest collapsed) — the view a first-time user sees when opening the editor. -->
+
 You do not need to touch YAML. Advanced users can switch to **YAML mode** inside the editor — both modes show the full config and switching is lossless. See [Configuration and Customization](Configuration-and-Customization#visual-editor-v120).
 
 ---

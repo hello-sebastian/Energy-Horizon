@@ -172,7 +172,63 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 
 **Conditional rendering:** `comparison_preset: custom` shows the `time_window` sub-block (under the **Custom settings** subsection); a standard preset hides it. **Forecast line / panel independence:** `show_forecast` controls only the forecast line on the chart; the `show_forecast_total_panel` control is always enabled (independent of `show_forecast`), so the line and the panel can be toggled separately.
 
+**Per-section documentation links:** every section header carries a book icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
+
+| Section | Wiki chapter |
+|---------|--------------|
+| General | [Core configuration](#core-configuration) |
+| Time windows | [Time Window Reference](Time-Window-Reference) |
+| Panels | [Layout sections (Figma-aligned)](#layout-sections-figma-aligned) |
+| Formatting & Localization | [Localization and number formatting](#localization-and-number-formatting) |
+| Chart settings | [Forecast](#forecast) |
+| Style | [Chart styling (fills, colors, gaps)](#chart-styling-fills-colors-gaps) |
+| Diagnostics | [Debug](#debug) |
+
 **Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions. YAML mode is a first-class input path (live preview, last valid values saved). The editor does not perform inline validation — invalid values surface as the standard card error.
+
+### Visual → YAML mapping
+
+Every editor control maps **1:1** to a YAML key — what you set in the form is exactly what is written to the config (the deprecated `comparison_mode` and the `forecast` alias are normalized away on save). The full mapping:
+
+| Section | Control | YAML key |
+|---------|---------|----------|
+| General | Entity | `entity` |
+| General | Show title / Title | `show_title` / `title` |
+| General | Show icon / Icon | `show_icon` / `icon` |
+| General | Interpretation / Neutral threshold | `interpretation` / `neutral_threshold` |
+| General | Aggregation | `aggregation` |
+| Time windows | Comparison preset | `comparison_preset` |
+| Time windows → Custom settings | Anchor / Duration / Step / Count / Offset | `time_window.anchor` / `time_window.duration` / `time_window.step` / `time_window.count` / `time_window.offset` |
+| Panels | Show comparison summary | `show_comparison_summary` |
+| Panels | Show forecast & reference total panel | `show_forecast_total_panel` |
+| Panels | Show narrative comment | `show_narrative_comment` |
+| Formatting & Localization | Language | `language` |
+| Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
+| Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
+| Chart settings | Show forecast on chart / Connect nulls / Show legend | `show_forecast` / `connect_nulls` / `show_legend` |
+| Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
+| Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
+| Diagnostics | Debug | `debug` |
+
+**Worked example.** Configuring the card entirely in the visual editor — preset **custom**, `anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 3`, `aggregation: month`, `primary_color: #119894`, `fill_reference: on` — produces exactly this YAML:
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.energy_consumption_total
+comparison_preset: custom
+time_window:
+  anchor: start_of_year
+  duration: 1y
+  step: 1y
+  count: 3
+aggregation: month
+primary_color: "#119894"
+fill_reference: true
+```
+
+**Preservative merge & round-trip.** A visual edit is applied with a **preservative deep merge**: changed fields are updated, `time_window` is merged key-by-key (editing `count` does not wipe `offset`), and **every key not modeled by the editor is preserved verbatim** — nothing is silently dropped. Because of this, Visual and YAML modes are two lossless views of the same config.
+
+<!-- IMAGE PLACEHOLDER: Screenshot of the editor with the Time windows section expanded and the Custom settings subsection visible (comparison_preset set to custom, showing the anchor/duration/step/count/offset fields). -->
 
 ---
 

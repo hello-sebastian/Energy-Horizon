@@ -318,6 +318,72 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 
 **`period_offset` is YAML-only.** It is a legacy value managed at the config level by the preset switch (removed on standard → `custom`, restored to `-1` on `custom` → standard) but it is not a control in the visual editor.
 
+**What each section configures:**
+
+- **General** — the `entity`, header `title`/`icon` (with their show toggles), `interpretation` + `neutral_threshold`, and `aggregation`.
+- **Time windows** — `comparison_preset`; when the preset is **custom**, the **Custom settings** subsection exposes the `time_window` block (`anchor`, `duration`, `step`, `count`, `offset`).
+- **Panels** — the panel visibility flags (`show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment`); `show_chart` is a disabled, always-on indicator (the chart is always shown).
+- **Formatting & Localization** — `language`; the **Unit** subsection (`force_prefix`, `number_format`, `precision`) and the **Dates** subsection (`x_axis_format`, `tooltip_format`).
+- **Chart settings** — `show_forecast` (the chart line only), `connect_nulls`, `show_legend`.
+- **Style** — the **Current series** and **Reference series** subsections in a two-column grid (`primary_color`, `fill_current`, `fill_current_opacity` / `fill_reference`, `fill_reference_opacity`).
+- **Diagnostics** — `debug`.
+
+**Per-section documentation links:** every section header carries a book icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
+
+| Section | Wiki chapter |
+|---------|--------------|
+| General | [Configuration and Customization — Core configuration](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#core-configuration) |
+| Time windows | [Time Window Reference](https://github.com/hello-sebastian/energy-horizon/wiki/Time-Window-Reference) |
+| Panels | [Configuration and Customization — Layout sections](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#layout-sections-figma-aligned) |
+| Formatting & Localization | [Configuration and Customization — Localization and number formatting](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#localization-and-number-formatting) |
+| Chart settings | [Configuration and Customization — Forecast](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#forecast) |
+| Style | [Configuration and Customization — Chart styling](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#chart-styling-fills-colors-gaps) |
+| Diagnostics | [Configuration and Customization — Debug](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#debug) |
+
+### Visual → YAML mapping
+
+Every editor control maps **1:1** to a YAML key — what you set in the form is exactly what is written to the config (the deprecated `comparison_mode` and the `forecast` alias are normalized away on save; see above). The full mapping:
+
+| Section | Control | YAML key |
+|---------|---------|----------|
+| General | Entity | `entity` |
+| General | Show title / Title | `show_title` / `title` |
+| General | Show icon / Icon | `show_icon` / `icon` |
+| General | Interpretation / Neutral threshold | `interpretation` / `neutral_threshold` |
+| General | Aggregation | `aggregation` |
+| Time windows | Comparison preset | `comparison_preset` |
+| Time windows → Custom settings | Anchor / Duration / Step / Count / Offset | `time_window.anchor` / `time_window.duration` / `time_window.step` / `time_window.count` / `time_window.offset` |
+| Panels | Show comparison summary | `show_comparison_summary` |
+| Panels | Show forecast & reference total panel | `show_forecast_total_panel` |
+| Panels | Show narrative comment | `show_narrative_comment` |
+| Formatting & Localization | Language | `language` |
+| Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
+| Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
+| Chart settings | Show forecast on chart / Connect nulls / Show legend | `show_forecast` / `connect_nulls` / `show_legend` |
+| Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
+| Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
+| Diagnostics | Debug | `debug` |
+
+**Worked example.** Configuring the card entirely in the visual editor — preset **custom**, `anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 3`, `aggregation: month`, `primary_color: #119894`, `fill_reference: on` — produces exactly this YAML:
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.energy_consumption_total
+comparison_preset: custom
+time_window:
+  anchor: start_of_year
+  duration: 1y
+  step: 1y
+  count: 3
+aggregation: month
+primary_color: "#119894"
+fill_reference: true
+```
+
+**Preservative merge & round-trip.** A visual edit is applied with a **preservative deep merge**: changed fields are updated, `time_window` is merged key-by-key (editing `count` does not wipe `offset`), and **every key not modeled by the editor is preserved verbatim** — nothing is silently dropped. Because of this, Visual and YAML modes are two lossless views of the same config (see [Visual ↔ YAML round-trip](#visual--yaml-round-trip)).
+
+<!-- IMAGE PLACEHOLDER: Screenshot of the expanded Style section showing the two-column Current series / Reference series grid, with the book (documentation) icon in the section header. -->
+
 ### Conditional rendering & cascading
 
 - **`custom` ↔ `time_window`:** when `comparison_preset` is **`custom`**, the editor shows the `time_window` sub-block (five fields: `anchor`, `duration`, `step`, `count`, `offset`) under the **Custom settings** subsection. When a standard preset is selected, the `time_window` sub-block is hidden. Switching standard → `custom` removes `period_offset` from the config and initializes `time_window` with defaults (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`); switching back removes `time_window` and restores `period_offset: -1` in the config.

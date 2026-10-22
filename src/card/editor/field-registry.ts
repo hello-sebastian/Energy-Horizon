@@ -43,6 +43,27 @@ export const SECTION_ICONS: Readonly<Record<SectionId, string>> = {
   diagnostics: "mdi:bug-outline"
 };
 
+/**
+ * Wiki documentation URL per section (FR-908-AA). Rendered as a link in the
+ * section header's `icons` slot (or the fallback `.section-header`), pointing
+ * to the wiki chapter that covers the section's keys.
+ */
+export const SECTION_DOCS_URLS: Readonly<Record<SectionId, string>> = {
+  general:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#core-configuration",
+  time: "https://github.com/hello-sebastian/energy-horizon/wiki/Time-Window-Reference",
+  panels:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#layout-sections-figma-aligned",
+  formatting:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#localization-and-number-formatting",
+  chart:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#forecast",
+  style:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#chart-styling-fills-colors-gaps",
+  diagnostics:
+    "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#debug"
+};
+
 /** Declarative control metadata (data-model.md §2). */
 export type ControlSpec =
   | { kind: "entity"; domain: string }

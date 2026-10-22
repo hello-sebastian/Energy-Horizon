@@ -55,6 +55,7 @@
   "editor.month_over_month": "Monat zu Monat (aufeinanderfolgend)",
   "editor.force_prefix": "Einheitenpräfix",
   "editor.visual_mode": "Visuell",
+  "editor.docs_link": "Dokumentation",
   "editor.yaml_mode": "YAML",
   "editor.yaml_error": "Ungültiges YAML",
   "editor.show_comparison_summary": "Vergleich „bis heute“ anzeigen (Data series info)",

@@ -55,6 +55,7 @@
   "editor.month_over_month": "Mois sur mois (consécutifs)",
   "editor.force_prefix": "Préfixe d'unité",
   "editor.visual_mode": "Visuel",
+  "editor.docs_link": "Documentation",
   "editor.yaml_mode": "YAML",
   "editor.yaml_error": "YAML invalide",
   "editor.show_comparison_summary": "Afficher le résumé de comparaison (infos des séries de données)",
