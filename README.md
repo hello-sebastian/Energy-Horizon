@@ -100,7 +100,7 @@ What each section configures:
 - **Style** — the current/reference series colors and fills (two-column layout).
 - **Diagnostics** — the `debug` flag for extra console output.
 
-**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
+**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Helper texts:** non-obvious fields — the time window syntax, the Luxon date formats, aggregation, precision, and the neutral threshold — show a short helper text below the control; the full reference is in the wiki. **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
 
 <!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the help-circle (documentation) icon visible in each section header. -->
 

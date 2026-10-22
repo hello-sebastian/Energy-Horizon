@@ -80,7 +80,7 @@
   "editor.show_title": "Pokaż tytuł",
   "editor.icon": "Ikona",
   "editor.show_icon": "Pokaż ikonę",
-  "editor.neutral_threshold": "Próg neutralny (%)",
+  "editor.neutral_threshold": "Próg neutralności",
   "editor.aggregation": "Agregacja",
   "editor.time_window": "Okno czasowe",
   "editor.time_window.anchor": "Kotwica",
@@ -129,6 +129,16 @@
   "editor.anchor.start_of_week": "Początek tygodnia",
   "editor.anchor.start_of_day": "Początek dnia",
   "editor.anchor.start_of_hour": "Początek godziny",
-  "editor.anchor.now": "Teraz"
+  "editor.anchor.now": "Teraz",
+  "editor.neutral_threshold_helper": "Delta w zakresie ±X% traktowana jest jako neutralna",
+  "editor.aggregation_helper": "Auto dobiera rozmiar interwału z długości okna; inaczej: godzina, dzień, tydzień lub miesiąc",
+  "editor.time_window.anchor_helper": "Punkt odniesienia, od którego okna są liczone wstecz",
+  "editor.time_window.duration_helper": "Długość okna — liczba + jednostka: 1y, 6M, 1w, 1d, 1h, 90m (min. 1h)",
+  "editor.time_window.step_helper": "Odstęp między oknami czasowymi, wstecz: 1y, 1M, 1w, 1d, 1h",
+  "editor.time_window.count_helper": "1 = tylko bieżące · 2 = bieżące + odniesienie · 3+ dodaje serie kontekstowe",
+  "editor.time_window.offset_helper": "Przesuwa kotwicę w czasie kalendarzowym — format ISO 8601, np. P4M4D, -P2M",
+  "editor.precision_helper": "Liczba miejsc po przecinku w wartościach i podpowiedziach",
+  "editor.x_axis_format_helper": "Tokeny Luxon, np. cccc, dd LLL yyyy HH:mm — wyłącza adaptacyjne etykiety",
+  "editor.tooltip_format_helper": "Tokeny Luxon, np. cccc, dd LLL yyyy HH:mm"
 }
 

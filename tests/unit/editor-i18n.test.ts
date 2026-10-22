@@ -54,6 +54,10 @@ describe("editor i18n dictionaries", () => {
     const referenced = new Set<string>();
     for (const field of FIELD_REGISTRY) {
       referenced.add(field.labelKey);
+      // Helper texts are i18n keys too (FR-908-AB).
+      if (field.helperKey) {
+        referenced.add(field.helperKey);
+      }
       // Non-collapsible subsection headers are i18n keys too.
       if (field.subsection) {
         referenced.add(field.subsection);

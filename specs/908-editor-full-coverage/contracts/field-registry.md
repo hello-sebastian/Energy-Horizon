@@ -10,6 +10,7 @@ interface FieldDescriptor {
   section: SectionId;                   // "general"|"time"|"panels"|"formatting"|"chart"|"style"|"diagnostics"
   control: ControlSpec;                 // declarative spec or { kind: "custom", render }
   labelKey: string;                     // "editor.<name>"
+  helperKey?: string;                   // i18n key of the helper text below the control, "editor.<name>_helper" (FR-908-AB)
   default?: unknown;
   required?: boolean;                   // true only for `entity`
   visibleWhen?: (cfg: CardConfig) => boolean;
@@ -63,7 +64,7 @@ The render loop MUST:
 1. Iterate sections in the fixed order `general → time → panels → formatting → chart → style → diagnostics`.
 2. For each section, group descriptors by `section`, filter by `visibleWhen(cfg)`, and apply `disabledWhen(cfg)`. The section header renders the icon from `SECTION_ICONS[section]` — via the `ha-expansion-panel` `leading-icon` slot, or as a `.section-icon` element inside the fallback `.section-header` — and the documentation link from `SECTION_DOCS_URLS[section]` (FR-908-AA) — via the `ha-expansion-panel` `icons` slot, or inside the fallback `.section-header`.
 3. Render each visible control from its declarative `control` metadata, or invoke the `custom` renderer (which MUST read/write through the same merge + event pipeline).
-4. Bind each control's value from `_config` (resolved by `key` path) and its label from `localize(labelKey)`.
+4. Bind each control's value from `_config` (resolved by `key` path) and its label from `localize(labelKey)`. When the descriptor sets `helperKey`, also render a `.field-helper` element below the control with `localize(helperKey)` (FR-908-AB); fields without `helperKey` render no helper.
 5. On a control change, route through `preservativeMerge` → emit gate (debounced/immediate per `emit`). A `dummy` field has no change handler and `_applyFieldChange` returns early for it, so it is never written to the config.
 6. Group fields into rows: a field with `inlineWith` renders in the same horizontal row as the field it references (to its right), not as its own row (FR-908-Z). The primary field takes the available width; the inline field is compact.
 7. Emit subsection headers: in a single pass over the section's visible fields, track the current `subsection` value; when it changes to a defined value, emit a non-collapsible subsection header (`localize(subsection)`) before the field. A subsection with no visible fields emits no header.
@@ -95,14 +96,14 @@ A descriptor may override `emit` explicitly.
 | `show_icon` | general | — | boolean | `true` | no | — | inline with `icon` |
 | `icon` | general | — | icon | — | no | — | — |
 | `interpretation` | general | — | select(2) | `consumption` | no | — | inline with `neutral_threshold` |
-| `neutral_threshold` | general | — | number (suffix `%`) | `2` | no | — | — |
-| `aggregation` | general | — | select(5) | `auto` (⇒ omitted in config) | no | — | — |
+| `neutral_threshold` | general | — | number (suffix `%`) | `2` | no | — | helper |
+| `aggregation` | general | — | select(5) | `auto` (⇒ omitted in config) | no | — | helper |
 | `comparison_preset` | time | — | select(4) | `year_over_year` | no | — | — |
-| `time_window.anchor` | time | Custom settings | select(6) | `start_of_year` | no | preset = `custom` | — |
-| `time_window.duration` | time | Custom settings | text | `1y` | no | preset = `custom` | — |
-| `time_window.step` | time | Custom settings | text | `1y` | no | preset = `custom` | — |
-| `time_window.count` | time | Custom settings | number | `2` | no | preset = `custom` | — |
-| `time_window.offset` | time | Custom settings | text | — | no | preset = `custom` | — |
+| `time_window.anchor` | time | Custom settings | select(6) | `start_of_year` | no | preset = `custom` | helper |
+| `time_window.duration` | time | Custom settings | text | `1y` | no | preset = `custom` | helper |
+| `time_window.step` | time | Custom settings | text | `1y` | no | preset = `custom` | helper |
+| `time_window.count` | time | Custom settings | number | `2` | no | preset = `custom` | helper |
+| `time_window.offset` | time | Custom settings | text | — | no | preset = `custom` | helper |
 | `show_comparison_summary` | panels | — | boolean | `true` | no | — | — |
 | `show_chart` | panels | — | boolean | `true` | no | — | **dummy** (always ON + disabled) |
 | `show_forecast_total_panel` | panels | — | boolean | `true` | no | — | — |
@@ -110,9 +111,9 @@ A descriptor may override `emit` explicitly.
 | `language` | formatting | — | select(5) | `auto` (sentinel ⇒ omitted in config) | no | — | Auto is always displayed when the key is absent |
 | `force_prefix` | formatting | Unit | select(8) | `auto` | no | — | — |
 | `number_format` | formatting | Unit | select(4) | `system` | no | — | — |
-| `precision` | formatting | Unit | number | `2` | no | — | — |
-| `x_axis_format` | formatting | Dates | text | — | no | — | — |
-| `tooltip_format` | formatting | Dates | text | — | no | — | — |
+| `precision` | formatting | Unit | number | `2` | no | — | helper |
+| `x_axis_format` | formatting | Dates | text | — | no | — | helper |
+| `tooltip_format` | formatting | Dates | text | — | no | — | helper |
 | `show_forecast` | chart | — | boolean | `true` | no | — | — |
 | `connect_nulls` | chart | — | boolean | `true` | no | — | — |
 | `show_legend` | chart | — | boolean | `false` | no | — | — |

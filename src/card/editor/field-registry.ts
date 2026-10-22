@@ -103,6 +103,8 @@ export interface FieldDescriptor {
   control: ControlSpec;
   /** i18n key, `editor.<name>` (FR-908-U). */
   labelKey: string;
+  /** i18n key of the helper text rendered below the control, `editor.<name>_helper` (FR-908-AB). */
+  helperKey?: string;
   /** Documented default (rendered when the value is absent). */
   default?: unknown;
   /** `true` only for `entity` (FR-908-R). */
@@ -276,6 +278,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "general",
     control: { kind: "number", min: 0, max: 100, suffix: "%" },
     labelKey: "editor.neutral_threshold",
+    helperKey: "editor.neutral_threshold_helper",
     default: 2,
     inlineWith: "interpretation"
   },
@@ -289,6 +292,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
       valueToConfig: (value) => (value === "auto" ? undefined : value)
     },
     labelKey: "editor.aggregation",
+    helperKey: "editor.aggregation_helper",
     default: "auto"
   },
 
@@ -305,6 +309,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "time",
     control: { kind: "select", options: ANCHOR_OPTIONS },
     labelKey: "editor.time_window.anchor",
+    helperKey: "editor.time_window.anchor_helper",
     default: "start_of_year",
     visibleWhen: IS_CUSTOM,
     subsection: "editor.subsection.custom_settings"
@@ -314,6 +319,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "time",
     control: { kind: "text" },
     labelKey: "editor.time_window.duration",
+    helperKey: "editor.time_window.duration_helper",
     default: "1y",
     visibleWhen: IS_CUSTOM,
     subsection: "editor.subsection.custom_settings"
@@ -323,6 +329,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "time",
     control: { kind: "text" },
     labelKey: "editor.time_window.step",
+    helperKey: "editor.time_window.step_helper",
     default: "1y",
     visibleWhen: IS_CUSTOM,
     subsection: "editor.subsection.custom_settings"
@@ -332,6 +339,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "time",
     control: { kind: "number", min: 1, max: 24 },
     labelKey: "editor.time_window.count",
+    helperKey: "editor.time_window.count_helper",
     default: 2,
     visibleWhen: IS_CUSTOM,
     subsection: "editor.subsection.custom_settings"
@@ -341,6 +349,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "time",
     control: { kind: "text" },
     labelKey: "editor.time_window.offset",
+    helperKey: "editor.time_window.offset_helper",
     visibleWhen: IS_CUSTOM,
     subsection: "editor.subsection.custom_settings"
   },
@@ -411,6 +420,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "formatting",
     control: { kind: "number", min: 0, max: 6 },
     labelKey: "editor.precision",
+    helperKey: "editor.precision_helper",
     default: 2,
     subsection: "editor.subsection.unit"
   },
@@ -419,6 +429,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "formatting",
     control: { kind: "text" },
     labelKey: "editor.x_axis_format",
+    helperKey: "editor.x_axis_format_helper",
     subsection: "editor.subsection.dates"
   },
   {
@@ -426,6 +437,7 @@ export const FIELD_REGISTRY: FieldRegistry = [
     section: "formatting",
     control: { kind: "text" },
     labelKey: "editor.tooltip_format",
+    helperKey: "editor.tooltip_format_helper",
     subsection: "editor.subsection.dates"
   },
 

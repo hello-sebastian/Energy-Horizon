@@ -967,6 +967,9 @@ export class EnergyHorizonCardEditor extends LitElement {
           field.disabledWhen?.(cfg) ?? false,
           localize
         )}
+        ${field.helperKey
+          ? html`<p class="field-helper">${localize(field.helperKey)}</p>`
+          : nothing}
       </div>
     `;
     };
@@ -1264,6 +1267,12 @@ export class EnergyHorizonCardEditor extends LitElement {
     }
     .field-label {
       font-size: 0.85em;
+      color: var(--secondary-text-color, #555);
+    }
+    .field-helper {
+      margin: 0;
+      font-size: 0.75em;
+      line-height: 1.4;
       color: var(--secondary-text-color, #555);
     }
     .req {

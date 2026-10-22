@@ -48,6 +48,8 @@ interface FieldDescriptor {
   section: SectionId;                   // owning section (FR-908-B: relocation = change this)
   control: ControlSpec;                 // declarative spec or custom-renderer ref
   labelKey: string;                     // i18n key, "editor.<name>" (FR-908-U)
+  /** i18n key of the helper text rendered below the control, "editor.<name>_helper" (FR-908-AB). */
+  helperKey?: string;
   default?: unknown;                    // documented default (rendered when value absent)
   required?: boolean;                   // true only for `entity` (FR-908-R)
   visibleWhen?: (cfg: CardConfig) => boolean;   // e.g. preset === "custom" (FR-908-G)
@@ -70,6 +72,7 @@ interface FieldDescriptor {
 - `required` is `true` only for `entity`; all others optional (FR-908-R).
 - `visibleWhen`/`disabledWhen` are pure predicates over `CardConfig` (no side effects, no I/O).
 - `labelKey` MUST exist in all four shipped dictionaries (SC-908-7).
+- `helperKey` (when set) MUST be an i18n key present in all four dictionaries (SC-908-7). The render loop renders a `.field-helper` element below the control with `localize(helperKey)`; fields without `helperKey` render no helper. In v1.2.0 exactly ten fields set it: `neutral_threshold`, `aggregation`, `time_window.anchor`, `time_window.duration`, `time_window.step`, `time_window.count`, `time_window.offset`, `precision`, `x_axis_format`, `tooltip_format` (FR-908-AB).
 - `inlineWith` MUST reference a field in the same section; in v1.2.0 it is set for `show_title` (`title`), `show_icon` (`icon`), and `interpretation` (`neutral_threshold`) (FR-908-Z).
 - `subsection` (when set) MUST be an i18n key present in all four dictionaries (SC-908-7). The render loop emits a subsection header the first time a visible field with that `subsection` value appears, and again whenever the value changes; a subsection with no visible fields emits no header.
 - `dummy` fields are rendered as a permanently ON + disabled control with no change handler; `_applyFieldChange` returns early for them, so they are never written to the config. In v1.2.0 the only dummy is `show_chart` (the chart is always shown; the control documents that there is no per-card toggle).

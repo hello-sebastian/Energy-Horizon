@@ -340,6 +340,8 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 | Style | [Configuration and Customization — Chart styling](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#chart-styling-fills-colors-gaps) |
 | Diagnostics | [Configuration and Customization — Debug](https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#debug) |
 
+**Field helper texts:** ten fields render a short helper text below the control — a one-line UX hint (format + example where the syntax is non-trivial); the full reference stays in the wiki. The fields: `neutral_threshold`, `aggregation`, `time_window.anchor`, `time_window.duration`, `time_window.step`, `time_window.count`, `time_window.offset`, `precision`, `x_axis_format`, `tooltip_format`. The helper is declarative: a field renders one only when its registry descriptor sets `helperKey` (the i18n key `editor.<name>_helper`).
+
 ### Visual → YAML mapping
 
 Every editor control maps **1:1** to a YAML key — what you set in the form is exactly what is written to the config (the deprecated `comparison_mode` and the `forecast` alias are normalized away on save; see above). The full mapping:

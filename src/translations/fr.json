@@ -80,7 +80,7 @@
   "editor.show_title": "Afficher le titre",
   "editor.icon": "Icône",
   "editor.show_icon": "Afficher l'icône",
-  "editor.neutral_threshold": "Seuil neutre (%)",
+  "editor.neutral_threshold": "Seuil neutre",
   "editor.aggregation": "Agrégation",
   "editor.time_window": "Fenêtre temporelle",
   "editor.time_window.anchor": "Ancrage",
@@ -129,5 +129,15 @@
   "editor.anchor.start_of_week": "Début de semaine",
   "editor.anchor.start_of_day": "Début de jour",
   "editor.anchor.start_of_hour": "Début d'heure",
-  "editor.anchor.now": "Maintenant"
+  "editor.anchor.now": "Maintenant",
+  "editor.neutral_threshold_helper": "Un écart dans ±X % est considéré comme neutre",
+  "editor.aggregation_helper": "Auto choisit la taille du pas selon la longueur de la fenêtre ; sinon heure, jour, semaine ou mois",
+  "editor.time_window.anchor_helper": "Point de référence à partir duquel les fenêtres sont comptées en arrière",
+  "editor.time_window.duration_helper": "Longueur de la fenêtre — nombre + unité : 1y, 6M, 1w, 1d, 1h, 90m (min. 1h)",
+  "editor.time_window.step_helper": "Espacement entre les fenêtres, en arrière : 1y, 1M, 1w, 1d, 1h",
+  "editor.time_window.count_helper": "1 = uniquement l'actuelle · 2 = actuelle + référence · 3+ ajoute des séries de contexte",
+  "editor.time_window.offset_helper": "Décale l'ancre dans le temps calendaire — format ISO 8601, p. ex. P4M4D, -P2M",
+  "editor.precision_helper": "Chiffres après la virgule dans les valeurs et les infobulles",
+  "editor.x_axis_format_helper": "Jetons Luxon, p. ex. cccc, dd LLL yyyy HH:mm — désactive les libellés adaptatifs",
+  "editor.tooltip_format_helper": "Jetons Luxon, p. ex. cccc, dd LLL yyyy HH:mm"
 }

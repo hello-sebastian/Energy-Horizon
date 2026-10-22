@@ -92,7 +92,7 @@ Since **v1.2.0** you can configure the card entirely in the GUI:
 - **Style** — set the **Current series** and **Reference series** colors and fills (two-column layout).
 - **Diagnostics** — enable **Debug** for extra console output when troubleshooting.
 
-**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table and a worked example are in [Configuration and Customization — Visual → YAML mapping](Configuration-and-Customization#visual--yaml-mapping).
+**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Helper texts:** non-obvious fields — the time window syntax, the Luxon date formats, aggregation, precision, and the neutral threshold — show a short helper text below the control. **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table and a worked example are in [Configuration and Customization — Visual → YAML mapping](Configuration-and-Customization#visual--yaml-mapping).
 
 <!-- IMAGE PLACEHOLDER: Screenshot of the visual editor in its default state (General and Time windows expanded, the rest collapsed) — the view a first-time user sees when opening the editor. -->
 

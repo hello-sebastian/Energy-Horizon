@@ -194,6 +194,61 @@ describe("editor sections (T018, US4)", () => {
     }
   });
 
+  it("renders a helper text below the control for fields with a helperKey (FR-908-AB)", async () => {
+    const el = mountEditor({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "custom"
+    });
+    await el.updateComplete;
+
+    // General is expanded by default; `aggregation` has a helper.
+    const agg = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="general"] [data-field="aggregation"]'
+    );
+    const aggHelper = agg!.querySelector<HTMLElement>(".field-helper");
+    expect(aggHelper).not.toBeNull();
+    expect(aggHelper!.textContent).toBe(
+      "Auto picks the bucket size from the window length; otherwise hour, day, week, or month"
+    );
+
+    // Time is expanded by default; with the custom preset `duration` is visible.
+    const dur = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="time"] [data-field="time_window.duration"]'
+    );
+    const durHelper = dur!.querySelector<HTMLElement>(".field-helper");
+    expect(durHelper).not.toBeNull();
+    expect(durHelper!.textContent).toBe(
+      "Window length — number + unit: 1y, 6M, 1w, 1d, 1h, 90m (min 1h)"
+    );
+  });
+
+  it("renders no helper text for fields without a helperKey (FR-908-AB)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    const title = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="general"] [data-field="title"]'
+    );
+    expect(title!.querySelector(".field-helper")).toBeNull();
+  });
+
+  it("renders the neutral_threshold helper inside its inline row (FR-908-AB)", async () => {
+    const el = mountEditor(MINIMAL);
+    await el.updateComplete;
+
+    const inline = el.shadowRoot!.querySelector<HTMLElement>(
+      '[data-section="general"] [data-field="neutral_threshold"]'
+    );
+    const row = inline!.closest(".field-row");
+    expect(row).not.toBeNull();
+    const helper = row!.querySelector<HTMLElement>(
+      '[data-field="neutral_threshold"] .field-helper'
+    );
+    expect(helper).not.toBeNull();
+    expect(helper!.textContent).toBe("Delta within ±X% counts as neutral");
+  });
+
   it("clicking the documentation link does not toggle the section (FR-908-AA)", async () => {
     const el = mountEditor(MINIMAL);
     await el.updateComplete;

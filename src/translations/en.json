@@ -53,7 +53,7 @@
   "editor.year_over_year": "Year over year",
   "editor.month_over_year": "Month over year",
   "editor.month_over_month": "Month over month (consecutive)",
-  "editor.force_prefix": "Unit Prefix",
+  "editor.force_prefix": "Unit prefix",
   "editor.visual_mode": "Visual",
   "editor.docs_link": "Documentation",
   "editor.yaml_mode": "YAML",
@@ -80,7 +80,7 @@
   "editor.show_title": "Show title",
   "editor.icon": "Icon",
   "editor.show_icon": "Show icon",
-  "editor.neutral_threshold": "Neutral threshold (%)",
+  "editor.neutral_threshold": "Neutral threshold",
   "editor.aggregation": "Aggregation",
   "editor.time_window": "Time window",
   "editor.time_window.anchor": "Anchor",
@@ -129,6 +129,16 @@
   "editor.anchor.start_of_week": "Start of week",
   "editor.anchor.start_of_day": "Start of day",
   "editor.anchor.start_of_hour": "Start of hour",
-  "editor.anchor.now": "Now"
+  "editor.anchor.now": "Now",
+  "editor.neutral_threshold_helper": "Delta within ±X% counts as neutral",
+  "editor.aggregation_helper": "Auto picks the bucket size from the window length; otherwise hour, day, week, or month",
+  "editor.time_window.anchor_helper": "Reference point the windows are counted back from",
+  "editor.time_window.duration_helper": "Window length — number + unit: 1y, 6M, 1w, 1d, 1h, 90m (min 1h)",
+  "editor.time_window.step_helper": "Spacing between time windows, going back: 1y, 1M, 1w, 1d, 1h",
+  "editor.time_window.count_helper": "1 = current only · 2 = current + reference · 3+ adds context series",
+  "editor.time_window.offset_helper": "Shifts the anchor in calendar time — format ISO 8601 e.g. P4M4D, -P2M",
+  "editor.precision_helper": "Decimal places shown in values and tooltips",
+  "editor.x_axis_format_helper": "Luxon tokens, e.g. cccc, dd LLL yyyy HH:mm — disables adaptive labels",
+  "editor.tooltip_format_helper": "Luxon tokens, e.g. cccc, dd LLL yyyy HH:mm"
 }
 

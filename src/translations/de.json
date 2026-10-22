@@ -80,7 +80,7 @@
   "editor.show_title": "Titel anzeigen",
   "editor.icon": "Symbol",
   "editor.show_icon": "Symbol anzeigen",
-  "editor.neutral_threshold": "Neutral-Schwelle (%)",
+  "editor.neutral_threshold": "Neutral-Schwelle",
   "editor.aggregation": "Aggregation",
   "editor.time_window": "Zeitfenster",
   "editor.time_window.anchor": "Anker",
@@ -129,5 +129,15 @@
   "editor.anchor.start_of_week": "Wochenanfang",
   "editor.anchor.start_of_day": "Tagesanfang",
   "editor.anchor.start_of_hour": "Stundenanfang",
-  "editor.anchor.now": "Jetzt"
+  "editor.anchor.now": "Jetzt",
+  "editor.neutral_threshold_helper": "Delta innerhalb von ±X % gilt als neutral",
+  "editor.aggregation_helper": "Auto wählt die Intervallgröße anhand der Fensterlänge; sonst Stunde, Tag, Woche oder Monat",
+  "editor.time_window.anchor_helper": "Referenzpunkt, von dem aus die Fenster rückwärts gezählt werden",
+  "editor.time_window.duration_helper": "Fensterlänge — Zahl + Einheit: 1y, 6M, 1w, 1d, 1h, 90m (min. 1h)",
+  "editor.time_window.step_helper": "Abstand zwischen den Zeitfenstern, rückwärts: 1y, 1M, 1w, 1d, 1h",
+  "editor.time_window.count_helper": "1 = nur aktuell · 2 = aktuell + Referenz · 3+ fügt Kontextserien hinzu",
+  "editor.time_window.offset_helper": "Verschiebt den Anker im Kalender — Format ISO 8601, z. B. P4M4D, -P2M",
+  "editor.precision_helper": "Dezimalstellen in Werten und Tooltips",
+  "editor.x_axis_format_helper": "Luxon-Tokens, z. B. cccc, dd LLL yyyy HH:mm — deaktiviert adaptive Beschriftungen",
+  "editor.tooltip_format_helper": "Luxon-Tokens, z. B. cccc, dd LLL yyyy HH:mm"
 }

@@ -184,6 +184,21 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | Style | [Chart styling (fills, colors, gaps)](#chart-styling-fills-colors-gaps) |
 | Diagnostics | [Debug](#debug) |
 
+**Field helper texts:** ten fields render a short helper text below the control — a one-line UX hint (format + example where the syntax is non-trivial); the full reference stays in the wiki. The fields and what the helper explains:
+
+| Field | Helper explains |
+|-------|-----------------|
+| `neutral_threshold` | that a delta within ±X% counts as neutral |
+| `aggregation` | that **auto** picks the bucket size from the window length; otherwise hour/day/week/month |
+| `time_window.anchor` | that it is the reference point the windows are counted back from |
+| `time_window.duration` | the window length syntax — number + unit (`1y`, `6M`, `1w`, `1d`, `1h`, `90m`; min 1h) |
+| `time_window.step` | the spacing between windows, going back (`1y`, `1M`, `1w`, `1d`, `1h`) |
+| `time_window.count` | that 1 = current only, 2 = current + reference, 3+ adds context series |
+| `time_window.offset` | that it shifts the anchor in calendar time — ISO 8601 format (e.g. `P4M4D`, `-P2M`) |
+| `precision` | that it is the number of decimal places in values and tooltips |
+| `x_axis_format` | Luxon tokens (e.g. `cccc`, `dd LLL yyyy HH:mm`) — disables adaptive labels |
+| `tooltip_format` | Luxon tokens (e.g. `cccc`, `dd LLL yyyy HH:mm`) |
+
 **Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions. YAML mode is a first-class input path (live preview, last valid values saved). The editor does not perform inline validation — invalid values surface as the standard card error.
 
 ### Visual → YAML mapping

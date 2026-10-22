@@ -137,6 +137,31 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(dummy.control.kind).toBe("boolean");
   });
 
+  it("exactly the ten documented fields declare a helperKey (FR-908-AB)", () => {
+    const expected = [
+      "neutral_threshold",
+      "aggregation",
+      "time_window.anchor",
+      "time_window.duration",
+      "time_window.step",
+      "time_window.count",
+      "time_window.offset",
+      "precision",
+      "x_axis_format",
+      "tooltip_format"
+    ];
+    const withHelper = FIELD_REGISTRY.filter((f) => f.helperKey).map(
+      (f) => f.key
+    );
+    expect(withHelper.sort()).toEqual([...expected].sort());
+    // Each helperKey follows the `editor.<key>_helper` pattern.
+    for (const field of FIELD_REGISTRY) {
+      if (field.helperKey) {
+        expect(field.helperKey).toBe(`editor.${field.key}_helper`);
+      }
+    }
+  });
+
   it("section membership matches FR-908-F", () => {
     for (const section of SECTION_ORDER) {
       expect(keysOfSection(section).sort()).toEqual(
