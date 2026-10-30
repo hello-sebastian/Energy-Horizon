@@ -1,17 +1,4 @@
 {
   "schema_version": "1.0",
-  "extensions": {
-    "fixit": {
-      "version": "1.0.0",
-      "source": "local",
-      "manifest_hash": "sha256:cd7575705b5b8ad6c421840e3bd7dcf3260523b7f7709500bb16afef03515a30",
-      "enabled": true,
-      "priority": 10,
-      "registered_commands": {},
-      "registered_skills": [
-        "speckit-fixit-run"
-      ],
-      "installed_at": "2026-10-30T20:00:01.097121+00:00"
-    }
-  }
+  "extensions": {}
 }
