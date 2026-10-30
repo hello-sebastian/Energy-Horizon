@@ -27643,25 +27643,25 @@ Qr([
   mR,
   FR
 ]);
-const UR = 274, Z1 = 32, YR = 8, By = Z1, ZR = 56;
+const UR = 274, Z1 = 32, YR = 8, By = Z1;
 function zl(r) {
   return r.replace(/\|/g, "｜").replace(/\{/g, "｛").replace(/\}/g, "｝");
 }
-const qR = 3, q1 = 12, KR = `${q1}px sans-serif`;
+const ZR = 3, q1 = 12, qR = `${q1}px sans-serif`;
 let df;
-function XR() {
+function KR() {
   if (df !== void 0) return df;
   let r = null;
   try {
-    r = document.createElement("canvas").getContext("2d"), r && (r.font = KR);
+    r = document.createElement("canvas").getContext("2d"), r && (r.font = qR);
   } catch {
     r = null;
   }
   return df = r, r;
 }
-function jR(r) {
+function XR(r) {
   if (r === "") return 0;
-  const e = XR();
+  const e = KR();
   return e ? e.measureText(r).width : r.length * 0.6 * q1;
 }
 function Vy(r, e, t, n, i) {
@@ -27670,7 +27670,7 @@ function Vy(r, e, t, n, i) {
     return { label: "", lines: [] };
   const c = n.format(r);
   if (u && i) {
-    if (c.length > qR)
+    if (c.length > ZR)
       return {
         label: `{yNum|${zl(c)}}
 {yUnit|${zl(i)}}`,
@@ -27681,7 +27681,7 @@ function Vy(r, e, t, n, i) {
   }
   return { label: c, lines: [c] };
 }
-function JR(r, e, t) {
+function jR(r, e, t) {
   const n = Math.max(0, e - 1);
   if (e <= 0)
     return 0;
@@ -27736,7 +27736,7 @@ function JR(r, e, t) {
   const c = a[0], f = c == null ? void 0 : c.dataIndex;
   return typeof f == "number" && Number.isFinite(f) ? i(f) : 0;
 }
-class QR {
+class JR {
   constructor(e) {
     this.container = e, this.onLegendLayoutFinished = () => {
       this.syncLegendLayoutAfterPaint();
@@ -27907,12 +27907,9 @@ class QR {
         h
       );
       for (const ne of H.lines)
-        g = Math.max(g, jR(ne));
+        g = Math.max(g, XR(ne));
     }
-    const p = Math.max(
-      ZR,
-      Math.ceil(g) + wi
-    ), y = Math.max(i.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, w = e.some((G) => G !== null), S = a.xAxisMode ?? "adaptive", b = a.currentWindowStartMs, x = a.currentWindowEndMs, M = a.haTimeZone ?? "UTC", C = a.primaryAggregation ?? "day", T = b != null && x != null ? RT(
+    const p = Math.ceil(g) + wi, y = Math.max(i.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, w = e.some((G) => G !== null), S = a.xAxisMode ?? "adaptive", b = a.currentWindowStartMs, x = a.currentWindowEndMs, M = a.haTimeZone ?? "UTC", C = a.primaryAggregation ?? "day", T = b != null && x != null ? RT(
       i,
       b,
       x,
@@ -28204,7 +28201,8 @@ class QR {
       // from the chart canvas edge to the axis line. Labels hang outside the plot area into the
       // reserved space. GRID_BOTTOM_PX is always the full two-line budget so chart height is
       // stable regardless of whether "today" is in range. grid.left is sized to the widest
-      // Y-axis label (floored at GRID_LEFT_PX) so long labels are never clipped.
+      // Y-axis label sized to the widest tick line so the label sits flush
+      // against the left canvas edge (bug: y-axis-label-clipping).
       grid: {
         containLabel: !1,
         left: p,
@@ -28233,7 +28231,7 @@ class QR {
         },
         appendTo: this.container,
         formatter: (G) => {
-          const H = Array.isArray(G) ? G : [G], ne = JR(
+          const H = Array.isArray(G) ? G : [G], ne = jR(
             H,
             i.length,
             {
@@ -28375,7 +28373,7 @@ class QR {
     this.instance.setOption(p, { notMerge: !0 });
   }
 }
-const K1 = 36e5, $l = 864e5, eN = 7 * $l, tN = 30.4375 * $l, $s = [
+const K1 = 36e5, $l = 864e5, QR = 7 * $l, eN = 30.4375 * $l, $s = [
   "month",
   "week",
   "day",
@@ -28388,14 +28386,14 @@ function Hy(r, e) {
     case "day":
       return Math.max(1, Math.ceil(e / $l));
     case "week":
-      return Math.max(1, Math.ceil(e / eN));
+      return Math.max(1, Math.ceil(e / QR));
     case "month":
-      return Math.max(1, Math.ceil(e / tN));
+      return Math.max(1, Math.ceil(e / eN));
     default:
       return Math.max(1, Math.ceil(e / $l));
   }
 }
-function rN(r) {
+function tN(r) {
   if (!Number.isFinite(r) || r <= 0)
     return "day";
   if (r <= K1)
@@ -28539,7 +28537,7 @@ function Wy(r) {
     throw new Error(`Invalid character in x_axis_format at position ${t}`);
   }
 }
-const nN = {
+const rN = {
   "period.current": "Aktueller Zeitraum",
   "period.reference": "Referenzzeitraum",
   "status.loading": "Lade Langzeitstatistiken…",
@@ -28684,10 +28682,10 @@ const nN = {
   "editor.precision_helper": "Dezimalstellen in Werten und Tooltips",
   "editor.x_axis_format_helper": "Luxon-Tokens, z. B. cccc, dd LLL yyyy HH:mm — deaktiviert adaptive Beschriftungen",
   "editor.tooltip_format_helper": "Luxon-Tokens, z. B. cccc, dd LLL yyyy HH:mm"
-}, iN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, nN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  default: nN
-}, Symbol.toStringTag, { value: "Module" })), aN = {
+  default: rN
+}, Symbol.toStringTag, { value: "Module" })), iN = {
   "period.current": "Current period",
   "period.reference": "Reference period",
   "status.loading": "Loading long-term statistics data...",
@@ -28832,10 +28830,10 @@ const nN = {
   "editor.precision_helper": "Decimal places shown in values and tooltips",
   "editor.x_axis_format_helper": "Luxon tokens, e.g. cccc, dd LLL yyyy HH:mm — disables adaptive labels",
   "editor.tooltip_format_helper": "Luxon tokens, e.g. cccc, dd LLL yyyy HH:mm"
-}, oN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, aN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  default: aN
-}, Symbol.toStringTag, { value: "Module" })), sN = {
+  default: iN
+}, Symbol.toStringTag, { value: "Module" })), oN = {
   "period.current": "Période actuelle",
   "period.reference": "Période de référence",
   "status.loading": "Chargement des données statistiques à long terme...",
@@ -28980,10 +28978,10 @@ const nN = {
   "editor.precision_helper": "Chiffres après la virgule dans les valeurs et les infobulles",
   "editor.x_axis_format_helper": "Jetons Luxon, p. ex. cccc, dd LLL yyyy HH:mm — désactive les libellés adaptatifs",
   "editor.tooltip_format_helper": "Jetons Luxon, p. ex. cccc, dd LLL yyyy HH:mm"
-}, lN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, sN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  default: sN
-}, Symbol.toStringTag, { value: "Module" })), uN = {
+  default: oN
+}, Symbol.toStringTag, { value: "Module" })), lN = {
   "period.current": "Bieżący okres",
   "period.reference": "Okres referencyjny",
   "status.loading": "Ładowanie danych statystyk długoterminowych...",
@@ -29128,14 +29126,14 @@ const nN = {
   "editor.precision_helper": "Liczba miejsc po przecinku w wartościach i podpowiedziach",
   "editor.x_axis_format_helper": "Tokeny Luxon, np. cccc, dd LLL yyyy HH:mm — wyłącza adaptacyjne etykiety",
   "editor.tooltip_format_helper": "Tokeny Luxon, np. cccc, dd LLL yyyy HH:mm"
-}, cN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, uN = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  default: uN
+  default: lN
 }, Symbol.toStringTag, { value: "Module" })), vf = "error.missing_translation", Xr = "en", Gy = /* @__PURE__ */ Object.assign({
-  "../translations/de.json": iN,
-  "../translations/en.json": oN,
-  "../translations/fr.json": lN,
-  "../translations/pl.json": cN
+  "../translations/de.json": nN,
+  "../translations/en.json": aN,
+  "../translations/fr.json": sN,
+  "../translations/pl.json": uN
 }), gr = /* @__PURE__ */ Object.create(null);
 for (const r of Object.keys(Gy)) {
   const e = r.match(/\/([^/]+)\.json$/);
@@ -29144,19 +29142,19 @@ for (const r of Object.keys(Gy)) {
     i && typeof i == "object" && (gr[t] = i);
   }
 }
-const fN = Object.keys(gr).sort(), hN = [
+const cN = Object.keys(gr).sort(), fN = [
   "comma",
   "decimal",
   "language",
   "system"
 ];
-function dN(r) {
-  return typeof r == "string" && hN.includes(r);
+function hN(r) {
+  return typeof r == "string" && fN.includes(r);
 }
-function vN(r) {
+function dN(r) {
   return Object.prototype.hasOwnProperty.call(gr, r);
 }
-function pN(r, e) {
+function vN(r, e) {
   return e ? r.replace(/\{\{(\w+)\}\}/g, (t, n) => {
     const i = e[n];
     return i === void 0 ? t : String(i);
@@ -29164,9 +29162,9 @@ function pN(r, e) {
 }
 function bi(r, e) {
   var s, l, u;
-  const t = e.language, n = t !== void 0 && t !== "" ? vN(t) ? t : (e.debug && console.warn(
+  const t = e.language, n = t !== void 0 && t !== "" ? dN(t) ? t : (e.debug && console.warn(
     `[Energy Horizon] Unsupported config.language "${t}", falling back to "${Xr}"`
-  ), Xr) : ((s = r == null ? void 0 : r.locale) == null ? void 0 : s.language) || (r == null ? void 0 : r.language) || Xr, i = e.number_format, a = i !== void 0 ? dN(i) ? i : (e.debug && console.warn(
+  ), Xr) : ((s = r == null ? void 0 : r.locale) == null ? void 0 : s.language) || (r == null ? void 0 : r.language) || Xr, i = e.number_format, a = i !== void 0 ? hN(i) ? i : (e.debug && console.warn(
     `[Energy Horizon] Invalid config.number_format "${String(i)}", falling back to "system"`
   ), "system") : ((l = r == null ? void 0 : r.locale) == null ? void 0 : l.number_format) ?? "system", o = ((u = r == null ? void 0 : r.config) == null ? void 0 : u.time_zone) || // fall back to UTC if HA does not provide a time zone
   "UTC";
@@ -29194,30 +29192,30 @@ function Nh(r, e) {
   let i = t[e];
   return i === void 0 && (i = n[e]), i;
 }
-function mN(r, e) {
+function pN(r, e) {
   return Nh(r, e) !== void 0;
 }
 function Wa(r) {
   const e = gr[r] ?? gr[Xr] ?? {}, t = gr[Xr] ?? {};
   return (n, i) => {
     let a = e[n];
-    return a === void 0 && (a = t[n]), a === void 0 ? n : pN(a, i);
+    return a === void 0 && (a = t[n]), a === void 0 ? n : vN(a, i);
   };
 }
-function gN(r) {
+function mN(r) {
   const e = r.trim();
   return e ? (e.startsWith("P") || e.startsWith("p") ? e.slice(1) : e).trim() : "";
 }
-function yN(r) {
-  const e = typeof r == "string" ? gN(r) : "";
+function gN(r) {
+  const e = typeof r == "string" ? mN(r) : "";
   return e === "1d" ? "day" : e === "1w" ? "week" : e === "1M" ? "month" : e === "1y" || e === "1Y" ? "year" : "reference";
 }
-function _N(r) {
+function yN(r) {
   return r === "production" ? "production" : "consumption";
 }
 function pf(r, e, t) {
   const n = `text_summary.${e}.${t}`;
-  return mN(r, n) ? n : `text_summary.generic.${t}`;
+  return pN(r, n) ? n : `text_summary.generic.${t}`;
 }
 const Bl = [
   { prefix: "G", factor: 1e9, display: "G" },
@@ -29227,9 +29225,9 @@ const Bl = [
   { prefix: "m", factor: 1e-3, display: "m" },
   { prefix: "u", factor: 1e-6, display: "µ" }
   // µ Micro Sign
-], wN = Bl.map(
+], _N = Bl.map(
   (r) => r.prefix
-), bN = {
+), wN = {
   G: "G",
   M: "M",
   k: "k",
@@ -29266,7 +29264,7 @@ const Bl = [
   "MHz",
   "GHz"
 ]);
-function SN(r) {
+function bN(r) {
   if (!r)
     return {
       baseUnit: "",
@@ -29304,10 +29302,10 @@ function Zy(r) {
       return e.prefix;
   return "u";
 }
-function xN(r, e, t) {
+function SN(r, e, t) {
   let n = (t == null ? void 0 : t.force_prefix) ?? "auto";
   (n === "µ" || n === "μ") && (n = "u");
-  const i = SN(e);
+  const i = bN(e);
   if (!i.scalable || n === "none")
     return {
       values: [...r],
@@ -29325,8 +29323,8 @@ function xN(r, e, t) {
     };
   const o = Math.max(...a.map((p) => Math.abs(p))), s = Bl.find((p) => p.prefix === i.existingPrefix), l = (s == null ? void 0 : s.factor) ?? 1, u = o * l;
   let c;
-  n === "auto" ? c = Zy(u) : wN.includes(n) ? c = n : (console.warn(`[unit-scaler] Unknown force_prefix: "${n}" — falling back to auto`), c = Zy(u));
-  const f = Bl.find((p) => p.prefix === c), d = (f == null ? void 0 : f.factor) ?? 1, h = l / d, v = r.map((p) => p === null ? null : p * h), g = (bN[c] ?? "") + i.baseUnit;
+  n === "auto" ? c = Zy(u) : _N.includes(n) ? c = n : (console.warn(`[unit-scaler] Unknown force_prefix: "${n}" — falling back to auto`), c = Zy(u));
+  const f = Bl.find((p) => p.prefix === c), d = (f == null ? void 0 : f.factor) ?? 1, h = l / d, v = r.map((p) => p === null ? null : p * h), g = (wN[c] ?? "") + i.baseUnit;
   return {
     values: v,
     unit: g,
@@ -29334,7 +29332,7 @@ function xN(r, e, t) {
     factor: h
   };
 }
-const TN = i_`
+const xN = i_`
   :host {
     display: block;
     height: 100%;
@@ -29820,7 +29818,7 @@ const pi = " – ";
 function ko(r, e) {
   return z.fromMillis(r.getTime(), { zone: e });
 }
-function MN(r, e, t, n) {
+function TN(r, e, t, n) {
   if ((e == null ? void 0 : e.currentEndIsNow) !== !0 || r.role !== "current" || r.aggregation === "hour")
     return r;
   const i = ko(r.start, n);
@@ -29839,11 +29837,11 @@ function Ke(r, e) {
 function ol(r, e) {
   return r.startOf("day").year !== e.startOf("day").year;
 }
-function CN(r, e, t) {
+function MN(r, e, t) {
   const n = r.year, i = z.fromObject({ year: n, month: 1, day: 1 }, { zone: t }).startOf("day"), a = z.fromObject({ year: n, month: 12, day: 31 }, { zone: t }).endOf("day");
   return !r.startOf("day").equals(i) || e.year !== n ? !1 : e >= a.startOf("day") && e <= a;
 }
-function DN(r, e, t) {
+function CN(r, e, t) {
   if (!r.startOf("day").equals(r.startOf("month").startOf("day")) || r.year !== e.year || r.month !== e.month)
     return !1;
   const n = z.fromObject(
@@ -29852,7 +29850,7 @@ function DN(r, e, t) {
   ).endOf("month").startOf("day");
   return e.startOf("day").equals(n);
 }
-function kN(r, e, t, n) {
+function DN(r, e, t, n) {
   if (!t)
     return ol(r, e);
   const i = ko(t.start, n);
@@ -29861,19 +29859,19 @@ function kN(r, e, t, n) {
   const a = ko(t.end, n);
   return !!ol(i, a);
 }
-function AN(r) {
+function kN(r) {
   return r === !0 ? "h:mm a" : "HH:mm";
 }
 function mi(r, e, t) {
-  return Ke(r, e).toFormat(AN(t));
+  return Ke(r, e).toFormat(kN(t));
 }
 function Ky(r, e, t) {
   const { zone: n, locale: i, hour12: a } = t, o = ko(r.start, n), s = ko(r.end, n), { aggregation: l } = r;
-  if (CN(o, s, n))
+  if (MN(o, s, n))
     return String(o.year);
-  if (DN(o, s, n))
+  if (CN(o, s, n))
     return Ke(o, i).toFormat("LLL yyyy");
-  const u = o.startOf("day").equals(s.startOf("day")), c = o.year === s.year && o.month === s.month, f = kN(o, s, e, n);
+  const u = o.startOf("day").equals(s.startOf("day")), c = o.year === s.year && o.month === s.month, f = DN(o, s, e, n);
   if (l === "hour" && u) {
     const h = `${mi(o, i, a)}${pi}${mi(s, i, a)}`, v = f ? Ke(o, i).toFormat("d LLL yyyy") : Ke(o, i).toFormat("d LLL");
     return `${h}, ${v}`;
@@ -29897,13 +29895,13 @@ function Ky(r, e, t) {
   const d = `${Ke(o, i).toFormat("d LLL")}${pi}${Ke(s, i).toFormat("d LLL")}`;
   return f ? `${d} ${o.year}` : d;
 }
-function LN(r) {
+function AN(r) {
   if (r === "12")
     return !0;
   if (r === "24")
     return !1;
 }
-function IN(r, e, t) {
+function LN(r, e, t) {
   if (!e)
     return { omitYearOnAxis: !1, dayOfMonthOnlyOnAxis: !1 };
   const n = z.fromJSDate(r.start, { zone: t }).startOf("day"), i = z.fromJSDate(e.start, { zone: t }).startOf("day"), a = n.year !== i.year, o = !a && n.year === i.year && n.month !== i.month;
@@ -29914,7 +29912,7 @@ function IN(r, e, t) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const PN = { attribute: !0, type: String, converter: sl, reflect: !1, hasChanged: Hh }, EN = (r = PN, e, t) => {
+const IN = { attribute: !0, type: String, converter: sl, reflect: !1, hasChanged: Hh }, PN = (r = IN, e, t) => {
   const { kind: n, metadata: i } = t;
   let a = globalThis.litPropertyMetadata.get(i);
   if (a === void 0 && globalThis.litPropertyMetadata.set(i, a = /* @__PURE__ */ new Map()), n === "setter" && ((r = Object.create(r)).wrapped = !0), a.set(t.name, r), n === "accessor") {
@@ -29936,7 +29934,7 @@ const PN = { attribute: !0, type: String, converter: sl, reflect: !1, hasChanged
   throw Error("Unsupported decorator location: " + n);
 };
 function j1(r) {
-  return (e, t) => typeof t == "object" ? EN(r, e, t) : ((n, i, a) => {
+  return (e, t) => typeof t == "object" ? PN(r, e, t) : ((n, i, a) => {
     const o = i.hasOwnProperty(a);
     return i.constructor.createProperty(a, n), o ? Object.getOwnPropertyDescriptor(i, a) : void 0;
   })(r, e, t);
@@ -29949,7 +29947,7 @@ function j1(r) {
 function Bs(r) {
   return j1({ ...r, state: !0, attribute: !1 });
 }
-const ON = [
+const EN = [
   "general",
   "time",
   "panels",
@@ -29965,7 +29963,7 @@ const ON = [
   chart: "mdi:chart-timeline-variant-shimmer",
   style: "mdi:palette-outline",
   diagnostics: "mdi:bug-outline"
-}, RN = {
+}, ON = {
   general: "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#core-configuration",
   time: "https://github.com/hello-sebastian/energy-horizon/wiki/Time-Window-Reference",
   panels: "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#layout-sections-figma-aligned",
@@ -29973,21 +29971,21 @@ const ON = [
   chart: "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#forecast",
   style: "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#chart-styling-fills-colors-gaps",
   diagnostics: "https://github.com/hello-sebastian/energy-horizon/wiki/Configuration-and-Customization#debug"
-}, NN = [
+}, RN = [
   { value: "year_over_year", labelKey: "editor.year_over_year" },
   { value: "month_over_year", labelKey: "editor.month_over_year" },
   { value: "month_over_month", labelKey: "editor.month_over_month" },
   { value: "custom", labelKey: "editor.custom" }
-], FN = [
+], NN = [
   { value: "auto", labelKey: "editor.aggregation.auto" },
   { value: "hour", labelKey: "editor.aggregation.hour" },
   { value: "day", labelKey: "editor.aggregation.day" },
   { value: "week", labelKey: "editor.aggregation.week" },
   { value: "month", labelKey: "editor.aggregation.month" }
-], zN = [
+], FN = [
   { value: "consumption", labelKey: "editor.interpretation_consumption" },
   { value: "production", labelKey: "editor.interpretation_production" }
-], $N = [
+], zN = [
   { value: "", labelKey: "" },
   { value: "auto", labelKey: "editor.force_prefix.auto" },
   { value: "none", labelKey: "editor.force_prefix.none" },
@@ -29996,21 +29994,21 @@ const ON = [
   { value: "k", labelKey: "editor.force_prefix.k" },
   { value: "m", labelKey: "editor.force_prefix.m" },
   { value: "µ", labelKey: "editor.force_prefix.µ" }
-], BN = [
+], $N = [
   { value: "system", labelKey: "editor.number_format.system" },
   { value: "comma", labelKey: "editor.number_format.comma" },
   { value: "decimal", labelKey: "editor.number_format.decimal" },
   { value: "language", labelKey: "editor.number_format.language" }
-], VN = [
+], BN = [
   { value: "start_of_year", labelKey: "editor.anchor.start_of_year" },
   { value: "start_of_month", labelKey: "editor.anchor.start_of_month" },
   { value: "start_of_week", labelKey: "editor.anchor.start_of_week" },
   { value: "start_of_day", labelKey: "editor.anchor.start_of_day" },
   { value: "start_of_hour", labelKey: "editor.anchor.start_of_hour" },
   { value: "now", labelKey: "editor.anchor.now" }
-], HN = [
+], VN = [
   { value: "auto", labelKey: "editor.language.auto" },
-  ...fN.map((r) => ({
+  ...cN.map((r) => ({
     value: r,
     labelKey: `editor.language.${r}`
   }))
@@ -30055,7 +30053,7 @@ const ON = [
   {
     key: "interpretation",
     section: "general",
-    control: { kind: "select", options: zN },
+    control: { kind: "select", options: FN },
     labelKey: "editor.interpretation",
     default: "consumption"
   },
@@ -30073,7 +30071,7 @@ const ON = [
     section: "general",
     control: {
       kind: "select",
-      options: FN,
+      options: NN,
       // `auto` maps to an omitted (undefined) aggregation — adaptive.
       valueToConfig: (r) => r === "auto" ? void 0 : r
     },
@@ -30085,14 +30083,14 @@ const ON = [
   {
     key: "comparison_preset",
     section: "time",
-    control: { kind: "select", options: NN },
+    control: { kind: "select", options: RN },
     labelKey: "editor.comparison_preset",
     default: "year_over_year"
   },
   {
     key: "time_window.anchor",
     section: "time",
-    control: { kind: "select", options: VN },
+    control: { kind: "select", options: BN },
     labelKey: "editor.time_window.anchor",
     helperKey: "editor.time_window.anchor_helper",
     default: "start_of_year",
@@ -30174,7 +30172,7 @@ const ON = [
     section: "formatting",
     control: {
       kind: "select",
-      options: HN,
+      options: VN,
       // The "auto" sentinel maps to an omitted `language` key — the card then
       // inherits the HA profile language (FR-908-X chain step 2).
       valueToConfig: (r) => r === "auto" ? void 0 : r
@@ -30185,7 +30183,7 @@ const ON = [
   {
     key: "force_prefix",
     section: "formatting",
-    control: { kind: "select", options: $N },
+    control: { kind: "select", options: zN },
     labelKey: "editor.force_prefix",
     default: "auto",
     subsection: "editor.subsection.unit"
@@ -30193,7 +30191,7 @@ const ON = [
   {
     key: "number_format",
     section: "formatting",
-    control: { kind: "select", options: BN },
+    control: { kind: "select", options: $N },
     labelKey: "editor.number_format",
     default: "system",
     subsection: "editor.subsection.unit"
@@ -30299,7 +30297,7 @@ const ON = [
     default: !1
   }
 ];
-function WN(r = sv) {
+function HN(r = sv) {
   const e = {
     general: [],
     time: [],
@@ -30313,16 +30311,16 @@ function WN(r = sv) {
     e[t.section].push(t);
   return e;
 }
-function GN(r, e, t = sv) {
-  return WN(t)[r].filter(
+function WN(r, e, t = sv) {
+  return HN(t)[r].filter(
     (n) => n.visibleWhen === void 0 || n.visibleWhen(e)
   );
 }
-function UN(r, e) {
-  const t = YN(e, r.key);
+function GN(r, e) {
+  const t = UN(e, r.key);
   return t !== void 0 ? t : r.default;
 }
-function YN(r, e) {
+function UN(r, e) {
   const t = e.split(".");
   let n = r;
   for (const i of t) {
@@ -30332,7 +30330,7 @@ function YN(r, e) {
   }
   return n;
 }
-function ZN(r, e) {
+function YN(r, e) {
   if (r.control.kind === "select" && r.control.valueToConfig)
     return r.control.valueToConfig(String(e ?? ""));
   if (r.control.kind === "number") {
@@ -30343,22 +30341,22 @@ function ZN(r, e) {
   }
   return e;
 }
-const qN = 300, KN = 150, XN = 1e3;
-function jN(r) {
+const ZN = 300, qN = 150, KN = 1e3;
+function XN(r) {
   if (r !== void 0 && !(typeof r == "string" && r.trim() === ""))
     return r;
 }
-function JN(r, e, t) {
-  const n = jN(t), i = e.split("."), a = { ...r };
+function jN(r, e, t) {
+  const n = XN(t), i = e.split("."), a = { ...r };
   if (i.length === 1)
     return n === void 0 ? delete a[i[0]] : a[i[0]] = n, a;
   const [o, ...s] = i, l = a[o], u = l !== null && typeof l == "object" && !Array.isArray(l) ? { ...l } : {}, c = s[s.length - 1];
   return n === void 0 ? delete u[c] : u[c] = n, a[o] = u, a;
 }
-function QN(r, e) {
+function JN(r, e) {
   let t = { ...r };
   for (const [n, i] of Object.entries(e))
-    t = JN(t, n, i);
+    t = jN(t, n, i);
   return t;
 }
 function Vs(r) {
@@ -30391,7 +30389,7 @@ function Vl(r, e) {
     (l) => Object.prototype.hasOwnProperty.call(a, l) && Vl(i[l], a[l])
   );
 }
-function eF(r, e) {
+function QN(r, e) {
   return !Vl(r, e);
 }
 function jy(r) {
@@ -30426,7 +30424,7 @@ function mf(r) {
     neutral_threshold: s
   };
 }
-function tF() {
+function eF() {
   return {
     expanded: {
       general: !0,
@@ -30448,10 +30446,10 @@ function Jy(r, e, t) {
 function gf(r, e, t) {
   return e === void 0 ? { ...r, lastFocusedField: void 0, lastCaret: void 0 } : { ...r, lastFocusedField: e, lastCaret: t };
 }
-function rF(r, e) {
+function tF(r, e) {
   return { ...r, scrollAnchor: e };
 }
-function nF(r) {
+function rF(r) {
   return {
     expanded: { ...r.expanded },
     lastFocusedField: r.lastFocusedField,
@@ -30459,32 +30457,32 @@ function nF(r) {
     scrollAnchor: r.scrollAnchor
   };
 }
-const iF = {
+const nF = {
   anchor: "start_of_year",
   duration: "1y",
   step: "1y",
   count: 2
-}, aF = -1;
-function oF(r, e) {
+}, iF = -1;
+function aF(r, e) {
   const t = r.comparison_preset, n = { ...r };
   n.comparison_preset = e;
   const i = t === "custom", a = e === "custom";
   if (i && !a)
-    delete n.time_window, n.period_offset = aF;
+    delete n.time_window, n.period_offset = iF;
   else if (!i && a) {
     delete n.period_offset;
     const o = n.time_window, s = o !== null && typeof o == "object" && !Array.isArray(o) ? o : {};
     n.time_window = {
-      ...iF,
+      ...nF,
       ...s
     };
   }
   return n;
 }
-function sF(r, e) {
+function oF(r, e) {
   return bi(r, e).language;
 }
-function lF(r) {
+function sF(r) {
   const e = typeof window < "u" ? window.jsyaml : void 0;
   if (!e)
     return { ok: !1, error: "yaml-unavailable" };
@@ -30507,30 +30505,30 @@ function Fh(r) {
   const e = Object.getPrototypeOf(r);
   return e !== Object.prototype && e !== null ? !1 : Object.values(r).every(Fh);
 }
-var uF = Object.create, J1 = Object.defineProperty, cF = Object.getOwnPropertyDescriptor, Q1 = (r, e) => (e = Symbol[r]) ? e : Symbol.for("Symbol." + r), Bo = (r) => {
+var lF = Object.create, J1 = Object.defineProperty, uF = Object.getOwnPropertyDescriptor, Q1 = (r, e) => (e = Symbol[r]) ? e : Symbol.for("Symbol." + r), Bo = (r) => {
   throw TypeError(r);
-}, fF = (r, e, t) => e in r ? J1(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t, hF = (r) => [, , , uF((r == null ? void 0 : r[Q1("metadata")]) ?? null)], eS = ["class", "method", "getter", "setter", "accessor", "field", "value", "get", "set"], Ga = (r) => r !== void 0 && typeof r != "function" ? Bo("Function expected") : r, dF = (r, e, t, n, i) => ({ kind: eS[r], name: e, metadata: n, addInitializer: (a) => t._ ? Bo("Already initialized") : i.push(Ga(a || null)) }), vF = (r, e) => fF(e, Q1("metadata"), r[3]), Qt = (r, e, t, n) => {
+}, cF = (r, e, t) => e in r ? J1(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t, fF = (r) => [, , , lF((r == null ? void 0 : r[Q1("metadata")]) ?? null)], eS = ["class", "method", "getter", "setter", "accessor", "field", "value", "get", "set"], Ga = (r) => r !== void 0 && typeof r != "function" ? Bo("Function expected") : r, hF = (r, e, t, n, i) => ({ kind: eS[r], name: e, metadata: n, addInitializer: (a) => t._ ? Bo("Already initialized") : i.push(Ga(a || null)) }), dF = (r, e) => cF(e, Q1("metadata"), r[3]), Qt = (r, e, t, n) => {
   for (var i = 0, a = r[e >> 1], o = a && a.length; i < o; i++) e & 1 ? a[i].call(t) : n = a[i].call(t, n);
   return n;
 }, Vo = (r, e, t, n, i, a) => {
-  for (var o, s, l, u, c, f = e & 7, d = !1, h = !1, v = r.length + 1, m = eS[f + 5], g = r[v - 1] = [], p = r[v] || (r[v] = []), y = (i = i.prototype, cF({ get [t]() {
-    return pF(this, a);
+  for (var o, s, l, u, c, f = e & 7, d = !1, h = !1, v = r.length + 1, m = eS[f + 5], g = r[v - 1] = [], p = r[v] || (r[v] = []), y = (i = i.prototype, uF({ get [t]() {
+    return vF(this, a);
   }, set [t](w) {
-    return mF(this, a, w);
+    return pF(this, a, w);
   } }, t)), _ = n.length - 1; _ >= 0; _--)
-    u = dF(f, t, l = {}, r[3], p), u.static = d, u.private = h, c = u.access = { has: (w) => t in w }, c.get = (w) => w[t], c.set = (w, S) => w[t] = S, s = (0, n[_])({ get: y.get, set: y.set }, u), l._ = 1, s === void 0 ? Ga(s) && (y[m] = s) : typeof s != "object" || s === null ? Bo("Object expected") : (Ga(o = s.get) && (y.get = o), Ga(o = s.set) && (y.set = o), Ga(o = s.init) && g.unshift(o));
+    u = hF(f, t, l = {}, r[3], p), u.static = d, u.private = h, c = u.access = { has: (w) => t in w }, c.get = (w) => w[t], c.set = (w, S) => w[t] = S, s = (0, n[_])({ get: y.get, set: y.set }, u), l._ = 1, s === void 0 ? Ga(s) && (y[m] = s) : typeof s != "object" || s === null ? Bo("Object expected") : (Ga(o = s.get) && (y.get = o), Ga(o = s.set) && (y.set = o), Ga(o = s.init) && g.unshift(o));
   return y && J1(i, t, y), i;
-}, tS = (r, e, t) => e.has(r) || Bo("Cannot " + t), pF = (r, e, t) => (tS(r, e, "read from private field"), e.get(r)), Pa = (r, e, t) => e.has(r) ? Bo("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(r) : e.set(r, t), mF = (r, e, t, n) => (tS(r, e, "write to private field"), e.set(r, t), t), rS, nS, iS, aS, oS, zh, ze, lv, uv, cv, fv, hv;
+}, tS = (r, e, t) => e.has(r) || Bo("Cannot " + t), vF = (r, e, t) => (tS(r, e, "read from private field"), e.get(r)), Pa = (r, e, t) => e.has(r) ? Bo("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(r) : e.set(r, t), pF = (r, e, t, n) => (tS(r, e, "write to private field"), e.set(r, t), t), rS, nS, iS, aS, oS, zh, ze, lv, uv, cv, fv, hv;
 class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()], nS = [Bs()], rS = [Bs()], zh) {
   constructor() {
-    super(...arguments), Pa(this, lv, Qt(ze, 8, this)), Qt(ze, 11, this), this._config = void 0, this._lastEmitted = void 0, Pa(this, uv, Qt(ze, 12, this, "visual")), Qt(ze, 15, this), Pa(this, cv, Qt(ze, 16, this, "")), Qt(ze, 19, this), Pa(this, fv, Qt(ze, 20, this, null)), Qt(ze, 23, this), Pa(this, hv, Qt(ze, 24, this, tF())), Qt(ze, 27, this), this._pendingFocusRestore = !1, this._emitTimer = null, this._parseTimer = null, this._yamlEmitTimer = null;
+    super(...arguments), Pa(this, lv, Qt(ze, 8, this)), Qt(ze, 11, this), this._config = void 0, this._lastEmitted = void 0, Pa(this, uv, Qt(ze, 12, this, "visual")), Qt(ze, 15, this), Pa(this, cv, Qt(ze, 16, this, "")), Qt(ze, 19, this), Pa(this, fv, Qt(ze, 20, this, null)), Qt(ze, 23, this), Pa(this, hv, Qt(ze, 24, this, eF())), Qt(ze, 27, this), this._pendingFocusRestore = !1, this._emitTimer = null, this._parseTimer = null, this._yamlEmitTimer = null;
   }
   // -------------------------------------------------------------------------
   // Public API (contracts/editor-public-api.md)
   // -------------------------------------------------------------------------
   setConfig(e) {
     const t = jy(e), n = mf(t), i = this._lastEmitted !== void 0 && Vl(n, this._lastEmitted);
-    this._config = t, this._uiState = nF(this._uiState), this._pendingFocusRestore = !0, this._editorMode === "yaml" && this._hasYamlSupport() && (i || (this._yamlText = this._dumpConfig(t))), this._yamlError = null, this.requestUpdate();
+    this._config = t, this._uiState = rF(this._uiState), this._pendingFocusRestore = !0, this._editorMode === "yaml" && this._hasYamlSupport() && (i || (this._yamlText = this._dumpConfig(t))), this._yamlError = null, this.requestUpdate();
   }
   disconnectedCallback() {
     super.disconnectedCallback(), this._flushYaml(), this._flushEmit();
@@ -30554,7 +30552,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
   // Label language chain (FR-908-X)
   // -------------------------------------------------------------------------
   _labelLanguage() {
-    return sF(this.hass, this._config ?? {});
+    return oF(this.hass, this._config ?? {});
   }
   // -------------------------------------------------------------------------
   // Emit pipeline (FR-908-N/O, research R1/R5)
@@ -30574,20 +30572,20 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
       return;
     let i;
     if (e.key === "comparison_preset")
-      i = oF(
+      i = aF(
         this._config,
         String(t ?? "")
       );
     else {
-      const a = ZN(e, t);
-      i = QN(this._config, { [e.key]: a });
+      const a = YN(e, t);
+      i = JN(this._config, { [e.key]: a });
     }
     this._config = i, this._emitPolicy(e) === "debounced" ? ((e.control.kind === "text" || e.control.kind === "number") && (this._uiState = gf(this._uiState, e.key, n)), this._scheduleEmit()) : this._flushEmit(), this._pendingFocusRestore = e.control.kind === "text" || e.control.kind === "number", this.requestUpdate();
   }
   _scheduleEmit() {
     this._emitTimer && clearTimeout(this._emitTimer), this._emitTimer = setTimeout(() => {
       this._emitTimer = null, this._flushEmit();
-    }, qN);
+    }, ZN);
   }
   /**
    * The emit gate (FR-908-N): dispatch `config-changed` only when the would-be
@@ -30597,7 +30595,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
     if (this._emitTimer && (clearTimeout(this._emitTimer), this._emitTimer = null), !this._config)
       return;
     const e = mf(this._config);
-    eF(e, this._lastEmitted ?? {}) && (this._lastEmitted = e, this.dispatchEvent(
+    QN(e, this._lastEmitted ?? {}) && (this._lastEmitted = e, this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: e },
         bubbles: !0,
@@ -30614,12 +30612,12 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
   _scheduleYamlParse() {
     this._parseTimer && clearTimeout(this._parseTimer), this._parseTimer = setTimeout(() => {
       this._parseTimer = null, this._runYamlParse();
-    }, KN);
+    }, qN);
   }
   _scheduleYamlEmit() {
     this._yamlEmitTimer && clearTimeout(this._yamlEmitTimer), this._yamlEmitTimer = setTimeout(() => {
       this._yamlEmitTimer = null, this._flushEmit();
-    }, XN);
+    }, KN);
   }
   /**
    * Runs the (safe-mode) YAML parse. On success `_config` is **replaced
@@ -30627,7 +30625,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
    * the last valid `_config` is kept and an inline error is shown.
    */
   _runYamlParse() {
-    const e = lF(this._yamlText);
+    const e = sF(this._yamlText);
     e.ok ? (this._config = jy(e.config), this._yamlError = null) : this._yamlError = e.error, this.requestUpdate();
   }
   /**
@@ -30727,7 +30725,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
   }
   _onScroll(e) {
     const t = e.target;
-    this._uiState = rF(this._uiState, t.scrollTop);
+    this._uiState = tF(this._uiState, t.scrollTop);
   }
   // -------------------------------------------------------------------------
   // Post-render restore (FR-908-K/L/M)
@@ -31024,7 +31022,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
     `;
   }
   _renderSection(e, t, n) {
-    const i = this._uiState.expanded[e], a = n(`editor.section.${e}`), o = GN(e, t, sv), s = o.some((p) => p.column !== void 0), l = /* @__PURE__ */ new Map(), u = /* @__PURE__ */ new Map();
+    const i = this._uiState.expanded[e], a = n(`editor.section.${e}`), o = WN(e, t, sv), s = o.some((p) => p.column !== void 0), l = /* @__PURE__ */ new Map(), u = /* @__PURE__ */ new Map();
     if (s) {
       const p = /* @__PURE__ */ new Set();
       for (const b of o)
@@ -31060,7 +31058,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
         ${this._renderFieldLabel(p, n)}
         ${this._renderControl(
         p,
-        UN(p, t),
+        GN(p, t),
         ((w = p.disabledWhen) == null ? void 0 : w.call(p, t)) ?? !1,
         n
       )}
@@ -31102,7 +31100,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
     const v = s ? $`<div class="section-columns">${d}</div>` : $`${d}`, m = $`
       <a
         class="section-docs-link"
-        href=${RN[e]}
+        href=${ON[e]}
         target="_blank"
         rel="noopener noreferrer"
         aria-label=${n("editor.docs_link")}
@@ -31180,7 +31178,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
             ` : ""}
         ${this._editorMode === "visual" ? $`
               <div class="sections" @scroll=${this._onScroll}>
-                ${ON.map(
+                ${EN.map(
       (i) => this._renderSection(i, this._config, e)
     )}
               </div>
@@ -31197,7 +31195,7 @@ class tn extends (zh = ki, oS = [j1({ attribute: !1 })], aS = [Bs()], iS = [Bs()
     `;
   }
 }
-ze = hF(zh);
+ze = fF(zh);
 lv = /* @__PURE__ */ new WeakMap();
 uv = /* @__PURE__ */ new WeakMap();
 cv = /* @__PURE__ */ new WeakMap();
@@ -31208,7 +31206,7 @@ Vo(ze, 4, "_editorMode", aS, tn, uv);
 Vo(ze, 4, "_yamlText", iS, tn, cv);
 Vo(ze, 4, "_yamlError", nS, tn, fv);
 Vo(ze, 4, "_uiState", rS, tn, hv);
-vF(ze, tn);
+dF(ze, tn);
 tn.styles = i_`
     :host {
       display: block;
@@ -31411,11 +31409,11 @@ customElements.define("energy-horizon-card-editor", tn);
 function Qy(r, e, t) {
   return r > 0 ? `+${e.format(r)} ${t}` : r < 0 ? `−${e.format(Math.abs(r))} ${t}` : `${e.format(0)} ${t}`;
 }
-const gF = /\{\{(\w+)\}\}/g;
+const mF = /\{\{(\w+)\}\}/g;
 function e_(r, e) {
   const t = [];
   let n = 0;
-  const i = new RegExp(gF.source, "g");
+  const i = new RegExp(mF.source, "g");
   let a;
   for (; (a = i.exec(r)) !== null; ) {
     a.index > n && t.push(r.slice(n, a.index));
@@ -31498,7 +31496,7 @@ const Hl = class Hl extends ki {
     if ((e.has("hass") || e.has("_config") || e.has("_state")) && (this._state.status === "loading" && this._loadData(), this._state.status === "ready" && this._state.comparisonSeries)) {
       if (!this._chartRenderer) {
         const t = this.renderRoot.querySelector(".chart-container");
-        t && (this._chartRenderer = new QR(t));
+        t && (this._chartRenderer = new JR(t));
       }
       if (this._chartRenderer && this._state.period && this._state.resolvedWindows && this._state.chartTime) {
         const t = bi(this.hass, this._config), n = Wa(t.language), { timeline: i } = this._state.chartTime, a = this._buildRendererConfig(i);
@@ -31515,7 +31513,7 @@ const Hl = class Hl extends ki {
     const e = /* @__PURE__ */ new Date(), t = bi(this.hass, this._config), n = Wa(t.language), i = { ...this._mergedTimeWindow };
     if (i.aggregation === void 0) {
       const h = jr(i.duration ?? "1y"), v = h ? Wi(h) : 0;
-      i.aggregation = rN(v);
+      i.aggregation = tN(v);
     }
     const a = _M(
       i,
@@ -31621,7 +31619,7 @@ const Hl = class Hl extends ki {
       ...n,
       ...a ?? [],
       ...o.flat()
-    ], l = xN(s, t, {
+    ], l = SN(s, t, {
       force_prefix: this._config.force_prefix
     });
     let u = 0;
@@ -31752,7 +31750,7 @@ const Hl = class Hl extends ki {
       month: "long",
       year: "numeric"
     }).format(_);
-    const b = h.current.unit, x = this._config.precision ?? 2, M = !m && (v != null && v[0]) && v[1] ? IN(v[0], v[1], t.timeZone) : { omitYearOnAxis: !1, dayOfMonthOnlyOnAxis: !1 };
+    const b = h.current.unit, x = this._config.precision ?? 2, M = !m && (v != null && v[0]) && v[1] ? LN(v[0], v[1], t.timeZone) : { omitYearOnAxis: !1, dayOfMonthOnlyOnAxis: !1 };
     return {
       primaryColor: this._config.primary_color ?? "",
       fillCurrent: this._config.fill_current ?? !0,
@@ -31833,7 +31831,7 @@ const Hl = class Hl extends ki {
     }), y = (i == null ? void 0 : i.unit) || m, _ = this._localizeOrError(t, "summary.current_period"), w = this._localizeOrError(t, "summary.reference_period");
     let S = "", b = "";
     if (this._state.status === "ready" && this._state.period) {
-      const mt = this._state.period, He = this._state.resolvedWindows, gt = zy(this.hass, this._config), ct = mt.time_zone || ((Xn = (ur = this.hass) == null ? void 0 : ur.config) == null ? void 0 : Xn.time_zone) || "UTC", yt = LN((Ho = (sa = this.hass) == null ? void 0 : sa.locale) == null ? void 0 : Ho.time_format), Mr = qy(He, mt, 0), Wo = qy(He, mt, 1), Go = this._state.mergedTimeWindow ?? this._mergedTimeWindow, Au = MN(
+      const mt = this._state.period, He = this._state.resolvedWindows, gt = zy(this.hass, this._config), ct = mt.time_zone || ((Xn = (ur = this.hass) == null ? void 0 : ur.config) == null ? void 0 : Xn.time_zone) || "UTC", yt = AN((Ho = (sa = this.hass) == null ? void 0 : sa.locale) == null ? void 0 : Ho.time_format), Mr = qy(He, mt, 0), Wo = qy(He, mt, 1), Go = this._state.mergedTimeWindow ?? this._mergedTimeWindow, Au = TN(
         Mr,
         Go,
         this._config.comparison_preset,
@@ -31845,7 +31843,7 @@ const Hl = class Hl extends ki {
       };
       S = Ky(Au, Wo, dv), b = Ky(Wo, Mr, dv);
     }
-    const x = S !== "" ? `${_} (${S})` : _, M = b !== "" ? `${w} (${b})` : w, C = S !== "" ? S : _, T = b !== "" ? b : w, k = i != null ? g.format(i.current_cumulative) : "", A = this._state.status === "ready" && this._state.resolvedWindows && this._state.resolvedWindows.length < 2, L = !A && i != null && i.reference_cumulative != null ? g.format(i.reference_cumulative) : null, P = !A && a != null && a.enabled && this._config.show_forecast_total_panel !== !1, E = (a == null ? void 0 : a.unit) || y, q = this._state.mergedTimeWindow ?? this._mergedTimeWindow, V = `text_summary.period.${yN(q == null ? void 0 : q.step)}`, W = this._localizeOrError(t, V), oe = _N(this._config.interpretation);
+    const x = S !== "" ? `${_} (${S})` : _, M = b !== "" ? `${w} (${b})` : w, C = S !== "" ? S : _, T = b !== "" ? b : w, k = i != null ? g.format(i.current_cumulative) : "", A = this._state.status === "ready" && this._state.resolvedWindows && this._state.resolvedWindows.length < 2, L = !A && i != null && i.reference_cumulative != null ? g.format(i.reference_cumulative) : null, P = !A && a != null && a.enabled && this._config.show_forecast_total_panel !== !1, E = (a == null ? void 0 : a.unit) || y, q = this._state.mergedTimeWindow ?? this._mergedTimeWindow, V = `text_summary.period.${gN(q == null ? void 0 : q.step)}`, W = this._localizeOrError(t, V), oe = yN(this._config.interpretation);
     let te = null;
     const j = this._interpretationSemantics(), ce = kS(j.outcome), we = AS(
       j.outcome,
@@ -32077,7 +32075,7 @@ Hl.properties = {
   hass: { type: Object, attribute: !1 },
   _config: { state: !0 },
   _state: { state: !0 }
-}, Hl.styles = TN;
+}, Hl.styles = xN;
 let $h = Hl;
 customElements.define("energy-horizon-card", $h);
 window.customCards = window.customCards ?? [];

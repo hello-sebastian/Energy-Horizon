@@ -7,7 +7,6 @@ import {
 } from "../../src/card/axis/x-axis-rich-styles";
 import {
   escapeEchartsRichAxisPiece,
-  GRID_LEFT_PX,
   formatYAxisTickLabel,
   measureYAxisLabelWidth,
   Y_AXIS_UNIT_WRAP_NUMBER_CHARS
@@ -1363,7 +1362,7 @@ describe('EChartsRenderer', () => {
       expect(lines).toEqual([]);
     });
 
-    it("grid.left grows to fit a long Y label and stays floored at GRID_LEFT_PX for short ones", () => {
+    it("grid.left fits the widest Y label exactly (no floor) so the plot fills the card width", () => {
       const container = document.createElement("div");
       document.body.appendChild(container);
 
@@ -1409,12 +1408,9 @@ describe('EChartsRenderer', () => {
       longRenderer.update(buildSeries(1000000), fullTimeline, baseConfig(), { current: "Current", reference: "Reference" });
       const longOption = setOptionMock.mock.calls[0]![0] as any;
       const longLeft = longOption.grid.left as number;
-      const expectedLongLeft = Math.max(
-        GRID_LEFT_PX,
-        Math.ceil(measureYAxisLabelWidth("1\u00A0000\u00A0000")) + 4
-      );
+      // No floor: grid.left is exactly the widest line (the number part) + gap.
+      const expectedLongLeft = Math.ceil(measureYAxisLabelWidth("1\u00A0000\u00A0000")) + 4;
       expect(longLeft).toBe(expectedLongLeft);
-      expect(longLeft).toBeGreaterThan(GRID_LEFT_PX);
 
       // The max-tick label must be the two-line rich form.
       const longFmt = longOption.yAxis.axisLabel.formatter as (v: number) => string;
@@ -1423,17 +1419,14 @@ describe('EChartsRenderer', () => {
       longRenderer.destroy();
       setOptionMock.mockClear();
 
-      // Short label: 1.5 Wh -> single line "1,5 Wh" (pl locale); grid.left stays at the floor.
+      // Short label: 1.5 Wh -> single line "1,5 Wh" (pl locale); grid.left equals
+      // the measured label width + gap (no floor) so the plot area expands left.
       const shortRenderer = new EChartsRenderer(container);
       shortRenderer.update(buildSeries(1.5), fullTimeline, baseConfig({ unit: "Wh" }), { current: "Current", reference: "Reference" });
       const shortOption = setOptionMock.mock.calls[0]![0] as any;
       const shortLeft = shortOption.grid.left as number;
-      const expectedShortLeft = Math.max(
-        GRID_LEFT_PX,
-        Math.ceil(measureYAxisLabelWidth("1,5 Wh")) + 4
-      );
+      const expectedShortLeft = Math.ceil(measureYAxisLabelWidth("1,5 Wh")) + 4;
       expect(shortLeft).toBe(expectedShortLeft);
-      expect(shortLeft).toBe(GRID_LEFT_PX);
 
       const shortFmt = shortOption.yAxis.axisLabel.formatter as (v: number) => string;
       expect(shortFmt(shortOption.yAxis.max)).toBe("1,5 Wh");
@@ -1913,8 +1906,9 @@ describe('EChartsRenderer', () => {
       const grid = option.grid as { bottom?: number; left?: number; containLabel?: boolean };
       expect(grid.bottom).toBe(GRID_BOTTOM_PX);
       expect(grid.containLabel).toBe(false);
-      // grid.left is now dynamic: floored at GRID_LEFT_PX, grown to fit the widest Y label.
-      expect(grid.left).toBeGreaterThanOrEqual(GRID_LEFT_PX);
+      // grid.left is dynamic with no floor: widest Y label line ("8 kWh" for
+      // yMax = 8, unit kWh, en-US) + gap — the label sits flush at the left edge.
+      expect(grid.left).toBe(Math.ceil(measureYAxisLabelWidth("8 kWh")) + 4);
 
       setOptionMock.mockClear();
       const finishedHandler = onMock.mock.calls.find((c) => c[0] === "finished")?.[1] as () => void;

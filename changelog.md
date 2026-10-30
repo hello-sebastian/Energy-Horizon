@@ -12,7 +12,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Changed
 
 - **Editor labels:** the **Neutral threshold** label no longer carries a "(%)" suffix (the control already shows the `%` suffix), and the **Unit prefix** label is lowercased.
-- **Y-axis labels are no longer clipped:** the left chart margin now adapts to the widest Y-axis tick label (measured per render, floored at the previous 56 px), and when the number part of the top tick is longer than 3 characters (e.g. `10 000 Wh`) the unit moves to a second, right-aligned line so the plot area is not squeezed.
+- **Y-axis labels are no longer clipped:** the left chart margin now adapts exactly to the widest Y-axis tick label (measured per render, no fixed floor) so the label sits flush against the card's left edge and the plot area fills the full card width; when the number part of the top tick is longer than 3 characters (e.g. `10 000 Wh`) the unit moves to a second, right-aligned line so the plot area is not squeezed.
 
 ### Documentation
 

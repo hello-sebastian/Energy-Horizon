@@ -75,3 +75,56 @@ export function measureYAxisLabelWidth(text: string): number {
 - Visual check in a real HA instance with `force_prefix: none` + Wh units (the reporter's scenario) — confirm the top tick shows `10 000` / `Wh` on two lines and the plot area is not squeezed.
 - Consider whether the mid tick should ever carry the unit (currently only the max tick does — unchanged by this fix).
 - `/speckit-bug-test slug=y-axis-label-clipping` to record the verification report.
+
+---
+
+# Round 2: Empty space between Y-axis label and the card's left edge
+
+- **Fixed**: 2026-10-30
+- **Assessment**: ./assessment.md (section "Round 2")
+- **Status**: applied
+
+## Summary
+
+The `GRID_LEFT_PX = 56` floor introduced in Round 1 is removed: `grid.left` is now exactly `ceil(measured widest Y label line) + AXIS_TICK_LABEL_GAP_PX`, so the label sits flush against the card's left edge and the plot area expands to fill the full card width.
+
+## Changes
+
+| File | Change | Notes |
+|------|--------|-------|
+| `src/card/echarts-renderer.ts` | modified | removed the `GRID_LEFT_PX` export and the `Math.max(GRID_LEFT_PX, …)` floor; `gridLeftPx = Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX`; comments updated |
+| `tests/unit/echarts-renderer.test.ts` | modified | removed the `GRID_LEFT_PX` import; "grid.left fits the widest Y label exactly (no floor)" — long label: `grid.left === ceil(measureYAxisLabelWidth("1 000 000")) + 4`; short label: `grid.left === ceil(measureYAxisLabelWidth("1,5 Wh")) + 4`; now-label test: `grid.left === ceil(measureYAxisLabelWidth("8 kWh")) + 4` |
+| `specs/902-chart-rendering-interaction/spec.md` | modified | FR-902-Z: "no fixed floor — the label MUST sit flush against the left canvas edge so the plot area fills the full card width"; grid-constants bullet and Key Entities updated (no more `GRID_LEFT_PX`) |
+| `changelog.md` | modified | Unreleased → Changed entry updated (no fixed floor, label flush at the left edge) |
+
+## Diff Highlights
+
+```ts
+// before (Round 1):
+const gridLeftPx = Math.max(
+  GRID_LEFT_PX,
+  Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX
+);
+// after (Round 2):
+const gridLeftPx = Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX;
+```
+
+## Tests Added or Updated
+
+- `tests/unit/echarts-renderer.test.ts` → "grid.left fits the widest Y label exactly (no floor) so the plot fills the card width" — end-to-end via `update()`: `1 000 000 Wh` → `grid.left === ceil(measureYAxisLabelWidth("1 000 000")) + 4`; `1,5 Wh` → `grid.left === ceil(measureYAxisLabelWidth("1,5 Wh")) + 4` (no floor).
+- Updated: now-label test assertion `grid.left >= GRID_LEFT_PX` → `grid.left === ceil(measureYAxisLabelWidth("8 kWh")) + 4` (yMax = 8 for the 7-day 1..7 kWh series, unit `kWh`, en-US).
+
+## Local Verification
+
+- Commands run: `npm run test` → 53 files, 538 tests, all passed.
+- Commands run: `npm run lint` → clean.
+- Manual checks: none (no browser session); behavior is pinned by the unit tests above.
+
+## Deviations from Assessment
+
+- None — the fix matches the Round 2 assessment exactly (floor removed, `GRID_LEFT_PX` export removed, spec + tests + changelog updated).
+
+## Follow-ups
+
+- `/speckit-bug-test slug=y-axis-label-clipping` to record the verification report (covers both rounds).
+- Visual check in a real HA instance: short-label scenario (e.g. `1,5 Wh`) — confirm the label sits flush at the card's left edge and the plot area fills the full card width.

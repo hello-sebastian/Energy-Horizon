@@ -71,3 +71,67 @@ The Y-axis tick label area is a fixed 56 px (`GRID_LEFT_PX`) regardless of the a
 
 - [NEEDS CLARIFICATION: does "dłuższe niż 3 znaki" refer to the number part only (my assumption) or the whole label including the unit?]
 - [NEEDS CLARIFICATION: should the two-line wrapping also apply to the mid/zero ticks (they carry no unit today, so no change is expected) — assumed no.]
+
+---
+
+# Round 2: Empty space between Y-axis label and the card's left edge
+
+- **Reported**: 2026-10-30 (continuation of the same bug — new dependency surfaced after the Round 1 fix)
+- **Source**: pasted text (user, Polish)
+- **Verdict**: valid
+- **Severity**: low (cosmetic — the chart is readable, but the plot area is unnecessarily narrow on the left)
+
+## Report (verbatim or summarized)
+
+> Zauważyłem jeszcze jeden problem. Teraz jednostka została przeniesiona linię niżej i etykiety na osi zajmują mniej miejsca, jednak pozostałe miejsce zostaje puste – tj. miejsce od etykiety do lewego marginesu karty. Chciałbym, aby w takim wypadku to puste miejsce zostało ograniczone – wykres powiększył się w taki sposób aby dosunął etykiety na tyle na ile to jest możliwe do lewej krawędzi, a sam bezpiecznie dla czytelności stał się nieco większy. Wykres razem z etykietami powinien zajmować całą przestrzeń w poziomie karty tj. od lewego do prawego marginesu.
+
+## Symptom
+
+After the Round 1 fix, `grid.left` is computed as `max(GRID_LEFT_PX=56, ceil(widest Y label line) + AXIS_TICK_LABEL_GAP_PX)`. When the wrapped label is narrower than ~52 px (e.g. `1,5 Wh` → lines `1,5` + `Wh`), the 56 px floor kicks in and dead space remains between the label and the left canvas edge (the card's left margin). The right side is already `right: AXIS_TICK_LABEL_GAP_PX` (4 px), so the chart reaches the right margin — the asymmetry is only on the left. Expected: `grid.left` should be exactly `ceil(widest label) + gap` with **no floor**, so the label sits flush against the left edge and the plot area expands to fill the full card width.
+
+## Reproduction
+
+1. Render the card with a short Y label (e.g. values below 1 000, unit `Wh`, or `1,5 kWh`).
+2. Observe the gap between the Y-axis label and the card's left edge — the plot area starts at 56 px even though the label is only ~20 px wide.
+
+## Suspected Code Paths
+
+- `src/card/echarts-renderer.ts:73` — `export const GRID_LEFT_PX = 56;` (the floor constant).
+- `src/card/echarts-renderer.ts:626-629` — `const gridLeftPx = Math.max(GRID_LEFT_PX, Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX);`
+- `src/card/echarts-renderer.ts:1071-1077` — `grid: { containLabel: false, left: gridLeftPx, right: AXIS_TICK_LABEL_GAP_PX, ... }` (right side already flush at 4 px).
+- `tests/unit/echarts-renderer.test.ts:1366-1436` — test "grid.left grows to fit a long Y label and stays floored at GRID_LEFT_PX for short ones" asserts `expect(shortLeft).toBe(GRID_LEFT_PX)` — must be updated.
+- `tests/unit/echarts-renderer.test.ts:1916-1917` — `expect(grid.left).toBeGreaterThanOrEqual(GRID_LEFT_PX)` — must be updated.
+- `specs/902-chart-rendering-interaction/spec.md:58,298,302,315` — FR-902-Z and the grid-constants bullet reference the floor.
+
+## Root Cause Hypothesis
+
+**Confidence: high.** The Round 1 fix introduced a floor (`GRID_LEFT_PX = 56`) to keep the plot from shrinking for short labels. That floor was sized for the *old* single-line label (`"1,927 kWh"` ≈ 52 px + 4 px gap). After unit wrapping, the widest line is only the number part (e.g. `1,5` ≈ 14 px), so the floor leaves ~40 px of dead space on the left. The floor's original purpose (guarding against an undersized plot) is no longer needed: the measured width is now the *true* label width, and the plot only shrinks when the label genuinely gets narrower — which is exactly the desired behavior (the user wants the chart to expand into the freed space).
+
+## Proposed Remediation
+
+**Preferred**: remove the floor entirely. `grid.left = ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX`. The label sits flush against the left canvas edge (the card's left margin) and the plot area expands to fill the full card width. Remove the now-unused `GRID_LEFT_PX` export (it is only referenced by the floor math and the tests). Update the spec (FR-902-Z: drop the "floored at GRID_LEFT_PX" wording → "computed per render as `ceil(measured widest Y label line) + AXIS_TICK_LABEL_GAP_PX`") and the tests (short-label case: `grid.left` equals measured width + gap, not 56).
+
+**Alternatives**:
+- Keep a small floor (e.g. 24 px) so a lone `0` doesn't make the plot excessively wide. Trade-off: the user explicitly asked for the label to sit "na tyle na ile to jest możliwe do lewej krawędzi" (as close to the left edge as possible), so any floor contradicts the request. Rejected.
+- `containLabel: true` — ECharts auto-sizes the label area. Rejected: forbidden by FR-902-Z and it changes the meaning of *all* grid insets (top/bottom budgets in `x-axis-rich-styles.ts` were derived under `containLabel: false`).
+
+**Files likely to change**:
+- `src/card/echarts-renderer.ts` (remove the floor; remove or repurpose `GRID_LEFT_PX`)
+- `tests/unit/echarts-renderer.test.ts` (update the short-label assertion; drop the `GRID_LEFT_PX` import if the constant is removed)
+- `specs/902-chart-rendering-interaction/spec.md` (FR-902-Z: drop the floor wording)
+- `changelog.md` (update the Unreleased entry)
+
+**Tests to add or update**:
+- Short label: `grid.left` equals `ceil(measured width) + AXIS_TICK_LABEL_GAP_PX` (not 56).
+- Long label: `grid.left` equals `ceil(measured width) + AXIS_TICK_LABEL_GAP_PX` (unchanged from Round 1).
+- Remove the `toBeGreaterThanOrEqual(GRID_LEFT_PX)` assertion.
+
+## Risks & Considerations
+
+- **Very short labels** (a lone `0`): the plot area becomes very wide. This is the desired behavior (the user wants the chart to fill the space) — no readability risk, the label still has the 4 px gap to the axis.
+- **Layout shift**: the plot width changes per data/locale — already accepted in Round 1.
+- **Spec deviation**: FR-902-Z must be updated to drop the floor wording in the same change to avoid drift.
+
+## Open Questions
+
+- None — the user's request is unambiguous: remove the dead space and expand the chart to fill the full card width.

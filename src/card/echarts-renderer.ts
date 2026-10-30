@@ -64,15 +64,6 @@ const LEGEND_BELOW_GAP_PX = 8;
 const GRID_TOP_FALLBACK_PX = LEGEND_BASELINE_PX;
 
 /**
- * Minimum left-side grid margin (px) for Y-axis tick labels.
- * With `containLabel: false` the margin must cover the widest formatted Y label;
- * `buildOption` measures the actual widest label and uses
- * `max(GRID_LEFT_PX, measuredWidth + AXIS_TICK_LABEL_GAP_PX)` so long labels
- * (e.g. "10 000 Wh") are never clipped (bug: y-axis-label-clipping).
- */
-export const GRID_LEFT_PX = 56;
-
-/**
  * Escape `{`, `}`, `|` in user/locale strings embedded in ECharts `rich` `{style|text}` pieces
  * (fullwidth substitutes — stable across ECharts versions).
  */
@@ -609,7 +600,8 @@ export class EChartsRenderer {
     const yMaxEps = Math.max(1e-12, Math.abs(yMax) * 1e-9);
 
     // Y-axis label budget (bug: y-axis-label-clipping): measure the widest rendered
-    // tick line (0 / mid / max) and size grid.left to it, floored at GRID_LEFT_PX.
+    // tick line (0 / mid / max) and size grid.left to it so the label sits flush
+    // against the left canvas edge and the plot area fills the full card width.
     let widestYLabelPx = 0;
     for (const tickValue of [0, yMax / 2, yMax]) {
       const parts = formatYAxisTickLabel(
@@ -623,10 +615,7 @@ export class EChartsRenderer {
         widestYLabelPx = Math.max(widestYLabelPx, measureYAxisLabelWidth(line));
       }
     }
-    const gridLeftPx = Math.max(
-      GRID_LEFT_PX,
-      Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX
-    );
+    const gridLeftPx = Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX;
 
     const xMax = Math.max(fullTimeline.length - 1, 0);
     const xIntervalLegacy = xMax > 0 ? Math.max(1, Math.round(xMax / 4)) : 1;
@@ -1067,7 +1056,8 @@ export class EChartsRenderer {
       // from the chart canvas edge to the axis line. Labels hang outside the plot area into the
       // reserved space. GRID_BOTTOM_PX is always the full two-line budget so chart height is
       // stable regardless of whether "today" is in range. grid.left is sized to the widest
-      // Y-axis label (floored at GRID_LEFT_PX) so long labels are never clipped.
+      // Y-axis label sized to the widest tick line so the label sits flush
+      // against the left canvas edge (bug: y-axis-label-clipping).
       grid: {
         containLabel: false,
         left: gridLeftPx,
