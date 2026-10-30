@@ -407,6 +407,7 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 - `period_offset` configuration correctly shifts the reference period's `start`/`end` dates; `formatCompactPeriodCaption` reuses the already-computed `ComparisonWindow` bounds.
 - The `−` sign for negative differences is U+2212 (minus sign) or a regular hyphen-minus (`-`), following existing project formatting conventions.
 - `anomalousReference` from `ForecastStats` may optionally be surfaced in the UI (e.g. a confidence indicator); the specific presentation is an implementation detail not normatively specified here.
+- The forecast panel displays the confidence level through the localized keys `forecast.confidence.{low|medium|high}` (see `905-localization-formatting`); the raw enum value from `ForecastStats` is never rendered directly.
 - **Interpretation** generalizes “entity semantics” beyond electricity; wording may say “energy” or be generic per copy review, but behavior is the same for any cumulative statistic exposed by the card.
 - **`neutral_threshold`** defaults to **2** percent when omitted, matching a common “close enough” band; power users may set **`0`** for strict neutrality only at exact balance (per **SC-903-9**).
 - Automated tests, changelog entry **1.1.0**, and README / README-advanced / wiki updates for this feature are tracked under `907-docs-product-knowledge` and `tasks.md` for this feature.

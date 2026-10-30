@@ -103,6 +103,16 @@
 
 ---
 
+## Phase 9: Forecast confidence level localization (post-implementation refinement)
+
+**Purpose**: The forecast panel renders the confidence level through the localized keys `forecast.confidence.{low|medium|high}` (see `905-localization-formatting` spec § Forecast confidence level labels); the raw enum value from `ForecastStats` is never rendered directly.
+
+- [x] T020 [P] Add `forecast.confidence.low` / `forecast.confidence.medium` / `forecast.confidence.high` to `/Users/admin/Projekty Local/Energy-Horizon/src/translations/en.json`, `pl.json`, `de.json`, and `fr.json`.
+- [x] T021 In `/Users/admin/Projekty Local/Energy-Horizon/src/card/cumulative-comparison-chart.ts`: resolve the confidence level via `localize("forecast.confidence." + forecast.confidence)` before interpolating it into the `forecast.confidence` sentence template.
+- [x] T022 [P] Extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/localize.test.ts` and `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/localize-dictionary-loading.test.ts` with per-language assertions for the three level keys; extend `/Users/admin/Projekty Local/Energy-Horizon/tests/unit/narrative-mandatory-keys.test.ts` to assert the three keys exist in every `src/translations/*.json`; add an integration test in `/Users/admin/Projekty Local/Energy-Horizon/tests/integration/card-render.test.ts` asserting the rendered panel shows the localized level (e.g. `hoch` for `de`).
+
+---
+
 ## Dependencies & execution order
 
 ### Phase dependencies

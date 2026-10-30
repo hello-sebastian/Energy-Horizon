@@ -28,6 +28,14 @@ describe("localize dictionary loading (US3)", () => {
       expect(text).toContain("80");
       expect(text).toContain("Prognose");
     });
+
+    it("createLocalize('de') resolves forecast confidence level keys", () => {
+      const localize = createLocalize("de");
+
+      expect(localize("forecast.confidence.low")).toBe("niedrig");
+      expect(localize("forecast.confidence.medium")).toBe("mittel");
+      expect(localize("forecast.confidence.high")).toBe("hoch");
+    });
   });
 
   describe("fallback to English for missing keys", () => {

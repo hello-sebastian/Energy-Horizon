@@ -21,6 +21,13 @@ const MANDATORY_TEXT_SUMMARY_KEYS = [
   "text_summary.insufficient_data"
 ] as const;
 
+/** FR-905-L — forecast confidence level labels, mandatory in every language. */
+const MANDATORY_FORECAST_CONFIDENCE_KEYS = [
+  "forecast.confidence.low",
+  "forecast.confidence.medium",
+  "forecast.confidence.high"
+] as const;
+
 describe("narrative mandatory translation keys (FR-903-NG)", () => {
   it("every src/translations/*.json defines all 11 mandatory keys", () => {
     const files = readdirSync(translationsDir).filter((f) => f.endsWith(".json"));
@@ -30,6 +37,22 @@ describe("narrative mandatory translation keys (FR-903-NG)", () => {
       const raw = readFileSync(join(translationsDir, file), "utf-8");
       const dict = JSON.parse(raw) as Record<string, string>;
       for (const key of MANDATORY_TEXT_SUMMARY_KEYS) {
+        expect(
+          typeof dict[key] === "string" && dict[key]!.length > 0,
+          `${file} missing or empty: ${key}`
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("every src/translations/*.json defines forecast confidence level keys", () => {
+    const files = readdirSync(translationsDir).filter((f) => f.endsWith(".json"));
+    expect(files.length).toBeGreaterThan(0);
+
+    for (const file of files) {
+      const raw = readFileSync(join(translationsDir, file), "utf-8");
+      const dict = JSON.parse(raw) as Record<string, string>;
+      for (const key of MANDATORY_FORECAST_CONFIDENCE_KEYS) {
         expect(
           typeof dict[key] === "string" && dict[key]!.length > 0,
           `${file} missing or empty: ${key}`

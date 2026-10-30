@@ -1115,7 +1115,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   </div>
                   <div class="ebc-forecast-confidence">
                     ${this._localizeOrError(localize, "forecast.confidence", {
-                      confidence: forecast.confidence
+                      confidence: this._localizeOrError(
+                        localize,
+                        `forecast.confidence.${forecast.confidence}`
+                      )
                     })}
                   </div>
                 </div>

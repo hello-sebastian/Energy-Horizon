@@ -29,6 +29,10 @@ The card resolves all user-visible text, number formats, and time zone from a th
 - Mandatory languages: `en` and `pl`. German (`de`) is present.
 - Fallback chain: active language → `en`. If a key is missing from both, the card enters an error state (rendering blocked, error message shown in UI; key and language logged to console when `debug: true`).
 
+### Forecast confidence level labels
+
+The forecast panel displays the confidence level (`low` / `medium` / `high` from `ForecastStats`) through per-language label keys `forecast.confidence.low`, `forecast.confidence.medium`, and `forecast.confidence.high`. The rendering layer resolves the level key for the active language before interpolating it into the `forecast.confidence` sentence template, so the displayed level is always localized (e.g. German `niedrig` / `mittel` / `hoch`). The raw enum values remain the internal data model and are never rendered directly.
+
 ### `localize()` function
 
 `localize(key: string, variables?: Record<string, unknown>): string` — returns the translated string with optional variable interpolation (e.g., `localize("summary.higher", { percent: 15 })`). All calls in rendering code use descriptive key names; no raw string literals for UI text exist outside translation files.
@@ -288,6 +292,6 @@ Keys removed: `text_summary.*_mom`, `text_summary.higher`, `text_summary.lower`,
 
 - **FR-905-K (Entity-kind fallback chain)**: The `localize()` system MUST support key-existence checking (`hasTranslationKey()` or equivalent guard in `getRawTemplate`) so the caller at the narrative rendering layer can attempt `text_summary.{entityKind}.{trend}` before falling back to `text_summary.generic.{trend}` without triggering an error state on the first attempt.
 
-- **FR-905-L (Mandatory key validation)**: An automated test or build-time check MUST assert that the 11 mandatory keys listed above are present in every language JSON file at `npm test` time.
+- **FR-905-L (Mandatory key validation)**: An automated test or build-time check MUST assert that the 11 mandatory keys listed above are present in every language JSON file at `npm test` time. The same check MUST assert that the three forecast confidence level keys (`forecast.confidence.low`, `forecast.confidence.medium`, `forecast.confidence.high`) are present in every language JSON file.
 
 - **FR-905-M (Grammar context documentation)**: A `CONTEXT.md` file MUST exist in `src/translations/` (or equivalent inline JSON comments) documenting the positional context for `text_summary.period.*` phrases before any new language file is merged.

@@ -212,6 +212,30 @@ describe("energy-horizon-card integration", () => {
     expect(shadowText).toContain("Total");
   });
 
+  it("forecast confidence level is rendered in the card language (de)", async () => {
+    const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
+    document.body.appendChild(el);
+    if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year", language: "de" });
+    el.hass = {
+      language: "de",
+      locale: { language: "de", number_format: "language" },
+      config: { time_zone: "UTC" },
+      connection: {
+        sendMessagePromise: async () => ({} as unknown)
+      }
+    } as HomeAssistant;
+
+    // baseYoYReadyState() has forecast.confidence = "high"
+    (el as any)._state = baseYoYReadyState();
+    await el.updateComplete;
+
+    const shadowText = el.shadowRoot!.textContent || "";
+    expect(shadowText).toContain("hoch");
+    expect(shadowText).not.toContain("Forecast confidence level");
+    document.body.removeChild(el);
+  });
+
   it("ready: delta chip shows placeholders when difference is missing", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & {
       setConfig: (c: unknown) => void;
