@@ -1,0 +1,26 @@
+schema_version: "1.0"
+
+extension:
+  id: "fixit"
+  name: "Fixit Extension"
+  version: "1.0.0"
+  description: "Spec-aware bug fixing — maps bugs to spec artifacts, proposes a plan, applies minimal changes."
+  author: "speckit-community"
+  repository: "https://github.com/speckit-community/spec-kit-fixit"
+  license: "MIT"
+  homepage: "https://github.com/speckit-community/spec-kit-fixit"
+
+requires:
+  speckit_version: ">=0.1.0"
+
+provides:
+  commands:
+    - name: "speckit.fixit.run"
+      file: "commands/run.md"
+      description: "Fix a bug with spec awareness — proposes a plan, then applies minimal fix"
+
+tags:
+  - "debugging"
+  - "fixit"
+  - "spec-alignment"
+  - "post-implementation"
