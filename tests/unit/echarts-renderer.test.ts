@@ -5,7 +5,13 @@ import {
   X_AXIS_RICH_EDGE_METRICS,
   X_AXIS_RICH_TODAY_METRICS
 } from "../../src/card/axis/x-axis-rich-styles";
-import { escapeEchartsRichAxisPiece, GRID_LEFT_PX } from "../../src/card/echarts-renderer";
+import {
+  escapeEchartsRichAxisPiece,
+  GRID_LEFT_PX,
+  formatYAxisTickLabel,
+  measureYAxisLabelWidth,
+  Y_AXIS_UNIT_WRAP_NUMBER_CHARS
+} from "../../src/card/echarts-renderer";
 import type { ComparisonSeries, ChartRendererConfig } from "../../src/card/types";
 
 // Mock ECharts init() so tests can capture ECOption passed to setOption.
@@ -1312,6 +1318,131 @@ describe('EChartsRenderer', () => {
     });
   });
 
+  describe("Y-axis label wrapping + dynamic grid.left (bug: y-axis-label-clipping)", () => {
+    const nf = (locale: string, max: number) =>
+      new Intl.NumberFormat(locale, { maximumFractionDigits: max, minimumFractionDigits: 0 });
+
+    it("keeps the unit inline when the number part is short (<= 3 chars)", () => {
+      const { label, lines } = formatYAxisTickLabel(
+        1.5,
+        1.5,
+        1e-9,
+        nf("en-US", 1),
+        "kWh"
+      );
+      expect(label).toBe("1.5 kWh");
+      expect(lines).toEqual(["1.5 kWh"]);
+      expect(label).not.toContain("\n");
+    });
+
+    it("moves the unit to a second right-aligned line when the number part is long (> 3 chars)", () => {
+      const { label, lines } = formatYAxisTickLabel(
+        10000,
+        10000,
+        1e-9,
+        nf("pl", 0),
+        "Wh"
+      );
+      // "10 000" is 6 chars > Y_AXIS_UNIT_WRAP_NUMBER_CHARS (3).
+      expect(label).toContain("\n");
+      expect(label).toContain("{yNum|");
+      expect(label).toContain("{yUnit|Wh}");
+      // pl locale uses a no-break space (U+00A0) as thousands separator.
+      expect(lines).toEqual(["10\u00A0000", "Wh"]);
+    });
+
+    it("returns empty label for non-rendered ticks (other than 0 / mid / max)", () => {
+      const { label, lines } = formatYAxisTickLabel(
+        2500,
+        10000,
+        1e-9,
+        nf("pl", 0),
+        "Wh"
+      );
+      expect(label).toBe("");
+      expect(lines).toEqual([]);
+    });
+
+    it("grid.left grows to fit a long Y label and stays floored at GRID_LEFT_PX for short ones", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000];
+
+      const baseConfig = (overrides: Partial<ChartRendererConfig> = {}): ChartRendererConfig => ({
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: true,
+        comparisonMode: "year_over_year",
+        language: "pl",
+        numberLocale: "pl",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: false,
+        unit: "Wh",
+        periodLabel: "",
+        ...overrides
+      });
+
+      const buildSeries = (max: number): ComparisonSeries => ({
+        current: {
+          points: [
+            { timestamp: fullTimeline[0] + 10, value: max / 2 },
+            { timestamp: fullTimeline[1] + 10, value: max }
+          ],
+          unit: "Wh",
+          periodLabel: "",
+          total: max
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      });
+
+      // Long label: 1 000 000 Wh -> number part "1 000 000" (9 chars) wraps; widest line is the number.
+      const longRenderer = new EChartsRenderer(container);
+      longRenderer.update(buildSeries(1000000), fullTimeline, baseConfig(), { current: "Current", reference: "Reference" });
+      const longOption = setOptionMock.mock.calls[0]![0] as any;
+      const longLeft = longOption.grid.left as number;
+      const expectedLongLeft = Math.max(
+        GRID_LEFT_PX,
+        Math.ceil(measureYAxisLabelWidth("1\u00A0000\u00A0000")) + 4
+      );
+      expect(longLeft).toBe(expectedLongLeft);
+      expect(longLeft).toBeGreaterThan(GRID_LEFT_PX);
+
+      // The max-tick label must be the two-line rich form.
+      const longFmt = longOption.yAxis.axisLabel.formatter as (v: number) => string;
+      expect(longFmt(longOption.yAxis.max)).toContain("\n");
+
+      longRenderer.destroy();
+      setOptionMock.mockClear();
+
+      // Short label: 1.5 Wh -> single line "1,5 Wh" (pl locale); grid.left stays at the floor.
+      const shortRenderer = new EChartsRenderer(container);
+      shortRenderer.update(buildSeries(1.5), fullTimeline, baseConfig({ unit: "Wh" }), { current: "Current", reference: "Reference" });
+      const shortOption = setOptionMock.mock.calls[0]![0] as any;
+      const shortLeft = shortOption.grid.left as number;
+      const expectedShortLeft = Math.max(
+        GRID_LEFT_PX,
+        Math.ceil(measureYAxisLabelWidth("1,5 Wh")) + 4
+      );
+      expect(shortLeft).toBe(expectedShortLeft);
+      expect(shortLeft).toBe(GRID_LEFT_PX);
+
+      const shortFmt = shortOption.yAxis.axisLabel.formatter as (v: number) => string;
+      expect(shortFmt(shortOption.yAxis.max)).toBe("1,5 Wh");
+
+      shortRenderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
   describe("Series paint order (oldest layers first)", () => {
     function buildBaseRendererConfig(
       overrides: Partial<ChartRendererConfig>
@@ -1782,7 +1913,8 @@ describe('EChartsRenderer', () => {
       const grid = option.grid as { bottom?: number; left?: number; containLabel?: boolean };
       expect(grid.bottom).toBe(GRID_BOTTOM_PX);
       expect(grid.containLabel).toBe(false);
-      expect(grid.left).toBe(GRID_LEFT_PX);
+      // grid.left is now dynamic: floored at GRID_LEFT_PX, grown to fit the widest Y label.
+      expect(grid.left).toBeGreaterThanOrEqual(GRID_LEFT_PX);
 
       setOptionMock.mockClear();
       const finishedHandler = onMock.mock.calls.find((c) => c[0] === "finished")?.[1] as () => void;

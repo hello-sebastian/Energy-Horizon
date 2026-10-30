@@ -10,6 +10,7 @@ const browserGlobals = {
   customElements: "readonly",
   HTMLElement: "readonly",
   HTMLCanvasElement: "readonly",
+  CanvasRenderingContext2D: "readonly",
   HTMLInputElement: "readonly",
   HTMLTextAreaElement: "readonly",
   getComputedStyle: "readonly",

@@ -55,7 +55,7 @@ Non-"now" ticks use single-line `edge` labels. The full two-line vertical budget
 - `containLabel: false` — `grid.bottom` is the exact distance from the canvas edge to the axis line; labels fill that space downward.
 - `grid.bottom` — fixed constant derived from: `AXIS_TICK_LABEL_GAP_PX + edge lineHeight + today lineHeight + descender buffer`. Does not change dynamically based on whether "now" is in range.
 - `AXIS_TICK_LABEL_GAP_PX` — gap between axis tick mark and the top of the label block; reducing it tightens visible bottom margin without touching typography.
-- `GRID_LEFT_PX` — explicit px constant sized for the widest realistic Y label (e.g. "1,927 kWh").
+- `GRID_LEFT_PX` — minimum (floor) px for Y-axis label space. The actual `grid.left` is computed per render as `max(GRID_LEFT_PX, ceil(measured widest Y label line) + AXIS_TICK_LABEL_GAP_PX)` so long labels (e.g. "10 000 Wh") are never clipped (bug: y-axis-label-clipping).
 - `CHART_MIN_HEIGHT_BASE_PX` — minimum chart container height (274 px); adjusted upward to compensate for removal of the dynamic `xAxisLabelMinHeightExtraPx` contribution.
 
 ### Tooltip slot resolution
@@ -295,9 +295,11 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 
 - **FR-902-Y (Auto-aggregation)**: When no manual `aggregation` applies, the card MUST derive a step from the window's `duration` using a documented threshold table targeting 20–100 buckets. Configuration that would produce more than 5000 points per series MUST trigger a fail-fast config error (same class as invalid `time_window`). Sub-hour auto-selection is excluded.
 
-- **FR-902-Z (Grid layout constants — stable height)**: `grid.bottom` MUST be a fixed constant derived from the full two-line typography budget (`AXIS_TICK_LABEL_GAP_PX + edge lineHeight + today lineHeight + descender buffer`), regardless of whether "now" is currently in range or whether adaptive rich labels are active. `containLabel: false` is required. `GRID_LEFT_PX` is an explicit px constant for Y-axis label space. `CHART_MIN_HEIGHT_BASE_PX` (274 px) ensures an adequate plot area.
+- **FR-902-Z (Grid layout constants — stable height)**: `grid.bottom` MUST be a fixed constant derived from the full two-line typography budget (`AXIS_TICK_LABEL_GAP_PX + edge lineHeight + today lineHeight + descender buffer`), regardless of whether "now" is currently in range or whether adaptive rich labels are active. `containLabel: false` is required. `grid.left` MUST be an explicit px value computed per render from the widest rendered Y-axis label line (canvas `measureText` at the axis label font, with a deterministic character-width fallback when no canvas context is available), floored at `GRID_LEFT_PX` — long labels MUST NOT be clipped. `CHART_MIN_HEIGHT_BASE_PX` (274 px) ensures an adequate plot area.
 
 - **FR-902-AA ("Now" tick — two-line stack)**: When the adaptive axis is active and the current series is visible, the "now" tick at any axis index (first, last, interior, or second-to-last with a terminal bucket remaining) MUST use a two-line rich-text label: line 1 = invisible placeholder row using `edge` typography metrics (reserves the band occupied by other edge labels); line 2 = substantive adaptive date/time string using `today` typography style. A standalone "Now"/"Teraz" caption MUST NOT be used as the only label text. Non-"now" ticks keep their normal single-line `edge` label. The full two-line vertical budget (`grid.bottom`, container `min-height`) MUST be reserved whenever "now" is within range, using metrics from `src/card/axis/x-axis-rich-styles.ts`.
+
+- **FR-902-AB (Y-axis unit wrapping)**: When the number part of the highest Y-axis tick is longer than 3 characters (e.g. `10 000`), the unit MUST move to a second line below the number, both lines right-aligned (ECharts `axisLabel.rich`), so the label width is capped at the number width and the plot area is not squeezed. Short number parts (≤ 3 characters, e.g. `1.5 kWh`) keep the single-line `"<number> <unit>"` format. The wrapping decision MUST be made in the same formatter that sizes `grid.left` (FR-902-Z).
 
 ---
 
@@ -310,7 +312,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 - **`findTimelineSlotContainingInstant`**: Function in `src/card/axis/now-marker-slot.ts` computing the "now" slot index from `Date.now()` against `timeline[]` in the HA time zone.
 - **Axis label profile**: Either adaptive (grain + locale + HA time zone) or forced (`x_axis_format`).
 - **Locale resolution**: Ordered: card `language` → HA user language → `en`.
-- **Grid layout constants**: `AXIS_TICK_LABEL_GAP_PX`, `GRID_LEFT_PX`, `CHART_MIN_HEIGHT_BASE_PX`, `edge` and `today` rich-style metrics — all defined in `src/card/axis/x-axis-rich-styles.ts`.
+- **Grid layout constants**: `AXIS_TICK_LABEL_GAP_PX`, `CHART_MIN_HEIGHT_BASE_PX`, `edge` and `today` rich-style metrics — defined in `src/card/axis/x-axis-rich-styles.ts`; `GRID_LEFT_PX` (Y-axis label floor) and the Y-axis label width measurement — defined in `src/card/echarts-renderer.ts`.
 
 ---
 

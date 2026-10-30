@@ -64,9 +64,11 @@ const LEGEND_BELOW_GAP_PX = 8;
 const GRID_TOP_FALLBACK_PX = LEGEND_BASELINE_PX;
 
 /**
- * Explicit left-side grid margin (px) that accommodates Y-axis tick labels.
- * With `containLabel: false` the margin must cover the widest formatted Y label
- * (e.g. "1,927 kWh" at ~12 px font ≈ 56 px). Increase if labels are clipped.
+ * Minimum left-side grid margin (px) for Y-axis tick labels.
+ * With `containLabel: false` the margin must cover the widest formatted Y label;
+ * `buildOption` measures the actual widest label and uses
+ * `max(GRID_LEFT_PX, measuredWidth + AXIS_TICK_LABEL_GAP_PX)` so long labels
+ * (e.g. "10 000 Wh") are never clipped (bug: y-axis-label-clipping).
  */
 export const GRID_LEFT_PX = 56;
 
@@ -79,6 +81,81 @@ export function escapeEchartsRichAxisPiece(text: string): string {
     .replace(/\|/g, '\uFF5C')
     .replace(/\{/g, '\uFF5B')
     .replace(/\}/g, '\uFF5D');
+}
+
+/**
+ * Y-axis unit wrapping (bug: y-axis-label-clipping): when the number part of the
+ * max tick is longer than this many characters (e.g. "10 000"), the unit moves to
+ * a second, right-aligned line so the label width is capped at the number width.
+ */
+export const Y_AXIS_UNIT_WRAP_NUMBER_CHARS = 3;
+
+/** Font used for Y-axis tick labels (ECharts default axis label typography). */
+const Y_AXIS_LABEL_FONT_SIZE_PX = 12;
+const Y_AXIS_LABEL_FONT = `${Y_AXIS_LABEL_FONT_SIZE_PX}px sans-serif`;
+
+let yAxisMeasureCtx: CanvasRenderingContext2D | null | undefined;
+
+function getYAxisMeasureContext(): CanvasRenderingContext2D | null {
+  if (yAxisMeasureCtx !== undefined) return yAxisMeasureCtx;
+  let ctx: CanvasRenderingContext2D | null = null;
+  try {
+    ctx = document.createElement('canvas').getContext('2d');
+    if (ctx) ctx.font = Y_AXIS_LABEL_FONT;
+  } catch {
+    ctx = null;
+  }
+  yAxisMeasureCtx = ctx;
+  return ctx;
+}
+
+/**
+ * Pixel width of a Y-axis label line. Uses canvas `measureText` when a 2D context
+ * is available; falls back to a 0.6em-per-character estimate in environments
+ * without canvas (e.g. jsdom) so layout math stays deterministic in tests.
+ */
+export function measureYAxisLabelWidth(text: string): number {
+  if (text === '') return 0;
+  const ctx = getYAxisMeasureContext();
+  if (ctx) return ctx.measureText(text).width;
+  return text.length * 0.6 * Y_AXIS_LABEL_FONT_SIZE_PX;
+}
+
+/**
+ * Build the Y-axis tick label for `value`. Only 0 / mid / max render text (all
+ * other ticks return ''). The max tick carries the unit; when its number part is
+ * longer than {@link Y_AXIS_UNIT_WRAP_NUMBER_CHARS} the unit moves to a second,
+ * right-aligned line (rich text). `lines` are the individual text lines, used to
+ * size `grid.left`.
+ */
+export function formatYAxisTickLabel(
+  value: number,
+  yMax: number,
+  yMaxEps: number,
+  numberFormatter: Intl.NumberFormat,
+  unit: string
+): { label: string; lines: string[] } {
+  const vMid = yMax / 2;
+  const tolMid = Math.max(yMax * 0.02, 1e-9);
+  const isZero = Math.abs(value - 0) <= yMaxEps;
+  const isMid = Math.abs(value - vMid) <= tolMid;
+  const isMaxTick = Math.abs(value - yMax) <= yMaxEps;
+  if (!isZero && !isMid && !isMaxTick) {
+    return { label: '', lines: [] };
+  }
+
+  const formatted = numberFormatter.format(value);
+  if (isMaxTick && unit) {
+    if (formatted.length > Y_AXIS_UNIT_WRAP_NUMBER_CHARS) {
+      return {
+        label: `{yNum|${escapeEchartsRichAxisPiece(formatted)}}\n{yUnit|${escapeEchartsRichAxisPiece(unit)}}`,
+        lines: [formatted, unit]
+      };
+    }
+    const label = `${formatted} ${unit}`;
+    return { label, lines: [label] };
+  }
+  return { label: formatted, lines: [formatted] };
 }
 
 /**
@@ -531,6 +608,26 @@ export class EChartsRenderer {
     // UX expectation: the "max tick" should get the unit label reliably.
     const yMaxEps = Math.max(1e-12, Math.abs(yMax) * 1e-9);
 
+    // Y-axis label budget (bug: y-axis-label-clipping): measure the widest rendered
+    // tick line (0 / mid / max) and size grid.left to it, floored at GRID_LEFT_PX.
+    let widestYLabelPx = 0;
+    for (const tickValue of [0, yMax / 2, yMax]) {
+      const parts = formatYAxisTickLabel(
+        tickValue,
+        yMax,
+        yMaxEps,
+        yAxisNumberFormatter,
+        yAxisUnit
+      );
+      for (const line of parts.lines) {
+        widestYLabelPx = Math.max(widestYLabelPx, measureYAxisLabelWidth(line));
+      }
+    }
+    const gridLeftPx = Math.max(
+      GRID_LEFT_PX,
+      Math.ceil(widestYLabelPx) + AXIS_TICK_LABEL_GAP_PX
+    );
+
     const xMax = Math.max(fullTimeline.length - 1, 0);
     const xIntervalLegacy = xMax > 0 ? Math.max(1, Math.round(xMax / 4)) : 1;
     const currentSeriesVisible = currentValues.some((v) => v !== null);
@@ -969,10 +1066,11 @@ export class EChartsRenderer {
       // Explicit grid bounds — `containLabel: false` so each side means the exact pixel distance
       // from the chart canvas edge to the axis line. Labels hang outside the plot area into the
       // reserved space. GRID_BOTTOM_PX is always the full two-line budget so chart height is
-      // stable regardless of whether "today" is in range. GRID_LEFT_PX accommodates Y-axis labels.
+      // stable regardless of whether "today" is in range. grid.left is sized to the widest
+      // Y-axis label (floored at GRID_LEFT_PX) so long labels are never clipped.
       grid: {
         containLabel: false,
-        left: GRID_LEFT_PX,
+        left: gridLeftPx,
         right: AXIS_TICK_LABEL_GAP_PX,
         top: GRID_TOP_FALLBACK_PX,
         bottom: GRID_BOTTOM_PX
@@ -1105,25 +1203,22 @@ export class EChartsRenderer {
         axisTick: { show: false },
         axisLabel: {
           color: theme.primaryText,
-          formatter: (value: number) => {
-            const vMid = yMax / 2;
-            const tolMid = Math.max(yMax * 0.02, 1e-9);
-            const isZero = Math.abs(value - 0) <= yMaxEps;
-            const isMid = Math.abs(value - vMid) <= tolMid;
-            const isMaxTick = Math.abs(value - yMax) <= yMaxEps;
-            if (!isZero && !isMid && !isMaxTick) {
-              return '';
-            }
-
-            const formatted = yAxisNumberFormatter.format(value);
-            if (isMaxTick && yAxisUnit) {
-              return `${formatted} ${yAxisUnit}`;
-            }
-            return formatted;
-          },
+          formatter: (value: number) =>
+            formatYAxisTickLabel(
+              value,
+              yMax,
+              yMaxEps,
+              yAxisNumberFormatter,
+              yAxisUnit
+            ).label,
           margin: AXIS_TICK_LABEL_GAP_PX,
           // Ensures the margin translates to spacing on the right side.
-          align: 'right'
+          align: 'right',
+          // Two-line max-tick label (number + unit): both lines right-aligned.
+          rich: {
+            yNum: { align: 'right' as const },
+            yUnit: { align: 'right' as const }
+          }
         }
       },
       series
