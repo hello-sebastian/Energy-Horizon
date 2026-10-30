@@ -958,6 +958,7 @@ export class EnergyHorizonCardEditor extends LitElement {
       <div
         class=${extraClass ? `field ${extraClass}` : "field"}
         data-field=${field.key}
+        data-control=${this._haTagForKind(field.control.kind) ?? "native"}
         style=${gridStyle || nothing}
       >
         ${this._renderFieldLabel(field, localize)}
@@ -1204,7 +1205,6 @@ export class EnergyHorizonCardEditor extends LitElement {
     .field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
       padding: 8px 12px;
     }
     .field-row {
@@ -1268,12 +1268,32 @@ export class EnergyHorizonCardEditor extends LitElement {
     .field-label {
       font-size: 0.85em;
       color: var(--secondary-text-color, #555);
+      margin-bottom: 4px;
     }
     .field-helper {
-      margin: 0;
+      margin: var(--helper-gap, 4px) 0 0 0;
       font-size: 0.75em;
       line-height: 1.4;
       color: var(--secondary-text-color, #555);
+    }
+    /* Normalization layer: HA components carry different internal shadow-DOM
+       padding, so the helper's top margin is tuned per control type to keep
+       the visual distance from the control's content consistent. Adding a new
+       control type = one line here. */
+    .field[data-control="ha-input"] .field-helper {
+      --helper-gap: 2px;
+    }
+    .field[data-control="ha-select"] .field-helper {
+      --helper-gap: 4px;
+    }
+    .field[data-control="ha-switch"] .field-helper {
+      --helper-gap: 6px;
+    }
+    .field[data-control="ha-color-picker"] .field-helper {
+      --helper-gap: 1px;
+    }
+    .field[data-control="native"] .field-helper {
+      --helper-gap: 4px;
     }
     .req {
       color: var(--error-color, #c62828);
