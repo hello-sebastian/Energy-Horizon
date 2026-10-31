@@ -472,7 +472,19 @@ function normalizePoints(points: LtsStatisticPoint[]): {
     /** For sum-deltas: period start of the increment; else use `startMs`. */
     let timestampMs = startMs;
 
-    if (typeof p.sum === "number") {
+    if (typeof p.change === "number") {
+      // `total` / `total_increasing` statistics: HA already returns the per-bucket
+      // increment as `change`. Prefer it over differencing `sum` — that keeps the
+      // first bucket (no baseline loss), preserves zero-consumption buckets, and
+      // stamps each value with its own bucket start (no one-bucket shift).
+      // See issue #56 ("new month problem").
+      if (Number.isFinite(p.change) && p.change >= 0) {
+        rawValue = p.change;
+      }
+      // Negative `change` = meter reset / inconsistent data — skip the bucket.
+    } else if (typeof p.sum === "number") {
+      // Fallback for responses that carry `sum` without `change` (older HA / edge
+      // cases): treat `sum` as a running total and emit per-bucket deltas.
       if (previousSum === undefined) {
         // Pierwszy punkt przy braku `change` traktujemy jako punkt odniesienia
         // dla bieżącego okresu (różnice liczymy względem niego).
@@ -491,8 +503,6 @@ function normalizePoints(points: LtsStatisticPoint[]): {
         timestampMs = previousSumStartMs ?? startMs;
         previousSumStartMs = startMs;
       }
-    } else if (typeof p.change === "number") {
-      rawValue = p.change;
     } else if (typeof p.state === "number") {
       rawValue = p.state;
     } else if (

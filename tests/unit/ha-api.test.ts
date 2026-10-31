@@ -650,6 +650,110 @@ describe("mapLtsResponseToSeries", () => {
   });
 });
 
+describe("normalizePoints — change-first (issue #56 new month problem)", () => {
+  it("prefers `change` over `sum`: first bucket kept, own-start timestamps, zero bucket preserved", () => {
+    // HA returns BOTH `sum` and `change` for total/total_increasing. With change-first,
+    // the first bucket is a real point (not a baseline), each value is stamped with its
+    // own bucket start, and the zero-consumption bucket is preserved as an explicit 0.
+    const response: LtsStatisticsResponse = {
+      results: {
+        "sensor.gas": [
+          { start: "2026-07-01T00:00:00+00:00", sum: 100, change: 5, unit_of_measurement: "m³" },
+          { start: "2026-07-02T00:00:00+00:00", sum: 105, change: 3, unit_of_measurement: "m³" },
+          { start: "2026-07-03T00:00:00+00:00", sum: 108, change: 0, unit_of_measurement: "m³" }
+        ]
+      }
+    };
+
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.gas", "Current");
+    expect(cum).toBeDefined();
+    expect(cum!.points).toHaveLength(3);
+
+    const tJul1 = new Date("2026-07-01T00:00:00Z").getTime();
+    const tJul2 = new Date("2026-07-02T00:00:00Z").getTime();
+    const tJul3 = new Date("2026-07-03T00:00:00Z").getTime();
+
+    // First bucket included (5), not consumed as a baseline.
+    expect(cum!.points[0]!.rawValue).toBe(5);
+    expect(cum!.points[0]!.value).toBe(5);
+    expect(cum!.points[0]!.timestamp).toBe(tJul1);
+
+    // Second bucket: cumulative 5 + 3 = 8, stamped on its own start (no one-bucket shift).
+    expect(cum!.points[1]!.rawValue).toBe(3);
+    expect(cum!.points[1]!.value).toBe(8);
+    expect(cum!.points[1]!.timestamp).toBe(tJul2);
+
+    // Zero-consumption bucket preserved as an explicit 0 point.
+    expect(cum!.points[2]!.rawValue).toBe(0);
+    expect(cum!.points[2]!.value).toBe(8);
+    expect(cum!.points[2]!.timestamp).toBe(tJul3);
+  });
+
+  it("skips negative `change` (meter reset) but keeps zero", () => {
+    const response: LtsStatisticsResponse = {
+      results: {
+        "sensor.gas": [
+          { start: "2026-07-01T00:00:00+00:00", sum: 100, change: -5, unit_of_measurement: "m³" },
+          { start: "2026-07-02T00:00:00+00:00", sum: 95, change: 2, unit_of_measurement: "m³" },
+          { start: "2026-07-03T00:00:00+00:00", sum: 97, change: 0, unit_of_measurement: "m³" }
+        ]
+      }
+    };
+
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.gas", "Current");
+    expect(cum).toBeDefined();
+    // Negative bucket dropped; the 2 and the 0 are kept.
+    expect(cum!.points).toHaveLength(2);
+    expect(cum!.points[0]!.rawValue).toBe(2);
+    expect(cum!.points[1]!.rawValue).toBe(0);
+  });
+
+  it("falls back to `sum` differencing when `change` is absent (older HA)", () => {
+    // No `change` field → the legacy running-total differencing path still applies:
+    // first sum is the baseline (skipped), subsequent sums become deltas.
+    const response: LtsStatisticsResponse = {
+      results: {
+        "sensor.energy": [
+          { start: "2024-01-01T00:00:00+00:00", sum: 100, unit_of_measurement: "kWh" },
+          { start: "2024-01-02T00:00:00+00:00", sum: 105, unit_of_measurement: "kWh" },
+          { start: "2024-01-03T00:00:00+00:00", sum: 113, unit_of_measurement: "kWh" }
+        ]
+      }
+    };
+
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.energy", "Current");
+    expect(cum).toBeDefined();
+    expect(cum!.points).toHaveLength(2);
+    expect(cum!.points[0]!.rawValue).toBe(5);
+    expect(cum!.points[1]!.rawValue).toBe(8);
+  });
+
+  it("fresh period (all-zero current) yields 0 / -100% in computeSummary, not undefined", () => {
+    // The "new month problem": at the start of a new period the current series is all
+    // zeros. With zero buckets preserved, computeSummary must produce a real comparison
+    // (0 so far, -100% vs reference) instead of `reference_cumulative = undefined`.
+    const T_CUR = Date.UTC(2026, 6, 1); // Jul 1 2026
+    const T_REF = Date.UTC(2025, 6, 1); // Jul 1 2025
+    const alignOffsetMs = T_CUR - T_REF; // window-start offset
+
+    // Current: 3 daily buckets, all zero consumption so far.
+    const curTs = [T_CUR, T_CUR + DAY_MS, T_CUR + 2 * DAY_MS];
+    const current = makeCumulativeFromTimestampsRaws(curTs, [0, 0, 0]);
+
+    // Reference: 3 daily buckets, 10 each → cumulative 10, 20, 30.
+    const refTs = [T_REF, T_REF + DAY_MS, T_REF + 2 * DAY_MS];
+    const reference = makeCumulativeFromTimestampsRaws(refTs, [10, 10, 10]);
+
+    const series = comparisonFrom(current, reference);
+    const summary = computeSummary(series, alignOffsetMs);
+
+    expect(summary.current_cumulative).toBe(0);
+    expect(summary.reference_cumulative).toBe(30);
+    expect(summary.difference).toBe(-30);
+    expect(summary.differencePercent).toBeCloseTo(-100, 5);
+  });
+});
+
 describe("computeTextSummary", () => {
   it("reports higher usage correctly", () => {
     const summary = {
