@@ -122,6 +122,8 @@ const PREFIX_DISPLAY: Record<SIPrefix, string> = {
  * dimensionless, frequencies with prefix, and meter as base unit.
  * 
  * Note: "m" (meter) is included to prevent parsing "m" as a milli prefix.
+ * "m²" (square meter) and "m³" (cubic meter) are included for the same reason —
+ * their leading "m" is the meter base unit, not a milli prefix.
  * "mA" will pass since "A" is not in this set.
  * "ms" (millisecond?) is intentionally excluded; since "s" is in this set,
  * parsing "ms" as prefix='m', base='s' will be rejected (base is non-scalable).
@@ -133,6 +135,8 @@ const NON_SCALABLE_UNITS = new Set<string>([
   'ppm', 'rpm',
   'bar', 'Pa', 'hPa', 'kPa', 'mbar',
   'm', // meter — not to be confused with milli
+  'm²', // square meter — not to be confused with milli
+  'm³', // cubic meter — not to be confused with milli
   'Hz', 'kHz', 'MHz', 'GHz',
 ]);
 

@@ -14,6 +14,10 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 - **Editor labels:** the **Neutral threshold** label no longer carries a "(%)" suffix (the control already shows the `%` suffix), and the **Unit prefix** label is lowercased.
 - **Y-axis labels are no longer clipped:** the left chart margin now adapts exactly to the widest Y-axis tick label (measured per render, no fixed floor) so the label sits flush against the card's left edge and the plot area fills the full card width; when the number part of the top tick is longer than 3 characters (e.g. `10 000 Wh`) the unit moves to a second, right-aligned line so the plot area is not squeezed.
 
+### Fixed
+
+- **Cubic/square meter units mis-scaled as milli:** entities reporting `m³` (e.g. gas/water consumption) or `m²` were parsed with the leading `m` as a **milli** prefix, so `1500 m³` displayed as **1.5 ³** (value off by 1000× and the unit label mangled). `m³` and `m²` are now treated as non-scalable units and pass through unchanged in all `force_prefix` modes.
+
 ### Documentation
 
 - Expanded the visual-editor documentation (README, README.advanced, wiki) with **per-section descriptions**, the **per-section documentation links**, the **field helper texts**, and a **Visual → YAML mapping** (control → key table, a worked example, and the preservative-merge / round-trip behavior).

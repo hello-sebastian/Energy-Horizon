@@ -183,6 +183,36 @@ describe('scaleSeriesValues — non-scalable units', () => {
     expect(result.values).toEqual([68]);
     expect(result.unit).toBe('°F');
   });
+
+  it('should not scale cubic meters m³ (meter base, not milli prefix)', () => {
+    const result = scaleSeriesValues([1500], 'm³', { force_prefix: 'auto' });
+    expect(result.values).toEqual([1500]);
+    expect(result.unit).toBe('m³');
+    expect(result.prefix).toBe('');
+    expect(result.factor).toBe(1);
+  });
+
+  it('should not scale square meters m² (meter base, not milli prefix)', () => {
+    const result = scaleSeriesValues([25], 'm²', { force_prefix: 'auto' });
+    expect(result.values).toEqual([25]);
+    expect(result.unit).toBe('m²');
+    expect(result.prefix).toBe('');
+    expect(result.factor).toBe(1);
+  });
+
+  it('should ignore force_prefix on cubic meters m³', () => {
+    const result = scaleSeriesValues([1500], 'm³', { force_prefix: 'k' });
+    expect(result.values).toEqual([1500]);
+    expect(result.unit).toBe('m³');
+    expect(result.factor).toBe(1);
+  });
+
+  it('should still treat bare meter m as non-scalable', () => {
+    const result = scaleSeriesValues([1500], 'm', { force_prefix: 'auto' });
+    expect(result.values).toEqual([1500]);
+    expect(result.unit).toBe('m');
+    expect(result.factor).toBe(1);
+  });
 });
 
 describe('scaleSeriesValues — force_prefix manual', () => {
