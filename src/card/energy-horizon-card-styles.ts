@@ -220,8 +220,9 @@ export const energyHorizonCardStyles = css`
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    row-gap: 3px;
     margin-top: 12px;
-    padding: 4px 8px;
+    padding: 8px;
     border-radius: 8px;
     font-size: 0.875rem;
     font-weight: 600;
@@ -229,6 +230,7 @@ export const energyHorizonCardStyles = css`
     max-width: 100%;
     flex-wrap: wrap;
     box-sizing: border-box;
+    line-height:100%
   }
 
   .ebc-delta-sep {

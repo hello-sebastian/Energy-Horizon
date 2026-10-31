@@ -46,6 +46,7 @@ The card renders as a Lovelace `custom:energy-horizon-card` web component built 
 Two-column layout: **Current period** column (left) and **Reference period** column (right), each showing the cumulative value. A **delta chip** sits below or between the columns showing `+/−N.NN kWh | +/−N.N %` with a separator `|`.
 
 - **Delta chip always visible**: even when the difference is zero (shows `0 kWh | 0 %`). When data is unavailable, shows placeholder `--- <unit> | -- %`; if unit is unavailable, shows `--- | -- %`.
+- **Wrapped-line spacing**: when the chip wraps onto a second line in a narrow column, the vertical distance between its lines is one third of the horizontal gap (3 px vs 8 px).
 - **Explicit sign**: absolute difference and percentage difference always carry `+` when positive and `−` (U+2212) when negative; zero values show no sign prefix.
 - **Period qualifiers**: each column heading includes a compact caption from `formatCompactPeriodCaption` (abbreviated month names, HA time zone, `locale.time_format` for hourly-window clock portions). Locale follows: card `language` → HA user language → `en`.
 

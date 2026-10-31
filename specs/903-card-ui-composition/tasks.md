@@ -113,6 +113,16 @@
 
 ---
 
+## Phase 10: Delta chip wrapped-line spacing (post-implementation refinement)
+
+**Purpose**: When the delta chip wraps onto a second line in a narrow column, the vertical distance between its lines is one third of the horizontal gap (3 px vs 8 px).
+
+- [x] T023 In `/Users/sebastian/Projekty local/Energy-Horizon/src/card/energy-horizon-card-styles.ts`: add `row-gap: 3px` to the `.ebc-delta-chip` rule (one third of `gap: 8px`).
+- [x] T024 [P] Add `/Users/sebastian/Projekty local/Energy-Horizon/tests/unit/delta-chip-styles.test.ts` asserting the `.ebc-delta-chip` rule keeps `gap: 8px` and adds `row-gap: 3px` (one third of the horizontal gap).
+- [x] T025 [P] Add a user-visible **CHANGELOG** entry under **`[Unreleased]` → Fixed** in `/Users/sebastian/Projekty local/Energy-Horizon/changelog.md`.
+
+---
+
 ## Dependencies & execution order
 
 ### Phase dependencies
