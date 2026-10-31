@@ -17,6 +17,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Fixed
 
 - **Cubic/square meter units mis-scaled as milli:** entities reporting `m³` (e.g. gas/water consumption) or `m²` were parsed with the leading `m` as a **milli** prefix, so `1500 m³` displayed as **1.5 ³** (value off by 1000× and the unit label mangled). `m³` and `m²` are now treated as non-scalable units and pass through unchanged in all `force_prefix` modes.
+- **Hour label inconsistency (12h/24h) between the X-axis and the top panel:** clock labels were formatted by two independent paths — the X-axis and tooltip followed the **locale** default (e.g. `en` → am/pm, `pl` → 24h) and ignored the HA `time_format` profile setting, while the top-panel period captions always fell back to **24h** when `time_format` was unset. All three surfaces now share one resolution of the HA `time_format` setting: `"12"` → 12h, `"24"` → 24h, unset/`"language"` → the locale default — so the X-axis, tooltip, and top-panel captions always agree.
 
 ### Documentation
 
