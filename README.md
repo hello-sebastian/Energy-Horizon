@@ -169,6 +169,21 @@ npm test
 npm run lint
 ```
 
+### Deploy to your own Home Assistant
+
+The build produces a single file, `dist/energy-horizon-card.js`. Copy it to your HA instance's `config/www/` directory:
+
+```bash
+npm run build
+scp dist/energy-horizon-card.js root@<your-ha-host>:/config/www/
+```
+
+The `npm run deploy` script in `package.json` is preconfigured for the author's instance (SSH alias `ha` in `~/.ssh/config`). To deploy to your own instance without editing the script, override the host and/or path:
+
+```bash
+DEPLOY_HOST=root@<your-ha-host> DEPLOY_PATH=/config/www/ npm run deploy
+```
+
 ## License
 
 Energy Horizon

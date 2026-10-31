@@ -50,6 +50,15 @@ url: /hacsfiles/energy-horizon-card/energy-horizon-card.js
 type: module
 ```
 
+### Build from source (forks)
+
+If you forked the repository (or want to build a specific commit):
+
+1. `npm install`
+2. `npm run build` — produces a single file, `dist/energy-horizon-card.js`
+3. Copy it to `config/www/` on your HA instance (e.g. `scp dist/energy-horizon-card.js root@<your-ha-host>:/config/www/`)
+4. Add the resource as in the manual installation above (`/local/energy-horizon-card.js`)
+
 ---
 
 ## 3) Add your first card

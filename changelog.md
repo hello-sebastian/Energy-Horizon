@@ -17,6 +17,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 ### Documentation
 
 - Expanded the visual-editor documentation (README, README.advanced, wiki) with **per-section descriptions**, the **per-section documentation links**, the **field helper texts**, and a **Visual → YAML mapping** (control → key table, a worked example, and the preservative-merge / round-trip behavior).
+- Documented the **build-from-source / deploy** path for forks and self-hosted instances (README Development section, wiki Getting Started): the build produces a single `dist/energy-horizon-card.js` file to copy into `config/www/`; the `npm run deploy` script is now parameterized via `DEPLOY_HOST` / `DEPLOY_PATH` (defaulting to the author's SSH alias `ha`).
 
 ---
 

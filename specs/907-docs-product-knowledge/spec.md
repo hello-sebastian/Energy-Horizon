@@ -24,6 +24,8 @@ Documentation for the Energy Horizon Card follows the **Diátaxis framework** (f
 | `README-advanced.md` | Advanced configuration reference | Power users |
 | `CHANGELOG.md` | User-visible change history per release | All users |
 
+The user-facing documentation also covers the **build-from-source / deploy** path for forks and self-hosted instances: the build produces a single `dist/energy-horizon-card.js` file that is copied to the HA instance's `config/www/` directory; this path is documented in `README.md` (Development section) and in the wiki (Getting Started).
+
 ### Diátaxis intents
 
 - **Tutorial**: Step-by-step path from prerequisites to first working configuration, with checkpoints.
