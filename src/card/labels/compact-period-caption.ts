@@ -135,15 +135,26 @@ function peerRequiresYearSuffix(w: DateTime, wEnd: DateTime, peer: ResolvedWindo
   return false;
 }
 
-function timeFormatToken(hour12: boolean | undefined): string {
-  if (hour12 === true) {
-    return "h:mm a";
+/**
+ * Clock part of a caption. Uses `Intl.DateTimeFormat` (the same engine as the
+ * X-axis and tooltip) so all three surfaces agree: HA `time_format` wins when
+ * set, otherwise the locale default applies (no hard-coded 24h fallback).
+ */
+function formatTime(
+  dt: DateTime,
+  locale: string,
+  hour12: boolean | undefined,
+  zone: string
+): string {
+  const opts: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: zone
+  };
+  if (hour12 !== undefined) {
+    opts.hour12 = hour12;
   }
-  return "HH:mm";
-}
-
-function formatTime(dt: DateTime, locale: string, hour12: boolean | undefined): string {
-  return forFormat(dt, locale).toFormat(timeFormatToken(hour12));
+  return new Intl.DateTimeFormat(locale, opts).format(dt.toJSDate());
 }
 
 /**
@@ -173,7 +184,7 @@ export function formatCompactPeriodCaption(
   const needYear = peerRequiresYearSuffix(s, e, peerWindow, zone);
 
   if (aggregation === "hour" && sameDay) {
-    const timePart = `${formatTime(s, locale, hour12)}${RANGE_SEP}${formatTime(e, locale, hour12)}`;
+    const timePart = `${formatTime(s, locale, hour12, zone)}${RANGE_SEP}${formatTime(e, locale, hour12, zone)}`;
     const datePart = needYear
       ? forFormat(s, locale).toFormat("d LLL yyyy")
       : forFormat(s, locale).toFormat("d LLL");
@@ -182,10 +193,10 @@ export function formatCompactPeriodCaption(
 
   if (aggregation === "hour" && !sameDay) {
     if (spansCalendarYears(s, e)) {
-      return `${forFormat(s, locale).toFormat("d LLL yyyy")} ${formatTime(s, locale, hour12)}${RANGE_SEP}${forFormat(e, locale).toFormat("d LLL yyyy")} ${formatTime(e, locale, hour12)}`;
+      return `${forFormat(s, locale).toFormat("d LLL yyyy")} ${formatTime(s, locale, hour12, zone)}${RANGE_SEP}${forFormat(e, locale).toFormat("d LLL yyyy")} ${formatTime(e, locale, hour12, zone)}`;
     }
-    const left = `${forFormat(s, locale).toFormat("d LLL")} ${formatTime(s, locale, hour12)}`;
-    const right = `${forFormat(e, locale).toFormat("d LLL")} ${formatTime(e, locale, hour12)}`;
+    const left = `${forFormat(s, locale).toFormat("d LLL")} ${formatTime(s, locale, hour12, zone)}`;
+    const right = `${forFormat(e, locale).toFormat("d LLL")} ${formatTime(e, locale, hour12, zone)}`;
     const yearSuffix = needYear ? ` ${s.year}` : "";
     return `${left}${RANGE_SEP}${right}${yearSuffix}`;
   }

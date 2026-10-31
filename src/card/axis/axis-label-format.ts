@@ -44,6 +44,8 @@ export function formatAdaptiveTickLabel(
   opts?: {
     tailFromIndex?: number;
     comparisonHints?: ComparisonAxisLabelHints;
+    /** HA `locale.time_format` → `true`/`false`; `undefined` = locale default. */
+    hour12?: boolean;
   }
 ): string {
   const ms = fullTimeline[index];
@@ -70,6 +72,8 @@ export function formatAdaptiveTickLabel(
   const hints = opts?.comparisonHints;
   const tz: Intl.DateTimeFormatOptions = { timeZone: zone };
   const d = new Date(ms);
+  const hour12Opts: Intl.DateTimeFormatOptions =
+    opts?.hour12 !== undefined ? { hour12: opts.hour12 } : {};
 
   if (isTail) {
     switch (aggregation) {
@@ -92,6 +96,7 @@ export function formatAdaptiveTickLabel(
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
+          ...hour12Opts,
           ...tz
         }).format(d);
       default:
@@ -111,12 +116,14 @@ export function formatAdaptiveTickLabel(
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
+          ...hour12Opts,
           ...tz
         }).format(d);
       }
       return new Intl.DateTimeFormat(locale, {
         hour: "numeric",
         minute: "2-digit",
+        ...hour12Opts,
         ...tz
       }).format(d);
     }

@@ -124,6 +124,42 @@ describe("formatCompactPeriodCaption", () => {
     );
   });
 
+  it("hour aggregation same day, hour12 undefined under en → locale default (12h)", () => {
+    const w = rw(
+      new Date(Date.UTC(2026, 3, 10, 10, 12, 0, 0)),
+      new Date(Date.UTC(2026, 3, 10, 15, 12, 0, 0)),
+      "hour"
+    );
+    const s = formatCompactPeriodCaption(w, undefined, en);
+    expect(s).toMatch(/AM|PM/i);
+    expect(s).toMatch(/10 Apr/);
+  });
+
+  it("hour aggregation same day, hour12 true under pl → 12h", () => {
+    const w = rw(
+      new Date(Date.UTC(2026, 3, 10, 10, 12, 0, 0)),
+      new Date(Date.UTC(2026, 3, 10, 15, 12, 0, 0)),
+      "hour"
+    );
+    const s = formatCompactPeriodCaption(w, undefined, {
+      zone: ZONE,
+      locale: "pl",
+      hour12: true
+    });
+    expect(s).toMatch(/PM|AM/i);
+  });
+
+  it("hour aggregation same day, hour12 false under en → 24h", () => {
+    const w = rw(
+      new Date(Date.UTC(2026, 3, 10, 10, 12, 0, 0)),
+      new Date(Date.UTC(2026, 3, 10, 15, 12, 0, 0)),
+      "hour"
+    );
+    const s = formatCompactPeriodCaption(w, undefined, { ...en, hour12: false });
+    expect(s).not.toMatch(/PM|AM/i);
+    expect(s).toBe("10:12 – 15:12, 10 Apr");
+  });
+
   it("hour aggregation multi-day same year → date+time range with year when peer differs", () => {
     const w = rw(
       new Date(Date.UTC(2026, 3, 10, 8, 0, 0, 0)),

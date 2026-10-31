@@ -18,6 +18,8 @@ export interface FormatTooltipHeaderParams {
   tooltipFormatPattern?: string;
   /** When set, default tooltip header mirrors comparison X-axis label policy. */
   comparisonHints?: ComparisonAxisLabelHints;
+  /** HA `locale.time_format` → `true`/`false`; `undefined` = locale default. */
+  hour12?: boolean;
 }
 
 /**
@@ -33,7 +35,8 @@ export function formatTooltipHeader(p: FormatTooltipHeaderParams): string {
     primaryAggregation,
     mergedDurationMs,
     tooltipFormatPattern,
-    comparisonHints
+    comparisonHints,
+    hour12
   } = p;
 
   if (
@@ -86,6 +89,7 @@ export function formatTooltipHeader(p: FormatTooltipHeaderParams): string {
       const timePart = new Intl.DateTimeFormat(labelLocale, {
         hour: "numeric",
         minute: "2-digit",
+        ...(hour12 !== undefined ? { hour12 } : {}),
         ...tz
       }).format(d);
       if (mergedDurationMs > MS_DAY) {

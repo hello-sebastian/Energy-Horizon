@@ -631,6 +631,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       "forecast.current_forecast"
     );
     const xAxisLabelLocale = resolveLabelLocale(this.hass, this._config);
+    const hour12 = hour12FromHaTimeFormat(this.hass?.locale?.time_format);
     const xf = this._config.x_axis_format?.trim();
     const xAxisMode = xf ? ("forced" as const) : ("adaptive" as const);
     const mergedDurationMs = this._mergedDurationMs();
@@ -659,6 +660,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         xAxisMode,
         xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,
         xAxisLabelLocale,
+        hour12,
         haTimeZone: resolved.timeZone,
         primaryAggregation: "day",
         fullTimeline,
@@ -724,6 +726,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       xAxisMode,
       xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,
       xAxisLabelLocale,
+      hour12,
       haTimeZone: resolved.timeZone,
       primaryAggregation: period.aggregation,
       fullTimeline,

@@ -709,11 +709,16 @@ export class EChartsRenderer {
         tailFrom < fullTimeline.length &&
         fullTimeline.length > 0;
       const tickOpts =
-        hasTailContext || comparisonAxisHints != null
+        hasTailContext ||
+        comparisonAxisHints != null ||
+        rendererConfig.hour12 !== undefined
           ? {
               ...(hasTailContext ? { tailFromIndex: tailFrom! } : {}),
               ...(comparisonAxisHints != null
                 ? { comparisonHints: comparisonAxisHints }
+                : {}),
+              ...(rendererConfig.hour12 !== undefined
+                ? { hour12: rendererConfig.hour12 }
                 : {})
             }
           : undefined;
@@ -1122,7 +1127,8 @@ export class EChartsRenderer {
             primaryAggregation: rendererConfig.primaryAggregation ?? 'day',
             mergedDurationMs: rendererConfig.mergedDurationMs ?? 0,
             tooltipFormatPattern: rendererConfig.tooltipFormatPattern,
-            comparisonHints: comparisonAxisHints
+            comparisonHints: comparisonAxisHints,
+            hour12: rendererConfig.hour12
           });
 
           const valueLines: string[] = [];

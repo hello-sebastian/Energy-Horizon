@@ -91,6 +91,35 @@ describe("formatTooltipHeader", () => {
     expect(s).toBe("2026-03-15");
   });
 
+  describe("hour12 (HA time_format) for hour aggregation", () => {
+    const ms = Date.UTC(2026, 2, 15, 14, 0, 0);
+    const base = {
+      slotIndex: 0,
+      fullTimeline: [ms],
+      zone,
+      primaryAggregation: "hour" as const,
+      mergedDurationMs: 12 * 3600000
+    };
+
+    it("hour12: true forces 12h even under pl", () => {
+      const s = formatTooltipHeader({ ...base, labelLocale: "pl", hour12: true });
+      expect(s).toMatch(/PM|AM/i);
+    });
+
+    it("hour12: false forces 24h even under en", () => {
+      const s = formatTooltipHeader({ ...base, labelLocale: "en-US", hour12: false });
+      expect(s).not.toMatch(/PM|AM/i);
+      expect(s).toMatch(/14:00/);
+    });
+
+    it("hour12: undefined follows the locale default", () => {
+      const pl = formatTooltipHeader({ ...base, labelLocale: "pl" });
+      const en = formatTooltipHeader({ ...base, labelLocale: "en-US" });
+      expect(pl).not.toMatch(/PM|AM/i);
+      expect(en).toMatch(/PM|AM/i);
+    });
+  });
+
   it("FR-H: default Intl header uses HA zone, not browser default", () => {
     // April 1 02:00 UTC = still March 31 evening in New York (calendar day differs).
     const ms = Date.UTC(2026, 3, 1, 2, 0, 0, 0);

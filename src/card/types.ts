@@ -353,6 +353,8 @@ export interface ChartRendererConfig {
   xAxisFormatPattern?: string;
   /** BCP-47 locale for axis `Intl` / Luxon. */
   xAxisLabelLocale?: string;
+  /** HA `locale.time_format` → `true`/`false`; `undefined` = locale default. */
+  hour12?: boolean;
   /** Home Assistant `time_zone` (IANA) for tick timestamps. */
   haTimeZone?: string;
   /**

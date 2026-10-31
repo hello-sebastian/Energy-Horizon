@@ -150,10 +150,6 @@ Want more control? Start here:
 - Issues: [GitHub Issues](https://github.com/hello-sebastian/energy-horizon/issues)
 - Discussions: [GitHub Discussions](https://github.com/hello-sebastian/energy-horizon/discussions)
 
-If this card saves you time, you can support development:
-
-[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy+me+a+coffee&emoji=&slug=hello.sebastian&button_colour=FFDD00&font_colour=000000&font_family=Lato&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/hello.sebastian)
-[![Buy me a coffee on buycoffee.to](https://buycoffee.to/static/img/share/share-button-primary.png)](https://buycoffee.to/hello.sebastian)
 
 ## Development
 

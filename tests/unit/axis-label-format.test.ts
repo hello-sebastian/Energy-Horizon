@@ -81,6 +81,40 @@ describe("formatAdaptiveTickLabel", () => {
     expect(label).toBe("2");
   });
 
+  describe("hour12 (HA time_format) for hour aggregation", () => {
+    const hourMs = 3600000;
+    const hTimeline = [t0, t0 + hourMs, t0 + 2 * hourMs]; // 00:00, 01:00, 02:00 UTC
+
+    it("hour12: true forces 12h even under pl", () => {
+      const label = formatAdaptiveTickLabel(2, hTimeline, zone, "pl", "hour", {
+        hour12: true
+      });
+      expect(label).toMatch(/PM|AM/i);
+    });
+
+    it("hour12: false forces 24h even under en", () => {
+      const label = formatAdaptiveTickLabel(2, hTimeline, zone, "en-US", "hour", {
+        hour12: false
+      });
+      expect(label).not.toMatch(/PM|AM/i);
+      expect(label).toMatch(/02:00/);
+    });
+
+    it("hour12: undefined follows the locale default", () => {
+      const pl = formatAdaptiveTickLabel(2, hTimeline, zone, "pl", "hour");
+      const en = formatAdaptiveTickLabel(2, hTimeline, zone, "en-US", "hour");
+      expect(pl).not.toMatch(/PM|AM/i);
+      expect(en).toMatch(/PM|AM/i);
+    });
+
+    it("applies to the first/day-changed hour tick as well", () => {
+      const label = formatAdaptiveTickLabel(0, hTimeline, zone, "pl", "hour", {
+        hour12: true
+      });
+      expect(label).toMatch(/PM|AM/i);
+    });
+  });
+
   it("FR-H: tick label uses HA zone for Intl calendar fields", () => {
     const ms = Date.UTC(2026, 3, 1, 2, 0, 0, 0);
     const tl = [ms];
