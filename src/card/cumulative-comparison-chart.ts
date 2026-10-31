@@ -411,10 +411,19 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       const scaledSeries = this._applyUnitScalingToSeries(series, entityUnit);
 
-      const summary = computeSummary(scaledSeries);
+      // Window-start alignment offset (current − reference). Correct even when the current
+      // series starts late (leading zero/missing buckets); the chart already aligns by these
+      // window starts, so the numeric pipeline now matches the visual one.
+      const alignOffsetMs =
+        windows.length > 1
+          ? chartTimeRaw.alignStartsMs[0]! - chartTimeRaw.alignStartsMs[1]!
+          : undefined;
+
+      const summary = computeSummary(scaledSeries, alignOffsetMs);
       const forecast = computeForecast(
         scaledSeries,
-        chartTimeRaw.forecastPeriodBuckets
+        chartTimeRaw.forecastPeriodBuckets,
+        alignOffsetMs
       );
 
       if (!summary.unit && entityUnit) {

@@ -558,13 +558,19 @@ function toCumulativeSeries(
  */
 export function referenceCumulativeAtAlignedCurrentEnd(
   currentPoints: TimeSeriesPoint[],
-  refPoints: TimeSeriesPoint[]
+  refPoints: TimeSeriesPoint[],
+  alignOffsetMs?: number
 ): number | undefined {
   if (currentPoints.length === 0 || refPoints.length === 0) {
     return undefined;
   }
+  // Prefer the window-start offset when provided: it is correct even when the current
+  // series starts late (leading zero/missing buckets), whereas the first-point offset
+  // drifts by the number of leading empty buckets.
   const periodAlignMs =
-    currentPoints[0]!.timestamp - refPoints[0]!.timestamp;
+    typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
+      ? alignOffsetMs
+      : currentPoints[0]!.timestamp - refPoints[0]!.timestamp;
   const lastTs = currentPoints[currentPoints.length - 1]!.timestamp;
   let bestIdx = -1;
   for (let i = refPoints.length - 1; i >= 0; i--) {
@@ -580,7 +586,10 @@ export function referenceCumulativeAtAlignedCurrentEnd(
   return refPoints[bestIdx]!.value;
 }
 
-export function computeSummary(series: ComparisonSeries): SummaryStats {
+export function computeSummary(
+  series: ComparisonSeries,
+  alignOffsetMs?: number
+): SummaryStats {
   const currentPoints = series.current.points;
   const current_cumulative =
     currentPoints[currentPoints.length - 1]?.value ?? 0;
@@ -589,7 +598,8 @@ export function computeSummary(series: ComparisonSeries): SummaryStats {
   if (series.reference?.points?.length) {
     reference_cumulative = referenceCumulativeAtAlignedCurrentEnd(
       currentPoints,
-      series.reference.points
+      series.reference.points,
+      alignOffsetMs
     );
   }
 
@@ -622,7 +632,8 @@ export function fullReferenceWindowRawTotal(points: TimeSeriesPoint[]): number {
 
 export function computeForecast(
   series: ComparisonSeries,
-  periodTotalBuckets: number
+  periodTotalBuckets: number,
+  alignOffsetMs?: number
 ): ForecastStats {
   const disabled = (unit: string): ForecastStats => ({
     enabled: false,
@@ -665,8 +676,13 @@ export function computeForecast(
 
   // Align reference timestamps to current period axis (same alignment as chart).
   // YoY: reference is in year N, current in N+1; raw comparison would put all ref ≤ cutoff.
+  // Prefer the window-start offset (alignOffsetMs) when provided: it is correct even when
+  // the current series starts late (leading zero/missing buckets), whereas the first-point
+  // offset drifts by the number of leading empty buckets.
   const periodAlignMs =
-    currentPoints[0]!.timestamp - referencePoints[0]!.timestamp;
+    typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
+      ? alignOffsetMs
+      : currentPoints[0]!.timestamp - referencePoints[0]!.timestamp;
 
   let splitIdx = -1;
   for (let i = referencePoints.length - 1; i >= 0; i--) {

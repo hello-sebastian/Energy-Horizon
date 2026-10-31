@@ -395,6 +395,51 @@ describe("computeForecast", () => {
     expect(f.anomalousReference).toBe(true);
     expect(f.confidence).toBe("low");
   });
+
+  // Late-start regression (bug: late-start-forecast-miscalc): current series begins after
+  // the reference (leading zero/missing buckets dropped by normalizePoints). Alignment must
+  // use the window-start offset (alignOffsetMs), not the first data point, or the reference
+  // split point drifts and the forecast is inflated.
+  it("late-start current: forecast aligns by window start (alignOffsetMs), not first data point", () => {
+    const T_REF = Date.UTC(2025, 9, 1); // Oct 1 2025
+    const T_CUR = Date.UTC(2026, 9, 1); // Oct 1 2026
+    const alignOffsetMs = T_CUR - T_REF; // window-start offset
+
+    // Reference: 31 daily buckets from day 1, raw 1 each.
+    const refTs = Array.from({ length: 31 }, (_, i) => T_REF + i * DAY_MS);
+    const refRaws = Array.from({ length: 31 }, () => 1);
+    const reference = makeCumulativeFromTimestampsRaws(refTs, refRaws);
+
+    // Current: starts 13 days late (Oct 14), 12 buckets, raw 1 each.
+    const curTs = Array.from({ length: 12 }, (_, i) => T_CUR + (13 + i) * DAY_MS);
+    const curRaws = Array.from({ length: 12 }, () => 1);
+    const current = makeCumulativeFromTimestampsRaws(curTs, curRaws);
+
+    const s = comparisonFrom(current, reference);
+    const periodTotalBuckets = 31;
+
+    // Correct: window-start offset → split at ref i=23, B=24, A=11, C=7, trend=11/24.
+    const f = computeForecast(s, periodTotalBuckets, alignOffsetMs);
+    expect(f.enabled).toBe(true);
+    expect(f.confidence).toBe("medium");
+    expect(f.anomalousReference).toBeFalsy();
+    const A = 11;
+    const B = 24;
+    const C = 7;
+    const trend = Math.min(5, Math.max(0.2, A / B));
+    const expected = Math.max(
+      A + C * trend,
+      current.points[current.points.length - 1]!.value
+    );
+    expect(f.forecast_total).toBeCloseTo(expected, 5);
+    expect(f.forecast_total).toBeCloseTo(14.2083, 2);
+
+    // Buggy (no offset): first-point offset drifts +13 days → split at i=10, B=11, C=20,
+    // trend=1 → forecast inflated to 31.
+    const fBuggy = computeForecast(s, periodTotalBuckets);
+    expect(fBuggy.forecast_total).toBeCloseTo(31, 5);
+    expect(f.forecast_total).toBeLessThan(fBuggy.forecast_total);
+  });
 });
 
 describe("computeSummary", () => {
@@ -430,6 +475,41 @@ describe("computeSummary", () => {
     expect(summary.reference_cumulative).toBe(8);
     expect(summary.difference).toBe(7);
     expect(summary.differencePercent).toBeCloseTo(87.5, 1);
+  });
+
+  // Late-start regression (bug: late-start-forecast-miscalc): the reference "to this day"
+  // must be read at the same calendar day as the current end, using the window-start offset.
+  it("late-start current: reference 'to this day' aligns by window start (alignOffsetMs)", () => {
+    const T_REF = Date.UTC(2025, 9, 1); // Oct 1 2025
+    const T_CUR = Date.UTC(2026, 9, 1); // Oct 1 2026
+    const alignOffsetMs = T_CUR - T_REF; // window-start offset
+
+    // Reference: 31 daily buckets from day 1, raw 1 each → cumulative 1..31.
+    const refTs = Array.from({ length: 31 }, (_, i) => T_REF + i * DAY_MS);
+    const reference = makeCumulativeFromTimestampsRaws(
+      refTs,
+      Array.from({ length: 31 }, () => 1)
+    );
+
+    // Current: starts 13 days late (Oct 14), 12 buckets, raw 1 each → cumulative 1..12.
+    const curTs = Array.from({ length: 12 }, (_, i) => T_CUR + (13 + i) * DAY_MS);
+    const current = makeCumulativeFromTimestampsRaws(
+      curTs,
+      Array.from({ length: 12 }, () => 1)
+    );
+
+    const series = comparisonFrom(current, reference);
+
+    // Correct: window-start offset → reference read at Oct 25 (i=24) → cumulative 25.
+    const summary = computeSummary(series, alignOffsetMs);
+    expect(summary.current_cumulative).toBe(12);
+    expect(summary.reference_cumulative).toBe(25);
+    expect(summary.difference).toBe(-13);
+    expect(summary.differencePercent).toBeCloseTo(-52, 1);
+
+    // Buggy (no offset): first-point offset drifts +13 days → reference read at i=11 → 12.
+    const summaryBuggy = computeSummary(series);
+    expect(summaryBuggy.reference_cumulative).toBe(12);
   });
 });
 
