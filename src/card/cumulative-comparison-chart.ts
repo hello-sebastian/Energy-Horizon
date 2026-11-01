@@ -135,6 +135,19 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   declare _config: CardConfig;
   _state: CardState = { status: "loading" };
 
+  /**
+   * Incremented on every `setConfig`. A load captures this value at start and discards its
+   * result if it changed before completion (i.e. the config changed mid-load), so a stale
+   * load can never overwrite state produced by a newer config.
+   */
+  private _loadGeneration = 0;
+  /**
+   * Generation of the most recently started load. Set in `_loadData` and intentionally not
+   * cleared: `updated()` starts a load only when this differs from `_loadGeneration`, which
+   * coalesces `hass`-triggered loads while one is in flight for the current config.
+   */
+  private _inFlightGeneration: number | null = null;
+
   /** Merged preset + `time_window` + card `aggregation` — updated in `setConfig`, used in `_loadData`. */
   private _mergedTimeWindow!: MergedTimeWindowConfig;
 
@@ -173,6 +186,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: CardConfigInput): void {
+    // Bump the generation so any in-flight load (started under the previous config)
+    // discards its result once it completes — a config change is never swallowed.
+    this._loadGeneration++;
     const raw = config as CardConfigInput & { forecast?: boolean };
     const comparison_preset = resolveComparisonPreset(raw);
     const { comparison_mode: _legacyComparisonMode, ...rest } = raw;
@@ -241,7 +257,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       changedProps.has("_state")
     ) {
       if (this._state.status === "loading") {
-        void this._loadData();
+        // Coalesce: only start a load if none is in flight for the current generation.
+        // `hass` updates (1–10×/s) during the load window must not re-trigger the load.
+        if (this._inFlightGeneration !== this._loadGeneration) {
+          void this._loadData();
+        }
       }
 
       if (
@@ -278,6 +298,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   private async _loadData(): Promise<void> {
     if (!this._config || !this.hass) return;
+
+    // Capture the generation at start; if it changes before we finish (config changed
+    // mid-load), we discard our result so we never clobber a newer load's state.
+    const gen = this._loadGeneration;
+    this._inFlightGeneration = gen;
 
     const now = new Date();
     const resolved = resolveLocale(this.hass, this._config);
@@ -321,6 +346,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             `[Energy Horizon] Point cap exceeded: ${e.actual} timeline slots (maximum ${e.maxPoints}). Reduce aggregation step or window duration.`
           );
         }
+        if (gen !== this._loadGeneration) return;
         this._state = {
           status: "error",
           errorMessage: "status.point_cap_exceeded",
@@ -376,6 +402,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             "[Energy Horizon] current series could not be built – check entity ID and results structure above"
           );
         }
+        if (gen !== this._loadGeneration) return;
         this._state = { status: "no-data" };
         return;
       }
@@ -435,6 +462,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       const textSummary = computeTextSummary(summary);
 
+      if (gen !== this._loadGeneration) return;
       this._state = {
         status: "ready",
         comparisonSeries: scaledSeries,
@@ -453,6 +481,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       };
     } catch (e) {
       console.error(e);
+      if (gen !== this._loadGeneration) return;
       this._state = {
         status: "error",
         errorMessage: "status.error_api"
