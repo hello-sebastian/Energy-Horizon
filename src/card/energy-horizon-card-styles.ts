@@ -465,4 +465,15 @@ export const energyHorizonCardStyles = css`
     --mdc-icon-size: 18px;
     color: var(--warning-color);
   }
+
+  .ebc-warning-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .ebc-warning-line {
+    min-width: 0;
+  }
 `;

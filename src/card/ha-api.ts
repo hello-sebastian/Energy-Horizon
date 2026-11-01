@@ -645,10 +645,14 @@ export function computeForecast(
   periodTotalBuckets: number,
   alignOffsetMs?: number
 ): ForecastStats {
-  const disabled = (unit: string): ForecastStats => ({
+  const disabled = (
+    unit: string,
+    disabledReason: NonNullable<ForecastStats["disabledReason"]>
+  ): ForecastStats => ({
     enabled: false,
     confidence: "low",
-    unit
+    unit,
+    disabledReason
   });
 
   const currentPoints = series.current.points;
@@ -661,7 +665,7 @@ export function computeForecast(
     periodTotalBuckets <= 0 ||
     currentPoints.length === 0
   ) {
-    return disabled(unit);
+    return disabled(unit, "invalid_period");
   }
 
   const completedBuckets = currentPoints.length - 1;
@@ -669,14 +673,17 @@ export function computeForecast(
 
   // Guard 2 — wbudowany floor 3 (FR-016) + próg procentowy 5%
   if (completedBuckets < 3 || pct < 0.05) {
-    return disabled(unit);
+    return disabled(
+      unit,
+      completedBuckets < 3 ? "insufficient_buckets" : "below_percent_threshold"
+    );
   }
 
   const referencePoints = series.reference?.points;
 
   // Guard 3
   if (!referencePoints || referencePoints.length === 0) {
-    return disabled(unit);
+    return disabled(unit, "no_reference");
   }
 
   const currentRangeMs =
@@ -705,7 +712,7 @@ export function computeForecast(
 
   // Guard 4
   if (splitIdx === -1) {
-    return disabled(unit);
+    return disabled(unit, "no_split");
   }
 
   const B = referencePoints
@@ -714,7 +721,7 @@ export function computeForecast(
 
   // Guard 5
   if (!Number.isFinite(B) || B <= 0) {
-    return disabled(unit);
+    return disabled(unit, "zero_reference_in_range");
   }
 
   const A = currentPoints

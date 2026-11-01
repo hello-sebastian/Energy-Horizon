@@ -102,6 +102,35 @@ function baseYoYReadyState(): CardState {
   };
 }
 
+/**
+ * Ready state with the forecast disabled (too early in the period) — the
+ * month-start scenario. The reference series carries `rawValue` increments so
+ * the panel's Total column can compute the full reference-window total.
+ */
+function disabledForecastReadyState(): CardState {
+  const base = baseYoYReadyState();
+  return {
+    ...base,
+    comparisonSeries: {
+      ...base.comparisonSeries!,
+      reference: {
+        ...base.comparisonSeries!.reference!,
+        points: [
+          { timestamp: Date.UTC(2023, 0, 1), value: 30, rawValue: 30 },
+          { timestamp: Date.UTC(2023, 0, 2), value: 60, rawValue: 30 },
+          { timestamp: Date.UTC(2023, 0, 3), value: 90, rawValue: 30 }
+        ]
+      }
+    },
+    forecast: {
+      enabled: false,
+      confidence: "low",
+      unit: "kWh",
+      disabledReason: "insufficient_buckets"
+    }
+  };
+}
+
 describe("energy-horizon-card integration", () => {
   it("can be instantiated without crashing", () => {
     const el = document.createElement("energy-horizon-card");
@@ -571,6 +600,131 @@ describe("energy-horizon-card integration", () => {
     const root = el.shadowRoot!;
     // The Forecast | Total panel is independent of show_forecast.
     expect(root.querySelector(".ebc-section--forecast-total")).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("ready: forecast disabled (too early) — panel still visible with placeholder + reference total + warning line", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      show_forecast: true,
+      show_forecast_total_panel: true
+    });
+    el.hass = energyCardHass();
+    el._state = disabledForecastReadyState();
+    await el.updateComplete;
+
+    const root = el.shadowRoot!;
+    // Panel is NOT removed when the forecast is disabled.
+    const panel = root.querySelector(".ebc-section--forecast-total");
+    expect(panel).not.toBeNull();
+    // Forecast column shows the placeholder (muted), not a fabricated value.
+    const muted = panel!.querySelectorAll(".ebc-surface-value-num--muted");
+    expect(muted.length).toBeGreaterThanOrEqual(1);
+    // Total column shows the full reference-window total (30+30+30 = 90).
+    expect(panel!.textContent).toContain("90");
+    // Warning bar explains why the forecast is unavailable.
+    const warn = root.querySelector(".ebc-section--warning");
+    expect(warn).not.toBeNull();
+    expect(warn!.textContent).toContain(
+      "Forecast not yet available"
+    );
+    document.body.removeChild(el);
+  });
+
+  it("ready: forecast disabled — warning bar combines incomplete reference + forecast messages into one bar", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year"
+    });
+    el.hass = energyCardHass();
+    const state = disabledForecastReadyState();
+    // Also make the reference cumulative missing so both warnings apply.
+    state.summary = {
+      current_cumulative: 100,
+      difference: undefined,
+      differencePercent: undefined,
+      unit: "kWh"
+    };
+    el._state = state;
+    await el.updateComplete;
+
+    const root = el.shadowRoot!;
+    // Exactly ONE warning bar (combined), not two stacked bars.
+    const bars = root.querySelectorAll(".ebc-section--warning");
+    expect(bars.length).toBe(1);
+    const text = bars[0]!.textContent ?? "";
+    expect(text).toContain("Reference data for this period is incomplete");
+    expect(text).toContain("Forecast not yet available");
+    // Two lines inside the single bar.
+    expect(bars[0]!.querySelectorAll(".ebc-warning-line").length).toBe(2);
+    document.body.removeChild(el);
+  });
+
+  it("ready: single-window mode — forecast panel visible with Total placeholder", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      show_forecast_total_panel: true
+    });
+    el.hass = energyCardHass();
+    const state = disabledForecastReadyState();
+    // Single window: only the current window is resolved, no reference window.
+    state.resolvedWindows = [state.resolvedWindows![0]!];
+    state.comparisonSeries = {
+      ...state.comparisonSeries!,
+      reference: undefined
+    };
+    el._state = state;
+    await el.updateComplete;
+
+    const root = el.shadowRoot!;
+    // Panel is visible even in single-window mode.
+    const panel = root.querySelector(".ebc-section--forecast-total");
+    expect(panel).not.toBeNull();
+    // Both columns are placeholders (no forecast value, no reference window).
+    const muted = panel!.querySelectorAll(".ebc-surface-value-num--muted");
+    expect(muted.length).toBe(2);
+    // No forecast warning line in single-window mode (forecast is not
+    // applicable without a reference window).
+    const warn = root.querySelector(".ebc-section--warning");
+    expect(warn).toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("ready: forecast enabled — no forecast warning line", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year"
+    });
+    el.hass = energyCardHass();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+
+    const root = el.shadowRoot!;
+    // baseYoYReadyState has a complete reference cumulative and an enabled
+    // forecast, so no warning bar at all.
+    expect(root.querySelector(".ebc-section--warning")).toBeNull();
     document.body.removeChild(el);
   });
 });

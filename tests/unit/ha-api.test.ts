@@ -202,6 +202,85 @@ describe("computeForecast", () => {
     expect(computeForecast(s, 30).enabled).toBe(false);
   });
 
+  describe("disabledReason", () => {
+    it("insufficient_buckets when completedBuckets < 3", () => {
+      const ts = [T0, T0 + DAY_MS, T0 + 2 * DAY_MS];
+      const s = comparisonFrom(
+        makeCumulativeFromTimestamps(ts, 1),
+        makeCumulativeFromTimestamps(
+          [T0, T0 + DAY_MS, T0 + 2 * DAY_MS, T0 + 3 * DAY_MS],
+          1
+        )
+      );
+      expect(computeForecast(s, 30).disabledReason).toBe(
+        "insufficient_buckets"
+      );
+    });
+
+    it("below_percent_threshold when pct < 0.05 (but ≥ 3 buckets)", () => {
+      // 4 completed buckets out of 365 → pct ≈ 0.011 < 0.05
+      const n = 5;
+      const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+      const s = comparisonFrom(
+        makeCumulativeFromTimestamps(ts, 1),
+        makeCumulativeFromTimestamps(
+          Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS),
+          1
+        )
+      );
+      expect(computeForecast(s, 365).disabledReason).toBe(
+        "below_percent_threshold"
+      );
+    });
+
+    it("no_reference when there is no reference series", () => {
+      const ts = Array.from({ length: 6 }, (_, i) => T0 + i * DAY_MS);
+      const s = comparisonFrom(makeCumulativeFromTimestamps(ts, 1));
+      expect(computeForecast(s, 30).disabledReason).toBe("no_reference");
+    });
+
+    it("invalid_period when periodTotalBuckets is 0", () => {
+      const ts = Array.from({ length: 6 }, (_, i) => T0 + i * DAY_MS);
+      const s = comparisonFrom(
+        makeCumulativeFromTimestamps(ts, 1),
+        makeCumulativeFromTimestamps(
+          Array.from({ length: 8 }, (_, i) => T0 + i * DAY_MS),
+          1
+        )
+      );
+      expect(computeForecast(s, 0).disabledReason).toBe("invalid_period");
+    });
+
+    it("zero_reference_in_range when B = 0", () => {
+      const n = 6;
+      const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+      const refTs = Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS);
+      const refRaws = Array.from({ length: n + 2 }, () => 0);
+      const s = comparisonFrom(
+        makeCumulativeFromTimestamps(ts, 1),
+        makeCumulativeFromTimestampsRaws(refTs, refRaws)
+      );
+      expect(computeForecast(s, 30).disabledReason).toBe(
+        "zero_reference_in_range"
+      );
+    });
+
+    it("is absent when the forecast is enabled", () => {
+      const n = 14;
+      const ts = Array.from({ length: n }, (_, i) => T0 + i * DAY_MS);
+      const s = comparisonFrom(
+        makeCumulativeFromTimestamps(ts, 2),
+        makeCumulativeFromTimestamps(
+          Array.from({ length: n + 2 }, (_, i) => T0 + i * DAY_MS),
+          2
+        )
+      );
+      const f = computeForecast(s, 30);
+      expect(f.enabled).toBe(true);
+      expect(f.disabledReason).toBeUndefined();
+    });
+  });
+
   // US2 — scenariusze 9 i 14
   it("scenario 9: gap in current series — split by time range, not index", () => {
     const curTs = [T0, T0 + 2 * DAY_MS, T0 + 4 * DAY_MS, T0 + 6 * DAY_MS];

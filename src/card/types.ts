@@ -265,6 +265,17 @@ export interface ForecastStats {
   /** True when rawTrend is strictly below 0.3 or strictly above 3.3 (anomalous reference year). */
   anomalousReference?: boolean;
   unit: string;
+  /**
+   * Reason why the forecast is disabled (present only when `enabled` is `false`).
+   * Used by the UI to display a specific warning-bar message.
+   */
+  disabledReason?:
+    | "insufficient_buckets"
+    | "below_percent_threshold"
+    | "no_reference"
+    | "no_split"
+    | "zero_reference_in_range"
+    | "invalid_period";
 }
 
 /** Single source for chart axis + forecast denominator after `buildChartTimeline` (006). */

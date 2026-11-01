@@ -209,10 +209,10 @@ As a user seeing the forecast, I need the "Total" value to represent the complet
 
 **Acceptance Scenarios**:
 
-1. **Given** `show_forecast: true` and a forecast is available, **When** the panel renders, **Then** "Forecast" shows the projected full-period consumption and "Total" shows the full reference period's historical total.
+1. **Given** a forecast is available, **When** the panel renders, **Then** "Forecast" shows the projected full-period consumption and "Total" shows the full reference period's historical total.
 2. **Given** incomplete reference data, **When** Total cannot be reliably computed, **Then** the card applies existing missing-data rules (warning bar); no fabricated value is shown.
-3. **Given** `show_forecast: false`, **When** the card renders, **Then** the entire Forecast | Total panel block is absent from the DOM.
-4. **Given** forecast is enabled but `computeForecast` returns `enabled: false` (too early in the period), **When** the card renders, **Then** the forecast value is shown as a placeholder; the Total column remains visible.
+3. **Given** `show_forecast_total_panel: false`, **When** the card renders, **Then** the entire Forecast | Total panel block is absent from the DOM. `show_forecast: false` does **not** hide the panel.
+4. **Given** `computeForecast` returns `enabled: false` (too early in the period), **When** the card renders, **Then** the panel is still visible: the forecast value is shown as a placeholder, the Total column remains visible (full reference-window total, or a placeholder in single-window mode), and a warning-bar line explains why the forecast is unavailable.
 
 ---
 
@@ -309,8 +309,8 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 5. **`period_offset` with a large negative value** (e.g. `-5`): period qualifier captions must still compute correct years/months reflecting the offset.
 6. **Month name missing for rare locale**: fall back first to Luxon/ICU for that locale, then to English.
 7. **Icon attribute absent on entity and no `icon` YAML**: no icon element rendered; title area not disrupted.
-8. **Forecast disabled (`show_forecast: false`)**: the Forecast | Total panel block is completely absent from the DOM — no empty container.
-9. **Forecast enabled but not yet available** (`ForecastStats.enabled = false`): forecast value shown as placeholder; Total column still visible.
+8. **Forecast | Total panel hidden (`show_forecast_total_panel: false`)**: the panel block is completely absent from the DOM — no empty container. `show_forecast: false` does **not** hide the panel (it only hides the forecast line on the chart).
+9. **Forecast enabled but not yet available** (`ForecastStats.enabled = false`): the panel is still rendered; the forecast value is shown as a placeholder (consistent with the Total placeholder); the Total column shows the full reference-window total (or a placeholder in single-window mode); a warning-bar line explains why the forecast is unavailable.
 10. **Theme switch mid-session**: the card responds to the next Lit render cycle triggered by HA's `hass` update propagation; no manual intervention required.
 11. **Custom HA theme with extreme low-contrast colors**: the card is not responsible for correcting the overall theme; it must not use hardcoded colors that contradict the HA token system.
 12. **`interpretation` missing, invalid, or differently cased in YAML**: parse **case-insensitively** against `consumption` and `production`. If the value does not match either after normalization, effective mode is **`consumption`**; the card must not crash. When `debug: true`, the card MAY log a diagnostic for unrecognized values.
@@ -342,7 +342,7 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 
 - **FR-903-I (Forecast | Total panel — semantics)**: "Total" in the Forecast panel MUST represent the full LTS consumption of the reference period (entire configured reference window), not a partial "to-date" subset. "Forecast" MUST represent the projected full-period consumption from `computeForecast`.
 
-- **FR-903-J (Forecast panel visibility)**: The Forecast | Total panel MUST be rendered only when `show_forecast: true` (or the `forecast` alias). When `show_forecast: false`, the entire panel block MUST be absent from the DOM.
+- **FR-903-J (Forecast panel visibility)**: The Forecast | Total panel MUST be rendered when `show_forecast_total_panel` is not `false` — independently of `show_forecast` (which controls only the forecast line on the chart) and independently of whether the forecast value is currently computable. When `show_forecast_total_panel: false`, the entire panel block MUST be absent from the DOM. The panel MUST be shown in single-window mode as well (the Total column then shows a placeholder, since no reference window exists).
 
 - **FR-903-K (Warning bar placement)**: Warnings about incomplete reference series data MUST appear exclusively in the `.ebc-warning` bar at the bottom. They MUST NOT be duplicated in the comparison panel body.
 

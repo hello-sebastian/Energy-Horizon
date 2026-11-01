@@ -30,7 +30,8 @@ import {
   buildLtsQueriesForWindows,
   buildChartTimeline,
   comparisonPeriodFromResolvedWindows,
-  firstTailAxisLabelIndex
+  firstTailAxisLabelIndex,
+  fullReferenceWindowRawTotal
 } from "./ha-api";
 import {
   assertLtsHardLimits,
@@ -924,19 +925,52 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         ? numberFormatter.format(summary.reference_cumulative)
         : null;
 
-    // The Forecast | Total panel is gated by forecast data availability and
-    // `show_forecast_total_panel` only — it is independent of `show_forecast`
-    // (which controls the forecast line on the chart, see
-    // `isForecastLineVisible` in `_buildRendererConfig`).
-    const shouldShowForecast =
-      !singleWindow &&
-      forecast != null &&
-      forecast.enabled;
-
+    // The Forecast | Total panel is gated by `show_forecast_total_panel` only —
+    // it is independent of `show_forecast` (which controls the forecast line on
+    // the chart, see `isForecastLineVisible` in `_buildRendererConfig`) and of
+    // `forecast.enabled` (which only decides whether the forecast *value* is
+    // computable). When the forecast is not yet available the panel still
+    // renders: the Forecast column shows a placeholder and the Total column
+    // shows the full reference-window total (or a placeholder in single-window
+    // mode, where no reference window exists).
     const showForecastTotalPanel =
-      shouldShowForecast && this._config.show_forecast_total_panel !== false;
+      forecast != null && this._config.show_forecast_total_panel !== false;
 
     const forecastUnit = forecast?.unit || displayUnit;
+
+    // Full reference-window total for the panel's Total column, computed from
+    // the (unit-scaled) reference series via the same standalone helper
+    // `computeForecast` uses, so the value matches `forecast.reference_total`
+    // when the forecast is enabled. In single-window mode there is no reference
+    // window, so the Total column shows a placeholder.
+    const panelReferenceTotal =
+      !singleWindow && this._state.comparisonSeries?.reference?.points?.length
+        ? fullReferenceWindowRawTotal(
+            this._state.comparisonSeries.reference.points
+          )
+        : null;
+
+    // Warning bar: combine all data-quality messages into a single bar (one
+    // line per issue) instead of stacking separate bars.
+    const warningMessages: string[] = [];
+    if (
+      !singleWindow &&
+      summary != null &&
+      summary.reference_cumulative == null
+    ) {
+      warningMessages.push(
+        this._localizeOrError(localize, "summary.incomplete_reference")
+      );
+    }
+    if (!singleWindow && forecast != null && forecast.enabled === false) {
+      const reasonKey =
+        forecast.disabledReason === "insufficient_buckets" ||
+        forecast.disabledReason === "below_percent_threshold"
+          ? "forecast.disabled.too_early"
+          : "forecast.disabled.unavailable";
+      warningMessages.push(this._localizeOrError(localize, reasonKey));
+    }
+    const showWarningStrip = warningMessages.length > 0;
 
     const mergedTw = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
     const stepKind = classifyComparisonStep(mergedTw?.step);
@@ -1030,9 +1064,6 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         : !singleWindow && summary != null
           ? "--- %"
           : "";
-
-    const showWarningStrip =
-      !singleWindow && summary != null && summary.reference_cumulative == null;
 
     return html`<ha-card class="ebc-card">
       <div class="content ebc-content">
@@ -1149,18 +1180,28 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                     ${this._localizeOrError(localize, "forecast.panel_forecast")}
                   </div>
                   <div class="ebc-surface-value-row">
-                    <span class="ebc-surface-value-num"
-                      >${numberFormatter.format(forecast.forecast_total ?? 0)}</span
-                    >
-                    <span class="ebc-surface-value-unit">${forecastUnit}</span>
+                    ${forecast.enabled && forecast.forecast_total != null
+                      ? html`<span class="ebc-surface-value-num"
+                            >${numberFormatter.format(forecast.forecast_total)}</span
+                          >
+                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`
+                      : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                            >---</span
+                          >
+                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`}
                   </div>
                   <div class="ebc-forecast-confidence">
-                    ${this._localizeOrError(localize, "forecast.confidence", {
-                      confidence: this._localizeOrError(
-                        localize,
-                        `forecast.confidence.${forecast.confidence}`
-                      )
-                    })}
+                    ${forecast.enabled
+                      ? this._localizeOrError(localize, "forecast.confidence", {
+                          confidence: this._localizeOrError(
+                            localize,
+                            `forecast.confidence.${forecast.confidence}`
+                          )
+                        })
+                      : this._localizeOrError(
+                          localize,
+                          "forecast.disabled.hint"
+                        )}
                   </div>
                 </div>
                 <div class="ebc-comparison-divider" aria-hidden="true"></div>
@@ -1169,9 +1210,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                     ${this._localizeOrError(localize, "forecast.panel_total")}
                   </div>
                   <div class="ebc-surface-value-row">
-                    ${forecast.reference_total != null
+                    ${panelReferenceTotal != null
                       ? html`<span class="ebc-surface-value-num"
-                            >${numberFormatter.format(forecast.reference_total)}</span
+                            >${numberFormatter.format(panelReferenceTotal)}</span
                           >
                           <span class="ebc-surface-value-unit">${forecastUnit}</span>`
                       : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
@@ -1218,7 +1259,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                 class="ebc-warning-icon"
                 .icon=${"mdi:alert-outline"}
               ></ha-icon>
-              <span>${this._localizeOrError(localize, "summary.incomplete_reference")}</span>
+              <div class="ebc-warning-lines">
+                ${warningMessages.map(
+                  (msg) => html`<div class="ebc-warning-line">${msg}</div>`
+                )}
+              </div>
             </div>`
           : null}
       </div>
