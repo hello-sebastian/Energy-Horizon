@@ -967,7 +967,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         forecast.disabledReason === "insufficient_buckets" ||
         forecast.disabledReason === "below_percent_threshold"
           ? "forecast.disabled.too_early"
-          : "forecast.disabled.unavailable";
+          : forecast.disabledReason === "zero_reference_in_range"
+            ? "forecast.disabled.zero_reference"
+            : forecast.disabledReason === "no_reference"
+              ? "forecast.disabled.no_reference"
+              : forecast.disabledReason === "no_split"
+                ? "forecast.disabled.no_split"
+                : "forecast.disabled.unavailable";
       warningMessages.push(this._localizeOrError(localize, reasonKey));
     }
     const showWarningStrip = warningMessages.length > 0;

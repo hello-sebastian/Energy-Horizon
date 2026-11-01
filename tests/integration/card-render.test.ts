@@ -637,6 +637,49 @@ describe("energy-horizon-card integration", () => {
     document.body.removeChild(el);
   });
 
+  it.each([
+    ["zero_reference_in_range", "no baseline to project from"],
+    ["no_reference", "no reference data for this period"],
+    ["no_split", "does not cover the elapsed time"]
+  ] as const)(
+    "ready: forecast disabled (%s) — warning bar shows the reason-specific message",
+    async (reason, expectedClause) => {
+      const el = document.createElement(
+        "energy-horizon-card"
+      ) as EnergyHorizonCardEl;
+      document.body.appendChild(el);
+      if (typeof el.setConfig !== "function") return;
+
+      el.setConfig({
+        type: "custom:energy-horizon-card",
+        entity: "sensor.energy",
+        comparison_preset: "year_over_year",
+        show_forecast: true,
+        show_forecast_total_panel: true
+      });
+      el.hass = energyCardHass();
+      const state = disabledForecastReadyState();
+      state.forecast = {
+        enabled: false,
+        confidence: "low",
+        unit: "kWh",
+        disabledReason: reason
+      };
+      el._state = state;
+      await el.updateComplete;
+
+      const root = el.shadowRoot!;
+      const warn = root.querySelector(".ebc-section--warning");
+      expect(warn).not.toBeNull();
+      const text = warn!.textContent ?? "";
+      // The reason-specific clause is present...
+      expect(text).toContain(expectedClause);
+      // ...and the generic fallback message is NOT used.
+      expect(text).not.toContain("Forecast not available for this period.");
+      document.body.removeChild(el);
+    }
+  );
+
   it("ready: forecast disabled — warning bar combines incomplete reference + forecast messages into one bar", async () => {
     const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
     document.body.appendChild(el);
