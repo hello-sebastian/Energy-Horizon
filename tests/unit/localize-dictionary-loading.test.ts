@@ -68,7 +68,7 @@ describe("localize dictionary loading (US3)", () => {
         language: "pl",
         config: { time_zone: "Europe/Warsaw" }
       } as unknown as HomeAssistant;
-      const config: CardConfig = { type: "custom:energy-horizon-card", entity: "sensor.x", language: "de" };
+      const config: CardConfig = { type: "custom:energy-horizon-card", entity: "sensor.x", comparison_preset: "year_over_year", language: "de" };
 
       const resolved = resolveLocale(hass, config);
 
@@ -81,7 +81,7 @@ describe("localize dictionary loading (US3)", () => {
         language: "en",
         config: { time_zone: "UTC" }
       } as unknown as HomeAssistant;
-      const config: CardConfig = { type: "custom:energy-horizon-card", entity: "sensor.x", language: "unsupported_xyz" };
+      const config: CardConfig = { type: "custom:energy-horizon-card", entity: "sensor.x", comparison_preset: "year_over_year", language: "unsupported_xyz" };
 
       const resolved = resolveLocale(hass, config);
 

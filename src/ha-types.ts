@@ -11,7 +11,7 @@ export interface HomeAssistant {
   };
   states?: Record<string, { state: string; attributes: Record<string, unknown> }>;
   connection: {
-    sendMessagePromise<T = unknown>(_msg: Record<string, unknown>): Promise<T>;
+    sendMessagePromise(_msg: Record<string, unknown>): Promise<unknown>;
   };
 }
 

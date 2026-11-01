@@ -156,7 +156,7 @@ describe("editor debounce pipeline (T009)", () => {
   });
 
   it("emits the full config with unmodeled keys preserved (FR-908-P)", async () => {
-    const el = mountEditor({ ...BASE, someUnknownKey: "keep-me" });
+    const el = mountEditor({ ...BASE, someUnknownKey: "keep-me" } as unknown as CardConfigInput);
     await el.updateComplete;
     trackEmits(el);
 
@@ -168,6 +168,6 @@ describe("editor debounce pipeline (T009)", () => {
 
     const emitted = emittedConfigs(el)[0]!;
     expect(emitted.title).toBe("Renamed");
-    expect((emitted as Record<string, unknown>).someUnknownKey).toBe("keep-me");
+    expect((emitted as unknown as Record<string, unknown>).someUnknownKey).toBe("keep-me");
   });
 });

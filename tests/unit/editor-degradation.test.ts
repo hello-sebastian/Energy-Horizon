@@ -46,7 +46,7 @@ function mountEditor(
   hass?: HomeAssistant
 ): EditorEl {
   const el = new EnergyHorizonCardEditor() as EditorEl;
-  el.hass = hass;
+  el.hass = hass!;
   el.__emitted = [];
   el.addEventListener("config-changed", (e) => {
     el.__emitted!.push((e as CustomEvent).detail.config);
@@ -113,7 +113,7 @@ describe("deprecated & unknown value handling (T022, US6)", () => {
   it("an unknown force_prefix shows an empty selection, throws no error, and does not block saving (acceptance 3)", async () => {
     const el = mountEditor({
       ...BASE,
-      force_prefix: "TYPO"
+      force_prefix: "TYPO" as unknown as CardConfigInput["force_prefix"]
     });
     await el.updateComplete;
 

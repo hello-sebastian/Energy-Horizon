@@ -305,7 +305,7 @@ describe('scaleSeriesValues — force_prefix none / µ normalization', () => {
 
   it('should normalize Greek mu (U+03BC) to u in force_prefix', () => {
     // U+03BC is Greek Small Letter Mu (μ)
-    const result = scaleSeriesValues([0.00005], 'A', { force_prefix: '\u03BC' });
+    const result = scaleSeriesValues([0.00005], 'A', { force_prefix: '\u03BC' as unknown as 'u' });
     expect(result.values).toEqual([50]);
     expect(result.unit).toBe('\u00B5A');
     expect(result.prefix).toBe('u');

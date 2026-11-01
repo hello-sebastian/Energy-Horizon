@@ -18,6 +18,10 @@
 import type { ComparisonSeries, ChartRendererConfig, TimeSeriesPoint } from "./types";
 import { findTimelineSlotContainingInstant } from "./axis/now-marker-slot";
 
+/** Deprecated: Chart.js is no longer imported; `Chart` is an untyped stand-in (value + type). */
+declare const Chart: any;
+type Chart = any;
+
 /** Labels must be pre-localized by the card; this module does not use translation files. */
 
 // Chart.register(

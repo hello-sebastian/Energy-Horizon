@@ -425,7 +425,6 @@ describe("energy-horizon-card integration", () => {
       },
       summary: {
         current_cumulative: 100,
-        reference_cumulative: null,
         difference: undefined,
         differencePercent: undefined,
         unit: "kWh"

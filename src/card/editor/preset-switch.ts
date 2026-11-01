@@ -52,7 +52,7 @@ export function applyPresetSwitch(
   newPreset: ComparisonMode
 ): CardConfig {
   const oldPreset = base.comparison_preset;
-  const out: ConfigRecord = { ...(base as ConfigRecord) };
+  const out: ConfigRecord = { ...(base as unknown as ConfigRecord) };
   out.comparison_preset = newPreset;
 
   const oldIsCustom = oldPreset === "custom";
@@ -76,5 +76,5 @@ export function applyPresetSwitch(
     };
   }
 
-  return out as CardConfig;
+  return out as unknown as CardConfig;
 }

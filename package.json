@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "TZ=UTC vitest run",
     "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint --config config/eslint.config.js \"src/**/*.{ts,tsx,js,jsx}\"",
     "deploy": "npm run build && scp -O dist/* ${DEPLOY_HOST:-ha}:${DEPLOY_PATH:-/config/www/community/Energy-Horizon/}"
   },
@@ -19,6 +20,8 @@
     "luxon": "^3.7.2"
   },
   "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/luxon": "^3.7.6",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",

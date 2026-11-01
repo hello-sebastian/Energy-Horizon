@@ -118,7 +118,7 @@ export function resolveLocale(
                 `[Energy Horizon] Invalid config.number_format "${String(configNumberFormat)}", falling back to "system"`
               );
             }
-            return "system";
+            return "system" as NumberFormat;
           })()
       : (hass?.locale?.number_format as NumberFormat | undefined) ?? "system";
 

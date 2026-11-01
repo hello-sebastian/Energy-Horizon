@@ -318,7 +318,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     );
     const field = byKey.get("neutral_threshold")!;
     expect(field.control.kind).toBe("number");
-    expect(field.control.suffix).toBe("%");
+    expect((field.control as { suffix?: string }).suffix).toBe("%");
     expect(field.inlineWith).toBe("interpretation");
     expect(field.labelKey).toBe("editor.neutral_threshold");
   });

@@ -493,7 +493,7 @@ describe("editor sections (T018, US4)", () => {
 
   it("uses HA design tokens for section corner radius and bottom padding", () => {
     const cssText = EnergyHorizonCardEditor.elementStyles
-      .map((s) => (s as CSSStyleSheet).cssText)
+      .map((s) => (s as unknown as { cssText: string }).cssText)
       .join("\n");
 
     // Corner radius follows the HA card token (matches ha-expansion-panel's

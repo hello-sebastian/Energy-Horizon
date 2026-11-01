@@ -11,7 +11,6 @@ function baseCard(
 ): CardConfig {
   return {
     type: "custom:energy-horizon-card",
-    entity: overrides.entity,
     comparison_preset: overrides.comparison_preset ?? "year_over_year",
     ...overrides
   };

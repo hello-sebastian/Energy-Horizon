@@ -438,7 +438,7 @@ describe("computeForecast", () => {
     // trend=1 → forecast inflated to 31.
     const fBuggy = computeForecast(s, periodTotalBuckets);
     expect(fBuggy.forecast_total).toBeCloseTo(31, 5);
-    expect(f.forecast_total).toBeLessThan(fBuggy.forecast_total);
+    expect(f.forecast_total).toBeLessThan(fBuggy.forecast_total!);
   });
 });
 

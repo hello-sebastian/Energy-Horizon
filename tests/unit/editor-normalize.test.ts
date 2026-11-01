@@ -89,7 +89,7 @@ describe("normalizeForLoad (research R8, FR-908-I/V)", () => {
       comparison_preset: "year_over_year",
       interpretation: "bogus",
       neutral_threshold: -3
-    } as CardConfigInput);
+    } as unknown as CardConfigInput);
     expect(invalid.interpretation).toBe("consumption");
     expect(invalid.neutral_threshold).toBe(2);
   });

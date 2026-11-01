@@ -142,7 +142,7 @@ const FULL_CONFIG: CardConfigInput = {
   debug: true,
   // Unknown / future key — must survive the round-trip (FR-908-P).
   custom_extra: "keep-me"
-};
+} as unknown as CardConfigInput;
 
 /** Minimal config: `entity` + `comparison_preset` only (spec US1 acceptance 3). */
 const MINIMAL_CONFIG: CardConfigInput = {

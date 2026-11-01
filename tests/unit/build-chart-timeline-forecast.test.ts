@@ -5,8 +5,8 @@ import {
 } from "../../src/card/ha-api";
 import type { MergedTimeWindowConfig, ResolvedWindow } from "../../src/card/types";
 
-const day = (y: number, m: number, d: number): Date =>
-  new Date(y, m - 1, d, 0, 0, 0, 0);
+const day = (y: number, m: number, d: number, h = 0, min = 0, s = 0, ms = 0): Date =>
+  new Date(y, m - 1, d, h, min, s, ms);
 
 describe("buildChartTimeline — forecastPeriodBuckets vs chart axis", () => {
   it("multi-window: forecast denominator follows window 0, not longest window span", () => {

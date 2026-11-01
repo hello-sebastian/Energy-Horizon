@@ -64,7 +64,6 @@ beforeAll(async () => {
   resolveTimelineSlotIndexFromAxisParams = mod.resolveTimelineSlotIndexFromAxisParams;
 
   // Make getComputedStyle available as global (renderer uses it without window.).
-  // @ts-expect-error test-only globals
   globalThis.getComputedStyle = (globalThis.window as any)?.getComputedStyle;
 
   // jsdom does not implement ResizeObserver.

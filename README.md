@@ -162,6 +162,7 @@ npm install
 npm run build
 npm run dev
 npm test
+npm run typecheck
 npm run lint
 ```
 

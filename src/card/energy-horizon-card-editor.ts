@@ -71,7 +71,7 @@ type EditorMode = "visual" | "yaml";
  * first-class input path) behind the same surface.
  */
 export class EnergyHorizonCardEditor extends LitElement {
-  @property({ attribute: false }) accessor hass?: HomeAssistant;
+  @property({ attribute: false }) accessor hass: HomeAssistant | undefined = undefined;
 
   /** The full, normalized config (authoritative object). */
   private _config?: CardConfig;
@@ -360,7 +360,7 @@ export class EnergyHorizonCardEditor extends LitElement {
     // fallback controls (native `<select>` / `<input>`) carry it on
     // `e.target.value` — prefer `detail` when present, else fall back.
     if (kind === "select" || kind === "icon" || kind === "color") {
-      const detail = (e as HaValueDetailEvent).detail?.value;
+      const detail = (e as unknown as HaValueDetailEvent).detail?.value;
       if (detail !== undefined) {
         return detail;
       }

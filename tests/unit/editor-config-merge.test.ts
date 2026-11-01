@@ -34,10 +34,11 @@ describe("preservativeMerge (research R3, FR-908-P)", () => {
 
   it("copies every unmodeled / unknown key through unchanged", () => {
     const out = preservativeMerge(baseConfig(), { title: "New title" });
-    expect(out.comparison_mode).toBe("year_over_year");
-    expect(out.forecast).toBe(true);
-    expect(out.some_future_key).toEqual({ nested: 1, list: [1, 2, 3] });
-    expect(out.unknown_scalar).toBe("keep-me");
+    const outRec = out as unknown as Record<string, unknown>;
+    expect(outRec.comparison_mode).toBe("year_over_year");
+    expect(outRec.forecast).toBe(true);
+    expect(outRec.some_future_key).toEqual({ nested: 1, list: [1, 2, 3] });
+    expect(outRec.unknown_scalar).toBe("keep-me");
   });
 
   it("merges time_window key-by-key (editing count preserves offset/duration)", () => {
@@ -132,7 +133,7 @@ describe("hasConfigDelta / deepEqual (research R5, FR-908-N)", () => {
 
   it("is robust to scalar type coercion (numeric string ≡ number)", () => {
     const a = { type: "x", entity: "e", precision: 2 } as CardConfig;
-    const b = { type: "x", entity: "e", precision: "2" } as CardConfig;
+    const b = { type: "x", entity: "e", precision: "2" } as unknown as CardConfig;
     expect(hasConfigDelta(a, b)).toBe(false);
   });
 

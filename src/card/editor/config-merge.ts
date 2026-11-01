@@ -91,11 +91,11 @@ export function preservativeMerge(
   base: CardConfig,
   changes: Record<string, unknown>
 ): CardConfig {
-  let out: ConfigRecord = { ...(base as ConfigRecord) };
+  let out: ConfigRecord = { ...(base as unknown as ConfigRecord) };
   for (const [path, value] of Object.entries(changes)) {
     out = applyChange(out, path, value);
   }
-  return out as CardConfig;
+  return out as unknown as CardConfig;
 }
 
 /**

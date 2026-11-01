@@ -236,7 +236,8 @@ export function scaleSeriesValues(
 ): ScaleResult {
   // Step 1: Normalize force_prefix
   let forcePrefixNormalized: ForcePrefix = options?.force_prefix ?? 'auto';
-  if (forcePrefixNormalized === 'µ' || forcePrefixNormalized === '\u03BC') {
+  const forcePrefixRaw: string = forcePrefixNormalized;
+  if (forcePrefixRaw === 'µ' || forcePrefixRaw === '\u03BC') {
     forcePrefixNormalized = 'u';
   }
 
