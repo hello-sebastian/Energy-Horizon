@@ -696,6 +696,300 @@ describe('EChartsRenderer', () => {
       renderer.destroy();
       document.body.removeChild(container);
     });
+
+    describe("A+: today-slot tooltip + delta segment (bug: tooltip-reference-mismatch)", () => {
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      const dayMs = 86400000;
+
+      function buildYoYSeries(day0: number): ComparisonSeries {
+        return {
+          current: {
+            points: [
+              { timestamp: day0 + 10, value: 10 },
+              { timestamp: day0 + dayMs + 10, value: 20 },
+              { timestamp: day0 + 2 * dayMs + 10, value: 30 }
+            ],
+            unit: "kWh",
+            periodLabel: "Cur",
+            total: 30
+          },
+          reference: {
+            points: [
+              { timestamp: day0 + 10, value: 5 },
+              { timestamp: day0 + dayMs + 10, value: 15 },
+              { timestamp: day0 + 2 * dayMs + 10, value: 25 },
+              { timestamp: day0 + 3 * dayMs + 10, value: 35 },
+              { timestamp: day0 + 4 * dayMs + 10, value: 45 }
+            ],
+            unit: "kWh",
+            periodLabel: "Ref",
+            total: 45
+          },
+          aggregation: "day",
+          time_zone: "UTC"
+        };
+      }
+
+      function buildTodayConfig(
+        day0: number,
+        overrides: Partial<ChartRendererConfig> = {}
+      ): ChartRendererConfig {
+        return buildBaseRendererConfig({
+          comparisonMode: "year_over_year",
+          language: "en-US",
+          numberLocale: "en-US",
+          precision: 1,
+          unit: "kWh",
+          haTimeZone: "UTC",
+          primaryAggregation: "day",
+          mergedDurationMs: dayMs * 5,
+          showForecast: true,
+          forecastTotal: 50,
+          currentWindowStartMs: day0,
+          currentWindowEndMs: day0 + 5 * dayMs,
+          windowAlignStartsMs: [day0, day0],
+          ...overrides
+        });
+      }
+
+      function fmt1(v: number): string {
+        return new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        }).format(v);
+      }
+
+      it("tooltip at today slot: reference row = panel reference cumulative, forecast row omitted", () => {
+        vi.useFakeTimers();
+        const day0 = Date.UTC(2026, 0, 1);
+        const fullTimeline = Array.from({ length: 5 }, (_, i) => day0 + i * dayMs);
+        vi.setSystemTime(day0 + 3 * dayMs + 3600000); // now in slot 3
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        const renderer = new EChartsRenderer(container);
+        renderer.update(
+          buildYoYSeries(day0),
+          fullTimeline,
+          buildTodayConfig(day0, { panelReferenceCumulative: 25 }),
+          { current: "Current", reference: "Reference" }
+        );
+
+        const option = captureOption(renderer);
+        const formatter = option.tooltip.formatter as (params: unknown) => string;
+
+        const html = formatter([
+          { axisValue: 3, dataIndex: 3, seriesName: "Current", data: [3, 30] },
+          { axisValue: 3, dataIndex: 3, seriesName: "Reference", data: [3, 35] },
+          { axisValue: 3, dataIndex: 0, seriesName: "Forecast", data: [3, 30] }
+        ]);
+
+        // Current row (carry-forward) present.
+        expect(html).toContain(`${fmt1(30)} kWh`);
+        // Reference row uses the PREVIOUS slot value (25), not the today-slot value (35).
+        expect(html).toContain(`${fmt1(25)} kWh`);
+        expect(html).not.toContain(`${fmt1(35)} kWh`);
+        // Forecast row omitted at the today slot → exactly two rows.
+        const rows = html.match(/class="tooltip-row"/g);
+        expect(rows?.length ?? 0).toBe(2);
+
+        renderer.destroy();
+        document.body.removeChild(container);
+      });
+
+      it("tooltip at a future slot: forecast row present, current row absent", () => {
+        vi.useFakeTimers();
+        const day0 = Date.UTC(2026, 0, 1);
+        const fullTimeline = Array.from({ length: 5 }, (_, i) => day0 + i * dayMs);
+        vi.setSystemTime(day0 + 3 * dayMs + 3600000); // now in slot 3
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        const renderer = new EChartsRenderer(container);
+        renderer.update(
+          buildYoYSeries(day0),
+          fullTimeline,
+          buildTodayConfig(day0),
+          { current: "Current", reference: "Reference" }
+        );
+
+        const option = captureOption(renderer);
+        const formatter = option.tooltip.formatter as (params: unknown) => string;
+
+        // Slot 4 is beyond "now": current is null, reference + forecast present.
+        const html = formatter([
+          { axisValue: 4, dataIndex: 4, seriesName: "Reference", data: [4, 45] },
+          { axisValue: 4, dataIndex: 1, seriesName: "Forecast", data: [4, 50] }
+        ]);
+
+        expect(html).toContain(`${fmt1(45)} kWh`); // reference at that slot
+        expect(html).toContain(`${fmt1(50)} kWh`); // forecast present
+        const rows = html.match(/class="tooltip-row"/g);
+        expect(rows?.length ?? 0).toBe(2);
+
+        renderer.destroy();
+        document.body.removeChild(container);
+      });
+
+      it("tooltip at today slot: falls back to the item value when the panel reference is unavailable", () => {
+        vi.useFakeTimers();
+        const day0 = Date.UTC(2026, 0, 1);
+        const fullTimeline = Array.from({ length: 3 }, (_, i) => day0 + i * dayMs);
+        vi.setSystemTime(day0 + 3600000); // now in slot 0 → todaySlotIndex = 0
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        const renderer = new EChartsRenderer(container);
+        const series: ComparisonSeries = {
+          current: {
+            points: [{ timestamp: day0 + 10, value: 10 }],
+            unit: "kWh",
+            periodLabel: "Cur",
+            total: 10
+          },
+          reference: {
+            points: [
+              { timestamp: day0 + 10, value: 5 },
+              { timestamp: day0 + dayMs + 10, value: 15 }
+            ],
+            unit: "kWh",
+            periodLabel: "Ref",
+            total: 15
+          },
+          aggregation: "day",
+          time_zone: "UTC"
+        };
+        renderer.update(
+          series,
+          fullTimeline,
+          buildTodayConfig(day0, {
+            currentWindowEndMs: day0 + 3 * dayMs,
+            windowAlignStartsMs: [day0, day0]
+          }),
+          { current: "Current", reference: "Reference" }
+        );
+
+        const option = captureOption(renderer);
+        const formatter = option.tooltip.formatter as (params: unknown) => string;
+
+        // todaySlotIndex = 0 → no previous slot; reference row uses the item's own value (5).
+        const html = formatter([
+          { axisValue: 0, dataIndex: 0, seriesName: "Reference", data: [0, 5] }
+        ]);
+        expect(html).toContain(`${fmt1(5)} kWh`);
+
+        renderer.destroy();
+        document.body.removeChild(container);
+      });
+
+      it("delta segment at today slot uses the panel reference cumulative; reference dot stays on the line", () => {
+        vi.useFakeTimers();
+        const day0 = Date.UTC(2026, 0, 1);
+        const fullTimeline = Array.from({ length: 5 }, (_, i) => day0 + i * dayMs);
+        vi.setSystemTime(day0 + 3 * dayMs + 3600000); // now in slot 3
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        const renderer = new EChartsRenderer(container);
+        renderer.update(
+          buildYoYSeries(day0),
+          fullTimeline,
+          buildTodayConfig(day0, { panelReferenceCumulative: 25 }),
+          { current: "Current", reference: "Reference" }
+        );
+
+        const option = captureOption(renderer);
+        const series = (option.series ?? []) as Array<{
+          name?: string;
+          markLine?: { data?: Array<Record<string, unknown>> };
+          markPoint?: { data?: Array<{ coord?: number[] }> };
+        }>;
+        const current = series.find((s) => s.name === "Current");
+        const reference = series.find((s) => s.name === "Reference");
+
+        // Delta segment = markLine.data[1] (data[0] is the full-height guide line).
+        const deltaSegment = current?.markLine?.data?.[1] as
+          | Array<{ coord?: number[] }>
+          | undefined;
+        expect(deltaSegment).toBeDefined();
+        const coords = (deltaSegment ?? []).map((p) => p.coord);
+        // Reference endpoint = previous slot value (25), current endpoint = 30.
+        expect(coords).toEqual([[3, 25], [3, 30]]);
+
+        // Reference dot stays on the line at the today-slot value (35).
+        const refDot = reference?.markPoint?.data?.[0];
+        expect(refDot?.coord).toEqual([3, 35]);
+
+        renderer.destroy();
+        document.body.removeChild(container);
+      });
+
+      it("MoM: current includes today's point → tooltip reference = panel reference (today-slot value)", () => {
+        vi.useFakeTimers();
+        const day0 = Date.UTC(2026, 8, 1); // Sep 1
+        const fullTimeline = Array.from({ length: 5 }, (_, i) => day0 + i * dayMs);
+        vi.setSystemTime(day0 + 3 * dayMs + 3600000); // now in slot 3
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        const renderer = new EChartsRenderer(container);
+        // MoM-like: the current series HAS a point at the today slot (slot 3), so the
+        // panel reference aligns to the today slot (35), not the previous slot (25).
+        const series: ComparisonSeries = {
+          current: {
+            points: [
+              { timestamp: day0 + 10, value: 10 },
+              { timestamp: day0 + dayMs + 10, value: 20 },
+              { timestamp: day0 + 2 * dayMs + 10, value: 30 },
+              { timestamp: day0 + 3 * dayMs + 10, value: 40 }
+            ],
+            unit: "kWh",
+            periodLabel: "Cur",
+            total: 40
+          },
+          reference: {
+            points: [
+              { timestamp: day0 + 10, value: 5 },
+              { timestamp: day0 + dayMs + 10, value: 15 },
+              { timestamp: day0 + 2 * dayMs + 10, value: 25 },
+              { timestamp: day0 + 3 * dayMs + 10, value: 35 },
+              { timestamp: day0 + 4 * dayMs + 10, value: 45 }
+            ],
+            unit: "kWh",
+            periodLabel: "Ref",
+            total: 45
+          },
+          aggregation: "day",
+          time_zone: "UTC"
+        };
+        renderer.update(
+          series,
+          fullTimeline,
+          buildTodayConfig(day0, { panelReferenceCumulative: 35 }),
+          { current: "Current", reference: "Reference" }
+        );
+
+        const option = captureOption(renderer);
+        const formatter = option.tooltip.formatter as (params: unknown) => string;
+
+        const html = formatter([
+          { axisValue: 3, dataIndex: 3, seriesName: "Current", data: [3, 40] },
+          { axisValue: 3, dataIndex: 3, seriesName: "Reference", data: [3, 35] }
+        ]);
+
+        // Current row present.
+        expect(html).toContain(`${fmt1(40)} kWh`);
+        // Reference row = panel reference (35, the today-slot value), NOT the previous slot (25).
+        expect(html).toContain(`${fmt1(35)} kWh`);
+        expect(html).not.toContain(`${fmt1(25)} kWh`);
+
+        renderer.destroy();
+        document.body.removeChild(container);
+      });
+    });
   });
 
   describe("resolveTimelineSlotIndexFromAxisParams", () => {

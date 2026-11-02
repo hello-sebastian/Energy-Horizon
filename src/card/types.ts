@@ -390,6 +390,14 @@ export interface ChartRendererConfig {
   /** Interpretation semantics for delta-at-today segment color (903). */
   chartSemanticOutcome?: SemanticOutcome;
   /**
+   * The reference cumulative shown in the "TO THIS DAY" reference panel
+   * (`summary.reference_cumulative`). When set, the tooltip reference row and the
+   * delta-at-today segment use this value at the today slot so they always match the
+   * panel, regardless of whether the current series includes today's point (bug:
+   * tooltip-reference-mismatch).
+   */
+  panelReferenceCumulative?: number;
+  /**
    * Multi-window comparison: omit calendar year on default X-axis / tooltip (YoY, MoY).
    * Forced `x_axis_format` / `tooltip_format` overrides adaptive behavior.
    */

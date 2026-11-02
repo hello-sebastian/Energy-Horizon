@@ -749,6 +749,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       showForecast: isForecastLineVisible(this._config) && !singleWindow,
       showReferenceComparison: !singleWindow && series.reference != null,
       forecastTotal: this._state.forecast?.forecast_total,
+      panelReferenceCumulative: this._state.summary?.reference_cumulative,
       unit: displayUnit,
       periodLabel,
       referencePeriodStart: period.reference_start.getTime(),

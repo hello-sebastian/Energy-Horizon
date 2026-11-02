@@ -49,6 +49,7 @@ Two-column layout: **Current period** column (left) and **Reference period** col
 - **Wrapped-line spacing**: when the chip wraps onto a second line in a narrow column, the vertical distance between its lines is one third of the horizontal gap (3 px vs 8 px).
 - **Explicit sign**: absolute difference and percentage difference always carry `+` when positive and `−` (U+2212) when negative; zero values show no sign prefix.
 - **Period qualifiers**: each column heading includes a compact caption from `formatCompactPeriodCaption` (abbreviated month names, HA time zone, `locale.time_format` for hourly-window clock portions). Locale follows: card `language` → HA user language → `en`.
+- **Panel ↔ chart consistency**: the reference cumulative shown in the Reference column MUST equal the tooltip's reference row and the delta segment's reference endpoint at the today slot (see `902-chart-rendering-interaction`, FR-902-AC). The panel value is the single source of truth; the chart surfaces MUST not derive a different value from the raw reference series at that slot.
 
 ### Narrative interpretation (summary row) and chart delta semantics
 

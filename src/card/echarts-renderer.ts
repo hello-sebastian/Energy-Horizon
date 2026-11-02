@@ -915,6 +915,16 @@ export class EChartsRenderer {
     if (todaySlotIndex >= 0) {
       const todayCurrentY = currentValues[todaySlotIndex] ?? null;
       const todayReferenceY = referenceValues[todaySlotIndex] ?? null;
+      // A+ (bug: tooltip-reference-mismatch): the delta segment compares the current
+      // cumulative against the reference value shown in the "TO THIS DAY" panel
+      // (`panelReferenceCumulative`), so the segment always matches the panel. Falls
+      // back to the today-slot reference value when the panel value is unavailable.
+      // The reference dot (markPoint) stays on the line at `todayReferenceY`.
+      const deltaReferenceY =
+        rendererConfig.panelReferenceCumulative != null &&
+        Number.isFinite(rendererConfig.panelReferenceCumulative)
+          ? rendererConfig.panelReferenceCumulative
+          : todayReferenceY;
 
       const deltaColor =
         rendererConfig.chartSemanticOutcome != null
@@ -934,11 +944,11 @@ export class EChartsRenderer {
 
       if (
         todayCurrentY !== null &&
-        todayReferenceY !== null &&
-        Math.abs(todayCurrentY - todayReferenceY) > yMaxEps
+        deltaReferenceY !== null &&
+        Math.abs(todayCurrentY - deltaReferenceY) > yMaxEps
       ) {
-        const yLo = Math.min(todayCurrentY, todayReferenceY);
-        const yHi = Math.max(todayCurrentY, todayReferenceY);
+        const yLo = Math.min(todayCurrentY, deltaReferenceY);
+        const yHi = Math.max(todayCurrentY, deltaReferenceY);
         markLineData.push([
           {
             coord: [todaySlotIndex, yLo],
@@ -1144,13 +1154,35 @@ export class EChartsRenderer {
               continue;
             }
 
-            const candidate = item?.data ?? item?.value;
+            // A+ (bug: tooltip-reference-mismatch): at the open "today" slot the
+            // forecast row duplicates the current cumulative — omit it there.
+            if (
+              seriesName === rendererConfig.forecastLabel &&
+              slotIndex === todaySlotIndex
+            ) {
+              continue;
+            }
 
+            // A+ (bug: tooltip-reference-mismatch): at the open "today" slot the
+            // reference row uses the panel's reference cumulative
+            // (`panelReferenceCumulative`) so it always matches the "TO THIS DAY"
+            // panel; fall back to the item's own value when unavailable.
             let y: unknown;
-            if (Array.isArray(candidate)) {
-              y = candidate.length > 1 ? candidate[1] : candidate[0];
-            } else {
-              y = candidate;
+            if (
+              seriesName === labels.reference &&
+              slotIndex === todaySlotIndex &&
+              rendererConfig.panelReferenceCumulative != null &&
+              Number.isFinite(rendererConfig.panelReferenceCumulative)
+            ) {
+              y = rendererConfig.panelReferenceCumulative;
+            }
+            if (y === undefined) {
+              const candidate = item?.data ?? item?.value;
+              if (Array.isArray(candidate)) {
+                y = candidate.length > 1 ? candidate[1] : candidate[0];
+              } else {
+                y = candidate;
+              }
             }
 
             if (y === null || y === undefined) continue;
