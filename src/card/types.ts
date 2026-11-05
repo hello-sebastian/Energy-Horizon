@@ -299,6 +299,18 @@ export interface CardState {
   resolvedWindows?: ResolvedWindow[];
   mergedTimeWindow?: MergedTimeWindowConfig;
   chartTime?: ChartTimeContext;
+  /**
+   * Transient time-window preview (909): the active shift in nominal window widths.
+   * `0`/absent = default (no preview); negative = earlier periods. Mirrors the element field
+   * into state so `render()` can branch. Never positive (FR-003).
+   */
+  previewShift?: number;
+  /**
+   * Transient time-window preview (909): the shifted current + shifted reference cumulative
+   * series pair (unit-scaled), present only while `previewShift < 0` and `status === "ready"`.
+   * Absent at the default.
+   */
+  previewSeries?: ComparisonSeries;
 }
 
 /** Theme colors read from the card host via `getComputedStyle` (US-7 / T020). */
@@ -406,5 +418,16 @@ export interface ChartRendererConfig {
    * Multi-window comparison: show day-of-month only for `day` aggregation (MoM).
    */
   comparisonAxisDayOfMonthOnly?: boolean;
+  /**
+   * Transient time-window preview (909): `true` while `previewShift < 0`. Tells the renderer
+   * to draw the shifted preview series (light gray current + darker gray reference) and hide
+   * the live series (FR-018/FR-019).
+   */
+  previewMode?: boolean;
+  /**
+   * Transient time-window preview (909): the shifted series pair to draw — current in light
+   * gray, reference in a darker gray (FR-018). Present only while `previewMode` is true.
+   */
+  previewSeries?: ComparisonSeries;
 }
 
