@@ -40,7 +40,7 @@ to follow and is out of scope — see spec Assumptions).
 
 | Aspect | Behavior |
 |---|---|
-| **Series drawn** | Exactly two: the shifted current period (light gray) and the shifted reference period (darker gray), using the card's existing color tokens (FR-018). The shifted current series does not use the current series' color. |
+| **Series drawn** | The shifted current period (light gray) and, when the card has a reference window, the shifted reference period (darker gray) — exactly two series on a card with a reference window, a single light-gray series (the shifted current) when it has none — using the card's existing color tokens (FR-018). The shifted current series does not use the current series' color. |
 | **Live series** | Not drawn (FR-019). |
 | **X-axis / period label** | Reflect the **shifted** period (so the axis matches the displayed series; see research R5). Label formatting/style unchanged. |
 | **Return to default** | The current series is shown again and the chart returns to its normal two-series presentation (FR-020). |
