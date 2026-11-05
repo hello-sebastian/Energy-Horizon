@@ -57,7 +57,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 1 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T005 [P] [US1] Unit tests for the shifted-window helper in `tests/unit/preview-shift.test.ts`: for every supported width (year, month, week, day, hour, minute, second) one step back moves by exactly one nominal width — calendar-aware for y/M/w (respecting month-length and end-of-month) and exact for d/h/m/s — and the window's duration/step/count/anchor/aggregation are preserved (FR-005, FR-006, "All supported widths" edge case)
+- [ ] T005 [P] [US1] Unit tests for the shifted-window helper in `tests/unit/preview-shift.test.ts`: for every supported width (year, month, week, day, hour, minute, second) one step back moves by exactly one nominal width — calendar-aware for y/M/w (respecting month-length and end-of-month) and exact for d/h/m/s — and the window's duration/step/count/anchor/aggregation are preserved (FR-005, FR-006, "All supported widths" edge case); include at least one case driving the shift through the legacy preset path (`currentEndIsNow && referenceFullPeriod && count === 2`) and one through the generic path, asserting identical one-width behavior on both (FR-015)
 - [ ] T006 [US1] Unit tests for the preview state transitions in `tests/unit/preview-shift.test.ts`: step back decrements (`previewShift -= 1`, no lower bound, FR-004); step forward increments clamped at `0` (no-op at the default, FR-003); reset sets `0` (FR-009); and `previewShift` is always an integer `≤ 0` — "any attempt to make it positive is clamped to `0`" (data-model validation rule 1)
 
 ### Implementation for User Story 1
