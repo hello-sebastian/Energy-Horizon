@@ -31,7 +31,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 **Purpose**: Confirm the existing project baseline is green before adding the feature (no new dependencies, no new top-level structure — the feature lives inside the existing `src/card/` tree).
 
-- [ ] T001 Verify the baseline is green before starting: run `npm test`, `npm run typecheck`, and `npm run lint` from the repo root and confirm all pass with no pre-existing failures (no code change; gate only)
+- [X] T001 Verify the baseline is green before starting: run `npm test`, `npm run typecheck`, and `npm run lint` from the repo root and confirm all pass with no pre-existing failures (no code change; gate only)
 
 ---
 
@@ -41,9 +41,9 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 [P] Extend `CardState` and `ChartRendererConfig` with the preview fields in `src/card/types.ts`: `CardState.previewShift` (number, `0`/absent = default), `CardState.previewSeries` (shifted current + shifted reference cumulative series pair, unit-scaled, present only when `status === "ready"`), `ChartRendererConfig.previewMode` (boolean, `true` while `previewShift < 0`), `ChartRendererConfig.previewSeries` (series pair), and `ChartRendererConfig.periodLabel` (string, reflects the shifted period in preview) — per `data-model.md`
-- [ ] T003 [P] Add the `preview.*` UI strings to all four locales in `src/card/translations/en.json`, `src/card/translations/pl.json`, `src/card/translations/de.json`, and `src/card/translations/fr.json`: `preview.step_back`, `preview.step_forward`, `preview.reset` (control `aria-label`s) and the preview indication label — short, concrete wording consistent with the existing `period.*` / `status.*` keys (research R8)
-- [ ] T004 [P] Implement the pure shifted-window helper in `src/card/time-windows/` (new file, e.g. `preview-shift.ts`): given `merged`, `now`, `timeZone`, and `previewShift`, compute the shifted `now` by applying `parseDurationToken(merged.duration)` (the window's nominal width, **not** `step`) `|previewShift|` times via the same `DateTime.minus(Duration)` algebra as `minusStepRepeated`, then return `resolveTimeWindows(merged, shiftedNow, timeZone, …)` — reusing the existing resolver unmodified (research R1); the helper MUST be a pure function with no side effects
+- [X] T002 [P] Extend `CardState` and `ChartRendererConfig` with the preview fields in `src/card/types.ts`: `CardState.previewShift` (number, `0`/absent = default), `CardState.previewSeries` (shifted current + shifted reference cumulative series pair, unit-scaled, present only when `status === "ready"`), `ChartRendererConfig.previewMode` (boolean, `true` while `previewShift < 0`), `ChartRendererConfig.previewSeries` (series pair), and `ChartRendererConfig.periodLabel` (string, reflects the shifted period in preview) — per `data-model.md`
+- [X] T003 [P] Add the `preview.*` UI strings to all four locales in `src/card/translations/en.json`, `src/card/translations/pl.json`, `src/card/translations/de.json`, and `src/card/translations/fr.json`: `preview.step_back`, `preview.step_forward`, `preview.reset` (control `aria-label`s) and the preview indication label — short, concrete wording consistent with the existing `period.*` / `status.*` keys (research R8)
+- [X] T004 [P] Implement the pure shifted-window helper in `src/card/time-windows/` (new file, e.g. `preview-shift.ts`): given `merged`, `now`, `timeZone`, and `previewShift`, compute the shifted `now` by applying `parseDurationToken(merged.duration)` (the window's nominal width, **not** `step`) `|previewShift|` times via the same `DateTime.minus(Duration)` algebra as `minusStepRepeated`, then return `resolveTimeWindows(merged, shiftedNow, timeZone, …)` — reusing the existing resolver unmodified (research R1); the helper MUST be a pure function with no side effects
 
 **Checkpoint**: Foundation ready — types, strings, and the shift helper exist; user story implementation can now begin.
 
