@@ -7,6 +7,33 @@ import type {
 import { parseDurationToken } from "./duration-parse";
 import { resolveTimeWindows } from "./resolve-windows";
 
+/** A preview control action (909). */
+export type PreviewShiftAction = "back" | "forward" | "reset";
+
+/**
+ * Pure preview state transition (909): given the current `previewShift` and a control
+ * action, return the next shift.
+ *
+ * - **back**: `previewShift -= 1` — always allowed, no lower bound (FR-004).
+ * - **forward**: `previewShift += 1`, clamped at `0` — a no-op at the default (FR-003).
+ * - **reset**: `previewShift = 0` (FR-009).
+ *
+ * The result is always an integer `≤ 0` (data-model validation rule 1).
+ */
+export function nextPreviewShift(
+  previewShift: number,
+  action: PreviewShiftAction
+): number {
+  switch (action) {
+    case "back":
+      return previewShift - 1;
+    case "forward":
+      return Math.min(0, previewShift + 1);
+    case "reset":
+      return 0;
+  }
+}
+
 /**
  * Transient time-window preview (909): compute the shifted window set for a preview shift.
  *

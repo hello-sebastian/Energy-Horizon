@@ -37,7 +37,10 @@ import {
   assertLtsHardLimits,
   assertMergedTimeWindowConfig,
   buildMergedTimeWindowConfig,
-  resolveTimeWindows
+  resolveTimeWindows,
+  resolvePreviewShiftedWindows,
+  nextPreviewShift,
+  type PreviewShiftAction
 } from "./time-windows";
 import { EChartsRenderer } from "./echarts-renderer";
 import { resolveSeriesCurrentColor } from "./series-color";
@@ -154,7 +157,32 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   private _chartRenderer?: EChartsRenderer;
 
+  /**
+   * Transient preview shift (909): `0` (or absent) = the default window; a negative integer
+   * = that many nominal window widths back. Plain runtime field — **not** part of `_config`,
+   * not persisted, and discarded on re-instantiation (FR-003, FR-004, FR-009). Always an
+   * integer `≤ 0` (data-model validation rule 1).
+   */
+  private previewShift = 0;
+
   static styles = energyHorizonCardStyles;
+
+  /**
+   * Step the preview window by one nominal width (909). `back` always allowed (no lower
+   * bound); `forward` clamped at `0` (a no-op at the default); `reset` returns to `0`.
+   * Each *change* bumps the load generation so rapid stepping coalesces (research R6) and
+   * any in-flight load is discarded (data-model validation rule 2).
+   */
+  private _onPreviewStep(action: PreviewShiftAction): void {
+    const next = nextPreviewShift(this.previewShift, action);
+    if (next === this.previewShift) {
+      // No-op (e.g. step forward at the default) — nothing to reload.
+      return;
+    }
+    this.previewShift = next;
+    this._loadGeneration++;
+    this._state = { status: "loading" };
+  }
 
   private _localizeOrError(
     baseLocalize: (_key: string, _vars?: Record<string, string | number>) => string,
@@ -463,6 +491,71 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       const textSummary = computeTextSummary(summary);
 
+      // Preview branch (909, T008): when previewShift < 0, resolve the shifted windows via
+      // the T004 helper and query the shifted current period (shiftedWindows[0]) and, when a
+      // reference window exists, the shifted reference period (shiftedWindows[1]) via the
+      // existing LTS `statistics_during_period` path. The default analytical pipeline above
+      // (summary/forecast/interpretation/narrative) is left untouched (FR-021). A preview
+      // failure is isolated so it never clobbers the default pipeline's result.
+      let previewSeries: ComparisonSeries | undefined;
+      if (this.previewShift < 0) {
+        try {
+          const shiftedWindows = resolvePreviewShiftedWindows(
+            merged,
+            now,
+            resolved.timeZone,
+            this.previewShift,
+            24,
+            merged.aggregation ?? "day"
+          );
+          const previewWindowCount = Math.min(2, shiftedWindows.length);
+          const previewWindows = shiftedWindows.slice(0, previewWindowCount);
+          const previewQueries = buildLtsQueriesForWindows(
+            previewWindows,
+            this._config.entity
+          );
+          const previewResponses = await Promise.all(
+            previewQueries.map((q) =>
+              this.hass.connection.sendMessagePromise(
+                q as unknown as Record<string, unknown>
+              )
+            )
+          );
+          const previewCurrent = mapLtsResponseToCumulativeSeries(
+            previewResponses[0] as any,
+            this._config.entity,
+            localize("period.current")
+          );
+          if (previewCurrent) {
+            const previewReference =
+              previewWindowCount > 1
+                ? mapLtsResponseToCumulativeSeries(
+                    previewResponses[1] as any,
+                    this._config.entity,
+                    localize("period.reference")
+                  )
+                : undefined;
+            const previewRaw: ComparisonSeries = {
+              current: previewCurrent,
+              reference: previewReference ?? undefined,
+              aggregation: period.aggregation,
+              time_zone: period.time_zone
+            };
+            previewSeries = this._applyUnitScalingToSeries(
+              previewRaw,
+              entityUnit
+            );
+          }
+        } catch (previewError) {
+          if (this._config.debug) {
+            console.warn(
+              "[Energy Horizon] Preview load failed; keeping the default pipeline.",
+              previewError
+            );
+          }
+        }
+      }
+
       if (gen !== this._loadGeneration) return;
       this._state = {
         status: "ready",
@@ -478,7 +571,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           alignStartsMs: chartTimeRaw.alignStartsMs,
           forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
           tailLabelFromIndex
-        }
+        },
+        previewShift: this.previewShift,
+        previewSeries
       };
     } catch (e) {
       console.error(e);
@@ -1237,6 +1332,24 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           role="region"
           aria-label=${this._localizeOrError(localize, "section.chart")}
         >
+          <div class="ebc-chart-controls">
+            <button
+              class="ebc-chart-control"
+              type="button"
+              aria-label=${this._localizeOrError(localize, "preview.step_back")}
+              @click=${() => this._onPreviewStep("back")}
+            >
+              <ha-icon icon="mdi:chevron-left"></ha-icon>
+            </button>
+            <button
+              class="ebc-chart-control"
+              type="button"
+              aria-label=${this._localizeOrError(localize, "preview.step_forward")}
+              @click=${() => this._onPreviewStep("forward")}
+            >
+              <ha-icon icon="mdi:chevron-right"></ha-icon>
+            </button>
+          </div>
           <div class="chart-container ebc-chart"></div>
         </div>
 

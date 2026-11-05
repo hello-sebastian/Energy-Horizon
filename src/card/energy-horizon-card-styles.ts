@@ -334,6 +334,48 @@ export const energyHorizonCardStyles = css`
     min-height: 240px;
   }
 
+  /* Preview step controls (909) — top-right of the chart, always present in view mode. */
+  .ebc-chart-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    display: flex;
+    gap: 4px;
+  }
+
+  .ebc-chart-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 30%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+    color: var(--primary-text-color);
+    cursor: pointer;
+    --mdc-icon-size: 20px;
+  }
+
+  .ebc-chart-control:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 45%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
+  .ebc-chart-control:focus-visible {
+    outline: 2px solid var(--primary-color, #03a9f4);
+    outline-offset: 1px;
+  }
+
   .ebc-section--comment {
     display: flex;
     align-items: flex-start;
