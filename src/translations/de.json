@@ -5,6 +5,7 @@
   "preview.step_forward": "Zum späteren Zeitraum wechseln",
   "preview.reset": "Zum aktuellen Zeitraum zurückkehren",
   "preview.indication": "Vorschau: {{period}}",
+  "preview.loading": "Wird geladen…",
   "status.loading": "Lade Langzeitstatistiken…",
   "status.config_invalid_time_window": "Ungültige time_window-Konfiguration. Prüfen Sie anchor, duration, step und count in YAML.",
   "status.config_too_many_windows": "Zu viele Zeitfenster (Maximum {{max}}). Verringern Sie count in time_window.",

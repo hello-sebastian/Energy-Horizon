@@ -328,20 +328,29 @@ export const energyHorizonCardStyles = css`
     flex-direction: column;
   }
 
+  /* Preview step controls (909) — a dedicated bar above the chart, in normal flow,
+     so it reserves its own space and never overlaps the chart (or future UI). */
+  .ebc-chart-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 0 0 8px 0;
+  }
+
+  /* Wrapper that scopes the in-place loading overlay to the chart area only. */
+  .ebc-chart-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .chart-container {
     position: relative;
     flex: 1 1 auto;
     min-height: 240px;
-  }
-
-  /* Preview step controls (909) — top-right of the chart, always present in view mode. */
-  .ebc-chart-controls {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 2;
-    display: flex;
-    gap: 4px;
   }
 
   .ebc-chart-control {
@@ -374,6 +383,32 @@ export const energyHorizonCardStyles = css`
   .ebc-chart-control:focus-visible {
     outline: 2px solid var(--primary-color, #03a9f4);
     outline-offset: 1px;
+  }
+
+  .ebc-chart-control:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* In-place preview load (909): the chart stays in the DOM, dimmed, with a
+     "loading" overlay on top — the card content is never torn down. */
+  .chart-container.ebc-chart--loading {
+    opacity: 0.5;
+    transition: opacity 120ms ease;
+  }
+
+  .ebc-chart-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    pointer-events: none;
   }
 
   .ebc-section--comment {

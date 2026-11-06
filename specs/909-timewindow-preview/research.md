@@ -136,9 +136,16 @@ discarded if the shift changed mid-flight.
 - The extra shifted queries are one LTS call per series (current + reference); HA's LTS layer
   caches, so repeated default queries on each step are cheap. The dominant cost is the shifted
   queries per distinct shift position.
-- The card shows its standard loading state during the fetch. An in-place chart-only update (no
-  full-card spinner) is a possible future polish, consistent with the spec's "interim form,
-  refined design later" assumption.
+- **In-place chart-only update (implemented)**: a preview step does NOT replace the card with the
+  full-card loading state. Instead a separate reactive flag (`_previewLoading`) keeps the card
+  intact with its current data: the chart is dimmed (`opacity: 0.5`) with a "loading" overlay
+  (`preview.loading` string) on top, and the step controls are `disabled` until the shifted series
+  arrive. The chart container therefore never leaves the DOM, so the ECharts renderer survives the
+  step and only the chart is swapped on completion. This is the "in-place chart-only update (no
+  full-card spinner)" polish noted in the spec's "interim form, refined design later" assumption,
+  and it also fixes the bug where a full-card loading state tore down the chart container and left
+  the renderer attached to a removed node. The initial (first) load still uses the standard
+  full-card loading state.
 
 **Alternatives considered**:
 - *A separate lightweight preview-only load* (fetch only the shifted series, keep the default

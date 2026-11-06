@@ -5,6 +5,7 @@
   "preview.step_forward": "Przejdź do późniejszego okresu",
   "preview.reset": "Wróć do bieżącego okresu",
   "preview.indication": "Podgląd: {{period}}",
+  "preview.loading": "Ładowanie…",
   "status.loading": "Ładowanie danych statystyk długoterminowych...",
   "status.config_invalid_time_window": "Nieprawidłowa konfiguracja time_window. Sprawdź anchor, duration, step i count w YAML.",
   "status.config_too_many_windows": "Zbyt wiele okien czasowych (maksimum {{max}}). Zmniejsz count w time_window.",
