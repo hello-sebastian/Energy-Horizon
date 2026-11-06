@@ -332,10 +332,22 @@ export const energyHorizonCardStyles = css`
      so it reserves its own space and never overlaps the chart (or future UI). */
   .ebc-chart-controls {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 4px;
     flex-shrink: 0;
     padding: 0 0 8px 0;
+  }
+
+  /* Preview indication (909 US2) — visible, screen-reader-announced text of the
+     shifted period, left-aligned in the controls bar while a preview is active. */
+  .ebc-preview-indication {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Wrapper that scopes the in-place loading overlay to the chart area only. */

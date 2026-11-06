@@ -78,11 +78,11 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 2 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T010 [US2] Integration test in `tests/integration/card-render.test.ts`: the preview indication is visible when `previewShift < 0` and absent at the default (FR-011, FR-012); its content conveys the shifted period, consistent with the period label the card already displays (US2 scenario 3)
+- [X] T010 [US2] Integration test in `tests/integration/card-render.test.ts`: the preview indication is visible when `previewShift < 0` and absent at the default (FR-011, FR-012); its content conveys the shifted period, consistent with the period label the card already displays (US2 scenario 3)
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Render the preview indication as a visible text element in the DOM (announced to screen readers, not a visual-only overlay) in `src/card/cumulative-comparison-chart.ts`: shown only while `previewShift < 0`, reusing the existing period-label formatting so the shifted period reads the same way the card already formats periods (FR-011, FR-012, research R5/R7, contract "Preview indication")
+- [X] T011 [US2] Render the preview indication as a visible text element in the DOM (announced to screen readers, not a visual-only overlay) in `src/card/cumulative-comparison-chart.ts`: shown only while `previewShift < 0`, reusing the existing period-label formatting so the shifted period reads the same way the card already formats periods (FR-011, FR-012, research R5/R7, contract "Preview indication")
 
 **Checkpoint**: The user can tell at a glance that the chart is a preview and which period is shown.
 
@@ -96,12 +96,12 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 3 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T012 [US3] Integration test in `tests/integration/card-render.test.ts`: in preview the chart draws exactly two gray-toned series — the shifted current in light gray and the shifted reference in a darker gray — with the live current and reference series not drawn (FR-018, FR-019); the shifted current series does not use the current series' color; for a single-window configuration (no reference window) exactly one light-gray series is drawn (US3 scenarios 1–2, 5; "Two windows in preview" and "Single window (no reference)" edge cases)
+- [X] T012 [US3] Integration test in `tests/integration/card-render.test.ts`: in preview the chart draws exactly two gray-toned series — the shifted current in light gray and the shifted reference in a darker gray — with the live current and reference series not drawn (FR-018, FR-019); the shifted current series does not use the current series' color; for a single-window configuration (no reference window) exactly one light-gray series is drawn (US3 scenarios 1–2, 5; "Two windows in preview" and "Single window (no reference)" edge cases)
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Implement the preview render path in `src/card/echarts-renderer.ts`: when `previewMode` is true, draw the shifted current series in light gray and the shifted reference series in a darker gray using the card's existing HA theme color tokens (the shifted current MUST NOT use the current series' color), and do not draw the live current/reference series; when there is no reference window, draw only the single light-gray shifted current series (FR-018, FR-019, research R3)
-- [ ] T014 [US3] Wire `previewMode`, `previewSeries`, and the shifted `periodLabel` from the card into the renderer config in `src/card/cumulative-comparison-chart.ts` so the chart's x-axis, period label, and legend follow the shifted series being drawn, with the existing formatting and style unchanged (FR-021, research R5)
+- [X] T013 [US3] Implement the preview render path in `src/card/echarts-renderer.ts`: when `previewMode` is true, draw the shifted current series in light gray and the shifted reference series in a darker gray using the card's existing HA theme color tokens (the shifted current MUST NOT use the current series' color), and do not draw the live current/reference series; when there is no reference window, draw only the single light-gray shifted current series (FR-018, FR-019, research R3)
+- [X] T014 [US3] Wire `previewMode`, `previewSeries`, and the shifted `periodLabel` from the card into the renderer config in `src/card/cumulative-comparison-chart.ts` so the chart's x-axis, period label, and legend follow the shifted series being drawn, with the existing formatting and style unchanged (FR-021, research R5)
 
 **Checkpoint**: The preview chart shows only the gray-toned shifted series (two, or one for single-window) with the live series hidden; returning to the default restores the normal presentation (FR-020).
 

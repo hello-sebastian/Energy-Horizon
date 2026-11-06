@@ -1,12 +1,46 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import "../helpers/setup-dom";
 import "../../src/index";
 import type { HomeAssistant } from "../../src/ha-types";
 import type {
   CardState,
   ComparisonPeriod,
-  ComparisonSeries
+  ComparisonSeries,
+  ResolvedWindow
 } from "../../src/card/types";
+
+// Mock ECharts init() so the ready-state renderer path can be exercised in jsdom
+// (no canvas) and the ECOption passed to setOption can be captured (909 US3, T012).
+const setOptionMock = vi.fn();
+const resizeMock = vi.fn();
+const disposeMock = vi.fn();
+const onMock = vi.fn();
+const offMock = vi.fn();
+const getModelMock = vi.fn(() => ({ getComponent: vi.fn(() => undefined) }));
+const getViewOfComponentModelMock = vi.fn(() => ({
+  group: { getBoundingRect: vi.fn(() => ({ height: 48 })) }
+}));
+
+vi.mock("echarts/core", () => ({
+  init: vi.fn(() => ({
+    setOption: setOptionMock,
+    resize: resizeMock,
+    dispose: disposeMock,
+    on: onMock,
+    off: offMock,
+    getModel: getModelMock,
+    getViewOfComponentModel: getViewOfComponentModelMock
+  })),
+  use: vi.fn()
+}));
+
+beforeEach(() => {
+  setOptionMock.mockClear();
+  resizeMock.mockClear();
+  disposeMock.mockClear();
+  onMock.mockClear();
+  offMock.mockClear();
+});
 
 type EnergyHorizonCardEl = import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & {
   setConfig: (c: unknown) => void;
@@ -768,6 +802,154 @@ describe("energy-horizon-card integration", () => {
     // baseYoYReadyState has a complete reference cumulative and an enabled
     // forecast, so no warning bar at all.
     expect(root.querySelector(".ebc-section--warning")).toBeNull();
+    document.body.removeChild(el);
+  });
+});
+
+describe("909 US2/US3: transient time-window preview", () => {
+  /**
+   * Ready state carrying the transient preview fields (909): `previewShift < 0`,
+   * the shifted series pair, the shifted window set, and the shifted chart
+   * timeline. `singleWindow` drops the reference window/series (US3 scenario 5).
+   */
+  function previewReadyState(opts: { singleWindow?: boolean } = {}): CardState {
+    const base = baseYoYReadyState();
+    const single = opts.singleWindow ?? false;
+    const previewWindows: ResolvedWindow[] = single
+      ? [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2023, 0, 1)),
+            end: new Date(Date.UTC(2023, 11, 31)),
+            aggregation: "day"
+          }
+        ]
+      : [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2023, 0, 1)),
+            end: new Date(Date.UTC(2023, 11, 31)),
+            aggregation: "day"
+          },
+          {
+            index: 1,
+            id: "p1",
+            role: "reference",
+            start: new Date(Date.UTC(2022, 0, 1)),
+            end: new Date(Date.UTC(2022, 11, 31)),
+            aggregation: "day"
+          }
+        ];
+    const previewSeries: ComparisonSeries = {
+      current: {
+        points: [
+          { timestamp: Date.UTC(2023, 0, 1), value: 10 },
+          { timestamp: Date.UTC(2023, 0, 2), value: 20 }
+        ],
+        unit: "kWh",
+        periodLabel: "2023",
+        total: 30
+      },
+      reference: single
+        ? undefined
+        : {
+            points: [
+              { timestamp: Date.UTC(2022, 0, 1), value: 8 },
+              { timestamp: Date.UTC(2022, 0, 2), value: 16 }
+            ],
+            unit: "kWh",
+            periodLabel: "2022",
+            total: 24
+          },
+      aggregation: "day",
+      time_zone: "UTC"
+    };
+    const timeline = [
+      Date.UTC(2023, 0, 1),
+      Date.UTC(2023, 0, 2),
+      Date.UTC(2023, 0, 3)
+    ];
+    return {
+      ...base,
+      previewShift: -1,
+      previewSeries,
+      previewWindows,
+      previewChartTime: {
+        timeline,
+        alignStartsMs: single
+          ? [Date.UTC(2023, 0, 1)]
+          : [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: timeline.length
+      }
+    };
+  }
+
+  function makeCard(config: Record<string, unknown> = {}): EnergyHorizonCardEl {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      primary_color: "#00ADEF",
+      ...config
+    });
+    el.hass = energyCardHass();
+    return el;
+  }
+
+  it("T010: preview indication is visible with the shifted period when previewShift < 0", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    await el.updateComplete;
+    const shadowText = el.shadowRoot!.textContent || "";
+    // The indication reuses the card's period formatting: the shifted current
+    // window starts 2023-01-01 → "2023" (US2 scenario 3).
+    expect(shadowText).toContain("Preview: 2023");
+    document.body.removeChild(el);
+  });
+
+  it("T010: preview indication is absent at the default (no preview)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    const shadowText = el.shadowRoot!.textContent || "";
+    expect(shadowText).not.toContain("Preview:");
+    document.body.removeChild(el);
+  });
+
+  it("T012: preview draws exactly two gray series (light + darker), not the current color", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    await el.updateComplete;
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    const series = option.series as any[];
+    // Exactly the shifted current (light gray) + shifted reference (darker gray).
+    expect(series.length).toBe(2);
+    const colors = series.map((s) => s.color).sort();
+    // jsdom has no HA theme CSS, so the card's theme resolves to its gray
+    // fallbacks: light gray current, darker gray reference.
+    expect(colors).toEqual(["rgba(127, 127, 127, 0.4)", "rgba(127, 127, 127, 0.55)"]);
+    // The shifted current must NOT reuse the current series' color (FR-018).
+    expect(colors).not.toContain("#00ADEF");
+    document.body.removeChild(el);
+  });
+
+  it("T012: single-window preview draws exactly one light-gray series", async () => {
+    const el = makeCard();
+    el._state = previewReadyState({ singleWindow: true });
+    await el.updateComplete;
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    const series = option.series as any[];
+    expect(series.length).toBe(1);
+    expect(series[0].color).toBe("rgba(127, 127, 127, 0.4)");
     document.body.removeChild(el);
   });
 });

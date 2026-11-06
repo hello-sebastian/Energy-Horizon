@@ -7,8 +7,10 @@ import {
   type CardState,
   type ChartRendererConfig,
   type ChartThemeResolved,
+  type ChartTimeContext,
   type ComparisonSeries,
   type MergedTimeWindowConfig,
+  type ResolvedWindow,
   type TimeSeriesPoint
 } from "./types";
 import {
@@ -330,14 +332,77 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           }
         }
 
-        if (
+        const locResolved = resolveLocale(this.hass, this._config);
+        const localize = createLocalize(locResolved.language);
+
+        // Transient time-window preview (909 US3, T014): while `previewShift < 0` and the
+        // shifted series + timeline are available, draw the shifted series on the shifted
+        // timeline in preview mode (gray tones). The default pipeline is left untouched.
+        const previewActive =
+          this._state.previewShift != null &&
+          this._state.previewShift < 0 &&
+          this._state.previewSeries != null &&
+          this._state.previewChartTime != null;
+
+        if (this._chartRenderer && previewActive) {
+          const previewSeries = this._state.previewSeries!;
+          const previewChartTime = this._state.previewChartTime!;
+          const previewWindows = this._state.previewWindows ?? [];
+          const { timeline } = previewChartTime;
+          const baseConfig = this._buildRendererConfig(timeline);
+          const cs = previewWindows[0]?.start;
+          const lux = cs
+            ? DateTime.fromJSDate(cs, { zone: locResolved.timeZone })
+            : null;
+          let previewPeriodLabel = "";
+          if (lux) {
+            if (lux.month === 1 && lux.day === 1) {
+              previewPeriodLabel = String(lux.year);
+            } else {
+              previewPeriodLabel = new Intl.DateTimeFormat(locResolved.language, {
+                month: "long",
+                year: "numeric"
+              }).format(cs!);
+            }
+          }
+          const axisHints =
+            previewWindows.length >= 2
+              ? resolveComparisonAxisLabelHints(
+                  previewWindows[0]!,
+                  previewWindows[1]!,
+                  locResolved.timeZone
+                )
+              : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
+          const rendererConfig: ChartRendererConfig = {
+            ...baseConfig,
+            periodLabel: previewPeriodLabel,
+            windowAlignStartsMs: previewChartTime.alignStartsMs,
+            currentWindowStartMs: previewWindows[0]?.start.getTime(),
+            currentWindowEndMs: previewWindows[0]?.end.getTime(),
+            referencePeriodStart: previewWindows[1]?.start.getTime(),
+            singleWindowMode: previewWindows.length < 2,
+            showReferenceComparison:
+              previewWindows.length >= 2 && previewSeries.reference != null,
+            showForecast: false,
+            unit: previewSeries.current.unit,
+            primaryAggregation: previewWindows[0]?.aggregation,
+            tailLabelFromIndex: previewChartTime.tailLabelFromIndex,
+            fullTimeline: timeline,
+            comparisonAxisOmitYear: axisHints.omitYearOnAxis,
+            comparisonAxisDayOfMonthOnly: axisHints.dayOfMonthOnlyOnAxis,
+            previewMode: true,
+            previewSeries
+          };
+          this._chartRenderer.update(previewSeries, timeline, rendererConfig, {
+            current: this._localizeOrError(localize, "period.current"),
+            reference: this._localizeOrError(localize, "period.reference")
+          });
+        } else if (
           this._chartRenderer &&
           this._state.period &&
           this._state.resolvedWindows &&
           this._state.chartTime
         ) {
-          const locResolved = resolveLocale(this.hass, this._config);
-          const localize = createLocalize(locResolved.language);
           const { timeline } = this._state.chartTime;
           const rendererConfig = this._buildRendererConfig(timeline);
           this._chartRenderer.update(this._state.comparisonSeries, timeline, rendererConfig, {
@@ -524,6 +589,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       // (summary/forecast/interpretation/narrative) is left untouched (FR-021). A preview
       // failure is isolated so it never clobbers the default pipeline's result.
       let previewSeries: ComparisonSeries | undefined;
+      let previewWindows: ResolvedWindow[] | undefined;
+      let previewChartTime: ChartTimeContext | undefined;
       if (this.previewShift < 0) {
         try {
           const shiftedWindows = resolvePreviewShiftedWindows(
@@ -535,9 +602,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             merged.aggregation ?? "day"
           );
           const previewWindowCount = Math.min(2, shiftedWindows.length);
-          const previewWindows = shiftedWindows.slice(0, previewWindowCount);
+          const previewWindowList = shiftedWindows.slice(0, previewWindowCount);
           const previewQueries = buildLtsQueriesForWindows(
-            previewWindows,
+            previewWindowList,
             this._config.entity
           );
           const previewResponses = await Promise.all(
@@ -571,6 +638,28 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               previewRaw,
               entityUnit
             );
+            // Build the preview chart timeline from the shifted windows so the
+            // preview series align to the shifted axis (909 US3, T014).
+            const previewTimelineRaw = buildChartTimeline(
+              previewWindowList,
+              merged,
+              resolved.timeZone
+            );
+            const previewTailLabelFromIndex =
+              previewWindowList.length >= 2
+                ? firstTailAxisLabelIndex(
+                    previewTimelineRaw.timeline,
+                    previewTimelineRaw.alignStartsMs[0]!,
+                    previewWindowList[0]!.end
+                  )
+                : previewTimelineRaw.timeline.length;
+            previewWindows = previewWindowList;
+            previewChartTime = {
+              timeline: previewTimelineRaw.timeline,
+              alignStartsMs: previewTimelineRaw.alignStartsMs,
+              forecastPeriodBuckets: previewTimelineRaw.forecastPeriodBuckets,
+              tailLabelFromIndex: previewTailLabelFromIndex
+            };
           }
         } catch (previewError) {
           if (this._config.debug) {
@@ -600,7 +689,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           tailLabelFromIndex
         },
         previewShift: this.previewShift,
-        previewSeries
+        previewSeries,
+        previewWindows,
+        previewChartTime
       };
     } catch (e) {
       console.error(e);
@@ -764,6 +855,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const trendMuted = readVar("--disabled-text-color") || trendSimilar;
     const todayFullHeightLine = grid || "rgba(127, 127, 127, 0.35)";
     const referenceDotBorder = tooltipBackground || "#ffffff";
+    const previewCurrent =
+      readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
+    const previewReference =
+      readVar("--disabled-text-color") || "rgba(127, 127, 127, 0.55)";
 
     return {
       seriesCurrent,
@@ -779,7 +874,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       trendLower,
       trendSimilar,
       trendUnknown,
-      trendMuted
+      trendMuted,
+      previewCurrent,
+      previewReference
     };
   }
 
@@ -1195,6 +1292,34 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? "--- %"
           : "";
 
+    // Transient time-window preview (909 US2, T011): a visible, screen-reader-announced
+    // indication of the shifted period, shown only while `previewShift < 0`. Reuses the
+    // card's period-label formatting (year for a Jan-1 start, else "Month YYYY") so the
+    // shifted period reads the same way the card already formats periods.
+    const previewActive =
+      this._state.status === "ready" &&
+      this._state.previewShift != null &&
+      this._state.previewShift < 0;
+    let previewIndicationText = "";
+    if (previewActive) {
+      const previewStart = this._state.previewWindows?.[0]?.start;
+      if (previewStart) {
+        const lux = DateTime.fromJSDate(previewStart, {
+          zone: resolved.timeZone
+        });
+        const previewPeriodLabel =
+          lux.month === 1 && lux.day === 1
+            ? String(lux.year)
+            : new Intl.DateTimeFormat(resolved.language, {
+                month: "long",
+                year: "numeric"
+              }).format(previewStart);
+        previewIndicationText = this._localizeOrError(localize, "preview.indication", {
+          period: previewPeriodLabel
+        });
+      }
+    }
+
     return html`<ha-card class="ebc-card">
       <div class="content ebc-content">
         ${shouldRenderHeader
@@ -1361,6 +1486,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           aria-label=${this._localizeOrError(localize, "section.chart")}
         >
           <div class="ebc-chart-controls">
+            ${previewActive
+              ? html`<span class="ebc-preview-indication" role="status">
+                  ${previewIndicationText}
+                </span>`
+              : null}
             <button
               class="ebc-chart-control"
               type="button"

@@ -478,6 +478,10 @@ export class EChartsRenderer {
 
     const todayFullHeightLine = grid || 'rgba(127, 127, 127, 0.35)';
     const referenceDotBorder = tooltipBackground || '#ffffff';
+    const previewCurrent =
+      styles.getPropertyValue('--secondary-text-color').trim() || 'rgba(127, 127, 127, 0.4)';
+    const previewReference =
+      styles.getPropertyValue('--disabled-text-color').trim() || 'rgba(127, 127, 127, 0.55)';
 
     return {
       seriesCurrent,
@@ -493,7 +497,9 @@ export class EChartsRenderer {
       trendLower,
       trendSimilar,
       trendUnknown,
-      trendMuted
+      trendMuted,
+      previewCurrent,
+      previewReference
     };
   }
 
@@ -787,6 +793,189 @@ export class EChartsRenderer {
       referenceValues.some((v) => v !== null);
 
     const series: any[] = [];
+
+    // Transient time-window preview (909 US3, T013): draw ONLY the shifted current
+    // (light gray) and, when present, the shifted reference (darker gray). The live
+    // current/reference series, forecast, and today marker are not drawn, and the
+    // shifted current must NOT reuse the current series' color (FR-018/FR-019).
+    if (rendererConfig.previewMode === true) {
+      series.push({
+        name: labels.current,
+        type: 'line',
+        color: theme.previewCurrent,
+        data: currentValues.map((y, i) => (y !== null ? [i, y] : null)),
+        lineStyle: { color: theme.previewCurrent, width: 1.5 },
+        areaStyle: { color: theme.previewCurrent, opacity: 0 },
+        connectNulls: false,
+        showSymbol: false,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        emphasis: {
+          focus: 'series',
+          showSymbol: true,
+          symbolSize: 6,
+          itemStyle: { color: theme.previewCurrent },
+          lineStyle: { color: theme.previewCurrent }
+        },
+        itemStyle: { color: theme.previewCurrent }
+      });
+      const previewHasReference = referenceValues.some((v) => v !== null);
+      if (previewHasReference) {
+        series.push({
+          name: labels.reference,
+          type: 'line',
+          color: theme.previewReference,
+          data: referenceValues.map((y, i) => (y !== null ? [i, y] : null)),
+          lineStyle: { color: theme.previewReference, width: 1.5 },
+          areaStyle: { color: theme.previewReference, opacity: 0 },
+          connectNulls: false,
+          showSymbol: false,
+          smooth: false,
+          symbol: 'circle',
+          symbolSize: 6,
+          emphasis: {
+            focus: 'series',
+            showSymbol: true,
+            symbolSize: 6,
+            itemStyle: { color: theme.previewReference },
+            lineStyle: { color: theme.previewReference }
+          },
+          itemStyle: { color: theme.previewReference }
+        });
+      }
+
+      const previewLegendData: string[] = [labels.current];
+      if (previewHasReference) {
+        previewLegendData.push(labels.reference);
+      }
+
+      return {
+        animation: false,
+        grid: {
+          containLabel: false,
+          left: gridLeftPx,
+          right: AXIS_TICK_LABEL_GAP_PX,
+          top: GRID_TOP_FALLBACK_PX,
+          bottom: GRID_BOTTOM_PX
+        },
+        legend: {
+          show: rendererConfig.showLegend === true,
+          ...(rendererConfig.showLegend === true ? { data: previewLegendData } : {}),
+          top: 0,
+          left: 'center',
+          textStyle: { color: theme.primaryText },
+          pageTextStyle: { color: theme.primaryText }
+        },
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: theme.tooltipBackground,
+          borderColor: theme.tooltipBorder,
+          borderWidth: 1,
+          textStyle: { color: theme.primaryText },
+          axisPointer: {
+            type: 'shadow',
+            shadowStyle: { color: theme.grid, opacity: 0.2 }
+          },
+          appendTo: this.container,
+          formatter: (params: unknown) => {
+            const items = Array.isArray(params) ? params : [params];
+            const slotIndex = resolveTimelineSlotIndexFromAxisParams(
+              items,
+              fullTimeline.length,
+              { currentName: labels.current, referenceName: labels.reference }
+            );
+            const numberFormatter = new Intl.NumberFormat(rendererConfig.numberLocale, {
+              minimumFractionDigits: rendererConfig.precision,
+              maximumFractionDigits: rendererConfig.precision
+            });
+            const escapeHtml = (value: string): string =>
+              value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+            const header = formatTooltipHeader({
+              slotIndex,
+              fullTimeline,
+              zone: rendererConfig.haTimeZone ?? 'UTC',
+              labelLocale: rendererConfig.xAxisLabelLocale ?? rendererConfig.language ?? 'en',
+              primaryAggregation: rendererConfig.primaryAggregation ?? 'day',
+              mergedDurationMs: rendererConfig.mergedDurationMs ?? 0,
+              tooltipFormatPattern: rendererConfig.tooltipFormatPattern,
+              comparisonHints: comparisonAxisHints,
+              hour12: rendererConfig.hour12
+            });
+            const valueLines: string[] = [];
+            for (const p of items) {
+              const item: any = p ?? {};
+              const seriesName = typeof item?.seriesName === 'string' ? item.seriesName : '';
+              if (seriesName !== labels.current && seriesName !== labels.reference) {
+                continue;
+              }
+              const candidate = item?.data ?? item?.value;
+              const y = Array.isArray(candidate)
+                ? candidate.length > 1
+                  ? candidate[1]
+                  : candidate[0]
+                : candidate;
+              if (y === null || y === undefined) continue;
+              const yNum = typeof y === 'number' ? y : Number(y);
+              if (!Number.isFinite(yNum)) continue;
+              const escapedSeries = escapeHtml(seriesName);
+              const escapedUnit = escapeHtml(rendererConfig.unit);
+              valueLines.push(
+                `<div class="tooltip-row">${escapedSeries ? `${escapedSeries}: ` : ''}${numberFormatter.format(yNum)} ${escapedUnit}</div>`
+              );
+            }
+            return `<div class="tooltip-container"><div class="tooltip-header">${escapeHtml(
+              header
+            )}</div>${valueLines.join('')}</div>`;
+          }
+        },
+        xAxis: {
+          type: 'value',
+          min: 0,
+          max: xMax,
+          interval: xAxisTickInterval,
+          boundaryGap: [0, 0],
+          splitLine: { show: false },
+          axisTick: { show: false },
+          axisLine: { show: false },
+          axisLabel: xAxisAxisLabel
+        },
+        yAxis: {
+          type: 'value',
+          min: 0,
+          max: yMax,
+          splitNumber: 4,
+          splitLine: {
+            show: true,
+            lineStyle: { color: theme.grid, width: 1 }
+          },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            color: theme.primaryText,
+            formatter: (value: number) =>
+              formatYAxisTickLabel(
+                value,
+                yMax,
+                yMaxEps,
+                yAxisNumberFormatter,
+                yAxisUnit
+              ).label,
+            margin: AXIS_TICK_LABEL_GAP_PX,
+            align: 'right',
+            rich: {
+              yNum: { align: 'right' as const },
+              yUnit: { align: 'right' as const }
+            }
+          }
+        },
+        series
+      };
+    }
 
     // Paint order (ECharts: later series draw on top): oldest windows first, current last before forecast.
     // context[] is ordered by rising window index (2,3,…); higher index = further back = older — reverse for bottom→top.

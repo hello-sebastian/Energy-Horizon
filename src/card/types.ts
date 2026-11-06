@@ -311,6 +311,19 @@ export interface CardState {
    * Absent at the default.
    */
   previewSeries?: ComparisonSeries;
+  /**
+   * Transient time-window preview (909): the shifted window set (current + reference,
+   * max 2) resolved for the active `previewShift`. Present only while `previewShift < 0`
+   * and `status === "ready"`. Used to derive the preview period label and the preview
+   * chart timeline.
+   */
+  previewWindows?: ResolvedWindow[];
+  /**
+   * Transient time-window preview (909): the chart timeline built from the shifted
+   * windows (`previewWindows`), so the preview series align to the shifted axis.
+   * Present only while `previewShift < 0` and `status === "ready"`.
+   */
+  previewChartTime?: ChartTimeContext;
 }
 
 /** Theme colors read from the card host via `getComputedStyle` (US-7 / T020). */
@@ -332,6 +345,10 @@ export interface ChartThemeResolved {
   trendUnknown: string;
   /** Non-judgment / insufficient comparison delta color (903). */
   trendMuted: string;
+  /** Preview shifted-current series color (light gray; 909 US3). */
+  previewCurrent: string;
+  /** Preview shifted-reference series color (darker gray; 909 US3). */
+  previewReference: string;
 }
 
 export interface ChartRendererConfig {
