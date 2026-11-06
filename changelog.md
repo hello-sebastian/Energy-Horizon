@@ -18,7 +18,6 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 
 ### Documentation
 
-- **Marketplace compatibility (HA 2026.11):** installation docs now cover the built-in **Marketplace** integration (Settings → Marketplace; installs to `www/community/`, dashboard resource added automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`). HACS instructions are kept for HA versions before 2026.11; the old `/hacsfiles/` resource path keeps working.
 
 
 ---
@@ -70,6 +69,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 - README / wiki updated for the new editor coverage (seven sections, `custom` preset, Visual ↔ YAML round-trip, YAML live-edit, lifecycle guarantees).
 - Expanded the visual-editor documentation (README, README.advanced, wiki) with **per-section descriptions**, the **per-section documentation links**, the **field helper texts**, and a **Visual → YAML mapping** (control → key table, a worked example, and the preservative-merge / round-trip behavior).
 - Documented the **build-from-source / deploy** path for forks and self-hosted instances (README Development section, wiki Getting Started): the build produces a single `dist/energy-horizon-card.js` file to copy into `config/www/`; the `npm run deploy` script is now parameterized via `DEPLOY_HOST` / `DEPLOY_PATH` (defaulting to the author's SSH alias `ha`).
+- **Marketplace compatibility (HA 2026.11):** installation docs now cover the built-in **Marketplace** integration (Settings → Marketplace; installs to `www/community/`, dashboard resource added automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`). HACS instructions are kept for HA versions before 2026.11; the old `/hacsfiles/` resource path keeps working.
 
 ---
 

@@ -2,10 +2,12 @@
 
 Elegant energy comparisons for Home Assistant dashboards — **cumulative usage** now vs a historical reference, with optional forecast.
 
-![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue?style=for-the-badge)
-![Marketplace](https://img.shields.io/badge/Marketplace-HA%202026.11%2B-orange?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.2.0-informational?style=for-the-badge)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue?style=for-the-badge&color=%2300c29e&logo=homeassistant&logoColor=white)&ensp;
+![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Custom-orange?style=for-the-badge)  
+![Release](https://img.shields.io/badge/version-1.2.0-informational?style=for-the-badge&color=%2300c29e)&ensp;
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=for-the-badge&color=%2300c29e)](https://www.gnu.org/licenses/gpl-3.0)&ensp;
+![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)
+
 
 <!-- IMAGE PLACEHOLDER: High-quality screenshot/GIF of the card with an active tooltip and visible current-vs-reference comparison. -->
 <!-- Example: a phone-width view + desktop-width view, if possible. -->
@@ -24,9 +26,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 
 ### 1) Install
 
-<p>
-  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=hello-sebastian&amp;repository=Energy-Horizon&amp;category=frontend" target="_blank" rel="noreferrer noopener"><img alt="Open this repository in the Marketplace" src="https://my.home-assistant.io/badges/hacs_repository.svg" height="32" loading="lazy"></a>
-</p>
+[![Open this repository in the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hello-sebastian&repository=Energy-Horizon&category=frontend)
 
 - **Marketplace (HA 2026.11+, recommended)**: Settings → **Marketplace** → search for **Energy Horizon** (or **Add from link** → `https://github.com/hello-sebastian/Energy-Horizon`) → **Install** → reload the browser. The dashboard resource is added automatically.
 - **HACS (HA < 2026.11)**: HACS → **Frontend** → **Add repository** → install **Energy Horizon Card** → restart Home Assistant.
