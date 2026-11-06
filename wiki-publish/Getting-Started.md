@@ -24,7 +24,14 @@ If the entity has no statistics, the chart will usually be empty.
 
 ## 2) Install the card
 
-### HACS (recommended)
+### Marketplace (HA 2026.11+, recommended)
+
+1. Open **Settings → Marketplace**  
+2. Search for **Energy Horizon** — or select **Add from link** and enter `https://github.com/hello-sebastian/Energy-Horizon`  
+3. Select **Install**  
+4. Reload the browser — the dashboard resource is added automatically  
+
+### HACS (HA < 2026.11)
 
 1. Open **HACS → Frontend**  
 2. Click **Add repository**  
@@ -40,6 +47,13 @@ If the entity has no statistics, the chart will usually be empty.
 
 ```yaml
 url: /local/energy-horizon-card.js
+type: module
+```
+
+Marketplace resource URL (YAML-managed resources):
+
+```yaml
+url: /local/community/Energy-Horizon/energy-horizon-card.js
 type: module
 ```
 

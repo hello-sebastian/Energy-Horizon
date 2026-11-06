@@ -1,21 +1,23 @@
 <!-- SYNC IMPACT REPORT (materiał roboczy — do usunięcia przed commit)
-- Version: 1.0.0 → 1.1.0 (MINOR: dodano nową zasadę)
-- Modified principles: brak (żadna istniejąca zasada nie została zmieniona ani przemianowana)
-- Added sections: "VI. Dbałość językowa i UX writing" (nowa zasada w Core Principles)
+- Version: 1.1.0 → 1.2.0 (MINOR: zasadnicze rozszerzenie zasady I o wbudowany Marketplace HA 2026.11+)
+- Modified principles: "I. Zgodność z ekosystemem Home Assistant i HACS" → "I. Zgodność z ekosystemem Home Assistant i Marketplace (HACS)"
+- Added sections: brak (dodano punkty w zasadzie I; aktualizacje w sekcjach "Workflow rozwojowy i jakość" oraz "Governance")
 - Removed sections: brak
 - Follow-up TODOs: brak
 -->
 
 # Energy Horizon Lovelace Card Constitution
 
-Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace dla Home Assistant, dystrybuowanych jako integracje HACS. Ma charakter ogólny i powinna być stosowana niezależnie od konkretnego typu karty czy wizualizowanych danych.
+Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace dla Home Assistant, dystrybuowanych przez wbudowany Marketplace (HA 2026.11+) lub HACS (starsze wersje HA). Ma charakter ogólny i powinna być stosowana niezależnie od konkretnego typu karty czy wizualizowanych danych.
 
 ## Core Principles
 
-### I. Zgodność z ekosystemem Home Assistant i HACS
+### I. Zgodność z ekosystemem Home Assistant i Marketplace (HACS)
 
 - Karta musi być zgodna z oficjalnymi wytycznymi Home Assistant dla kart Lovelace (API, konfiguracja YAML/Storage UI, eventy, theming).
-- Projekt domyślnie zakłada instalację i aktualizację przez HACS, z poprawnie utrzymywanym `repository.json`, semantycznym wersjonowaniem i czytelnym changelogiem.
+- Projekt domyślnie zakłada instalację i aktualizację przez wbudowany Marketplace (HA 2026.11+) lub HACS (HA < 2026.11), z poprawnie utrzymywanym manifestem `hacs.json` (wymagany przez oba kanały), semantycznym wersjonowaniem i czytelnym changelogiem.
+- Repozytorium i artefakt wydawniczy muszą spełniać wymagania Marketplace: publiczne repozytorium GitHub, manifest `hacs.json`, poprawna struktura plików; deploy docelowo trafia do `www/community/` (ścieżka, pod którą Marketplace instaluje i serwuje zasoby dashboardu).
+- Dokumentacja użytkownika (README, wiki, changelog) opisuje oba kanały instalacji — Marketplace (HA 2026.11+) i HACS (starsze wersje HA) — wraz ze ścieżkami zasobów dashboardu: `/local/community/…` (Marketplace), `/hacsfiles/…` (HACS, działa dalej) oraz `/local/…` (instalacja ręczna).
 - Konfiguracja karty nie może naruszać istniejących wzorców HA (np. nazewnictwa encji, sposobu użycia `state`, `attributes`, `unit_of_measurement`).
 - Karta powinna zachowywać się przewidywalnie w trybach `edit`/`view` dashboardu oraz nie wpływać negatywnie na inne karty.
 - Tam gdzie to tylko mozliwe nalezy wykorzystać wbudoane rozwiązania, standardy, style wizualne, zachowania, biblioteki z Home Assistant.
@@ -71,13 +73,13 @@ Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace d
 - Wszystkie zmiany wprowadzane są poprzez pull requesty, z co najmniej jedną niezależną recenzją przy istotnych modyfikacjach logiki lub UI.
 - Każda nowa funkcja lub istotna zmiana istniejącej musi być poparta opisem przypadku użycia oraz wpływu na UX, wydajność i kompatybilność z istniejącymi konfiguracjami.
 - Przed wydaniem wersji produkcyjnej karty przeprowadzamy testy w realistycznym środowisku Home Assistant (różne encje, różne konfiguracje dashboardu, co najmniej kilka motywów).
-- Pipeline wydawniczy (ręczny lub automatyczny) zapewnia: budowanie artefaktów, podstawową walidację, aktualizację wersji i changeloga, a także weryfikację poprawności metadanych HACS.
+- Pipeline wydawniczy (ręczny lub automatyczny) zapewnia: budowanie artefaktów, podstawową walidację, aktualizację wersji i changeloga, a także weryfikację poprawności metadanych Marketplace/HACS (`hacs.json`).
 
 ## Governance
 
 - Niniejsza konstytucja ma pierwszeństwo przed lokalnymi preferencjami implementacyjnymi; w razie konfliktu praktyka musi zostać dopasowana do zasad konstytucji lub należy formalnie zmienić konstytucję.
-- Zmiany konstytucji wymagają: (1) uzasadnienia (np. nowe wytyczne HA/HACS, nowe potrzeby użytkowników, problemy bezpieczeństwa), (2) omówienia w dokumentacji projektu, (3) planu migracji, jeśli wpływają na istniejących użytkowników.
+- Zmiany konstytucji wymagają: (1) uzasadnienia (np. nowe wytyczne HA/Marketplace/HACS, nowe potrzeby użytkowników, problemy bezpieczeństwa), (2) omówienia w dokumentacji projektu, (3) planu migracji, jeśli wpływają na istniejących użytkowników.
 - Każda większa decyzja projektowa (nowy typ wizualizacji, istotne rozszerzenie konfiguracji, zmiana domyślnych zachowań) powinna być weryfikowana pod kątem zgodności z tą konstytucją.
 - Przeglądy okresowe projektu (np. przy większych wydaniach) powinny zawierać punkt „zgodność z konstytucją” i identyfikować miejsca wymagające refaktoryzacji.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-10-21
+**Version**: 1.2.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-11-06

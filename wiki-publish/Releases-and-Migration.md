@@ -56,7 +56,7 @@ The boolean alias `forecast` is accepted and merged into `show_forecast` at load
 ## Practical upgrade flow
 
 1. Read release notes and `changelog.md` before updating.  
-2. Update the card via HACS or manual file copy.  
+2. Update the card via the Marketplace (Settings → Updates), HACS, or manual file copy.  
 3. Compare your YAML with [Configuration and Customization](Configuration-and-Customization); adjust renamed or new keys.  
 4. Reload the dashboard and verify chart, summary, units, and forecast.  
 5. If issues appear, use [Troubleshooting and FAQ](Troubleshooting-and-FAQ).

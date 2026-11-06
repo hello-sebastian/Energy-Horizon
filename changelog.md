@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) are documented in this file.
+All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Marketplace / HACS) are documented in this file.
 
 ## [Unreleased]
 
@@ -18,6 +18,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 
 ### Documentation
 
+- **Marketplace compatibility (HA 2026.11):** installation docs now cover the built-in **Marketplace** integration (Settings → Marketplace; installs to `www/community/`, dashboard resource added automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`). HACS instructions are kept for HA versions before 2026.11; the old `/hacsfiles/` resource path keeps working.
 
 
 ---
@@ -53,7 +54,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace / HACS) 
 - **Editor HA-component fidelity:** the editor now uses the real Home Assistant component APIs — text/number fields use `ha-input` (with built-in labels) instead of a non-existent `ha-textfield`; `ha-select` / `ha-icon-picker` / `ha-color-picker` listen for their actual events (`selected` / `value-changed`) so those fields are no longer silently dead; `ha-switch` binds `.checked`; and sections use `ha-expansion-panel`'s `header` property + `expanded-changed` so **section names render** and clicking a field no longer collapses the section. Every control keeps an accessible label (built-in where the component supports it, external `<label>` otherwise).
 - **`language` field always shows Auto:** the editor's `language` select now displays **Auto (HA profile)** whenever the `language` key is omitted (the Auto option is backed by an `auto` sentinel that maps back to an omitted key on save — the YAML behavior is unchanged).
 - **Consistent section corner radius:** editor section borders now follow the HA card radius token (`--ha-card-border-radius`), matching the `ha-expansion-panel` header fill instead of a hard-coded 4px.
-- **Bottom spacing of the last component:** the last control in an editor section now keeps a 12px bottom inset (matching the side insets) in both the `ha-expansion-panel` and fallback render paths.
+- **Bottom spacing of the last component:** the last control in an **expanded** editor section keeps a 12px bottom inset (matching the side insets) in both the `ha-expansion-panel` and fallback render paths; **collapsed** sections no longer show a dark content gap under the header (the panel's zero-height content container keeps its padding, so the bottom padding is zeroed when collapsed and the collapsed bar is vertically symmetric).
 - **Style section is two-column:** the **Current series** and **Reference series** subsections now render side by side (two-column grid), with components of the same feature in the same row (`fill_current`/`fill_reference`, both opacity sliders).
 - **Forecast | Total panel vanished at the start of a period (month-start-forecast-panel-missing):** on the first days of a new period the forecast is not yet computable (`computeForecast` returns `enabled: false`), and the card removed the entire Forecast | Total panel from the DOM — even with `show_forecast_total_panel: true` — with no explanation for the missing forecast line. The panel is now gated by `show_forecast_total_panel` only (independent of `show_forecast` and of forecast availability, and shown in single-window mode too): when the forecast is not yet available the Forecast column shows a placeholder (consistent with the Total placeholder) and the Total column shows the full reference-window total (placeholder in single-window mode). A warning-bar line now explains why the forecast is unavailable (e.g. "at least 3 completed days / 5% of the period required"); multiple data-quality notices are combined into a single warning bar. `computeForecast` now reports which guard disabled the forecast (`disabledReason`).
 - **Warning bar did not explain why the forecast is disabled (zero-reference-forecast):** when the forecast is disabled the warning bar showed only the generic "Forecast not available for this period." without a reason — most visibly when the reference series is entirely 0 (e.g. a device that was off for the whole reference window) while the current series has data. The warning bar now shows a reason-specific message for each data-driven `disabledReason`: `zero_reference_in_range` ("the reference period is 0, no baseline to project from"), `no_reference` ("no reference data for this period"), and `no_split` ("reference data does not cover the elapsed time"). The two "too early" reasons keep their existing message, and the generic message remains as a defensive fallback. The forecast-disable behavior itself is unchanged (it is spec-mandated: `B = 0` → `enabled: false`).

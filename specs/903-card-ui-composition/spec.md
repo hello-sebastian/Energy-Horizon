@@ -595,7 +595,7 @@ As a developer adding `export` (grid export) entity kind, I want to add 3 transl
 
 ### Documentation & release (`907-docs-product-knowledge`)
 
-- **CHANGELOG (`CHANGELOG.md`)**: Any change that is **user-visible** (copy, narrative, icons, chart semantics, i18n keys, error states) MUST ship with a **changelog entry** under the release section whose heading matches the **semver git tag** published for that release (e.g. continuation under **`[1.1.0]`** if the change is included in that tagged line, or a **`[1.x.y]`** section for the next tag if the change is released separately — the heading MUST match the tag users install from HACS).
+- **CHANGELOG (`CHANGELOG.md`)**: Any change that is **user-visible** (copy, narrative, icons, chart semantics, i18n keys, error states) MUST ship with a **changelog entry** under the release section whose heading matches the **semver git tag** published for that release (e.g. continuation under **`[1.1.0]`** if the change is included in that tagged line, or a **`[1.x.y]`** section for the next tag if the change is released separately — the heading MUST match the tag users install from the Marketplace (HACS on HA versions before 2026.11)).
 - **`README.md`**, **`README-advanced.md`**, **`wiki-publish/`**: MUST be updated **in addition** to the changelog when the change affects **how users configure or operate the card** — for example new or renamed YAML keys, editor fields, defaults, troubleshooting, or any behavior that contradicts or extends what those documents currently promise. Purely internal refactors with no user-visible delta are exempt.
 
 ### Non-Goals (Narrative Engine)

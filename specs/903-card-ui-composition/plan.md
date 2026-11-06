@@ -14,7 +14,7 @@ Replace geometry-based month detection (`resolvedWindowsAreConsecutiveCalendarMo
 **Storage**: N/A (in-browser card; translations in `src/translations/*.json`)  
 **Testing**: Vitest 2 (`npm test`), ESLint (`npm run lint`)  
 **Target Platform**: Modern evergreen browsers running Home Assistant Lovelace  
-**Project Type**: Single frontend package (HACS-distributed custom card)  
+**Project Type**: Single frontend package (Marketplace/HACS-distributed custom card)  
 **Performance Goals**: Narrative resolution O(1) string lookups per render; no additional network I/O  
 **Constraints**: No new YAML fields; no changes to Forecast \| Total copy (FR-903-U); `computeTextSummary` / `computeInterpretationSemantics` unchanged beyond render/key layer  
 **Scale/Scope**: ~5 translation files (`en`, `pl`, `de`, `fr`, …), one chart component, `localize.ts` extension, new small pure module + tests
@@ -25,7 +25,7 @@ Replace geometry-based month detection (`resolvedWindowsAreConsecutiveCalendarMo
 
 | Principle | Status | Notes |
 |---|---|---|
-| I. HA / HACS compatibility | PASS | User-visible strings remain via `localize()`; no new HA APIs |
+| I. HA / Marketplace / HACS compatibility | PASS | User-visible strings remain via `localize()`; no new HA APIs |
 | II. Safety / resilience | PASS | Missing keys still fail gracefully; fallback reduces false error states |
 | III. TypeScript strict + tests | PASS | Pure functions + Vitest; mandatory key scan in CI |
 | IV. UX / accessibility | PASS | Copy correctness for billing cycles; no contrast/layout change |

@@ -14,7 +14,7 @@ Implement **FR-900-Q**: a **single** parser/validator for `time_window.offset` t
 **Storage**: N/A (in-browser Lovelace card)  
 **Testing**: Vitest 2 (`npm test`), ESLint (`npm run lint`); extend `tests/unit/time-windows-*.test.ts`  
 **Target Platform**: Evergreen browsers in Home Assistant Lovelace  
-**Project Type**: Single HACS frontend package (`src/card/time-windows/`)  
+**Project Type**: Single frontend package (Marketplace/HACS-distributed) (`src/card/time-windows/`)  
 **Performance Goals**: Parse/validate offset once per config merge / window resolution path; O(1) string work beyond Luxon  
 **Constraints**: No new i18n keys for offset errors; no changes to `ComparisonWindow` shape or downstream pipeline types; fail-fast in `setConfig` aligned with existing `assertMergedTimeWindowConfig` / `assertLtsHardLimits` patterns  
 **Scale/Scope**: One new small module (or tightly scoped additions to `duration-parse.ts`), updates to `validate.ts`, `resolve-windows.ts`, optional alignment in `lts-hard-limits.ts` if offset sub-hour must throw at same layer; Vitest golden cases from spec Edge Cases 11–20
@@ -25,7 +25,7 @@ Implement **FR-900-Q**: a **single** parser/validator for `time_window.offset` t
 
 | Principle | Status | Notes |
 |---|---|---|
-| I. HA / HACS compatibility | PASS | YAML surface already documented in spec; no new HA APIs |
+| I. HA / Marketplace / HACS compatibility | PASS | YAML surface already documented in spec; no new HA APIs |
 | II. Safety / resilience | PASS | Invalid offset fails fast; same user-visible error class as other bad `time_window` |
 | III. TypeScript strict + tests | PASS | Pure parse + Vitest tables for ISO, legacy, leap, rejections |
 | IV. UX / accessibility | PASS | Clear card error via existing key; no silent fallback |

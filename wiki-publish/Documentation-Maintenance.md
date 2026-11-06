@@ -9,7 +9,7 @@
 
 ## Release-triggered workflow
 
-1. Ship the card release (semver tag, HACS artifact, GitHub Release notes).  
+1. Ship the card release (semver tag, Marketplace/HACS artifact, GitHub Release notes).  
 2. Update `wiki-publish/Home.md` **Documentation version** to the same semver as the release.  
 3. Refresh any pages affected by `changelog.md`.  
 4. Merge PR with wiki changes.  

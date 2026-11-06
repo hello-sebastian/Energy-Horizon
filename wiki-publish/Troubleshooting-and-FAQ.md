@@ -22,8 +22,8 @@ For option names/defaults, use [Configuration and Customization](Configuration-a
 
 **Steps:**
 
-1. Confirm you installed the JS file via HACS or manual copy.
-2. Confirm the Lovelace **resource URL** is correct (HACS path vs `/local/`).
+1. Confirm you installed the JS file via the Marketplace, HACS, or manual copy.
+2. Confirm the Lovelace **resource URL** is correct (Marketplace `/local/community/…` vs HACS `/hacsfiles/…` vs manual `/local/`).
 3. Reload the dashboard (or clear cache / restart HA frontend).
 
 **Expected outcome:** The card renders a header and loads data (or shows a data-related message).
@@ -94,7 +94,7 @@ Since **v1.2.0** every option is editable in the visual editor, so you can chang
 
 **Cause:** In **v1.1.0 and earlier**, the editor’s UI state (expanded panels, focus) was tied to the config object, so HA re-renders could reset it.
 
-**Fix:** This was fixed in **v1.2.0**. The editor now keeps its UI state (expanded sections, focus, caret, scroll) **independent of the config object** — it is restored after every re-render, and passive re-renders emit no spurious `config-changed` events. If you still see this behavior, make sure you are running the **1.2.0** card build (check the release notes / HACS version) and clear the browser cache.
+**Fix:** This was fixed in **v1.2.0**. The editor now keeps its UI state (expanded sections, focus, caret, scroll) **independent of the config object** — it is restored after every re-render, and passive re-renders emit no spurious `config-changed` events. If you still see this behavior, make sure you are running the **1.2.0** card build (check the release notes / Marketplace or HACS version) and clear the browser cache.
 
 ---
 

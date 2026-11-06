@@ -20,7 +20,7 @@ Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **1
 
 **Target Platform**: Modern evergreen browsers running Home Assistant Lovelace (HA 2024+ for the HA components used)
 
-**Project Type**: Single frontend package (HACS-distributed custom card)
+**Project Type**: Single frontend package (Marketplace/HACS-distributed custom card)
 
 **Performance Goals**: Re-render after `setConfig` must be cheap enough to be invisible (no flash) — measured as zero spurious `config-changed` on a passive re-render (SC-908-3) and no visible reset (SC-908-2); discrete changes (select/switch/slider) reflected in the card preview within 500 ms (SC-908-4); YAML textarea edits produce a live preview within the emit debounce window with no-op suppression (SC-908-9); editor bundle growth bounded (no lazy chunk, no new deps)
 
@@ -34,7 +34,7 @@ Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **1
 
 | Principle | Status | Notes |
 |---|---|---|
-| I. HA / HACS compatibility | PASS | Uses standard HA runtime components (`ha-expansion-panel`, `ha-select`, …) and the standard `config-changed`/`setConfig` card contract; editor stays a static import; no new HA APIs; `custom` preset is a backward-compatible, opt-in config value |
+| I. HA / Marketplace / HACS compatibility | PASS | Uses standard HA runtime components (`ha-expansion-panel`, `ha-select`, …) and the standard `config-changed`/`setConfig` card contract; editor stays a static import; no new HA APIs; `custom` preset is a backward-compatible, opt-in config value |
 | II. Safety / resilience | PASS | Config values are treated as untrusted data: invalid values are passed through (never crash the editor, FR-908-T), no HTML injection (labels via `localize()` text), graceful degradation when `hass` is absent or a select value is unknown; no sensitive data in UI/logs |
 | III. TypeScript strict + tests | PASS | `strict` mode, no `any`; registry/merge/normalization are pure, unit-testable functions; Vitest coverage for merge, normalization, registry, and the re-render lifecycle contract |
 | IV. UX / accessibility | PASS | HA look & feel via native HA components; progressive disclosure (S1 expanded, S2–S6 collapsed); keyboard-operable native controls; localized labels in all four languages; focus/caret/scroll preserved (FR-908-J/K/L/M) |
