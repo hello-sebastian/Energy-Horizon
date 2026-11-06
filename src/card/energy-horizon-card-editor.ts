@@ -1151,6 +1151,12 @@ export class EnergyHorizonCardEditor extends LitElement {
     ha-expansion-panel.editor-section {
       --expansion-panel-content-padding: 0 12px 12px;
     }
+    /* A collapsed panel keeps height: 0 but retains its content padding,
+       which would leave a dark gap under the header inside the border.
+       Zero the bottom padding when collapsed so the bar is symmetric. */
+    ha-expansion-panel.editor-section:not([expanded]) {
+      --expansion-panel-content-padding: 0 12px 0;
+    }
     .section-header {
       cursor: pointer;
       padding: 8px;

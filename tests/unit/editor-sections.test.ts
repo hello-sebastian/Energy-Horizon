@@ -503,6 +503,13 @@ describe("editor sections (T018, US4)", () => {
     );
     // The panel content gets 12px bottom padding via the HA CSS property.
     expect(cssText).toContain("--expansion-panel-content-padding: 0 12px 12px");
+    // A collapsed panel zeroes the bottom padding (its height: 0 content
+    // container keeps the padding, which would leave a dark gap under the
+    // header and make the collapsed bar vertically asymmetric).
+    expect(cssText).toContain(
+      "ha-expansion-panel.editor-section:not([expanded])"
+    );
+    expect(cssText).toContain("--expansion-panel-content-padding: 0 12px 0");
     // The div fallback body gets the same 12px bottom padding.
     expect(cssText).toContain("padding-bottom: 12px");
   });
