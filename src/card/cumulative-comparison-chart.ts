@@ -132,12 +132,22 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   static properties = {
     hass: { type: Object, attribute: false },
     _config: { state: true },
-    _state: { state: true }
+    _state: { state: true },
+    _previewLoading: { state: true }
   };
 
   declare hass: HomeAssistant;
   declare _config: CardConfig;
   _state: CardState = { status: "loading" };
+
+  /**
+   * True while a preview step (back/forward/reset) is loading the shifted period (909).
+   * Unlike the initial load, a preview load must NOT replace the card's content with the
+   * full-card loading state — the card stays intact with its current data, the chart is
+   * dimmed with a "loading" overlay, and the step controls are disabled until the new
+   * series arrive (research R6: "in-place chart-only update").
+   */
+  _previewLoading = false;
 
   /**
    * Incremented on every `setConfig`. A load captures this value at start and discards its
@@ -181,7 +191,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
     this.previewShift = next;
     this._loadGeneration++;
-    this._state = { status: "loading" };
+    // In-place preview load (research R6): keep the card intact with its current data;
+    // the chart is dimmed with a "loading" overlay and the controls are disabled until
+    // the shifted series arrive. `_state` is NOT replaced with the full-card loading
+    // state, so the chart container stays in the DOM and the renderer survives.
+    this._previewLoading = true;
   }
 
   private _localizeOrError(
@@ -272,6 +286,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     this._mergedTimeWindow = buildMergedTimeWindowConfig(this._config);
     assertLtsHardLimits(this._mergedTimeWindow);
     assertMergedTimeWindowConfig(this._mergedTimeWindow);
+    // A config change starts a full-card load — any in-flight preview load is
+    // superseded (the generation bump above discards its result), so clear the
+    // in-place preview flag. The transient preview shift is tied to the previous
+    // configuration's window, so it is reset to the default: the new config
+    // defines a new default, and a stale shift must not silently apply to it.
+    this.previewShift = 0;
+    this._previewLoading = false;
     this._state = { status: "loading" };
   }
 
@@ -283,11 +304,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     if (
       changedProps.has("hass") ||
       changedProps.has("_config") ||
-      changedProps.has("_state")
+      changedProps.has("_state") ||
+      changedProps.has("_previewLoading")
     ) {
-      if (this._state.status === "loading") {
-        // Coalesce: only start a load if none is in flight for the current generation.
-        // `hass` updates (1–10×/s) during the load window must not re-trigger the load.
+      // A load is needed either for the initial/full-card load (`status === "loading"`)
+      // or for an in-place preview step (`_previewLoading`). Both coalesce via the
+      // generation mechanism: `hass` updates (1–10×/s) during the load window must not
+      // re-trigger the load, and rapid preview stepping discards stale in-flight loads.
+      if (this._state.status === "loading" || this._previewLoading) {
         if (this._inFlightGeneration !== this._loadGeneration) {
           void this._loadData();
         }
@@ -376,6 +400,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           );
         }
         if (gen !== this._loadGeneration) return;
+        this._previewLoading = false;
         this._state = {
           status: "error",
           errorMessage: "status.point_cap_exceeded",
@@ -432,6 +457,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           );
         }
         if (gen !== this._loadGeneration) return;
+        this._previewLoading = false;
         this._state = { status: "no-data" };
         return;
       }
@@ -557,6 +583,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       }
 
       if (gen !== this._loadGeneration) return;
+      this._previewLoading = false;
       this._state = {
         status: "ready",
         comparisonSeries: scaledSeries,
@@ -578,6 +605,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     } catch (e) {
       console.error(e);
       if (gen !== this._loadGeneration) return;
+      this._previewLoading = false;
       this._state = {
         status: "error",
         errorMessage: "status.error_api"
@@ -1336,6 +1364,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             <button
               class="ebc-chart-control"
               type="button"
+              ?disabled=${this._previewLoading}
               aria-label=${this._localizeOrError(localize, "preview.step_back")}
               @click=${() => this._onPreviewStep("back")}
             >
@@ -1344,13 +1373,26 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             <button
               class="ebc-chart-control"
               type="button"
+              ?disabled=${this._previewLoading}
               aria-label=${this._localizeOrError(localize, "preview.step_forward")}
               @click=${() => this._onPreviewStep("forward")}
             >
               <ha-icon icon="mdi:chevron-right"></ha-icon>
             </button>
           </div>
-          <div class="chart-container ebc-chart"></div>
+          <div class="ebc-chart-wrap">
+            <div
+              class="chart-container ebc-chart ${this._previewLoading
+                ? "ebc-chart--loading"
+                : ""}"
+            ></div>
+            ${this._previewLoading
+              ? html`<div class="ebc-chart-loading-overlay" role="status">
+                  <ha-circular-progress active size="small"></ha-circular-progress>
+                  <span>${this._localizeOrError(localize, "preview.loading")}</span>
+                </div>`
+              : null}
+          </div>
         </div>
 
         ${narrativeBody && this._config.show_narrative_comment !== false
