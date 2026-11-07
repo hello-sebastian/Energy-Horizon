@@ -70,6 +70,7 @@ A set of accuracy fixes that matter most at the start of a month or year:
 *   **Section pictograms in the visual editor:** each editor section header displays an MDI icon — General (cog), Time windows (Gantt), Panels (day view), Formatting & Localization (counter), Chart settings (timeline), Style (palette), Diagnostics (bug).
 *   **Per-section documentation links in the visual editor:** each editor section header now shows a documentation icon (help circle) linking to the wiki chapter covering that section's keys. The link opens in a new tab and does not collapse the section when clicked.
 *   **Field helper texts in the visual editor:** non-obvious fields (time window syntax, Luxon date formats, aggregation, precision, neutral threshold) now show a short helper text below the control.
+*   **Dutch language support (nl):** the card now ships a Dutch translation (`nl.json`), contributed by [tRoOlos](https://github.com/tRoOlos).
 
 ### Changed
 
@@ -78,7 +79,7 @@ A set of accuracy fixes that matter most at the start of a month or year:
 *   **YAML mode is a first-class input path:** edits update the preview live (debounced), the **last valid YAML values** are the saved config (no switch to Visual required), and syntax errors are shown inline. HA re-serializes the config on save, so values persist but text formatting (comments, key order, indentation) is canonicalized.
 *   **Visual ↔ YAML round-trip:** both modes show the complete config; switching is lossless in both directions.
 *   **Editor lifecycle:** expanded panels, focus/caret, and scroll now persist across HA re-renders (UI state is independent of the config object); text-input emits are **debounced**; passive re-renders emit **no** spurious `config-changed` events.
-*   **`language` editor field is a dropdown:** the editor's `language` field is now a **picker over the available card dictionaries** (en, pl, de, fr) plus an **Auto (HA profile)** option, instead of a free-text input. Selecting **Auto** omits the `language` key so the card inherits the HA profile language.
+*   **`language` editor field is a dropdown:** the editor's `language` field is now a **picker over the available card dictionaries** (en, pl, de, fr, nl) plus an **Auto (HA profile)** option, instead of a free-text input. Selecting **Auto** omits the `language` key so the card inherits the HA profile language.
 *   **`show_forecast` editor label renamed** to **"Show forecast on chart"** (en: "Show forecast on chart", pl: "Pokaż prognozę na wykresie", de: "Prognose auf dem Diagramm anzeigen", fr: "Afficher la prévision sur le graphique") to make clear it toggles the chart line, not the panel.
 *   **Editor labels:** the **Neutral threshold** label no longer carries a "(%)" suffix (the control already shows the `%` suffix), and the **Unit prefix** label is lowercased.
 *   **Y-axis labels are no longer clipped:** the left chart margin now adapts exactly to the widest Y-axis tick label (measured per render, no fixed floor) so the label sits flush against the card's left edge and the plot area fills the full card width; when the number part of the top tick is longer than 3 characters (e.g. `10 000 Wh`) the unit moves to a second, right-aligned line so the plot area is not squeezed.
