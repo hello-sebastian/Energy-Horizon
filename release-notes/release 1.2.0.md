@@ -48,13 +48,13 @@ The **Forecast | Total** panel no longer vanishes at the start of a new period. 
 
 Also: `show_forecast` now controls **only the forecast line on the chart**. The panel is controlled independently by `show_forecast_total_panel`. **Migration note:** if you relied on `show_forecast: false` to hide the panel, also set `show_forecast_total_panel: false`.
 
-### 5\. Data You Can Trust
+### 5\. Dutch Language Support
 
-A set of accuracy fixes that matter most at the start of a month or year:
+The card now ships a **Dutch translation** (`nl`), contributed by [tRoOlos](https://github.com/tRoOlos) — selectable in the editor's **language** dropdown alongside English, Polish, German, and French.
 
-*   **The "new month problem" is fixed:** the first day of a period is no longer missing, values are no longer shifted one bucket early, and zero-consumption days are preserved. A freshly started period now shows **0 so far / −100 % vs reference** instead of `---` and "Not enough data to compare."
-*   **`m³` / `m²` units fixed:** gas and water meters were parsed with the leading `m` as a *milli* prefix, so `1500 m³` displayed as `1.5 ³` — off by a factor of 1000. These units now pass through unchanged.
-*   **Consistent 12h/24h:** the X-axis, the tooltip, and the top-panel captions now all follow the Home Assistant `time_format` setting — no more am/pm on the axis while the panel shows 24h.
+### 6\. Marketplace Compatibility (HA 2026.11)
+
+Home Assistant 2026.11 introduces the built-in **Marketplace** integration, and the card is ready for it: install from Settings → Marketplace and the dashboard resource is added automatically. HACS remains the way to go on earlier HA versions.
 
 ---
 
