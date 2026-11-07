@@ -295,7 +295,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     // First option is the "auto" sentinel ("Auto (HA profile)").
     expect(values[0]).toBe("auto");
     // Every available dictionary is offered as an option.
-    for (const lang of ["en", "pl", "de", "fr"]) {
+    for (const lang of ["en", "pl", "de", "fr", "nl"]) {
       expect(values).toContain(lang);
     }
     // The sentinel maps to an omitted (undefined) config value.

@@ -230,7 +230,7 @@ As a user with an existing config that uses deprecated or out-of-range values, I
 
 #### Localization
 
-- **FR-908-U (Localized labels & options)**: All section titles, field labels, and select-option labels MUST be sourced from the card's translation dictionaries (`en`, `pl`, `de`, `fr`) under the `editor.*` namespace via the card's `localize` module (wired to the form through `computeLabel`), consistent with domain `905`. HA's internal `hass.localize` pipeline MUST NOT be used for editor labels. New keys added by this feature MUST be added to all four shipped dictionaries.
+- **FR-908-U (Localized labels & options)**: All section titles, field labels, and select-option labels MUST be sourced from the card's translation dictionaries (`en`, `pl`, `de`, `fr`, `nl`) under the `editor.*` namespace via the card's `localize` module (wired to the form through `computeLabel`), consistent with domain `905`. HA's internal `hass.localize` pipeline MUST NOT be used for editor labels. New keys added by this feature MUST be added to all five shipped dictionaries.
 - **FR-908-X (Editor label language resolution)**: The language used for editor labels MUST follow this resolution chain: (1) if the card config's `language` field is set → use it (it forces that language for both the card and the editor labels); (2) if `language` is not set → inherit the HA profile language (`hass.locale.language`); (3) if the resolved language is not covered by the card's shipped dictionaries → use the card's existing fallback (unchanged from v1.1.0). Changing the `language` field in the editor MUST re-label the entire form live (the label language tracks the config value, not a cached value from editor open). The editor's `language` select offers an **Auto** option backed by the sentinel value `"auto"` (mapped to an omitted `language` key on save, same pattern as `aggregation`); the field carries `default: "auto"` so the Auto option is always displayed when the key is absent.
 
 ---
@@ -373,7 +373,7 @@ dispatchEvent(new CustomEvent("config-changed", {
 
 - **Inline field validation / error prevention** in the editor (FR-908-S). Invalid values are passed through and surfaced by the card. Explicit validation UX is deferred to a later version.
 - **A new Vite entry point or lazy-loaded editor module** (the editor stays a static import, per domain `904` FR-904-F).
-- **New translations beyond the four shipped** (`en`, `pl`, `de`, `fr`).
+- **New translations beyond the five shipped** (`en`, `pl`, `de`, `fr`, `nl`).
 - **Authoring the documentation updates** (README/wiki/changelog) *in this feature's code tasks*. They are **planned** as part of v1.2.0 and owned by domain `907-docs-product-knowledge`; this spec defines *what* must be documented, not the doc files themselves.
 - **Per-window aggregation in the editor** (the card currently uses one effective `aggregation` for all windows; no per-window step UI).
 - **A graphical ISO-8601 duration builder or range-preview chart** for `time_window` (the custom-renderer *hook* is required; the rich control itself is optional/deferred).

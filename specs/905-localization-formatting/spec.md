@@ -24,9 +24,9 @@ The card resolves all user-visible text, number formats, and time zone from a th
 
 ### Translation dictionary
 
-- Separate JSON file per language in `src/translations/` (e.g., `en.json`, `pl.json`, `de.json`).
+- Separate JSON file per language in `src/translations/` (e.g., `en.json`, `pl.json`, `de.json`, `fr.json`, `nl.json`).
 - Keys use descriptive dot-notation (e.g., `"card.summary.no_data"`).
-- Mandatory languages: `en` and `pl`. German (`de`) is present.
+- Mandatory languages: `en` and `pl`. German (`de`), French (`fr`), and Dutch (`nl`) are present.
 - Fallback chain: active language → `en`. If a key is missing from both, the card enters an error state (rendering blocked, error message shown in UI; key and language logged to console when `debug: true`).
 
 ### Forecast confidence level labels
@@ -43,7 +43,7 @@ Invalid `time_window.offset` values (domain `900` FR-900-Q / US-900-8) use the *
 
 ### Interpretation copy (consumption vs production)
 
-User-visible strings that depend on **`interpretation`** (`consumption` \| `production` from card YAML; default consumption) — including **production-specific** narrative lines and **editor** labels for the interpretation control — MUST have parallel keys in **`en`**, **`pl`**, and **`de`**. When `interpretation` is omitted, runtime behavior uses **consumption** strings per `903-card-ui-composition`.
+User-visible strings that depend on **`interpretation`** (`consumption` \| `production` from card YAML; default consumption) — including **production-specific** narrative lines and **editor** labels for the interpretation control — MUST have parallel keys in **`en`**, **`pl`**, **`de`**, **`fr`**, and **`nl`**. When `interpretation` is omitted, runtime behavior uses **consumption** strings per `903-card-ui-composition`.
 
 ### Re-render on locale change
 
@@ -204,7 +204,7 @@ As a community contributor, I need to add a new language by editing only the tra
 
 ## Key Entities
 
-- **Translations Dictionary**: Per-language JSON files in `src/translations/` (e.g., `en.json`, `pl.json`, `de.json`). Keys use descriptive dot-notation. `en` and `pl` are mandatory; additional files can be added independently.
+- **Translations Dictionary**: Per-language JSON files in `src/translations/` (e.g., `en.json`, `pl.json`, `de.json`, `fr.json`, `nl.json`). Keys use descriptive dot-notation. `en` and `pl` are mandatory; additional files can be added independently.
 - **`ResolvedLocale`**: Internal object holding resolved `language`, `numberFormat`, and `timeZone` after applying the cascade. Consumed by all rendering and formatting logic.
 - **`localize(key, variables?, languageOverride?)`**: Function in `src/card/localize.ts` returning the translated string with optional variable interpolation and `en` fallback.
 - **HA IANA time zone**: `hass.config.time_zone` — the canonical time zone used for all calendar and datetime operations across the card.

@@ -6,7 +6,7 @@
 
 ## Summary
 
-Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **100% coverage** of the v1.1.0 YAML surface, organized into **six progressive-disclosure sections** driven by a **schema-driven field registry** (data, not template). The central engineering problem is the **lifecycle**: every field change emits `config-changed` → HA re-invokes `setConfig()` → the whole editor re-renders, which today would collapse expanded panels and steal focus mid-typing. The plan introduces a config-independent `EditorUiState` (expanded flags, focus, scroll) re-applied on every render, a **preservative deep merge** that never drops unmodeled keys, and a **debounced emit** pipeline (immediate display, debounced `config-changed`). It adds the **`custom`** comparison preset (type-level addition to `ComparisonMode` + a generic preset template in domain 900), normalizes the legacy `forecast` alias and deprecated `comparison_mode` on save, and localizes all new labels via the card's `localize()` under `editor.*` in all four shipped dictionaries. The YAML mode is a **first-class input path** (FR-908-Y): edits update the preview live (debounced) and the last valid YAML **values** are the saved config (HA re-serializes the config object, so values persist but text formatting is canonicalized); `setConfig()` preserves the editor mode. No new npm dependencies; the editor stays a static import.
+Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **100% coverage** of the v1.1.0 YAML surface, organized into **six progressive-disclosure sections** driven by a **schema-driven field registry** (data, not template). The central engineering problem is the **lifecycle**: every field change emits `config-changed` → HA re-invokes `setConfig()` → the whole editor re-renders, which today would collapse expanded panels and steal focus mid-typing. The plan introduces a config-independent `EditorUiState` (expanded flags, focus, scroll) re-applied on every render, a **preservative deep merge** that never drops unmodeled keys, and a **debounced emit** pipeline (immediate display, debounced `config-changed`). It adds the **`custom`** comparison preset (type-level addition to `ComparisonMode` + a generic preset template in domain 900), normalizes the legacy `forecast` alias and deprecated `comparison_mode` on save, and localizes all new labels via the card's `localize()` under `editor.*` in all five shipped dictionaries. The YAML mode is a **first-class input path** (FR-908-Y): edits update the preview live (debounced) and the last valid YAML **values** are the saved config (HA re-serializes the config object, so values persist but text formatting is canonicalized); `setConfig()` preserves the editor mode. No new npm dependencies; the editor stays a static import.
 
 ## Technical Context
 
@@ -37,7 +37,7 @@ Expand the `energy-horizon-card-editor` from a 6-field `<ha-form>` subset to **1
 | I. HA / Marketplace / HACS compatibility | PASS | Uses standard HA runtime components (`ha-expansion-panel`, `ha-select`, …) and the standard `config-changed`/`setConfig` card contract; editor stays a static import; no new HA APIs; `custom` preset is a backward-compatible, opt-in config value |
 | II. Safety / resilience | PASS | Config values are treated as untrusted data: invalid values are passed through (never crash the editor, FR-908-T), no HTML injection (labels via `localize()` text), graceful degradation when `hass` is absent or a select value is unknown; no sensitive data in UI/logs |
 | III. TypeScript strict + tests | PASS | `strict` mode, no `any`; registry/merge/normalization are pure, unit-testable functions; Vitest coverage for merge, normalization, registry, and the re-render lifecycle contract |
-| IV. UX / accessibility | PASS | HA look & feel via native HA components; progressive disclosure (S1 expanded, S2–S6 collapsed); keyboard-operable native controls; localized labels in all four languages; focus/caret/scroll preserved (FR-908-J/K/L/M) |
+| IV. UX / accessibility | PASS | HA look & feel via native HA components; progressive disclosure (S1 expanded, S2–S6 collapsed); keyboard-operable native controls; localized labels in all five languages; focus/caret/scroll preserved (FR-908-J/K/L/M) |
 | V. Performance / simplicity | PASS | Debounced text emit avoids a full card re-query per keystroke; re-render emits nothing (no feedback loop, FR-908-N); declarative registry keeps the render path simple and predictable; no heavy computation on the main thread |
 
 **Gate result**: PASS — no Complexity Tracking table required.
@@ -89,7 +89,7 @@ tests/unit/
 ├── editor-normalize.test.ts        # comparison_mode + forecast alias load/save normalization
 ├── editor-ui-state.test.ts         # expanded/focus/scroll survive a setConfig re-render
 ├── editor-debounce.test.ts         # text emit debounced; flush on blur/commit/close; no emit on re-render
-├── editor-i18n.test.ts             # dictionary guard: every editor.* key resolves in en/pl/de/fr (SC-908-7)
+├── editor-i18n.test.ts             # dictionary guard: every editor.* key resolves in en/pl/de/fr/nl (SC-908-7)
 └── editor-preset-switch.test.ts    # standard↔custom cleanup both directions (SC-908-5)
 
 tests/integration/
@@ -111,17 +111,17 @@ All clarifications were resolved in the spec's `## Clarifications` (Session 2026
 | Entity / key model (FieldDescriptor, FieldRegistry, EditorUiState, config pipeline, field→section map) | [data-model.md](./data-model.md) |
 | Editor public API + `config-changed` contract | [contracts/editor-public-api.md](./contracts/editor-public-api.md) |
 | Field registry schema contract | [contracts/field-registry.md](./contracts/field-registry.md) |
-| Editor i18n key contract (`editor.*`, 4 dictionaries) | [contracts/editor-i18n.md](./contracts/editor-i18n.md) |
+| Editor i18n key contract (`editor.*`, 5 dictionaries) | [contracts/editor-i18n.md](./contracts/editor-i18n.md) |
 | Contributor quickstart / validation guide | [quickstart.md](./quickstart.md) |
 
 ### Constitution Check (post-design)
 
-Re-evaluated after Phase 1: still **PASS**. The design adds no dependencies, no new HA APIs, no `any`, and keeps all new logic in pure, testable modules; the `custom` preset is a backward-compatible opt-in value; the i18n contract adds keys to all four shipped dictionaries only. No Complexity Tracking table required.
+Re-evaluated after Phase 1: still **PASS**. The design adds no dependencies, no new HA APIs, no `any`, and keeps all new logic in pure, testable modules; the `custom` preset is a backward-compatible opt-in value; the i18n contract adds keys to all five shipped dictionaries only. No Complexity Tracking table required.
 
 ### Cross-domain sync
 
 - **`900-time-model-windows`**: `ComparisonMode` gains `"custom"`; `getPresetTemplate` gains a `custom` branch returning the generic shape (`anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 2`, **no** `currentEndIsNow`/`referenceFullPeriod`/`periodOffsetYears` flags) so `resolveTimeWindows` takes the `resolveGeneric` path. The editor's preset↔custom cleanup (FR-908-Q) stays consistent with this.
-- **`905-localization-formatting`**: new `editor.*` keys consumed via the existing `localize()`; label language follows the FR-908-X chain (card `language` → `hass.locale.language` → fallback). The `language` field is a **select** whose options are derived from `AVAILABLE_LANGUAGES` (exported by `localize.ts`); the option labels use the `editor.language.auto` and `editor.language.{en,pl,de,fr}` keys, and the **Auto** option is backed by the sentinel value `"auto"` (mapped to an omitted `language` key on save, same pattern as `aggregation`); the field carries `default: "auto"` so Auto is always displayed when the key is absent.
+- **`905-localization-formatting`**: new `editor.*` keys consumed via the existing `localize()`; label language follows the FR-908-X chain (card `language` → `hass.locale.language` → fallback). The `language` field is a **select** whose options are derived from `AVAILABLE_LANGUAGES` (exported by `localize.ts`); the option labels use the `editor.language.auto` and `editor.language.{en,pl,de,fr,nl}` keys, and the **Auto** option is backed by the sentinel value `"auto"` (mapped to an omitted `language` key on save, same pattern as `aggregation`); the field carries `default: "auto"` so Auto is always displayed when the key is absent.
 - **`907-docs-product-knowledge`**: the spec's Documentation Plan (README / README.advanced / wiki / changelog `[1.2.0]`) is owned by domain 907 and is **not** authored in this feature's code tasks.
 
 ## Phase 2 — **OUT OF SCOPE for `/speckit-plan`**

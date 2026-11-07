@@ -32,7 +32,7 @@ The visual editor provides **full coverage** of the card's YAML configuration, o
 
 ### Localization of labels
 
-Labels are provided via a `computeLabel` arrow function passed as a property on `<ha-form>`, mapping `schema.name` → `localize("editor.<name>")`. Translation keys exist in `src/translations/en.json`, `pl.json`, and `de.json` under the `editor.*` namespace. HA's internal `hass.localize` pipeline is not used for editor labels.
+Labels are provided via a `computeLabel` arrow function passed as a property on `<ha-form>`, mapping `schema.name` → `localize("editor.<name>")`. Translation keys exist in `src/translations/en.json`, `pl.json`, `de.json`, `fr.json`, and `nl.json` under the `editor.*` namespace. HA's internal `hass.localize` pipeline is not used for editor labels.
 
 ### YAML text mode
 

@@ -19,7 +19,7 @@ npm run lint
 3. [data-model.md](./data-model.md) — `FieldDescriptor`, `FieldRegistry`, `EditorUiState`, config pipeline, field→section map.
 4. [contracts/field-registry.md](./contracts/field-registry.md) — full field inventory + render-loop contract.
 5. [contracts/editor-public-api.md](./contracts/editor-public-api.md) — `setConfig` / `config-changed` contract.
-6. [contracts/editor-i18n.md](./contracts/editor-i18n.md) — `editor.*` keys across the four dictionaries.
+6. [contracts/editor-i18n.md](./contracts/editor-i18n.md) — `editor.*` keys across the five dictionaries.
 
 ## 3. Implementation sketch
 
@@ -30,7 +30,7 @@ npm run lint
 | C | Create `src/card/editor/config-merge.ts` (preservative deep merge) + `config-normalize.ts` (load/save normalization). Unit-test: unmodeled keys survive; `time_window` merges key-by-key; `comparison_mode`/`forecast` normalized on save. |
 | D | Create `src/card/editor/editor-ui-state.ts` (`EditorUiState` + expand/focus/scroll helpers). Unit-test that state survives a simulated `setConfig` re-render. |
 | E | Rewrite `src/card/energy-horizon-card-editor.ts`: registry-driven render loop (six `ha-expansion-panel` sections), `EditorUiState` as `@state`, debounce pipeline (`EMIT_DEBOUNCE_MS = 300`), emit gate (delta check), preset↔custom cleanup, focus/caret/scroll restore in a post-render effect. |
-| F | Add `editor.*` keys to `src/translations/{en,pl,de,fr}.json` per [contracts/editor-i18n.md](./contracts/editor-i18n.md). Add a dictionary-guard test asserting the full key set exists in all four files. |
+| F | Add `editor.*` keys to `src/translations/{en,pl,de,fr,nl}.json` per [contracts/editor-i18n.md](./contracts/editor-i18n.md). Add a dictionary-guard test asserting the full key set exists in all five files. |
 | G | Add `tests/integration/editor-lifecycle.test.ts`: a passive `setConfig` re-render emits **zero** `config-changed`; focus/scroll/expanded preserved. |
 
 ## 4. Verify (automated)

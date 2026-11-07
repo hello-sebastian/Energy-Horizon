@@ -89,7 +89,7 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 
 ## R7. Localization — `editor.*` keys, FR-908-X language chain
 
-**Decision**: All section titles, field labels, and select-option labels are sourced from the card's `localize()` under the `editor.*` namespace (consistent with domain 905; HA's internal `hass.localize` is **not** used). New keys are added to **all four** shipped dictionaries (`en`, `pl`, `de`, `fr`). The label language follows the FR-908-X chain: (1) card `language` field if set; (2) else `hass.locale.language`; (3) else the card's existing fallback. Changing `language` re-labels the whole form live (labels track the config value, not a cached value).
+**Decision**: All section titles, field labels, and select-option labels are sourced from the card's `localize()` under the `editor.*` namespace (consistent with domain 905; HA's internal `hass.localize` is **not** used). New keys are added to **all five** shipped dictionaries (`en`, `pl`, `de`, `fr`, `nl`). The label language follows the FR-908-X chain: (1) card `language` field if set; (2) else `hass.locale.language`; (3) else the card's existing fallback. Changing `language` re-labels the whole form live (labels track the config value, not a cached value).
 
 **Rationale**: Reuses the existing `createLocalize(lang)` pipeline already wired to the editor (`_computeLabel`); satisfies FR-908-U and FR-908-X and SC-908-7 (no missing-key fallback to the raw key). The language is recomputed from the current `_config.language` on each render so a live `language` edit re-labels the form.
 

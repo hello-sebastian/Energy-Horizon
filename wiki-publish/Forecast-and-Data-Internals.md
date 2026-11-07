@@ -103,7 +103,7 @@ When enabled, confidence is derived from period progress:
 
 Additionally, the card can detect an **anomalous reference** year (extreme ratio vs reference) and cap confidence to **low**.
 
-The card displays the level in the card's language (e.g. German: *niedrig* / *mittel* / *hoch*; Polish: *niska* / *średnia* / *wysoka*; French: *faible* / *moyen* / *élevé*).
+The card displays the level in the card's language (e.g. German: *niedrig* / *mittel* / *hoch*; Polish: *niska* / *średnia* / *wysoka*; French: *faible* / *moyen* / *élevé*; Dutch: *laag* / *gemiddeld* / *hoog*).
 
 ---
 

@@ -1,6 +1,6 @@
 # Contract: Editor i18n (`editor.*`)
 
-All section titles, field labels, and select-option labels are sourced from the card's `localize()` under the `editor.*` namespace (FR-908-U, domain 905). HA's internal `hass.localize` pipeline is **not** used for editor labels. New keys MUST be added to **all four** shipped dictionaries: `en`, `pl`, `de`, `fr` (SC-908-7 — no missing-key fallback to the raw key).
+All section titles, field labels, and select-option labels are sourced from the card's `localize()` under the `editor.*` namespace (FR-908-U, domain 905). HA's internal `hass.localize` pipeline is **not** used for editor labels. New keys MUST be added to **all five** shipped dictionaries: `en`, `pl`, `de`, `fr`, `nl` (SC-908-7 — no missing-key fallback to the raw key).
 
 ## Label language resolution (FR-908-X)
 
@@ -106,7 +106,7 @@ Non-collapsible headers emitted within a section (see [field-registry.md](./fiel
 
 ## Rules
 
-- Every `labelKey` in the `FieldRegistry` and every select `option.labelKey` MUST resolve in all four dictionaries (SC-908-7).
-- `pl`, `de`, `fr` values are authored by the translators; `en` is the reference. The key **set** is identical across all four files.
+- Every `labelKey` in the `FieldRegistry` and every select `option.labelKey` MUST resolve in all five dictionaries (SC-908-7).
+- `pl`, `de`, `fr`, `nl` values are authored by the translators; `en` is the reference. The key **set** is identical across all five files.
 - The `force_prefix` empty option (`` value ``) uses an empty label (adaptive) — mirrors v1.1.0.
 - No new keys are introduced for error copy (the card reuses its existing standard error strings; FR-908-S).
