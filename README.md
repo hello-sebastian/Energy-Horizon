@@ -9,14 +9,9 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 ![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)
 
 
-<!-- IMAGE PLACEHOLDER: High-quality screenshot/GIF of the card with an active tooltip and visible current-vs-reference comparison. -->
-<!-- Example: a phone-width view + desktop-width view, if possible. -->
+**Energy Horizon Card** is a high-performance Lovelace dashboard card for Home Assistant. It enables period-over-period visualization and analytical comparison of cumulative energy consumption and solar generation. 
 
-- **Clear comparisons**: see “this period so far” vs a reference period at a glance.
-- **Readable timelines**: smart axis labels that stay legible on mobile.
-- **Always-usable charts**: automatic aggregation keeps the chart clean.
-- **Optional forecast**: a dashed estimate for the period total when it’s meaningful.
-- **Full-coverage visual editor** (v1.2.0): every configuration parameter is editable in the Lovelace editor across seven sections — no YAML required.
+By querying Home Assistant's **Long-Term Statistics (LTS)**, Energy Horizon overlays current progress against historical baselines (e.g., Year-over-Year, Month-over-Month) to immediately reveal whether your energy trajectory is ahead of or behind expected trends.
 
 > This card is built for **long-term statistics** (energy history), not live power charts.
 
@@ -70,9 +65,85 @@ Most often, the selected entity has **no long-term statistics**.
 - Check Home Assistant **Developer Tools → Statistics**.
 - Then follow: [Troubleshooting and FAQ](https://github.com/hello-sebastian/energy-horizon/wiki/Troubleshooting-and-FAQ).
 
-## Basic configuration (first knobs to turn)
 
-These are the options most people adjust first. Everything else is in the Wiki and `README.advanced.md`.
+
+
+## Why Energy Horizon?
+
+Standard Home Assistant dashboards excel at displaying historical totals, but they make it difficult to answer critical questions:
+
+* *Are we consuming more electricity this November compared to last November?*
+
+* *Is our solar array yielding as much cumulative power this month as it did during the same timeframe last year?*
+
+* *Based on our rate of consumption so far, where will we end up by the end of the billing period?*
+
+Energy Horizon bridges this gap by rendering **aligned, cumulative comparison curves** combined with **predictive end-of-period forecasting**, operating 100% locally on your Home Assistant frontend.
+
+## Key Features
+
+### Period-over-Period Cumulative Comparison
+
+Overlay current energy progress directly against equivalent historical baselines—such as Year-over-Year (YoY), Month-over-Month (MoM), or matching historical calendar months—to track long-term performance without manual data extraction.
+
+### Context-Aware Semantics (Consumption vs Production)
+
+Tailored visual feedback based on your data type. In **Consumption mode**, lower usage relative to the baseline is highlighted as a positive achievement. In **Production mode** (for solar/PV generation), higher yields trigger positive indicators.
+
+### Smart Baseline Forecasting
+
+Extrapolates your current rate of energy generation or usage to project your final total at the end of the active period. The forecast combines real-time progress with historical trends to provide a realistic target line.
+- Learn more: [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals) and [README.advanced](README.advanced.md)
+
+### Adaptive Timeline Granularity
+
+Dynamically selects the optimal temporal resolution (hourly, daily, weekly, or monthly slots) depending on your selected time window, ensuring smooth charts and high performance on mobile devices without cluttering the screen.
+- Learn more: [Aggregation and Axis Labels](https://github.com/hello-sebastian/energy-horizon/wiki/Aggregation-and-Axis-Labels) and [How-To: Aggregation & Performance](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Aggregation-and-Performance)
+
+
+### Zero-Backend Overhead
+
+Queries Home Assistant’s native Long-Term Statistics (LTS) directly via WebSocket. Requires no custom backend integration, database modifications, or external cloud services.
+
+### Prerequisites
+
+To display energy data, Energy Horizon requires a Home Assistant entity that records **Long-Term Statistics (LTS)** with cumulative states.
+
+* **Supported Units:** `kWh`, `Wh`, or `MWh` and what's more `m³` and `l` work too.
+
+* **Required Entity Attributes:** Must have `state_class: total` or `state_class: total_increasing` (e.g., utility meters, energy grid import sensors, or total solar yield sensors).
+
+*Note: Instantaneous power sensors measuring `kW` or `W` cannot be used directly for cumulative comparison without being processed by Home Assistant's Riemann Sum Integration first.*
+
+
+## Basic configuration
+
+### Visual editor
+
+![Energy Horizon Card screenshot](wiki-publish/ehorizon-visual-editor.png)
+
+The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into seven sections: **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, and **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, and **Reference series**). **General** and **Time windows** are expanded by default; the rest are collapsed. You do not need to touch YAML to configure the card. In **General**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
+
+What each section configures:
+
+- **General** — the entity, header title/icon, interpretation (consumption vs production), neutral threshold, and aggregation.
+- **Time windows** — the comparison preset; when the preset is **custom**, a **Custom settings** subsection exposes the `time_window` block (`anchor`, `duration`, `step`, `count`, `offset`).
+- **Panels** — which card panels are visible (comparison summary, forecast & reference total, narrative comment).
+- **Formatting & Localization** — the card language, unit prefix, number format, precision, and the Luxon date formats for the axis and tooltip.
+- **Chart settings** — the forecast line, null-gap bridging, and the legend.
+- **Style** — the current/reference series colors and fills (two-column layout).
+- **Diagnostics** — the `debug` flag for extra console output.
+
+**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Helper texts:** non-obvious fields — the time window syntax, the Luxon date formats, aggregation, precision, and the neutral threshold — show a short helper text below the control; the full reference is in the wiki. **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
+
+<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the help-circle (documentation) icon visible in each section header. -->
+
+Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
+
+
+### Basic YAML configuration
+
+These are the options most people adjust first. Everything else is in the [Wiki](https://github.com/hello-sebastian/energy-horizon/wiki) and [`README.advanced.md`](./README.advanced.md).
 
 | Option | What it does | Learn more |
 |---|---|---|
@@ -98,47 +169,8 @@ time_window:
   count: 2
 ```
 
-## Visual editor (v1.2.0)
 
-The Lovelace visual editor now covers the **full configuration surface** — every parameter above (and the advanced ones) is editable in the GUI, organized into seven sections: **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, and **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, and **Reference series**). **General** and **Time windows** are expanded by default; the rest are collapsed. You do not need to touch YAML to configure the card. In **General**, the **Show title** and **Show icon** toggles sit in the same row as the **Title** and **Icon** fields, respectively.
-
-What each section configures:
-
-- **General** — the entity, header title/icon, interpretation (consumption vs production), neutral threshold, and aggregation.
-- **Time windows** — the comparison preset; when the preset is **custom**, a **Custom settings** subsection exposes the `time_window` block (`anchor`, `duration`, `step`, `count`, `offset`).
-- **Panels** — which card panels are visible (comparison summary, forecast & reference total, narrative comment).
-- **Formatting & Localization** — the card language, unit prefix, number format, precision, and the Luxon date formats for the axis and tooltip.
-- **Chart settings** — the forecast line, null-gap bridging, and the legend.
-- **Style** — the current/reference series colors and fills (two-column layout).
-- **Diagnostics** — the `debug` flag for extra console output.
-
-**Jump straight to the docs:** every section header carries a small help-circle icon that opens the wiki chapter covering that section's keys (in a new tab). **Helper texts:** non-obvious fields — the time window syntax, the Luxon date formats, aggregation, precision, and the neutral threshold — show a short helper text below the control; the full reference is in the wiki. **Visual → YAML:** every control maps 1:1 to a YAML key — the full control → key table, a worked example, and the round-trip behavior are in [`README.advanced.md`](./README.advanced.md#lovelace-editor).
-
-<!-- IMAGE PLACEHOLDER: Screenshot of the visual editor showing all seven sections (General and Time windows expanded, the rest collapsed), with the MDI section icons and the help-circle (documentation) icon visible in each section header. -->
-
-Advanced users can still switch to **YAML mode** inside the editor: both modes show the complete config, and switching between them is lossless in both directions. See [`README.advanced.md`](./README.advanced.md) for the full editor reference.
-
-## Key features (in plain words)
-
-### Smart X-axis (labels that “just make sense”)
-
-The card adjusts date/time labels automatically so they stay readable (especially on phones). With **two or more windows**, the shared axis length follows the **largest nominal slot count** at the chart’s aggregation (e.g. February vs March at daily grain uses 31 slots); tick dates follow **window 0’s** calendar (with an ordinal tail if the axis is longer), and the **“now”** marker is based on today **inside window 0**. **Forecast progress** still uses **window 0** only, so the axis can be longer than the forecast period. **Tooltip** headers use that same slot index and the **Home Assistant time zone** for calendar text (not the browser’s zone). For YoY/MoY/MoM, adaptive labels drop redundant years or months so the axis matches the comparison story (see wiki mental model). **Long-term statistics** that expose **`sum`** are mapped so each daily (or hourly) increment sits under the correct calendar bucket on that axis; when LTS has only **`min`**/**`max`** (common for misclassified cumulative templates), increments use **`max - min`**. See [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals) and [README.advanced](README.advanced.md).
-
-- Learn more: [Aggregation and Axis Labels](https://github.com/hello-sebastian/energy-horizon/wiki/Aggregation-and-Axis-Labels)
-
-### Automatic aggregation
-
-If you don’t set `aggregation`, the card picks a sensible bucket size so you get a clear chart instead of thousands of cramped points.
-
-- Learn more: [How-To: Aggregation & Performance](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Aggregation-and-Performance)
-
-### Forecast
-
-When there’s enough data and a valid reference, the dashed line estimates the period total based on your history.
-
-- Learn more: [Forecast and Data Internals](https://github.com/hello-sebastian/energy-horizon/wiki/Forecast-and-Data-Internals)
-
-## Advanced configuration (power users)
+## Advanced configuration
 
 Want more control? Start here:
 
@@ -199,7 +231,4 @@ Energy Horizon
 Copyright (C) 2026 Sebastian Sikora
 https://github.com/hello-sebastian/Energy-Horizon
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
