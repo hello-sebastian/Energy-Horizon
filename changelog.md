@@ -34,6 +34,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 - **Section pictograms in the visual editor:** each editor section header displays an MDI icon — General (cog), Time windows (Gantt), Panels (day view), Formatting & Localization (counter), Chart settings (timeline), Style (palette), Diagnostics (bug).
 - **Per-section documentation links in the visual editor:** each editor section header now shows a documentation icon (help circle) linking to the wiki chapter covering that section's keys. The link opens in a new tab and does not collapse the section when clicked.
 - **Field helper texts in the visual editor:** non-obvious fields (time window syntax, Luxon date formats, aggregation, precision, neutral threshold) now show a short helper text below the control.
+- Dutch language nl.json (by [tRoOlos](https://github.com/tRoOlos))
 
 ### Changed
 
