@@ -633,17 +633,22 @@ export class EChartsRenderer {
     const w0e = rendererConfig.currentWindowEndMs;
     const tz = rendererConfig.haTimeZone ?? 'UTC';
     const agg = rendererConfig.primaryAggregation ?? 'day';
+    // T028: in preview the window is shifted into the past, so "now" falls outside it and
+    // findNowSlotIndexOnComparisonAxis clamps to the last bucket — a bold "today" tick on a
+    // wrong (past) date. The today marker is not drawn in preview (FR-018/FR-021); force -1.
     const todaySlotIndex =
-      w0s != null && w0e != null
-        ? findNowSlotIndexOnComparisonAxis(
-            fullTimeline,
-            w0s,
-            w0e,
-            agg,
-            tz,
-            Date.now()
-          )
-        : findTimelineSlotContainingInstant(fullTimeline, Date.now());
+      rendererConfig.previewMode === true
+        ? -1
+        : w0s != null && w0e != null
+          ? findNowSlotIndexOnComparisonAxis(
+              fullTimeline,
+              w0s,
+              w0e,
+              agg,
+              tz,
+              Date.now()
+            )
+          : findTimelineSlotContainingInstant(fullTimeline, Date.now());
 
     const comparisonAxisHints: ComparisonAxisLabelHints | undefined =
       rendererConfig.singleWindowMode !== true

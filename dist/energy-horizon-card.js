@@ -29217,6 +29217,11 @@ const vN = {
 }, Symbol.toStringTag, { value: "Module" })), wN = {
   "period.current": "Huidige periode",
   "period.reference": "Referentieperiode",
+  "preview.step_back": "Stap naar eerdere periode",
+  "preview.step_forward": "Stap naar latere periode",
+  "preview.reset": "Terug naar huidige periode",
+  "preview.indication": "Voorvertoning: {{period}}",
+  "preview.loading": "Laden…",
   "status.loading": "Langetermijnstatistieken laden...",
   "status.config_invalid_time_window": "Ongeldige time_window-configuratie. Controleer anchor, duration, step en count in de YAML.",
   "status.config_too_many_windows": "Te veel tijdvensters (maximaal {{max}}). Verlaag count in time_window.",
