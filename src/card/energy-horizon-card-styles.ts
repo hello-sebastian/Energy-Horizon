@@ -423,6 +423,19 @@ export const energyHorizonCardStyles = css`
     pointer-events: none;
   }
 
+  /* Preview no-data (909 T026): the chart stays in place (stable card height,
+     x-axis with the period's start/end labels, empty plot); the standard
+     no-data indication is overlaid centered on the chart area. */
+  .ebc-chart-nodata-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
   .ebc-section--comment {
     display: flex;
     align-items: flex-start;

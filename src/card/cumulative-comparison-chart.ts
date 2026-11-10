@@ -341,11 +341,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         const previewActive =
           this._state.previewShift != null &&
           this._state.previewShift < 0 &&
-          this._state.previewSeries != null &&
           this._state.previewChartTime != null;
 
         if (this._chartRenderer && previewActive) {
-          const previewSeries = this._state.previewSeries!;
+          const previewSeries = this._state.previewSeries;
           const previewChartTime = this._state.previewChartTime!;
           const previewWindows = this._state.previewWindows ?? [];
           const { timeline } = previewChartTime;
@@ -373,6 +372,21 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   locResolved.timeZone
                 )
               : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
+          // Preview no-data (FR-013, US6, T026): the shifted period has no data —
+          // keep the chart in place (stable card height, x-axis with the period's
+          // start/end labels, empty plot) by updating with an empty series; the
+          // standard no-data indication is overlaid centered on the chart by render().
+          const seriesForChart: ComparisonSeries = previewSeries ?? {
+            current: {
+              points: [],
+              unit: this._state.comparisonSeries?.current.unit ?? "",
+              periodLabel: this._localizeOrError(localize, "period.current"),
+              total: 0
+            },
+            aggregation: previewWindows[0]?.aggregation ?? "day",
+            time_zone:
+              this._state.comparisonSeries?.time_zone ?? locResolved.timeZone
+          };
           const rendererConfig: ChartRendererConfig = {
             ...baseConfig,
             periodLabel: previewPeriodLabel,
@@ -382,9 +396,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             referencePeriodStart: previewWindows[1]?.start.getTime(),
             singleWindowMode: previewWindows.length < 2,
             showReferenceComparison:
-              previewWindows.length >= 2 && previewSeries.reference != null,
+              previewWindows.length >= 2 && previewSeries?.reference != null,
             showForecast: false,
-            unit: previewSeries.current.unit,
+            unit: seriesForChart.current.unit,
             primaryAggregation: previewWindows[0]?.aggregation,
             tailLabelFromIndex: previewChartTime.tailLabelFromIndex,
             fullTimeline: timeline,
@@ -393,7 +407,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             previewMode: true,
             previewSeries
           };
-          this._chartRenderer.update(previewSeries, timeline, rendererConfig, {
+          this._chartRenderer.update(seriesForChart, timeline, rendererConfig, {
             current: this._localizeOrError(localize, "period.current"),
             reference: this._localizeOrError(localize, "period.reference")
           });
@@ -614,6 +628,31 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               )
             )
           );
+          // Build the preview chart timeline from the shifted windows so the
+          // preview series align to the shifted axis (909 US3, T014). This is
+          // done unconditionally (even when the shifted period has no data) so
+          // the preview period label, controls, and no-data indication can be
+          // rendered (FR-013, US6).
+          const previewTimelineRaw = buildChartTimeline(
+            previewWindowList,
+            merged,
+            resolved.timeZone
+          );
+          const previewTailLabelFromIndex =
+            previewWindowList.length >= 2
+              ? firstTailAxisLabelIndex(
+                  previewTimelineRaw.timeline,
+                  previewTimelineRaw.alignStartsMs[0]!,
+                  previewWindowList[0]!.end
+                )
+              : previewTimelineRaw.timeline.length;
+          previewWindows = previewWindowList;
+          previewChartTime = {
+            timeline: previewTimelineRaw.timeline,
+            alignStartsMs: previewTimelineRaw.alignStartsMs,
+            forecastPeriodBuckets: previewTimelineRaw.forecastPeriodBuckets,
+            tailLabelFromIndex: previewTailLabelFromIndex
+          };
           const previewCurrent = mapLtsResponseToCumulativeSeries(
             previewResponses[0] as any,
             this._config.entity,
@@ -638,28 +677,6 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
               previewRaw,
               entityUnit
             );
-            // Build the preview chart timeline from the shifted windows so the
-            // preview series align to the shifted axis (909 US3, T014).
-            const previewTimelineRaw = buildChartTimeline(
-              previewWindowList,
-              merged,
-              resolved.timeZone
-            );
-            const previewTailLabelFromIndex =
-              previewWindowList.length >= 2
-                ? firstTailAxisLabelIndex(
-                    previewTimelineRaw.timeline,
-                    previewTimelineRaw.alignStartsMs[0]!,
-                    previewWindowList[0]!.end
-                  )
-                : previewTimelineRaw.timeline.length;
-            previewWindows = previewWindowList;
-            previewChartTime = {
-              timeline: previewTimelineRaw.timeline,
-              alignStartsMs: previewTimelineRaw.alignStartsMs,
-              forecastPeriodBuckets: previewTimelineRaw.forecastPeriodBuckets,
-              tailLabelFromIndex: previewTailLabelFromIndex
-            };
           }
         } catch (previewError) {
           if (this._config.debug) {
@@ -1516,6 +1533,16 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                 ? "ebc-chart--loading"
                 : ""}"
             ></div>
+            ${previewActive &&
+            !this._previewLoading &&
+            this._state.previewChartTime != null &&
+            this._state.previewSeries == null
+              ? html`<div class="ebc-chart-nodata-overlay" role="status">
+                  <ha-alert alert-type="info">
+                    ${this._localizeOrError(localize, "status.no_data")}
+                  </ha-alert>
+                </div>`
+              : null}
             ${this._previewLoading
               ? html`<div class="ebc-chart-loading-overlay" role="status">
                   <ha-circular-progress active size="small"></ha-circular-progress>

@@ -73,6 +73,22 @@ export function resolvePreviewShiftedWindows(
     }
   }
 
+  // Legacy presets (month_over_year / year_over_year) resolve the current window
+  // as "start of period → now" (TO THIS DAY). Shifting `now` back would leave the
+  // shifted current window partial (e.g. Oct 1–9) while the shifted reference stays
+  // a full period, so the two series would have different lengths. The spec requires
+  // the full previous calendar period in preview, so snap the shifted `now` to the
+  // end of its nominal period (last ms of the month/year).
+  const count = Math.min(merged.count ?? 1, maxWindows);
+  if (merged.currentEndIsNow && merged.referenceFullPeriod && count === 2) {
+    // `endOf` already returns the last millisecond of the period (.999), which is
+    // exactly what `resolveLegacy` uses for `currentEnd = now`.
+    shiftedNow =
+      merged.comparisonMode === "year_over_year"
+        ? shiftedNow.endOf("year")
+        : shiftedNow.endOf("month");
+  }
+
   return resolveTimeWindows(
     merged,
     shiftedNow,

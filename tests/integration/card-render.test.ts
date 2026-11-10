@@ -250,6 +250,115 @@ describe("energy-horizon-card integration", () => {
     expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
   });
 
+  it("preview no-data: shifted period without data keeps the chart in place with a centered no-data overlay (FR-013, US6, T026)", async () => {
+    const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
+    document.body.appendChild(el);
+    if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
+    el.hass = {
+      language: "pl",
+      connection: {
+        sendMessagePromise: async () => ({} as unknown)
+      }
+    } as HomeAssistant;
+
+    // Ready state (the default pipeline has data) but the shifted preview period
+    // has no data: previewSeries is undefined while previewWindows/previewChartTime
+    // are set.
+    (el as any)._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2020, 0, 1)),
+          end: new Date(Date.UTC(2020, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    await el.updateComplete;
+
+    // The standard no-data indication is overlaid centered on the chart.
+    const overlay = el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay");
+    expect(overlay).not.toBeNull();
+    const alert = overlay!.querySelector("ha-alert");
+    expect(alert).not.toBeNull();
+    expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
+    // The chart container stays in place (stable card height, empty plot).
+    expect(el.shadowRoot!.querySelector(".chart-container")).not.toBeNull();
+    // The preview controls (back/forward) remain available.
+    const controls = el.shadowRoot!.querySelectorAll(".ebc-chart-control");
+    expect(controls.length).toBe(2);
+    // The preview indication remains visible.
+    const indication = el.shadowRoot!.querySelector(".ebc-preview-indication");
+    expect(indication).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("preview no-data: reset (previewShift 0) renders the default chart, not the no-data alert (FR-009)", async () => {
+    const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
+    document.body.appendChild(el);
+    if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
+    el.hass = {
+      language: "pl",
+      connection: {
+        sendMessagePromise: async () => ({} as unknown)
+      }
+    } as HomeAssistant;
+
+    // Start in the preview no-data state.
+    (el as any)._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+
+    // Reset: previewShift 0, no preview fields → the default chart is shown.
+    (el as any)._state = baseYoYReadyState();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).toBeNull();
+    expect(el.shadowRoot!.querySelector("ha-alert")).toBeNull();
+    expect(el.shadowRoot!.querySelector(".chart-container")).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
   it("forecast section does not contain historical_value row", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);

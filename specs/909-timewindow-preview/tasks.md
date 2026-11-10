@@ -168,6 +168,9 @@ description: "Task list for the Transient Time-Window Preview feature"
 - [ ] T021 Accessibility pass in `src/card/cumulative-comparison-chart.ts`: confirm the three controls are keyboard-operable (Enter/Space), focus-visible, and carry the localized `aria-label`s; confirm the preview indication is real text announced to screen readers; confirm contrast is inherited from the existing theme tokens (FR-017, research R7, Constitution Principle IV)
 - [ ] T022 [P] Verify all four locales (`src/card/translations/en.json`, `pl.json`, `de.json`, `fr.json`) have complete `preview.*` keys with no missing-key warnings, and that the wording is consistent across locales (research R8, Constitution Principle VI)
 - [ ] T023 Run the full validation gate and the quickstart scenarios: `npm test`, `npm run typecheck`, and `npm run lint` all green, then walk the end-to-end scenarios in `specs/909-timewindow-preview/quickstart.md` (step back, config untouched, all widths, forward bound, reset, transient, per-card independence, no-data, panels unchanged, accessibility)
+- [ ] T024 Fix: snap shifted `now` to end of nominal period for legacy presets in `src/card/time-windows/preview-shift.ts` (full month/year, not partial); add unit tests in `tests/unit/preview-shift.test.ts`
+- [ ] T025 Fix: preview no-data — when the shifted period has no data, set `previewWindows`/`previewChartTime` unconditionally in `src/card/cumulative-comparison-chart.ts` and render the standard no-data alert (with preview controls and indication) instead of falling back to the default pipeline (FR-004, FR-013, SC-005, US6)
+- [ ] T026 Fix: preview no-data — keep the chart container and renderer in place (stable card height, x-axis with the period's start/end labels, empty plot) and overlay the standard no-data indication centered on the chart (FR-013, SC-005, US6)
 
 ---
 

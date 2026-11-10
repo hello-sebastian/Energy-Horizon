@@ -6,6 +6,7 @@ import {
   resolvePreviewShiftedWindows,
   nextPreviewShift
 } from "../../src/card/time-windows";
+import { buildTimelineSlots } from "../../src/card/ha-api";
 import type { MergedTimeWindowConfig } from "../../src/card/types";
 
 const TZ = "UTC";
@@ -154,6 +155,75 @@ describe("resolvePreviewShiftedWindows — shift algebra (T005)", () => {
     // In both paths, one step back moves window0 to where window1 was.
     expect(lShifted[0]!.start.getTime()).toBe(lDef[1]!.start.getTime());
     expect(gShifted[0]!.start.getTime()).toBe(gDef[1]!.start.getTime());
+  });
+});
+
+describe("resolvePreviewShiftedWindows — legacy full-period snap (T024)", () => {
+  // No `timeWindowPartial` — the preset template is used as-is (with
+  // `currentEndIsNow` / `referenceFullPeriod`), so `resolveTimeWindows` routes
+  // to the legacy path. Overriding `step` would strip those flags and force the
+  // generic path, which is not what these tests exercise.
+  const moY = () =>
+    mergeTimeWindowConfig({
+      mode: "month_over_year",
+      periodOffset: -1
+    });
+  const yoy = () =>
+    mergeTimeWindowConfig({
+      mode: "year_over_year",
+      periodOffset: -1
+    });
+  const nov9 = DateTime.fromObject({ year: 2026, month: 11, day: 9, hour: 20, minute: 46 }, { zone: TZ }).toJSDate();
+
+  it("legacy MoY shift −1 shows the full previous calendar month (not partial)", () => {
+    const shifted = resolvePreviewShiftedWindows(moY(), nov9, TZ, -1);
+    // Shifted current = full October 2026 (31 days), not Oct 1–9.
+    expect(shifted[0]!.start.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+    expect(shifted[0]!.end.toISOString()).toBe("2026-10-31T23:59:59.999Z");
+    // Shifted reference = full October 2025 (31 days).
+    expect(shifted[1]!.start.toISOString()).toBe("2025-10-01T00:00:00.000Z");
+    expect(shifted[1]!.end.toISOString()).toBe("2025-10-31T23:59:59.999Z");
+  });
+
+  it("legacy MoY shift −2 shows the full month two steps back", () => {
+    const shifted = resolvePreviewShiftedWindows(moY(), nov9, TZ, -2);
+    // Shifted current = full September 2026 (30 days).
+    expect(shifted[0]!.start.toISOString()).toBe("2026-09-01T00:00:00.000Z");
+    expect(shifted[0]!.end.toISOString()).toBe("2026-09-30T23:59:59.999Z");
+    // Shifted reference = full September 2025 (30 days).
+    expect(shifted[1]!.start.toISOString()).toBe("2025-09-01T00:00:00.000Z");
+    expect(shifted[1]!.end.toISOString()).toBe("2025-09-30T23:59:59.999Z");
+  });
+
+  it("legacy YoY shift −1 shows the full previous calendar year (not partial)", () => {
+    const shifted = resolvePreviewShiftedWindows(yoy(), nov9, TZ, -1);
+    // Shifted current = full 2025, not Jan 1 – Nov 9.
+    expect(shifted[0]!.start.toISOString()).toBe("2025-01-01T00:00:00.000Z");
+    expect(shifted[0]!.end.toISOString()).toBe("2025-12-31T23:59:59.999Z");
+    // Shifted reference = full 2024.
+    expect(shifted[1]!.start.toISOString()).toBe("2024-01-01T00:00:00.000Z");
+    expect(shifted[1]!.end.toISOString()).toBe("2024-12-31T23:59:59.999Z");
+  });
+
+  it("generic MoM shift −1 is unaffected by the legacy snap (unchanged behavior)", () => {
+    const merged = mergeTimeWindowConfig({
+      mode: "month_over_month",
+      timeWindowPartial: { anchor: "start_of_month", duration: "1M", step: "1M", count: 2 }
+    });
+    const def = resolveTimeWindows(merged, nov9, TZ, 24, "day");
+    const shifted = resolvePreviewShiftedWindows(merged, nov9, TZ, -1);
+    // Generic path: one step back moves window0 to where window1 was (exact).
+    expect(shifted[0]!.start.getTime()).toBe(def[1]!.start.getTime());
+    expect(shifted[0]!.end.getTime()).toBe(def[1]!.end.getTime());
+  });
+
+  it("legacy MoY preview: shifted current and reference have equal slot counts", () => {
+    const shifted = resolvePreviewShiftedWindows(moY(), nov9, TZ, -1);
+    const currentSlots = buildTimelineSlots(shifted[0]!.start, shifted[0]!.end, "day", TZ);
+    const referenceSlots = buildTimelineSlots(shifted[1]!.start, shifted[1]!.end, "day", TZ);
+    expect(currentSlots.length).toBe(31);
+    expect(referenceSlots.length).toBe(31);
+    expect(currentSlots.length).toBe(referenceSlots.length);
   });
 });
 

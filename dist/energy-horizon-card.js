@@ -286,7 +286,7 @@ xn.elementStyles = [], xn.shadowRootOptions = { mode: "open" }, xn[ja("elementPr
  */
 const Ja = globalThis, Av = (r) => r, vl = Ja.trustedTypes, Lv = vl ? vl.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, w_ = "$lit$", Yr = `lit$${Math.random().toFixed(9).slice(2)}$`, b_ = "?" + Yr, OS = `<${b_}>`, Gi = document, mo = () => Gi.createComment(""), go = (r) => r === null || typeof r != "object" && typeof r != "function", Qh = Array.isArray, RS = (r) => Qh(r) || typeof (r == null ? void 0 : r[Symbol.iterator]) == "function", Nu = `[ 	
 \f\r]`, va = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Pv = /-->/g, Iv = />/g, ui = RegExp(`>|${Nu}(?:([^\\s"'>=/]+)(${Nu}*=${Nu}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Ev = /'/g, Ov = /"/g, S_ = /^(?:script|style|textarea|title)$/i, NS = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), B = NS(1), Gn = Symbol.for("lit-noChange"), Te = Symbol.for("lit-nothing"), Rv = /* @__PURE__ */ new WeakMap(), Ri = Gi.createTreeWalker(Gi, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Ev = /'/g, Ov = /"/g, S_ = /^(?:script|style|textarea|title)$/i, NS = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), $ = NS(1), Gn = Symbol.for("lit-noChange"), Te = Symbol.for("lit-nothing"), Rv = /* @__PURE__ */ new WeakMap(), Ri = Gi.createTreeWalker(Gi, 129);
 function x_(r, e) {
   if (!Qh(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Lv !== void 0 ? Lv.createHTML(e) : e;
@@ -6879,9 +6879,10 @@ function EM(r, e, t, i, n = 24, a = "day") {
   const s = e instanceof Date ? z.fromJSDate(e, { zone: t }) : e.setZone(t), l = xr(r.duration ?? "1y");
   let u = s;
   if (l)
-    for (let c = 0; c < -o; c++)
+    for (let f = 0; f < -o; f++)
       u = u.minus(l);
-  return $f(
+  const c = Math.min(r.count ?? 1, n);
+  return r.currentEndIsNow && r.referenceFullPeriod && c === 2 && (u = r.comparisonMode === "year_over_year" ? u.endOf("year") : u.endOf("month")), $f(
     r,
     u,
     t,
@@ -7039,12 +7040,12 @@ function le(r) {
   return e;
 }
 function ue(r, e, t) {
-  if (!J(e) || !J(r))
+  if (!j(e) || !j(r))
     return t ? le(e) : r;
   for (var i in e)
     if (e.hasOwnProperty(i) && i !== dd) {
       var n = r[i], a = e[i];
-      J(a) && J(n) && !F(a) && !F(n) && !wo(a) && !wo(n) && !yp(a) && !yp(n) && !eo(a) && !eo(n) ? ue(n, a, t) : (t || !(i in r)) && (r[i] = le(e[i]));
+      j(a) && j(n) && !F(a) && !F(n) && !wo(a) && !wo(n) && !yp(a) && !yp(n) && !eo(a) && !eo(n) ? ue(n, a, t) : (t || !(i in r)) && (r[i] = le(e[i]));
     }
   return r;
 }
@@ -7151,7 +7152,7 @@ function qM(r, e) {
     return r.apply(e, t.concat(hd.call(arguments)));
   };
 }
-var Me = rs && j(rs.bind) ? rs.call.bind(rs.bind) : qM;
+var Me = rs && X(rs.bind) ? rs.call.bind(rs.bind) : qM;
 function Se(r) {
   for (var e = [], t = 1; t < arguments.length; t++)
     e[t - 1] = arguments[t];
@@ -7162,7 +7163,7 @@ function Se(r) {
 function F(r) {
   return Array.isArray ? Array.isArray(r) : Bo.call(r) === "[object Array]";
 }
-function j(r) {
+function X(r) {
   return typeof r == "function";
 }
 function q(r) {
@@ -7174,7 +7175,7 @@ function Vf(r) {
 function xe(r) {
   return typeof r == "number";
 }
-function J(r) {
+function j(r) {
   var e = typeof r;
   return e === "function" || !!r && e === "object";
 }
@@ -8635,7 +8636,7 @@ var FC = (function() {
   }, r.prototype.resume = function() {
     this._paused = !1;
   }, r.prototype.setEasing = function(e) {
-    this.easing = e, this.easingFunc = j(e) ? e : to[e] || q0(e);
+    this.easing = e, this.easingFunc = X(e) ? e : to[e] || q0(e);
   }, r;
 })(), K0 = /* @__PURE__ */ (function() {
   function r(e) {
@@ -8985,7 +8986,7 @@ function VC(r) {
   return r.type === "radial";
 }
 (function() {
-  return te.hasGlobalWindow && j(window.btoa) ? function(r) {
+  return te.hasGlobalWindow && X(window.btoa) ? function(r) {
     return window.btoa(unescape(encodeURIComponent(r)));
   } : typeof Buffer < "u" ? function(r) {
     return Buffer.from(r).toString("base64");
@@ -9118,7 +9119,7 @@ var wa = [0, 0, 0, 0], YC = (function() {
       rawValue: t,
       percent: 0
     };
-    return i && (d.easing = i, d.easingFunc = j(i) ? i : to[i] || q0(i)), n.push(d), d;
+    return i && (d.easing = i, d.easingFunc = X(i) ? i : to[i] || q0(i)), n.push(d), d;
   }, r.prototype.prepare = function(e, t) {
     var i = this.keyframes;
     this._needsSort && i.sort(function(p, g) {
@@ -9852,7 +9853,7 @@ var hc = "__zr_normal__", dc = bo.concat(["ignore"]), iD = aa(bo, function(r, e)
   }, r.prototype.attr = function(e, t) {
     if (typeof e == "string")
       this.attrKV(e, t);
-    else if (J(e))
+    else if (j(e))
       for (var i = e, n = Ce(i), a = 0; a < n.length; a++) {
         var o = n[a];
         this.attrKV(o, e[o]);
@@ -10155,10 +10156,10 @@ function lD(r, e) {
   return !0;
 }
 function tw(r, e, t, i, n, a, o, s) {
-  for (var l = Ce(i), u = n.duration, c = n.delay, f = n.additive, d = n.setToFinal, h = !J(a), v = r.animators, p = [], g = 0; g < l.length; g++) {
+  for (var l = Ce(i), u = n.duration, c = n.delay, f = n.additive, d = n.setToFinal, h = !j(a), v = r.animators, p = [], g = 0; g < l.length; g++) {
     var m = l[g], y = i[m];
     if (y != null && t[m] != null && (h || a[m]))
-      if (J(y) && !ct(y) && !ru(y)) {
+      if (j(y) && !ct(y) && !ru(y)) {
         if (e) {
           s || (t[m] = y, r.updateDuringAnimation(e));
           continue;
@@ -10548,17 +10549,17 @@ function nh(r, e, t) {
 }
 var Jp = ["fontStyle", "fontWeight", "fontSize", "fontFamily", "rich", "tag", "color", "textBorderColor", "textBorderWidth", "width", "height", "lineHeight", "align", "verticalAlign", "baseline", "shadowColor", "shadowBlur", "shadowOffsetX", "shadowOffsetY", "textShadowColor", "textShadowBlur", "textShadowOffsetX", "textShadowOffsetY", "backgroundColor", "borderColor", "borderWidth", "borderRadius", "padding"];
 function Ho(r) {
-  return J(r) && !F(r) && !(r instanceof Date) ? r.value : r;
+  return j(r) && !F(r) && !(r instanceof Date) ? r.value : r;
 }
 function bD(r) {
-  return J(r) && !(r instanceof Array);
+  return j(r) && !(r instanceof Array);
 }
 function SD(r, e, t) {
   var i = t === "normalMerge", n = t === "replaceMerge", a = t === "replaceAll";
   r = r || [], e = (e || []).slice();
   var o = ae();
   k(e, function(l, u) {
-    if (!J(l)) {
+    if (!j(l)) {
       e[u] = null;
       return;
     }
@@ -10643,7 +10644,7 @@ function kD(r) {
     Tr(!i || i.id == null || !e.get(i.id) || e.get(i.id) === t, "id duplicates: " + (i && i.id)), i && i.id != null && e.set(i.id, t), !t.keyInfo && (t.keyInfo = {});
   }), k(r, function(t, i) {
     var n = t.existing, a = t.newOption, o = t.keyInfo;
-    if (J(a)) {
+    if (j(a)) {
       if (o.name = a.name != null ? io(a.name) : n ? n.name : lw + i, n)
         o.id = io(n.id);
       else if (a.id != null)
@@ -10678,7 +10679,7 @@ function So(r) {
 function AD(r, e, t) {
   k(r, function(i) {
     var n = i.newOption;
-    J(n) && (i.keyInfo.mainType = e, i.keyInfo.subType = LD(e, n, i.existing, t));
+    j(n) && (i.keyInfo.mainType = e, i.keyInfo.subType = LD(e, n, i.existing, t));
   });
 }
 function LD(r, e, t, i) {
@@ -10827,7 +10828,7 @@ function kd(r, e) {
   };
 }
 function zD(r) {
-  return j(r) && /^class\s/.test(Function.prototype.toString.call(r));
+  return X(r) && /^class\s/.test(Function.prototype.toString.call(r));
 }
 function hw(r, e) {
   r.extend = e.extend;
@@ -11068,8 +11069,8 @@ function JD(r, e) {
   }
   s < r.length && yc(t, r.substring(s, r.length), e, o);
   var c = [], f = 0, d = 0, h = e.padding, v = a === "truncate", p = e.lineOverflow === "truncate", g = {};
-  function m(H, re, ne) {
-    H.width = re, H.lineHeight = ne, f += ne, d = Math.max(d, re);
+  function m(V, ne, re) {
+    V.width = ne, V.lineHeight = re, f += re, d = Math.max(d, ne);
   }
   e: for (var y = 0; y < t.lines.length; y++) {
     for (var _ = t.lines[y], w = 0, S = 0, b = 0; b < _.tokens.length; b++) {
@@ -11089,8 +11090,8 @@ function JD(r, e) {
           var E = M.backgroundColor, W = E && E.image;
           W && (W = YD(W), su(W) && (x.width = Math.max(x.width, W.width * A / W.height)));
         }
-        var V = v && i != null ? i - S : null;
-        V != null && V < x.width ? !I || V < T ? (x.text = "", x.width = x.contentWidth = 0) : (ZD(g, x.text, V - T, D, e.ellipsis, { minChar: e.truncateMinChar }), x.text = g.text, t.isTruncated = t.isTruncated || g.isTruncated, x.width = x.contentWidth = gt(x.text, D)) : x.contentWidth = gt(x.text, D);
+        var H = v && i != null ? i - S : null;
+        H != null && H < x.width ? !I || H < T ? (x.text = "", x.width = x.contentWidth = 0) : (ZD(g, x.text, H - T, D, e.ellipsis, { minChar: e.truncateMinChar }), x.text = g.text, t.isTruncated = t.isTruncated || g.isTruncated, x.width = x.contentWidth = gt(x.text, D)) : x.contentWidth = gt(x.text, D);
       }
       x.width += T, S += x.width, M && (w = Math.max(w, x.lineHeight));
     }
@@ -11098,8 +11099,8 @@ function JD(r, e) {
   }
   t.outerWidth = t.width = ie(i, d), t.outerHeight = t.height = ie(n, f), t.contentHeight = f, t.contentWidth = d, h && (t.outerWidth += h[1] + h[3], t.outerHeight += h[0] + h[2]);
   for (var y = 0; y < c.length; y++) {
-    var x = c[y], $ = x.percentWidth;
-    x.width = parseInt($, 10) / 100 * t.width;
+    var x = c[y], B = x.percentWidth;
+    x.width = parseInt(B, 10) / 100 * t.width;
   }
   return t;
 }
@@ -11549,17 +11550,17 @@ var Ki = (function() {
             break;
           }
           case de.C: {
-            var P = i[b++], I = i[b++], E = i[b++], W = i[b++], V = i[b++], $ = i[b++];
+            var P = i[b++], I = i[b++], E = i[b++], W = i[b++], H = i[b++], B = i[b++];
             if (h) {
               var D = v[m++];
               if (g + D > y) {
                 var A = (y - g) / D;
-                xl(u, P, E, V, A, wi), xl(c, I, W, $, A, bi), e.bezierCurveTo(wi[1], bi[1], wi[2], bi[2], wi[3], bi[3]);
+                xl(u, P, E, H, A, wi), xl(c, I, W, B, A, bi), e.bezierCurveTo(wi[1], bi[1], wi[2], bi[2], wi[3], bi[3]);
                 break e;
               }
               g += D;
             }
-            e.bezierCurveTo(P, I, E, W, V, $), u = V, c = $;
+            e.bezierCurveTo(P, I, E, W, H, B), u = H, c = B;
             break;
           }
           case de.Q: {
@@ -11577,14 +11578,14 @@ var Ki = (function() {
             break;
           }
           case de.A:
-            var H = i[b++], re = i[b++], ne = i[b++], X = i[b++], se = i[b++], ce = i[b++], Re = i[b++], Xt = !i[b++], G = ne > X ? ne : X, Y = pr(ne - X) > 1e-3, Z = se + ce, U = !1;
+            var V = i[b++], ne = i[b++], re = i[b++], J = i[b++], se = i[b++], ce = i[b++], Re = i[b++], Xt = !i[b++], G = re > J ? re : J, Y = pr(re - J) > 1e-3, Z = se + ce, U = !1;
             if (h) {
               var D = v[m++];
               g + D > y && (Z = se + ce * (y - g) / D, U = !0), g += D;
             }
-            if (Y && e.ellipse ? e.ellipse(H, re, ne, X, Re, se, Z, Xt) : e.arc(H, re, G, se, Z, Xt), U)
+            if (Y && e.ellipse ? e.ellipse(V, ne, re, J, Re, se, Z, Xt) : e.arc(V, ne, G, se, Z, Xt), U)
               break e;
-            M && (s = Si(se) * ne + H, l = xi(se) * X + re), u = Si(Z) * ne + H, c = xi(Z) * X + re;
+            M && (s = Si(se) * re + V, l = xi(se) * J + ne), u = Si(Z) * re + V, c = xi(Z) * J + ne;
             break;
           case de.R:
             s = u = i[b], l = c = i[b + 1], f = i[b++], d = i[b++];
@@ -12547,7 +12548,7 @@ function lh(r, e, t, i) {
           g.__highByOuter && c && e === "self" || Pd(g);
         }), ct(e))
           a(u.getData(), e);
-        else if (J(e))
+        else if (j(e))
           for (var v = Ce(e), p = 0; p < v.length; p++)
             a(u.getData(v[p]), e[v[p]]);
         l.push(u), Ad(u).isBlured = !0;
@@ -12967,33 +12968,33 @@ function dA(r, e) {
       else if (h > Pc - Vt)
         r.moveTo(c + i * dn(l), f + i * Ci(l)), r.arc(c, f, i, l, u, !d), n > Vt && (r.moveTo(c + n * dn(u), f + n * Ci(u)), r.arc(c, f, n, u, l, d));
       else {
-        var p = void 0, g = void 0, m = void 0, y = void 0, _ = void 0, w = void 0, S = void 0, b = void 0, x = void 0, M = void 0, C = void 0, T = void 0, D = void 0, A = void 0, L = void 0, P = void 0, I = i * dn(l), E = i * Ci(l), W = n * dn(u), V = n * Ci(u), $ = h > Vt;
-        if ($) {
-          var H = e.cornerRadius;
-          H && (t = hA(H), p = t[0], g = t[1], m = t[2], y = t[3]);
-          var re = Lm(i - n) / 2;
-          if (_ = tr(re, m), w = tr(re, y), S = tr(re, p), b = tr(re, g), C = x = Ua(_, w), T = M = Ua(S, b), (x > Vt || M > Vt) && (D = i * dn(u), A = i * Ci(u), L = n * dn(l), P = n * Ci(l), h < Ow)) {
-            var ne = fA(I, E, L, P, D, A, W, V);
-            if (ne) {
-              var X = I - ne[0], se = E - ne[1], ce = D - ne[0], Re = A - ne[1], Xt = 1 / Ci(cA((X * ce + se * Re) / (oo(X * X + se * se) * oo(ce * ce + Re * Re))) / 2), G = oo(ne[0] * ne[0] + ne[1] * ne[1]);
+        var p = void 0, g = void 0, m = void 0, y = void 0, _ = void 0, w = void 0, S = void 0, b = void 0, x = void 0, M = void 0, C = void 0, T = void 0, D = void 0, A = void 0, L = void 0, P = void 0, I = i * dn(l), E = i * Ci(l), W = n * dn(u), H = n * Ci(u), B = h > Vt;
+        if (B) {
+          var V = e.cornerRadius;
+          V && (t = hA(V), p = t[0], g = t[1], m = t[2], y = t[3]);
+          var ne = Lm(i - n) / 2;
+          if (_ = tr(ne, m), w = tr(ne, y), S = tr(ne, p), b = tr(ne, g), C = x = Ua(_, w), T = M = Ua(S, b), (x > Vt || M > Vt) && (D = i * dn(u), A = i * Ci(u), L = n * dn(l), P = n * Ci(l), h < Ow)) {
+            var re = fA(I, E, L, P, D, A, W, H);
+            if (re) {
+              var J = I - re[0], se = E - re[1], ce = D - re[0], Re = A - re[1], Xt = 1 / Ci(cA((J * ce + se * Re) / (oo(J * J + se * se) * oo(ce * ce + Re * Re))) / 2), G = oo(re[0] * re[0] + re[1] * re[1]);
               C = tr(x, (i - G) / (Xt + 1)), T = tr(M, (n - G) / (Xt - 1));
             }
           }
         }
-        if (!$)
+        if (!B)
           r.moveTo(c + I, f + E);
         else if (C > Vt) {
-          var Y = tr(m, C), Z = tr(y, C), U = ys(L, P, I, E, i, Y, d), Q = ys(D, A, W, V, i, Z, d);
+          var Y = tr(m, C), Z = tr(y, C), U = ys(L, P, I, E, i, Y, d), Q = ys(D, A, W, H, i, Z, d);
           r.moveTo(c + U.cx + U.x0, f + U.cy + U.y0), C < x && Y === Z ? r.arc(c + U.cx, f + U.cy, C, Ye(U.y0, U.x0), Ye(Q.y0, Q.x0), !d) : (Y > 0 && r.arc(c + U.cx, f + U.cy, Y, Ye(U.y0, U.x0), Ye(U.y1, U.x1), !d), r.arc(c, f, i, Ye(U.cy + U.y1, U.cx + U.x1), Ye(Q.cy + Q.y1, Q.cx + Q.x1), !d), Z > 0 && r.arc(c + Q.cx, f + Q.cy, Z, Ye(Q.y1, Q.x1), Ye(Q.y0, Q.x0), !d));
         } else
           r.moveTo(c + I, f + E), r.arc(c, f, i, l, u, !d);
-        if (!(n > Vt) || !$)
-          r.lineTo(c + W, f + V);
+        if (!(n > Vt) || !B)
+          r.lineTo(c + W, f + H);
         else if (T > Vt) {
-          var Y = tr(p, T), Z = tr(g, T), U = ys(W, V, D, A, n, -Z, d), Q = ys(I, E, L, P, n, -Y, d);
+          var Y = tr(p, T), Z = tr(g, T), U = ys(W, H, D, A, n, -Z, d), Q = ys(I, E, L, P, n, -Y, d);
           r.lineTo(c + U.cx + U.x0, f + U.cy + U.y0), T < M && Y === Z ? r.arc(c + U.cx, f + U.cy, T, Ye(U.y0, U.x0), Ye(Q.y0, Q.x0), !d) : (Z > 0 && r.arc(c + U.cx, f + U.cy, Z, Ye(U.y0, U.x0), Ye(U.y1, U.x1), !d), r.arc(c, f, n, Ye(U.cy + U.y1, U.cx + U.x1), Ye(Q.cy + Q.y1, Q.cx + Q.x1), d), Y > 0 && r.arc(c + Q.cx, f + Q.cy, Y, Ye(Q.y1, Q.x1), Ye(Q.y0, Q.x0), !d));
         } else
-          r.lineTo(c + W, f + V), r.arc(c, f, n, u, l, d);
+          r.lineTo(c + W, f + H), r.arc(c, f, n, u, l, d);
       }
       r.closePath();
     }
@@ -13375,7 +13376,7 @@ function kA(r, e, t, i, n) {
   var s = e && e.isAnimationEnabled(), l = r === "update";
   if (s) {
     var u = void 0, c = void 0, f = void 0;
-    i ? (u = ie(i.duration, 200), c = ie(i.easing, "cubicOut"), f = 0) : (u = e.getShallow(l ? "animationDurationUpdate" : "animationDuration"), c = e.getShallow(l ? "animationEasingUpdate" : "animationEasing"), f = e.getShallow(l ? "animationDelayUpdate" : "animationDelay")), a && (a.duration != null && (u = a.duration), a.easing != null && (c = a.easing), a.delay != null && (f = a.delay)), j(f) && (f = f(t, n)), j(u) && (u = u(t));
+    i ? (u = ie(i.duration, 200), c = ie(i.easing, "cubicOut"), f = 0) : (u = e.getShallow(l ? "animationDurationUpdate" : "animationDuration"), c = e.getShallow(l ? "animationEasingUpdate" : "animationEasing"), f = e.getShallow(l ? "animationDelayUpdate" : "animationDelay")), a && (a.duration != null && (u = a.duration), a.easing != null && (c = a.easing), a.delay != null && (f = a.delay)), X(f) && (f = f(t, n)), X(u) && (u = u(t));
     var d = {
       duration: u || 0,
       delay: f,
@@ -13387,7 +13388,7 @@ function kA(r, e, t, i, n) {
 }
 function zd(r, e, t, i, n, a, o) {
   var s = !1, l;
-  j(n) ? (o = a, a = n, n = null) : J(n) && (a = n.cb, o = n.during, s = n.isFrom, l = n.removeOpt, n = n.dataIndex);
+  X(n) ? (o = a, a = n, n = null) : j(n) && (a = n.cb, o = n.during, s = n.isFrom, l = n.removeOpt, n = n.dataIndex);
   var u = r === "leave";
   u || e.stopAnimation("leave");
   var c = kA(r, i, n, u ? l || {} : null, i && i.getAnimationDelayParams ? i.getAnimationDelayParams(e, n) : null);
@@ -13725,7 +13726,7 @@ function Rm(r, e, t) {
   var i = r.labelFetcher, n = r.labelDataIndex, a = r.labelDimIndex, o = e.normal, s;
   i && (s = i.getFormattedLabel(n, "normal", null, a, o && o.get("formatter"), t != null ? {
     interpolatedValue: t
-  } : null)), s == null && (s = j(r.defaultText) ? r.defaultText(n, r, t) : r.defaultText);
+  } : null)), s == null && (s = X(r.defaultText) ? r.defaultText(n, r, t) : r.defaultText);
   for (var l = {
     normal: s
   }, u = 0; u < Rt.length; u++) {
@@ -14358,7 +14359,7 @@ function dL(r, e, t, i, n) {
   var a = null;
   if (q(t))
     a = t;
-  else if (j(t))
+  else if (X(t))
     a = t(r.value, e, {
       level: r.level
     });
@@ -14537,7 +14538,7 @@ function pL(r, e) {
   };
 }
 function Xi(r, e) {
-  return e = e || "transparent", q(r) ? r : J(r) && r.colorStops && (r.colorStops[0] || {}).color || e;
+  return e = e || "transparent", q(r) ? r : j(r) && r.colorStops && (r.colorStops[0] || {}).color || e;
 }
 var ul = k, mL = ["left", "right", "top", "bottom", "width", "height"], Ss = [["width", "left", "right"], ["height", "top", "bottom"]];
 function Zd(r, e, t, i, n) {
@@ -14585,7 +14586,7 @@ function Nl(r, e, t) {
 }
 function ko(r) {
   var e = r.layoutMode || r.constructor.layoutMode;
-  return J(e) ? e : e ? {
+  return j(e) ? e : e ? {
     type: e
   } : null;
 }
@@ -14805,7 +14806,7 @@ function SL(r, e, t) {
     return i;
   var a = [], o = [], s = e.ecModel, l = lb(s).datasetMap, u = n.uid + "_" + t.seriesLayoutBy, c, f;
   r = r.slice(), k(r, function(p, g) {
-    var m = J(p) ? p : r[g] = {
+    var m = j(p) ? p : r[g] = {
       name: p
     };
     m.type === "ordinal" && c == null && (c = g, f = v(m)), i[m.name] = [];
@@ -14860,7 +14861,7 @@ function TL(r, e, t, i, n, a) {
   var l, u;
   if (i) {
     var c = i[a];
-    J(c) ? (l = c.name, u = c.type) : q(c) && (l = c);
+    j(c) ? (l = c.name, u = c.type) : q(c) && (l = c);
   }
   if (u != null)
     return u === "ordinal" ? vt.Must : vt.Not;
@@ -15095,7 +15096,7 @@ var xs, Ta, Ym, Zm = "\0_ec_inner", LL = 1, Kd = (
       }
     }, e.prototype.eachComponent = function(t, i, n) {
       var a = this._componentsMap;
-      if (j(t)) {
+      if (X(t)) {
         var o = i, s = t;
         a.each(function(f, d) {
           for (var h = 0; f && h < f.length; h++) {
@@ -15104,7 +15105,7 @@ var xs, Ta, Ym, Zm = "\0_ec_inner", LL = 1, Kd = (
           }
         });
       } else
-        for (var l = q(t) ? a.get(t) : J(t) ? this.findComponents(t) : null, u = 0; l && u < l.length; u++) {
+        for (var l = q(t) ? a.get(t) : j(t) ? this.findComponents(t) : null, u = 0; l && u < l.length; u++) {
           var c = l[u];
           c && i.call(n, c, c.componentIndex);
         }
@@ -15174,7 +15175,7 @@ var xs, Ta, Ym, Zm = "\0_ec_inner", LL = 1, Kd = (
           series: []
         }), t._componentsCount = ae();
         var n = i.aria;
-        J(n) && n.enabled == null && (n.enabled = !0), IL(i, t._theme.option), ue(i, wL, !1), t._mergeOption(i, null);
+        j(n) && n.enabled == null && (n.enabled = !0), IL(i, t._theme.option), ue(i, wL, !1), t._mergeOption(i, null);
       };
     })(), e;
   })(Le)
@@ -15357,7 +15358,7 @@ function zL(r, e, t) {
 function $L(r, e) {
   return r.join(",") === e.join(",");
 }
-var $t = k, Ao = J, jm = ["areaStyle", "lineStyle", "nodeStyle", "linkStyle", "chordStyle", "label", "labelLine"];
+var $t = k, Ao = j, jm = ["areaStyle", "lineStyle", "nodeStyle", "linkStyle", "chordStyle", "label", "labelLine"];
 function zc(r) {
   var e = r && r.itemStyle;
   if (e)
@@ -15450,7 +15451,7 @@ function VL(r, e) {
     Ct(i), Xe(i, "label"), Xe(i, "itemStyle"), Xe(i, "controlStyle", !0);
     var n = i.data;
     F(n) && k(n, function(a) {
-      J(a) && (Xe(a, "label"), Xe(a, "itemStyle"));
+      j(a) && (Xe(a, "label"), Xe(a, "itemStyle"));
     });
   }), $t(mr(r.toolbox), function(i) {
     Xe(i, "iconStyle"), $t(i.feature, function(n) {
@@ -15498,7 +15499,7 @@ function hb(r, e) {
 }
 function db(r, e) {
   VL(r, e), r.series = tt(r.series), k(r.series, function(t) {
-    if (J(t)) {
+    if (j(t)) {
       var i = t.type;
       if (i === "line")
         t.clipOverflow != null && (t.clip = t.clipOverflow);
@@ -15635,13 +15636,13 @@ function pb(r) {
         if (F(n) || ft(n)) {
           e = dt;
           break;
-        } else if (J(n)) {
+        } else if (j(n)) {
           e = cr;
           break;
         }
       }
     }
-  } else if (J(r)) {
+  } else if (j(r)) {
     for (var a in r)
       if (Yi(r, a) && ct(r[a])) {
         e = Ar;
@@ -15691,7 +15692,7 @@ function rg(r) {
   if (r) {
     var e = ae();
     return K(r, function(t, i) {
-      t = J(t) ? t : {
+      t = j(t) ? t : {
         name: t
       };
       var n = {
@@ -15909,7 +15910,7 @@ var tP = /\{@(.+?)\}/g, Qd = (
         var u = s.getItemModel(e);
         a = u.get(t === "normal" ? ["label", "formatter"] : [t, "label", "formatter"]);
       }
-      if (j(a))
+      if (X(a))
         return l.status = t, l.dimensionIndex = n, a(l);
       if (q(a)) {
         var c = nb(a, l);
@@ -15932,7 +15933,7 @@ var tP = /\{@(.+?)\}/g, Qd = (
 );
 function lg(r) {
   var e, t;
-  return J(r) ? r.type && (t = r) : e = r, {
+  return j(r) ? r.type && (t = r) : e = r, {
     text: e,
     // markers: markers || markersExisting,
     frag: t
@@ -16172,7 +16173,7 @@ function fP(r, e, t) {
 }
 function hP(r, e, t, i) {
   var n = "";
-  e.length || st(n), J(r) || st(n);
+  e.length || st(n), j(r) || st(n);
   var a = r.type, o = bb.get(a);
   o || st(n);
   var s = K(e, function(u) {
@@ -16184,7 +16185,7 @@ function hP(r, e, t, i) {
   }));
   return K(l, function(u, c) {
     var f = "";
-    J(u) || st(f), u.data || st(f);
+    j(u) || st(f), u.data || st(f);
     var d = pb(u.data);
     ev(d) || st(f);
     var h, v = e[0];
@@ -17119,7 +17120,7 @@ var AP = "__universalTransitionEnabled", ii = (
         if (s === "series")
           o.selectedMap = "all";
         else if (s === "multiple") {
-          J(o.selectedMap) || (o.selectedMap = {});
+          j(o.selectedMap) || (o.selectedMap = {});
           for (var u = o.selectedMap, c = 0; c < l; c++) {
             var f = i[c], d = Ms(t, f);
             u[d] = !0, this._selectedDataIndicesMap[d] = t.getRawIndex(f);
@@ -17348,7 +17349,7 @@ var BP = {
   reset: function(r, e) {
     var t = r.getData(), i = r.visualStyleAccessPath || "itemStyle", n = r.getModel(i), a = Ob(r, i), o = a(n), s = n.getShallow("decal");
     s && (t.setVisual("decal", s), s.dirty = !0);
-    var l = Rb(r, i), u = o[l], c = j(u) ? u : null, f = o.fill === "auto" || o.stroke === "auto";
+    var l = Rb(r, i), u = o[l], c = X(u) ? u : null, f = o.fill === "auto" || o.stroke === "auto";
     if (!o[l] || c || f) {
       var d = r.getColorFromPalette(
         // TODO series count changed.
@@ -17356,7 +17357,7 @@ var BP = {
         null,
         e.getSeriesCount()
       );
-      o[l] || (o[l] = d, t.setVisual("colorFromPalette", !0)), o.fill = o.fill === "auto" || j(o.fill) ? d : o.fill, o.stroke = o.stroke === "auto" || j(o.stroke) ? d : o.stroke;
+      o[l] || (o[l] = d, t.setVisual("colorFromPalette", !0)), o.fill = o.fill === "auto" || X(o.fill) ? d : o.fill, o.stroke = o.stroke === "auto" || X(o.stroke) ? d : o.stroke;
     }
     if (t.setVisual("style", o), t.setVisual("drawType", l), !e.isSeriesFiltered(r) && c)
       return t.setVisual("colorFromPalette", !1), {
@@ -17648,7 +17649,7 @@ var Nb = (
       var i = e.uid, n = this._pipelineMap.get(i);
       !n.head && (n.head = t), n.tail && n.tail.pipe(t), n.tail = t, t.__idxInPipeline = n.count++, t.__pipeline = n;
     }, r.wrapStageHandler = function(e, t) {
-      return j(e) && (e = {
+      return X(e) && (e = {
         overallReset: e,
         seriesType: JP(e)
       }), e.uid = wu("stageHandler"), t && (e.visualType = t), e;
@@ -17951,7 +17952,7 @@ var eI = (
       return;
     for (var i = {}, n = {}, a = !1, o = 0; o < Sh.length; o++) {
       var s = Sh[o], l = r.get(s);
-      j(l) ? (a = !0, n[s] = l) : i[s] = l;
+      X(l) ? (a = !0, n[s] = l) : i[s] = l;
     }
     if (i.symbol = i.symbol || r.defaultSymbol, t.setVisual(O({
       legendIcon: r.legendIcon || i.symbol,
@@ -18507,16 +18508,16 @@ function Ch(r, e) {
         return;
       for (var L = -w, P = 0, I = 0, E = 0; L < x.height; ) {
         if (P % 2 === 0) {
-          for (var W = I / 2 % y.length, V = 0, $ = 0, H = 0; V < x.width * 2; ) {
-            for (var re = 0, A = 0; A < g[E].length; ++A)
-              re += g[E][A];
-            if (re <= 0)
+          for (var W = I / 2 % y.length, H = 0, B = 0, V = 0; H < x.width * 2; ) {
+            for (var ne = 0, A = 0; A < g[E].length; ++A)
+              ne += g[E][A];
+            if (ne <= 0)
               break;
-            if ($ % 2 === 0) {
-              var ne = (1 - o.symbolSize) * 0.5, X = V + g[E][$] * ne, se = L + m[P] * ne, ce = g[E][$] * o.symbolSize, Re = m[P] * o.symbolSize, Xt = H / 2 % y[W].length;
-              G(X, se, ce, Re, y[W][Xt]);
+            if (B % 2 === 0) {
+              var re = (1 - o.symbolSize) * 0.5, J = H + g[E][B] * re, se = L + m[P] * re, ce = g[E][B] * o.symbolSize, Re = m[P] * o.symbolSize, Xt = V / 2 % y[W].length;
+              G(J, se, ce, Re, y[W][Xt]);
             }
-            V += g[E][$], ++H, ++$, $ === g[E].length && ($ = 0);
+            H += g[E][B], ++V, ++B, B === g[E].length && (B = 0);
           }
           ++E, E === g.length && (E = 0);
         }
@@ -18739,7 +18740,7 @@ var yn, Yc, Ls, Nr, Zc, qc, Kc, Da, ka, Bg, Vg, Xc, Hg, Ps, Wg, i1, St, Gg, n1 =
           return;
         }
         var a, o, s;
-        if (J(i) && (n = i.lazyUpdate, a = i.silent, o = i.replaceMerge, s = i.transition, i = i.notMerge), this[Ze] = !0, !this._model || i) {
+        if (j(i) && (n = i.lazyUpdate, a = i.silent, o = i.replaceMerge, s = i.transition, i = i.notMerge), this[Ze] = !0, !this._model || i) {
           var l = new RL(this._api), u = this._theme, c = this._model = new Kd();
           c.scheduler = this._scheduler, c.ssr = this._ssr, c.init(null, null, null, u, this._locale, l);
         }
@@ -18987,7 +18988,7 @@ var yn, Yc, Ls, Nr, Zc, qc, Kc, Da, ka, Bg, Vg, Xc, Hg, Ps, Wg, i1, St, Gg, n1 =
         this.id;
         return;
       }
-      if (J(t) && (i = t, t = ""), t = t || "default", this.hideLoading(), !!Ah[t]) {
+      if (j(t) && (i = t, t = ""), t = t || "default", this.hideLoading(), !!Ah[t]) {
         var n = Ah[t](this._api, i), a = this._zr;
         this._loadingFX = n, a.add(n);
       }
@@ -19005,7 +19006,7 @@ var yn, Yc, Ls, Nr, Zc, qc, Kc, Da, ka, Bg, Vg, Xc, Hg, Ps, Wg, i1, St, Gg, n1 =
         this.id;
         return;
       }
-      if (J(i) || (i = {
+      if (j(i) || (i = {
         silent: !!i
       }), !!Vl[t.type] && this._model) {
         if (this[Ze]) {
@@ -19199,8 +19200,8 @@ var yn, Yc, Ls, Nr, Zc, qc, Kc, Da, ka, Bg, Vg, Xc, Hg, Ps, Wg, i1, St, Gg, n1 =
         var M = [], C, T = hh(f), D = Mm(f);
         if (D && Aw(this._api), k(b, function(P) {
           if (C = m.action(P, h._model, h._api), C = C || O({}, P), C.type = y.event || C.type, M.push(C), D) {
-            var I = Dd(f), E = I.queryOptionMap, W = I.mainTypeSpecified, V = W ? E.keys()[0] : "series";
-            Ls(h, w, P, V), St(h);
+            var I = Dd(f), E = I.queryOptionMap, W = I.mainTypeSpecified, H = W ? E.keys()[0] : "series";
+            Ls(h, w, P, H), St(h);
           } else T ? (Ls(h, w, P, "series"), St(h)) : S && Ls(h, w, P, S.main, S.sub);
         }), w !== "none" && !D && !T && !S)
           try {
@@ -19506,8 +19507,8 @@ function ov(r, e) {
   Wt.on(r, e);
 }
 function ua(r, e, t) {
-  j(e) && (t = e, e = "");
-  var i = J(r) ? r.type : [r, r = {
+  X(e) && (t = e, e = "");
+  var i = j(r) ? r.type : [r, r = {
     event: e
   }][0];
   r.event = (r.event || i).toLowerCase(), e = r.event, !fo[e] && (Tr(zg.test(i) && zg.test(e)), Vl[i] || (Vl[i] = {
@@ -19526,7 +19527,7 @@ function tn(r, e) {
 }
 var Yg = [];
 function sv(r, e, t, i, n) {
-  if ((j(e) || J(e)) && (t = e, e = i), !(me(Yg, t) >= 0)) {
+  if ((X(e) || j(e)) && (t = e, e = i), !(me(Yg, t) >= 0)) {
     Yg.push(t);
     var a = Nb.wrapStageHandler(t, n);
     a.__prio = e, a.__raw = t, r.push(a);
@@ -19775,7 +19776,7 @@ function f1(r) {
 }
 function h1(r) {
   for (var e = ae(), t = 0; t < (r || []).length; t++) {
-    var i = r[t], n = J(i) ? i.name : i;
+    var i = r[t], n = j(i) ? i.name : i;
     n != null && e.get(n) == null && e.set(n, t);
   }
   return e;
@@ -19787,7 +19788,7 @@ function d1(r) {
 function v1(r) {
   return r > 30;
 }
-var La = J, Fr = K, f2 = typeof Int32Array > "u" ? Array : Int32Array, h2 = "e\0\0", qg = -1, d2 = ["hasItemOption", "_nameList", "_idList", "_invertedIndicesMap", "_dimSummary", "userOutput", "_rawData", "_dimValueGetter", "_nameDimIdx", "_idDimIdx", "_nameRepeatCount"], v2 = ["_approximateExtent"], Kg, Is, Pa, Ia, Jc, Ea, Qc, vo = (
+var La = j, Fr = K, f2 = typeof Int32Array > "u" ? Array : Int32Array, h2 = "e\0\0", qg = -1, d2 = ["hasItemOption", "_nameList", "_idList", "_invertedIndicesMap", "_dimSummary", "userOutput", "_rawData", "_dimValueGetter", "_nameDimIdx", "_idDimIdx", "_nameRepeatCount"], v2 = ["_approximateExtent"], Kg, Is, Pa, Ia, Jc, Ea, Qc, vo = (
   /** @class */
   (function() {
     function r(e, t) {
@@ -19968,11 +19969,11 @@ var La = J, Fr = K, f2 = typeof Int32Array > "u" ? Array : Int32Array, h2 = "e\0
     }, r.prototype.indicesOfNearest = function(e, t, i) {
       return this._store.indicesOfNearest(this._getStoreDimIndex(e), t, i);
     }, r.prototype.each = function(e, t, i) {
-      j(e) && (i = t, t = e, e = []);
+      X(e) && (i = t, t = e, e = []);
       var n = i || this, a = Fr(Ia(e), this._getStoreDimIndex, this);
       this._store.each(a, n ? Me(t, n) : t);
     }, r.prototype.filterSelf = function(e, t, i) {
-      j(e) && (i = t, t = e, e = []);
+      X(e) && (i = t, t = e, e = []);
       var n = i || this, a = Fr(Ia(e), this._getStoreDimIndex, this);
       return this._store = this._store.filter(a, n ? Me(t, n) : t), this;
     }, r.prototype.selectRange = function(e) {
@@ -19982,7 +19983,7 @@ var La = J, Fr = K, f2 = typeof Int32Array > "u" ? Array : Int32Array, h2 = "e\0
         i[o] = e[a];
       }), this._store = this._store.selectRange(i), this;
     }, r.prototype.mapArray = function(e, t, i) {
-      j(e) && (i = t, t = e, e = []), i = i || this;
+      X(e) && (i = t, t = e, e = []), i = i || this;
       var n = [];
       return this.each(e, function() {
         n.push(t && t.apply(this, arguments));
@@ -20057,7 +20058,7 @@ var La = J, Fr = K, f2 = typeof Int32Array > "u" ? Array : Int32Array, h2 = "e\0
       return e || (e = new r(this._schema ? this._schema : Fr(this.dimensions, this._getDimInfo, this), this.hostModel)), Jc(e, this), e._store = this._store, e;
     }, r.prototype.wrapMethod = function(e, t) {
       var i = this[e];
-      j(i) && (this.__wrappedMethods = this.__wrappedMethods || [], this.__wrappedMethods.push(e), this[e] = function() {
+      X(i) && (this.__wrappedMethods = this.__wrappedMethods || [], this.__wrappedMethods.push(e), this[e] = function() {
         var n = i.apply(this, arguments);
         return t.apply(this, [n].concat(pd(arguments)));
       });
@@ -20109,7 +20110,7 @@ function p2(r, e) {
   function v(C) {
     var T = d[C];
     if (T < 0) {
-      var D = i[C], A = J(D) ? D : {
+      var D = i[C], A = j(D) ? D : {
         name: D
       }, L = new cl(), P = A.name;
       P != null && u.get(P) != null && (L.name = L.displayName = P), A.type != null && (L.type = A.type), A.displayName != null && (L.displayName = A.displayName);
@@ -20151,15 +20152,15 @@ function p2(r, e) {
             p++;
           p < o && I.push(p++);
         }
-      k(I, function(W, V) {
-        var $ = v(W);
-        if (l && L.type != null && ($.type = L.type), g(_e($, L), T, V), $.name == null && D) {
-          var H = D[V];
-          !J(H) && (H = {
-            name: H
-          }), $.name = $.displayName = H.name, $.defaultTooltip = H.defaultTooltip;
+      k(I, function(W, H) {
+        var B = v(W);
+        if (l && L.type != null && (B.type = L.type), g(_e(B, L), T, H), B.name == null && D) {
+          var V = D[H];
+          !j(V) && (V = {
+            name: V
+          }), B.name = B.displayName = V.name, B.defaultTooltip = V.defaultTooltip;
         }
-        A && _e($.otherDims, A);
+        A && _e(B.otherDims, A);
       });
     }
   });
@@ -20200,7 +20201,7 @@ function g2(r, e, t, i) {
   var n = Math.max(r.dimensionsDetectedCount || 1, e.length, t.length, i || 0);
   return k(e, function(a) {
     var o;
-    J(a) && (o = a.dimsDef) && (n = Math.max(n, o.length));
+    j(a) && (o = a.dimsDef) && (n = Math.max(n, o.length));
   }), n;
 }
 function y2(r, e, t) {
@@ -20329,7 +20330,7 @@ function C2(r, e, t) {
   t = t || {};
   var i = e.getSourceManager(), n, a = !1;
   n = i.getSource(), a = n.sourceFormat === Nt;
-  var o = w2(e), s = T2(e, o), l = t.useEncodeDefaulter, u = j(l) ? l : l ? Se(SL, s, e) : null, c = {
+  var o = w2(e), s = T2(e, o), l = t.useEncodeDefaulter, u = X(l) ? l : l ? Se(SL, s, e) : null, c = {
     coordDimensions: s,
     generateCoord: t.generateCoord,
     encodeDefine: e.getEncode(),
@@ -20419,7 +20420,7 @@ var A2 = 0, Lh = (
   })()
 );
 function L2(r) {
-  return J(r) && r.value != null ? r.value : r + "";
+  return j(r) && r.value != null ? r.value : r + "";
 }
 function Ph(r) {
   return r.type === "interval" || r.type === "log";
@@ -20462,7 +20463,7 @@ var lv = (
       var n = i.getSetting("ordinalMeta");
       return n || (n = new Lh({})), F(n) && (n = new Lh({
         categories: K(n, function(a) {
-          return J(a) ? a.value : a;
+          return j(a) ? a.value : a;
         })
       })), i._ordinalMeta = n, i._extent = i.getSetting("extent") || [0, n.categories.length - 1], i;
     }
@@ -20900,12 +20901,12 @@ function K2(r, e, t) {
 function X2(r, e, t, i) {
   var n = 1e4, a = qw, o = 0;
   function s(T, D, A, L, P, I, E) {
-    for (var W = new Date(D), V = D, $ = W[L](); V < A && V <= i[1]; )
+    for (var W = new Date(D), H = D, B = W[L](); H < A && H <= i[1]; )
       E.push({
-        value: V
-      }), $ += T, W[P]($), V = W.getTime();
+        value: H
+      }), B += T, W[P](B), H = W.getTime();
     E.push({
-      value: V,
+      value: H,
       notAdd: !0
     });
   }
@@ -20921,39 +20922,39 @@ function X2(r, e, t, i) {
       for (var I = 0; I < D.length - 1; I++) {
         var E = D[I].value, W = D[I + 1].value;
         if (E !== W) {
-          var V = void 0, $ = void 0, H = void 0, re = !1;
+          var H = void 0, B = void 0, V = void 0, ne = !1;
           switch (T) {
             case "year":
-              V = Math.max(1, Math.round(e / Pt / 365)), $ = Yd(t), H = vL(t);
+              H = Math.max(1, Math.round(e / Pt / 365)), B = Yd(t), V = vL(t);
               break;
             case "half-year":
             case "quarter":
             case "month":
-              V = Y2(e), $ = Hn(t), H = Xw(t);
+              H = Y2(e), B = Hn(t), V = Xw(t);
               break;
             case "week":
             // PENDING If week is added. Ignore day.
             case "half-week":
             case "day":
-              V = U2(e), $ = Su(t), H = jw(t), re = !0;
+              H = U2(e), B = Su(t), V = jw(t), ne = !0;
               break;
             case "half-day":
             case "quarter-day":
             case "hour":
-              V = Z2(e), $ = Do(t), H = Jw(t);
+              H = Z2(e), B = Do(t), V = Jw(t);
               break;
             case "minute":
-              V = jg(e, !0), $ = xu(t), H = Qw(t);
+              H = jg(e, !0), B = xu(t), V = Qw(t);
               break;
             case "second":
-              V = jg(e, !1), $ = Tu(t), H = eb(t);
+              H = jg(e, !1), B = Tu(t), V = eb(t);
               break;
             case "millisecond":
-              V = q2(e), $ = Mu(t), H = tb(t);
+              H = q2(e), B = Mu(t), V = tb(t);
               break;
           }
-          s(V, E, W, $, H, re, L), T === "year" && A.length > 1 && I === 0 && A.unshift({
-            value: A[0].value - V
+          s(H, E, W, B, V, ne, L), T === "year" && A.length > 1 && I === 0 && A.unshift({
+            value: A[0].value - H
           });
         }
       }
@@ -21076,12 +21077,12 @@ var eE = (
       var a = t.get("min", !0);
       a == null && (a = t.get("startValue", !0));
       var o = this._modelMinRaw = a;
-      j(o) ? this._modelMinNum = Ns(e, o({
+      X(o) ? this._modelMinNum = Ns(e, o({
         min: i[0],
         max: i[1]
       })) : o !== "dataMin" && (this._modelMinNum = Ns(e, o));
       var s = this._modelMaxRaw = t.get("max", !0);
-      if (j(s) ? this._modelMaxNum = Ns(e, s({
+      if (X(s) ? this._modelMaxNum = Ns(e, s({
         min: i[0],
         max: i[1]
       })) : s !== "dataMax" && (this._modelMaxNum = Ns(e, s)), n)
@@ -21213,7 +21214,7 @@ function fa(r) {
       var a = r.scale.getLabel(n), o = i.replace("{value}", a ?? "");
       return o;
     };
-  })(e) : j(e) ? /* @__PURE__ */ (function(i) {
+  })(e) : X(e) ? /* @__PURE__ */ (function(i) {
     return function(n, a) {
       return t != null && (a = n.value - t), i(cv(r, n), a, n.level != null ? {
         level: n.level
@@ -21316,7 +21317,7 @@ function ni(r) {
     });
     return;
   }
-  me(ey, r) >= 0 || (ey.push(r), j(r) && (r = {
+  me(ey, r) >= 0 || (ey.push(r), X(r) && (r = {
     install: r
   }), r.install(fE));
 }
@@ -21376,7 +21377,7 @@ function T1(r, e) {
   if (n)
     return n;
   var a, o;
-  return j(i) ? a = A1(r, i) : (o = i === "auto" ? gE(r) : i, a = k1(r, o)), D1(t, i, {
+  return X(i) ? a = A1(r, i) : (o = i === "auto" ? gE(r) : i, a = k1(r, o)), D1(t, i, {
     labels: a,
     labelCategoryInterval: o
   });
@@ -21386,7 +21387,7 @@ function pE(r, e) {
   if (n)
     return n;
   var a, o;
-  if ((!e.get("show") || r.scale.isBlank()) && (a = []), j(i))
+  if ((!e.get("show") || r.scale.isBlank()) && (a = []), X(i))
     a = A1(r, i, !0);
   else if (i === "auto") {
     var s = T1(r, r.getLabelModel());
@@ -21888,7 +21889,7 @@ function tf(r, e, t, i) {
   return e && !isNaN(e[0]) && !isNaN(e[1]) && !(i.isIgnore && i.isIgnore(t)) && !(i.clipShape && !i.clipShape.contain(e[0], e[1])) && r.getItemVisual(t, "symbol") !== "none";
 }
 function iy(r) {
-  return r != null && !J(r) && (r = {
+  return r != null && !j(r) && (r = {
     isIgnore: r
   }), r || {};
 }
@@ -22058,16 +22059,16 @@ function AE(r, e, t, i, n, a, o, s) {
   v.sort(function(ce, Re) {
     return p[ce] - p[Re];
   });
-  for (var E = u.length, W = In(E), V = In(E), $ = In(E), H = In(E), re = [], _ = 0; _ < v.length; _++) {
-    var ne = v[_], X = _ * 2, se = ne * 2;
-    W[X] = u[se], W[X + 1] = u[se + 1], V[X] = c[se], V[X + 1] = c[se + 1], $[X] = f[se], $[X + 1] = f[se + 1], H[X] = d[se], H[X + 1] = d[se + 1], re[_] = h[ne];
+  for (var E = u.length, W = In(E), H = In(E), B = In(E), V = In(E), ne = [], _ = 0; _ < v.length; _++) {
+    var re = v[_], J = _ * 2, se = re * 2;
+    W[J] = u[se], W[J + 1] = u[se + 1], H[J] = c[se], H[J + 1] = c[se + 1], B[J] = f[se], B[J + 1] = f[se + 1], V[J] = d[se], V[J + 1] = d[se + 1], ne[_] = h[re];
   }
   return {
     current: W,
-    next: V,
-    stackedOnCurrent: $,
-    stackedOnNext: H,
-    status: re
+    next: H,
+    stackedOnCurrent: B,
+    stackedOnNext: V,
+    status: ne
   };
 }
 var zr = Math.min, $r = Math.max;
@@ -22106,17 +22107,17 @@ function Ih(r, e, t, i, n, a, o, s, l) {
           h = m, v = y;
         else {
           T = b - u, D = x - c;
-          var P = m - u, I = b - m, E = y - c, W = x - y, V = void 0, $ = void 0;
+          var P = m - u, I = b - m, E = y - c, W = x - y, H = void 0, B = void 0;
           if (s === "x") {
-            V = Math.abs(P), $ = Math.abs(I);
-            var H = T > 0 ? 1 : -1;
-            h = m - H * V * o, v = y, A = m + H * $ * o, L = y;
+            H = Math.abs(P), B = Math.abs(I);
+            var V = T > 0 ? 1 : -1;
+            h = m - V * H * o, v = y, A = m + V * B * o, L = y;
           } else if (s === "y") {
-            V = Math.abs(E), $ = Math.abs(W);
-            var re = D > 0 ? 1 : -1;
-            h = m, v = y - re * V * o, A = m, L = y + re * $ * o;
+            H = Math.abs(E), B = Math.abs(W);
+            var ne = D > 0 ? 1 : -1;
+            h = m, v = y - ne * H * o, A = m, L = y + ne * B * o;
           } else
-            V = Math.sqrt(P * P + E * E), $ = Math.sqrt(I * I + W * W), C = $ / ($ + V), h = m - T * o * (1 - C), v = y - D * o * (1 - C), A = m + T * o * C, L = y + D * o * C, A = zr(A, $r(b, m)), L = zr(L, $r(x, y)), A = $r(A, zr(b, m)), L = $r(L, zr(x, y)), T = A - m, D = L - y, h = m - T * V / $, v = y - D * V / $, h = zr(h, $r(u, m)), v = zr(v, $r(c, y)), h = $r(h, zr(u, m)), v = $r(v, zr(c, y)), T = m - h, D = y - v, A = m + T * $ / V, L = y + D * $ / V;
+            H = Math.sqrt(P * P + E * E), B = Math.sqrt(I * I + W * W), C = B / (B + H), h = m - T * o * (1 - C), v = y - D * o * (1 - C), A = m + T * o * C, L = y + D * o * C, A = zr(A, $r(b, m)), L = zr(L, $r(x, y)), A = $r(A, zr(b, m)), L = $r(L, zr(x, y)), T = A - m, D = L - y, h = m - T * H / B, v = y - D * H / B, h = zr(h, $r(u, m)), v = zr(v, $r(c, y)), h = $r(h, zr(u, m)), v = $r(v, zr(c, y)), T = m - h, D = y - v, A = m + T * B / H, L = y + D * B / H;
         }
         r.bezierCurveTo(f, d, h, v, m, y), f = A, d = L;
       } else
@@ -22239,7 +22240,7 @@ function EE(r, e, t, i, n) {
   if (e) {
     var d = r.getBaseAxis(), h = d.isHorizontal(), v = d.inverse;
     h ? (v && (f.shape.x += l), f.shape.width = 0) : (v || (f.shape.y += u), f.shape.height = 0);
-    var p = j(n) ? function(g) {
+    var p = X(n) ? function(g) {
       n(g, f);
     } : null;
     sa(f, {
@@ -22538,7 +22539,7 @@ var GE = (
           stackedOnPoints: S
         })));
       }
-      var I = t.getModel("emphasis"), E = I.get("focus"), W = I.get("blurScope"), V = I.get("disabled");
+      var I = t.getModel("emphasis"), E = I.get("focus"), W = I.get("blurScope"), H = I.get("disabled");
       if (v.useStyle(_e(
         // Use color in lineStyle first
         l.getLineStyle(),
@@ -22548,28 +22549,28 @@ var GE = (
           lineJoin: "bevel"
         }
       )), Tm(v, t, "lineStyle"), v.style.lineWidth > 0 && t.get(["emphasis", "lineStyle", "width"]) === "bolder") {
-        var $ = v.getState("emphasis").style;
-        $.lineWidth = +v.style.lineWidth + 1;
+        var B = v.getState("emphasis").style;
+        B.lineWidth = +v.style.lineWidth + 1;
       }
-      pe(v).seriesIndex = t.seriesIndex, Ll(v, E, W, V);
-      var H = ly(t.get("smooth")), re = t.get("smoothMonotone");
+      pe(v).seriesIndex = t.seriesIndex, Ll(v, E, W, H);
+      var V = ly(t.get("smooth")), ne = t.get("smoothMonotone");
       if (v.setShape({
-        smooth: H,
-        smoothMonotone: re,
+        smooth: V,
+        smoothMonotone: ne,
         connectNulls: x
       }), p) {
-        var ne = s.getCalculationInfo("stackedOnSeries"), X = 0;
+        var re = s.getCalculationInfo("stackedOnSeries"), J = 0;
         p.useStyle(_e(u.getAreaStyle(), {
           fill: A,
           opacity: 0.7,
           lineJoin: "bevel",
           decal: s.getVisual("style").decal
-        })), ne && (X = ly(ne.get("smooth"))), p.setShape({
-          smooth: H,
-          stackedOnSmooth: X,
-          smoothMonotone: re,
+        })), re && (J = ly(re.get("smooth"))), p.setShape({
+          smooth: V,
+          stackedOnSmooth: J,
+          smoothMonotone: ne,
           connectNulls: x
-        }), Tm(p, t, "areaStyle"), pe(p).seriesIndex = t.seriesIndex, Ll(p, E, W, V);
+        }), Tm(p, t, "areaStyle"), pe(p).seriesIndex = t.seriesIndex, Ll(p, E, W, H);
       }
       var se = this._changePolyState;
       s.eachItemGraphicEl(function(ce) {
@@ -22632,8 +22633,8 @@ var GE = (
       var a, o, s = i.getBaseAxis(), l = s.inverse;
       i.type === "cartesian2d" ? (a = s.isHorizontal(), o = !1) : i.type === "polar" && (a = s.dim === "angle", o = !0);
       var u = t.hostModel, c = u.get("animationDuration");
-      j(c) && (c = c(null));
-      var f = u.get("animationDelay") || 0, d = j(f) ? f(null) : f;
+      X(c) && (c = c(null));
+      var f = u.get("animationDelay") || 0, d = X(f) ? f(null) : f;
       t.eachItemGraphicEl(function(h, v) {
         var p = h;
         if (p) {
@@ -22648,7 +22649,7 @@ var GE = (
             }
           var x = y === m ? 0 : (_ - m) / (y - m);
           l && (x = 1 - x);
-          var M = j(f) ? f(v) : c * x + d, C = p.getSymbolPath(), T = C.getTextContent();
+          var M = X(f) ? f(v) : c * x + d, C = p.getSymbolPath(), T = C.getTextContent();
           p.attr({
             scaleX: 0,
             scaleY: 0
@@ -22850,7 +22851,7 @@ function qE(r) {
         if (isFinite(h) && h > 1) {
           a === "lttb" ? e.setData(n.lttbDownSample(n.mapDimension(u.dim), 1 / h)) : a === "minmax" && e.setData(n.minmaxDownSample(n.mapDimension(u.dim), 1 / h));
           var v = void 0;
-          q(a) ? v = YE[a] : j(a) && (v = a), v && e.setData(n.downSample(n.mapDimension(u.dim), 1 / h, v, ZE));
+          q(a) ? v = YE[a] : X(a) && (v = a), v && e.setData(n.downSample(n.mapDimension(u.dim), 1 / h, v, ZE));
         }
       }
     }
@@ -23330,7 +23331,7 @@ var oO = (
         var i = "x" + e + "y" + t;
         return this._coordsMap[i];
       }
-      J(e) && (t = e.yAxisIndex, e = e.xAxisIndex);
+      j(e) && (t = e.yAxisIndex, e = e.xAxisIndex);
       for (var n = 0, a = this._coordsList; n < a.length; n++)
         if (a[n].getAxis("x").index === e || a[n].getAxis("y").index === t)
           return a[n];
@@ -23711,7 +23712,7 @@ function hO(r, e, t, i) {
       var m = n.scale.type === "ordinal" ? n.scale.getRawOrdinalNumber(p.tickValue) : p.tickValue, y = p.formattedLabel, _ = p.rawLabel, w = o;
       if (f && f[m]) {
         var S = f[m];
-        J(S) && S.textStyle && (w = new Le(S.textStyle, o, t.ecModel));
+        j(S) && S.textStyle && (w = new Le(S.textStyle, o, t.ecModel));
       }
       var b = w.getTextColor() || t.get(["axisLine", "lineStyle", "color"]), x = n.dataToCoord(m), M = w.getShallow("align", !0) || c.textAlign, C = ie(w.getShallow("alignMinLabel", !0), M), T = ie(w.getShallow("alignMaxLabel", !0), M), D = w.getShallow("verticalAlign", !0) || w.getShallow("baseline", !0) || c.textVerticalAlign, A = ie(w.getShallow("verticalAlignMinLabel", !0), D), L = ie(w.getShallow("verticalAlignMaxLabel", !0), D), P = new ht({
         x,
@@ -23723,7 +23724,7 @@ function hO(r, e, t, i) {
           text: y,
           align: g === 0 ? C : g === l.length - 1 ? T : M,
           verticalAlign: g === 0 ? A : g === l.length - 1 ? L : D,
-          fill: j(b) ? b(
+          fill: X(b) ? b(
             // (1) In category axis with data zoom, tick is not the original
             // index of axis.data. So tick should not be exposed to user
             // in category axis.
@@ -24561,7 +24562,7 @@ function Ay(r, e, t, i) {
   W1(Oi(t).lastProp, i) || (Oi(t).lastProp = i, e ? Dr(t, i, r) : (t.stopAnimation(), t.attr(i)));
 }
 function W1(r, e) {
-  if (J(r) && J(e)) {
+  if (j(r) && j(e)) {
     var t = !0;
     return k(e, function(i, n) {
       t = t && W1(r[n], i);
@@ -24638,7 +24639,7 @@ function G1(r, e, t, i, n) {
     k(i, function(l) {
       var u = t.getSeriesByIndex(l.seriesIndex), c = l.dataIndexInside, f = u && u.getDataParams(c);
       f && s.seriesData.push(f);
-    }), q(o) ? a = o.replace("{value}", a) : j(o) && (a = o(s));
+    }), q(o) ? a = o.replace("{value}", a) : X(o) && (a = o(s));
   }
   return a;
 }
@@ -25313,7 +25314,7 @@ var pR = (
         return null;
       var i = document.createElement("div");
       i.domBelongToZr = !0, this.el = i;
-      var n = this._zr = e.getZr(), a = t.appendTo, o = a && (q(a) ? document.querySelector(a) : wo(a) ? a : j(a) && a(e.getDom()));
+      var n = this._zr = e.getZr(), a = t.appendTo, o = a && (q(a) ? document.querySelector(a) : wo(a) ? a : X(a) && a(e.getDom()));
       $y(this._styleCoord, n, o, e.getWidth() / 2, e.getHeight() / 2), (o || e.getDom()).appendChild(i), this._api = e, this._container = o;
       var s = this;
       i.onmouseenter = function() {
@@ -25402,7 +25403,7 @@ var pR = (
       this._hideTimeout && clearTimeout(this._hideTimeout), this.el.show(), this._show = !0;
     }, r.prototype.setContent = function(e, t, i, n, a) {
       var o = this;
-      J(e) && st(""), this.el && this._zr.remove(this.el);
+      j(e) && st(""), this.el && this._zr.remove(this.el);
       var s = i.getModel("textStyle");
       this.el = new ht({
         style: {
@@ -25715,7 +25716,7 @@ var gR = new We({
           if (q(d)) {
             var g = t.ecModel.get("useUTC"), m = F(n) ? n[0] : n, y = m && m.axisType && m.axisType.indexOf("time") >= 0;
             h = d, y && (h = bu(m.axisValue, h, g)), h = nb(h, n, !0);
-          } else if (j(d)) {
+          } else if (X(d)) {
             var _ = Me(function(w, S) {
               w === this._ticket && (f.setContent(S, c, t, p, l), this._updatePosition(t, l, o, s, f, n, u));
             }, this);
@@ -25737,12 +25738,12 @@ var gR = new We({
       var u = this._api.getWidth(), c = this._api.getHeight();
       i = i || t.get("position");
       var f = o.getSize(), d = t.get("align"), h = t.get("verticalAlign"), v = l && l.getBoundingRect().clone();
-      if (l && v.applyTransform(l.transform), j(i) && (i = i([n, a], s, o.el, v, {
+      if (l && v.applyTransform(l.transform), X(i) && (i = i([n, a], s, o.el, v, {
         viewSize: [u, c],
         contentSize: f.slice()
       })), F(i))
         n = $e(i[0], u), a = $e(i[1], c);
-      else if (J(i)) {
+      else if (j(i)) {
         var p = i;
         p.width = f[0], p.height = f[1];
         var g = Nl(p, {
@@ -26107,9 +26108,9 @@ var kR = (
       var o = t.coordinateSystem, s = t.id, l = t.getData(), u = this.markerGroupMap, c = u.get(s) || u.set(s, new P1()), f = AR(o, t, i);
       i.setData(f), Gy(i.getData(), t, a), f.each(function(d) {
         var h = f.getItemModel(d), v = h.getShallow("symbol"), p = h.getShallow("symbolSize"), g = h.getShallow("symbolRotate"), m = h.getShallow("symbolOffset"), y = h.getShallow("symbolKeepAspect");
-        if (j(v) || j(p) || j(g) || j(m)) {
+        if (X(v) || X(p) || X(g) || X(m)) {
           var _ = i.getRawValue(d), w = i.getDataParams(d);
-          j(v) && (v = v(_, w)), j(p) && (p = p(_, w)), j(g) && (g = g(_, w)), j(m) && (m = m(_, w));
+          X(v) && (v = v(_, w)), X(p) && (p = p(_, w)), X(g) && (g = g(_, w)), X(m) && (m = m(_, w));
         }
         var S = h.getModel("itemStyle").getItemStyle(), b = tv(l, "color");
         S.fill || (S.fill = b), f.setItemVisual(d, {
@@ -26645,7 +26646,7 @@ var FR = function(r, e) {
       var h = t.visualDrawType, v = o.get("itemWidth"), p = o.get("itemHeight"), g = o.isSelected(i), m = a.get("symbolRotate"), y = a.get("symbolKeepAspect"), _ = a.get("icon");
       c = _ || c || "roundRect";
       var w = zR(c, a, l, u, h, g, d), S = new Vs(), b = a.getModel("textStyle");
-      if (j(t.getLegendIcon) && (!_ || _ === "inherit"))
+      if (X(t.getLegendIcon) && (!_ || _ === "inherit"))
         S.add(t.getLegendIcon({
           itemWidth: v,
           itemHeight: p,
@@ -26667,7 +26668,7 @@ var FR = function(r, e) {
         }));
       }
       var M = s === "left" ? v + 5 : -5, C = s, T = o.get("formatter"), D = i;
-      q(T) && T ? D = T.replace("{name}", i ?? "") : j(T) && (D = T(i));
+      q(T) && T ? D = T.replace("{name}", i ?? "") : X(T) && (D = T(i));
       var A = g ? b.getTextColor() : a.get("inactiveColor");
       S.add(new ht({
         style: Xn(b, {
@@ -27064,7 +27065,7 @@ var yf = (function(r) {
     var a = r.call(this) || this;
     a.motionBlur = !1, a.lastFrameAlpha = 0.7, a.dpr = 1, a.virtual = !1, a.config = {}, a.incremental = !1, a.zlevel = 0, a.maxRepaintRectCount = 5, a.__dirty = !0, a.__firstTimePaint = !0, a.__used = !1, a.__drawIndex = 0, a.__startIndex = 0, a.__endIndex = 0, a.__prevStartIndex = null, a.__prevEndIndex = null;
     var o;
-    n = n || Cl, typeof t == "string" ? o = Xy(t, i, n) : J(t) && (o = t, t = o.id), a.id = t, a.dom = o;
+    n = n || Cl, typeof t == "string" ? o = Xy(t, i, n) : j(t) && (o = t, t = o.id), a.id = t, a.dom = o;
     var s = o.style;
     return s && (N0(o), o.onselectstart = function() {
       return !1;
@@ -28038,12 +28039,12 @@ class cN {
     }, W = Math.min(
       Math.max(a.fillCurrentOpacity, 0),
       100
-    ) / 100, V = Math.min(
+    ) / 100, H = Math.min(
       Math.max(a.fillReferenceOpacity, 0),
       100
-    ) / 100, $ = a.showReferenceComparison !== !1 && t.some((G) => G !== null), H = [];
+    ) / 100, B = a.showReferenceComparison !== !1 && t.some((G) => G !== null), V = [];
     if (a.previewMode === !0) {
-      H.push({
+      V.push({
         name: o.current,
         type: "line",
         color: s.previewCurrent,
@@ -28065,7 +28066,7 @@ class cN {
         itemStyle: { color: s.previewCurrent }
       });
       const G = t.some((Z) => Z !== null);
-      G && H.push({
+      G && V.push({
         name: o.reference,
         type: "line",
         color: s.previewReference,
@@ -28191,11 +28192,11 @@ class cN {
             }
           }
         },
-        series: H
+        series: V
       };
     }
     for (const G of [...i].reverse())
-      H.push({
+      V.push({
         name: G.name,
         type: "line",
         color: s.seriesReference,
@@ -28210,9 +28211,9 @@ class cN {
         emphasis: { focus: "none" },
         showInLegend: !1
       });
-    let re;
-    if ($) {
-      re = H.length, H.push({
+    let ne;
+    if (B) {
+      ne = V.length, V.push({
         name: o.reference,
         type: "line",
         color: s.seriesReference,
@@ -28220,7 +28221,7 @@ class cN {
         lineStyle: { color: s.seriesReference, width: 1.5 },
         areaStyle: {
           color: s.seriesReference,
-          opacity: a.fillReference ? V : 0
+          opacity: a.fillReference ? H : 0
         },
         connectNulls: !1,
         showSymbol: !1,
@@ -28237,7 +28238,7 @@ class cN {
         itemStyle: { color: s.seriesReference }
       });
       const G = this.buildDashedNullGapValues(t);
-      a.connectNulls && G.some((Y) => Y !== null) && H.push({
+      a.connectNulls && G.some((Y) => Y !== null) && V.push({
         name: `${o.reference} (dashed)`,
         type: "line",
         color: s.seriesReference,
@@ -28256,15 +28257,15 @@ class cN {
         emphasis: { focus: "none" }
       });
     }
-    const ne = H.length, X = s.seriesCurrent;
-    if (H.push({
+    const re = V.length, J = s.seriesCurrent;
+    if (V.push({
       name: o.current,
       type: "line",
-      color: X,
+      color: J,
       data: e.map((G, Y) => G !== null ? [Y, G] : null),
-      lineStyle: { color: X, width: 1.5 },
+      lineStyle: { color: J, width: 1.5 },
       areaStyle: {
-        color: X,
+        color: J,
         opacity: a.fillCurrent ? W : 0
       },
       connectNulls: !1,
@@ -28276,25 +28277,25 @@ class cN {
         focus: "series",
         showSymbol: !0,
         symbolSize: 6,
-        itemStyle: { color: X },
-        lineStyle: { color: X }
+        itemStyle: { color: J },
+        lineStyle: { color: J }
       },
-      itemStyle: { color: X }
+      itemStyle: { color: J }
     }), a.connectNulls) {
       const G = this.buildDashedNullGapValues(e);
-      G.some((Y) => Y !== null) && H.push({
+      G.some((Y) => Y !== null) && V.push({
         name: `${o.current} (dashed)`,
         type: "line",
-        color: X,
+        color: J,
         data: G.map((Y, Z) => Y !== null ? [Z, Y] : null),
-        lineStyle: { type: "dashed", color: X, width: 1.5 },
+        lineStyle: { type: "dashed", color: J, width: 1.5 },
         areaStyle: {
           opacity: 0
         },
         connectNulls: !1,
         showSymbol: !1,
         smooth: !1,
-        itemStyle: { color: X },
+        itemStyle: { color: J },
         showInLegend: !1,
         silent: !0,
         tooltip: { show: !1 },
@@ -28331,20 +28332,20 @@ class cN {
         symbol: "circle",
         symbolSize: 8,
         itemStyle: {
-          color: X,
+          color: J,
           borderColor: s.referenceDotBorder,
           borderWidth: 2
         }
-      }), H[ne].markLine = {
+      }), V[re].markLine = {
         silent: !0,
         symbol: ["none", "none"],
         label: { show: !1 },
         data: Q,
         lineStyle: { type: "dashed", color: s.todayFullHeightLine, width: 1 }
-      }, H[ne].markPoint = {
+      }, V[re].markPoint = {
         silent: !0,
         data: Ne
-      }, re !== void 0 && Y !== null && (H[re].markPoint = {
+      }, ne !== void 0 && Y !== null && (V[ne].markPoint = {
         silent: !0,
         data: [
           {
@@ -28358,12 +28359,12 @@ class cN {
             }
           }
         ]
-      }), a.showForecast && T >= 0 && G !== null && a.forecastTotal !== void 0 && H.push({
+      }), a.showForecast && T >= 0 && G !== null && a.forecastTotal !== void 0 && V.push({
         name: a.forecastLabel,
         type: "line",
-        color: X,
+        color: J,
         data: [[T, G], [n.length - 1, a.forecastTotal]],
-        lineStyle: { type: "dashed", color: X, width: 1.5 },
+        lineStyle: { type: "dashed", color: J, width: 1.5 },
         areaStyle: { opacity: 0 },
         showSymbol: !1,
         connectNulls: !1,
@@ -28373,21 +28374,21 @@ class cN {
           focus: "series",
           showSymbol: !0,
           symbolSize: 6,
-          itemStyle: { color: X },
-          lineStyle: { color: X }
+          itemStyle: { color: J },
+          lineStyle: { color: J }
         },
-        itemStyle: { color: X }
+        itemStyle: { color: J }
       });
     } else
-      H[ne].markPoint = { silent: !0, data: [] }, H[ne].markLine = {
+      V[re].markPoint = { silent: !0, data: [] }, V[re].markLine = {
         silent: !0,
         symbol: ["none", "none"],
         label: { show: !1 },
         data: [],
-        lineStyle: { type: "dashed", color: X, width: 1.5 }
-      }, re !== void 0 && (H[re].markPoint = { silent: !0, data: [] });
+        lineStyle: { type: "dashed", color: J, width: 1.5 }
+      }, ne !== void 0 && (V[ne].markPoint = { silent: !0, data: [] });
     const se = T >= 0 ? e[T] ?? null : null, ce = T >= 0 && a.showForecast && se !== null && a.forecastTotal !== void 0, Re = [o.current];
-    return $ && Re.push(o.reference), ce && Re.push(a.forecastLabel), {
+    return B && Re.push(o.reference), ce && Re.push(a.forecastLabel), {
       animation: !1,
       // Explicit grid bounds — `containLabel: false` so each side means the exact pixel distance
       // from the chart canvas edge to the axis line. Labels hang outside the plot area into the
@@ -28511,7 +28512,7 @@ class cN {
           }
         }
       },
-      series: H
+      series: V
     };
   }
   /**
@@ -30000,6 +30001,19 @@ const RN = __`
     pointer-events: none;
   }
 
+  /* Preview no-data (909 T026): the chart stays in place (stable card height,
+     x-axis with the period's start/end labels, empty plot); the standard
+     no-data indication is overlaid centered on the chart area. */
+  .ebc-chart-nodata-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
   .ebc-section--comment {
     display: flex;
     align-items: flex-start;
@@ -31148,7 +31162,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
     const a = this._fieldId(e), o = e.control, s = (l) => l == null ? "" : String(l);
     switch (o.kind) {
       case "entity":
-        return this._haAvailable("ha-entity-picker") ? B`
+        return this._haAvailable("ha-entity-picker") ? $`
               <ha-entity-picker
                 id=${a}
                 .hass=${this.hass}
@@ -31158,7 +31172,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 ?disabled=${i}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-entity-picker>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="text"
@@ -31168,7 +31182,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               />
             `;
       case "icon":
-        return this._haAvailable("ha-icon-picker") ? B`
+        return this._haAvailable("ha-icon-picker") ? $`
               <ha-icon-picker
                 id=${a}
                 .hass=${this.hass}
@@ -31177,7 +31191,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 ?disabled=${i}
                 @value-changed=${(l) => this._onFieldValueChanged(e, l)}
               ></ha-icon-picker>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="text"
@@ -31187,7 +31201,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               />
             `;
       case "text":
-        return this._haAvailable("ha-input") ? B`
+        return this._haAvailable("ha-input") ? $`
               <ha-input
                 id=${a}
                 .label=${n(e.labelKey)}
@@ -31197,7 +31211,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 @focusin=${(l) => this._onFieldFocus(e, l)}
                 @focusout=${() => this._onFieldBlur(e)}
               ></ha-input>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="text"
@@ -31209,7 +31223,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               />
             `;
       case "number":
-        return this._haAvailable("ha-input") ? B`
+        return this._haAvailable("ha-input") ? $`
             <ha-input
               id=${a}
               type="number"
@@ -31222,9 +31236,9 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               @focusin=${(l) => this._onFieldFocus(e, l)}
               @focusout=${() => this._onFieldBlur(e)}
             >
-              ${o.suffix ? B`<span slot="end" class="field-suffix">${o.suffix}</span>` : Te}
+              ${o.suffix ? $`<span slot="end" class="field-suffix">${o.suffix}</span>` : Te}
             </ha-input>
-          ` : B`
+          ` : $`
           <div class="field-number-box">
             <input
               id=${a}
@@ -31237,18 +31251,18 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               @focusin=${(l) => this._onFieldFocus(e, l)}
               @focusout=${() => this._onFieldBlur(e)}
             />
-            ${o.suffix ? B`<span class="field-suffix">${o.suffix}</span>` : Te}
+            ${o.suffix ? $`<span class="field-suffix">${o.suffix}</span>` : Te}
           </div>
         `;
       case "select": {
         const l = o.options.map(
-          (u) => B`
+          (u) => $`
             <option value=${u.value} ?selected=${s(t) === u.value}>
               ${n(u.labelKey)}
             </option>
           `
         );
-        return this._haAvailable("ha-select") ? B`
+        return this._haAvailable("ha-select") ? $`
               <ha-select
                 id=${a}
                 .label=${n(e.labelKey)}
@@ -31260,7 +31274,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 ?disabled=${i}
                 @selected=${(u) => this._onFieldSelect(e, u)}
               ></ha-select>
-            ` : B`
+            ` : $`
               <select
                 id=${a}
                 .value=${s(t)}
@@ -31272,27 +31286,27 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
             `;
       }
       case "boolean":
-        return e.dummy ? this._haAvailable("ha-switch") ? B`
+        return e.dummy ? this._haAvailable("ha-switch") ? $`
                 <ha-switch
                   id=${a}
                   .checked=${!0}
                   ?disabled=${!0}
                 ></ha-switch>
-              ` : B`
+              ` : $`
                 <input
                   id=${a}
                   type="checkbox"
                   .checked=${!0}
                   ?disabled=${!0}
                 />
-              ` : this._haAvailable("ha-switch") ? B`
+              ` : this._haAvailable("ha-switch") ? $`
               <ha-switch
                 id=${a}
                 .checked=${!!t}
                 ?disabled=${i}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-switch>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="checkbox"
@@ -31302,7 +31316,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               />
             `;
       case "slider":
-        return this._haAvailable("ha-slider") ? B`
+        return this._haAvailable("ha-slider") ? $`
               <ha-slider
                 id=${a}
                 .value=${Number(t ?? o.min ?? 0)}
@@ -31312,7 +31326,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 ?disabled=${i}
                 @change=${(l) => this._onFieldChange(e, l)}
               ></ha-slider>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="range"
@@ -31325,7 +31339,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
               />
             `;
       case "color":
-        return this._haAvailable("ha-color-picker") ? B`
+        return this._haAvailable("ha-color-picker") ? $`
               <ha-color-picker
                 id=${a}
                 .label=${n(e.labelKey)}
@@ -31333,7 +31347,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 ?disabled=${i}
                 @value-changed=${(l) => this._onFieldValueChanged(e, l)}
               ></ha-color-picker>
-            ` : B`
+            ` : $`
               <input
                 id=${a}
                 type="text"
@@ -31363,10 +31377,10 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
    */
   _renderFieldLabel(e, t) {
     const i = e.control.kind, n = this._haTagForKind(i);
-    return n !== null && this._haAvailable(n) && this._hasBuiltInLabel(i) ? Te : B`
+    return n !== null && this._haAvailable(n) && this._hasBuiltInLabel(i) ? Te : $`
       <label class="field-label" for=${this._fieldId(e)}>
         ${t(e.labelKey)}
-        ${e.required ? B`<span class="req">*</span>` : ""}
+        ${e.required ? $`<span class="req">*</span>` : ""}
       </label>
     `;
   }
@@ -31397,7 +31411,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
     const f = (m, y = "") => {
       var w;
       const _ = s ? m.column ? `grid-column: ${m.column}; grid-row: ${l.get(m.key)}` : "grid-column: 1 / -1" : "";
-      return B`
+      return $`
       <div
         class=${y ? `field ${y}` : "field"}
         data-field=${m.key}
@@ -31411,7 +31425,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
         ((w = m.disabledWhen) == null ? void 0 : w.call(m, t)) ?? !1,
         i
       )}
-        ${m.helperKey ? B`<p class="field-helper">${i(m.helperKey)}</p>` : Te}
+        ${m.helperKey ? $`<p class="field-helper">${i(m.helperKey)}</p>` : Te}
       </div>
     `;
     }, d = [];
@@ -31420,7 +31434,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
       if (m.subsection !== h && (h = m.subsection, m.subsection)) {
         const _ = u.get(m.subsection), w = s && _ !== void 0 ? `grid-column: ${_}; grid-row: 1` : "";
         d.push(
-          B`<div
+          $`<div
               class="subsection-header"
               style=${w || Te}
             >${i(m.subsection)}</div>`
@@ -31430,7 +31444,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
         continue;
       const y = c.get(m.key) ?? [];
       y.length === 0 ? d.push(f(m)) : d.push(
-        B`
+        $`
             <div class="field-row">
               ${f(m, "field-main")}
               ${y.map(
@@ -31446,7 +31460,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
           `
       );
     }
-    const v = s ? B`<div class="section-columns">${d}</div>` : B`${d}`, p = B`
+    const v = s ? $`<div class="section-columns">${d}</div>` : $`${d}`, p = $`
       <a
         class="section-docs-link"
         href=${WN[e]}
@@ -31459,7 +31473,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
         <ha-icon icon="mdi:help-circle-outline"></ha-icon>
       </a>
     `;
-    return this._haAvailable("ha-expansion-panel") ? B`
+    return this._haAvailable("ha-expansion-panel") ? $`
           <ha-expansion-panel
             class="editor-section"
             data-section=${e}
@@ -31476,7 +31490,7 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
             <div slot="icons" class="section-header-actions">${p}</div>
             ${v}
           </ha-expansion-panel>
-        ` : B`
+        ` : $`
           <div
             class="editor-section"
             data-section=${e}
@@ -31503,11 +31517,11 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
   }
   render() {
     if (!this._config)
-      return B``;
+      return $``;
     const e = Ka(this._labelLanguage()), t = e("editor.visual_mode"), i = e("editor.yaml_mode");
-    return B`
+    return $`
       <div class="editor">
-        ${this._hasYamlSupport() ? B`
+        ${this._hasYamlSupport() ? $`
               <div class="toggle-row">
                 <button
                   type="button"
@@ -31525,20 +31539,20 @@ class oi extends (qh = En, SS = [dS({ attribute: !1 })], bS = [Ys()], wS = [Ys()
                 </button>
               </div>
             ` : ""}
-        ${this._editorMode === "visual" ? B`
+        ${this._editorMode === "visual" ? $`
               <div class="sections" @scroll=${this._onScroll}>
                 ${HN.map(
       (n) => this._renderSection(n, this._config, e)
     )}
               </div>
-            ` : B`
+            ` : $`
               <textarea
                 class="yaml-editor"
                 .value=${this._yamlText}
                 @input=${this._onYamlInput}
                 @blur=${() => this._flushYaml()}
               ></textarea>
-              ${this._yamlError ? B`<p class="error">${e("editor.yaml_error")}: ${this._yamlError}</p>` : ""}
+              ${this._yamlError ? $`<p class="error">${e("editor.yaml_error")}: ${this._yamlError}</p>` : ""}
             `}
       </div>
     `;
@@ -31767,9 +31781,9 @@ function p_(r, e) {
   for (; (a = n.exec(r)) !== null; ) {
     a.index > i && t.push(r.slice(i, a.index));
     const o = a[1], s = e[o] ?? a[0];
-    t.push(B`<span class="ebc-comment-emphasis">${s}</span>`), i = a.index + a[0].length;
+    t.push($`<span class="ebc-comment-emphasis">${s}</span>`), i = a.index + a[0].length;
   }
-  return t.push(r.slice(i)), B`<div class="ebc-comment-text">${t}</div>`;
+  return t.push(r.slice(i)), $`<div class="ebc-comment-text">${t}</div>`;
 }
 function m_(r) {
   return r.show_forecast !== !1;
@@ -31853,52 +31867,61 @@ const ql = class ql extends En {
     return 4;
   }
   updated(e) {
-    var t, i, n, a, o;
+    var t, i, n, a, o, s, l, u;
     if ((e.has("hass") || e.has("_config") || e.has("_state") || e.has("_previewLoading")) && ((this._state.status === "loading" || this._previewLoading) && this._inFlightGeneration !== this._loadGeneration && this._loadData(), this._state.status === "ready" && this._state.comparisonSeries)) {
       if (!this._chartRenderer) {
-        const c = this.renderRoot.querySelector(".chart-container");
-        c && (this._chartRenderer = new cN(c));
+        const h = this.renderRoot.querySelector(".chart-container");
+        h && (this._chartRenderer = new cN(h));
       }
-      const s = Cn(this.hass, this._config), l = Ka(s.language), u = this._state.previewShift != null && this._state.previewShift < 0 && this._state.previewSeries != null && this._state.previewChartTime != null;
-      if (this._chartRenderer && u) {
-        const c = this._state.previewSeries, f = this._state.previewChartTime, d = this._state.previewWindows ?? [], { timeline: h } = f, v = this._buildRendererConfig(h), p = (t = d[0]) == null ? void 0 : t.start, g = p ? z.fromJSDate(p, { zone: s.timeZone }) : null;
-        let m = "";
-        g && (g.month === 1 && g.day === 1 ? m = String(g.year) : m = new Intl.DateTimeFormat(s.language, {
+      const c = Cn(this.hass, this._config), f = Ka(c.language), d = this._state.previewShift != null && this._state.previewShift < 0 && this._state.previewChartTime != null;
+      if (this._chartRenderer && d) {
+        const h = this._state.previewSeries, v = this._state.previewChartTime, p = this._state.previewWindows ?? [], { timeline: g } = v, m = this._buildRendererConfig(g), y = (t = p[0]) == null ? void 0 : t.start, _ = y ? z.fromJSDate(y, { zone: c.timeZone }) : null;
+        let w = "";
+        _ && (_.month === 1 && _.day === 1 ? w = String(_.year) : w = new Intl.DateTimeFormat(c.language, {
           month: "long",
           year: "numeric"
-        }).format(p));
-        const y = d.length >= 2 ? c_(
-          d[0],
-          d[1],
-          s.timeZone
-        ) : { omitYearOnAxis: !1, dayOfMonthOnlyOnAxis: !1 }, _ = {
-          ...v,
-          periodLabel: m,
-          windowAlignStartsMs: f.alignStartsMs,
-          currentWindowStartMs: (i = d[0]) == null ? void 0 : i.start.getTime(),
-          currentWindowEndMs: (n = d[0]) == null ? void 0 : n.end.getTime(),
-          referencePeriodStart: (a = d[1]) == null ? void 0 : a.start.getTime(),
-          singleWindowMode: d.length < 2,
-          showReferenceComparison: d.length >= 2 && c.reference != null,
+        }).format(y));
+        const S = p.length >= 2 ? c_(
+          p[0],
+          p[1],
+          c.timeZone
+        ) : { omitYearOnAxis: !1, dayOfMonthOnlyOnAxis: !1 }, b = h ?? {
+          current: {
+            points: [],
+            unit: ((i = this._state.comparisonSeries) == null ? void 0 : i.current.unit) ?? "",
+            periodLabel: this._localizeOrError(f, "period.current"),
+            total: 0
+          },
+          aggregation: ((n = p[0]) == null ? void 0 : n.aggregation) ?? "day",
+          time_zone: ((a = this._state.comparisonSeries) == null ? void 0 : a.time_zone) ?? c.timeZone
+        }, x = {
+          ...m,
+          periodLabel: w,
+          windowAlignStartsMs: v.alignStartsMs,
+          currentWindowStartMs: (o = p[0]) == null ? void 0 : o.start.getTime(),
+          currentWindowEndMs: (s = p[0]) == null ? void 0 : s.end.getTime(),
+          referencePeriodStart: (l = p[1]) == null ? void 0 : l.start.getTime(),
+          singleWindowMode: p.length < 2,
+          showReferenceComparison: p.length >= 2 && (h == null ? void 0 : h.reference) != null,
           showForecast: !1,
-          unit: c.current.unit,
-          primaryAggregation: (o = d[0]) == null ? void 0 : o.aggregation,
-          tailLabelFromIndex: f.tailLabelFromIndex,
-          fullTimeline: h,
-          comparisonAxisOmitYear: y.omitYearOnAxis,
-          comparisonAxisDayOfMonthOnly: y.dayOfMonthOnlyOnAxis,
+          unit: b.current.unit,
+          primaryAggregation: (u = p[0]) == null ? void 0 : u.aggregation,
+          tailLabelFromIndex: v.tailLabelFromIndex,
+          fullTimeline: g,
+          comparisonAxisOmitYear: S.omitYearOnAxis,
+          comparisonAxisDayOfMonthOnly: S.dayOfMonthOnlyOnAxis,
           previewMode: !0,
-          previewSeries: c
+          previewSeries: h
         };
-        this._chartRenderer.update(c, h, _, {
-          current: this._localizeOrError(l, "period.current"),
-          reference: this._localizeOrError(l, "period.reference")
+        this._chartRenderer.update(b, g, x, {
+          current: this._localizeOrError(f, "period.current"),
+          reference: this._localizeOrError(f, "period.reference")
         });
       } else if (this._chartRenderer && this._state.period && this._state.resolvedWindows && this._state.chartTime) {
-        const { timeline: c } = this._state.chartTime, f = this._buildRendererConfig(c);
-        this._chartRenderer.update(this._state.comparisonSeries, c, f, {
-          current: this._localizeOrError(l, "period.current"),
-          reference: this._localizeOrError(l, "period.reference")
+        const { timeline: h } = this._state.chartTime, v = this._buildRendererConfig(h);
+        this._chartRenderer.update(this._state.comparisonSeries, h, v, {
+          current: this._localizeOrError(f, "period.current"),
+          reference: this._localizeOrError(f, "period.reference")
         });
       }
     }
@@ -31997,50 +32020,50 @@ const ql = class ql extends En {
             this.previewShift,
             24,
             a.aggregation ?? "day"
-          ), E = Math.min(2, I.length), W = I.slice(0, E), V = pp(
+          ), E = Math.min(2, I.length), W = I.slice(0, E), H = pp(
             W,
             this._config.entity
-          ), $ = await Promise.all(
-            V.map(
-              (re) => this.hass.connection.sendMessagePromise(
-                re
+          ), B = await Promise.all(
+            H.map(
+              (J) => this.hass.connection.sendMessagePromise(
+                J
               )
             )
-          ), H = qu(
-            $[0],
+          ), V = vp(
+            W,
+            a,
+            i.timeZone
+          ), ne = W.length >= 2 ? dp(
+            V.timeline,
+            V.alignStartsMs[0],
+            W[0].end
+          ) : V.timeline.length;
+          L = W, P = {
+            timeline: V.timeline,
+            alignStartsMs: V.alignStartsMs,
+            forecastPeriodBuckets: V.forecastPeriodBuckets,
+            tailLabelFromIndex: ne
+          };
+          const re = qu(
+            B[0],
             this._config.entity,
             n("period.current")
           );
-          if (H) {
-            const re = E > 1 ? qu(
-              $[1],
+          if (re) {
+            const J = E > 1 ? qu(
+              B[1],
               this._config.entity,
               n("period.reference")
-            ) : void 0, ne = {
-              current: H,
-              reference: re ?? void 0,
+            ) : void 0, se = {
+              current: re,
+              reference: J ?? void 0,
               aggregation: u.aggregation,
               time_zone: u.time_zone
             };
             A = this._applyUnitScalingToSeries(
-              ne,
+              se,
               y
             );
-            const X = vp(
-              W,
-              a,
-              i.timeZone
-            ), se = W.length >= 2 ? dp(
-              X.timeline,
-              X.alignStartsMs[0],
-              W[0].end
-            ) : X.timeline.length;
-            L = W, P = {
-              timeline: X.timeline,
-              alignStartsMs: X.alignStartsMs,
-              forecastPeriodBuckets: X.forecastPeriodBuckets,
-              tailLabelFromIndex: se
-            };
           }
         } catch (I) {
           this._config.debug && console.warn(
@@ -32177,7 +32200,7 @@ const ql = class ql extends En {
     };
   }
   _buildRendererConfig(e = []) {
-    var T, D, A, L, P, I, E, W, V, $, H;
+    var T, D, A, L, P, I, E, W, H, B, V;
     const t = Cn(this.hass ?? null, this._config), i = t.language, n = n_(t.numberFormat, t.language), a = Ka(i), o = this._localizeOrError(
       a,
       "forecast.current_forecast"
@@ -32237,10 +32260,10 @@ const ql = class ql extends En {
       unit: x,
       periodLabel: b,
       referencePeriodStart: h.reference_start.getTime(),
-      windowAlignStartsMs: p == null ? void 0 : p.map((re) => re.start.getTime()),
+      windowAlignStartsMs: p == null ? void 0 : p.map((ne) => ne.start.getTime()),
       tailLabelFromIndex: y == null ? void 0 : y.tailLabelFromIndex,
-      currentWindowStartMs: (V = _ == null ? void 0 : _.start) == null ? void 0 : V.getTime(),
-      currentWindowEndMs: ($ = _ == null ? void 0 : _.end) == null ? void 0 : $.getTime(),
+      currentWindowStartMs: (H = _ == null ? void 0 : _.start) == null ? void 0 : H.getTime(),
+      currentWindowEndMs: (B = _ == null ? void 0 : _.end) == null ? void 0 : B.getTime(),
       comparisonMode: this._config.comparison_preset,
       language: i,
       numberLocale: n,
@@ -32257,7 +32280,7 @@ const ql = class ql extends En {
       mergedDurationMs: f,
       tooltipFormatPattern: d || void 0,
       chartTheme: this._resolveChartTheme(),
-      chartTrend: ((H = this._state.textSummary) == null ? void 0 : H.trend) ?? "unknown",
+      chartTrend: ((V = this._state.textSummary) == null ? void 0 : V.trend) ?? "unknown",
       chartSemanticOutcome: g ? "neutral" : m.outcome,
       comparisonAxisOmitYear: C.omitYearOnAxis,
       comparisonAxisDayOfMonthOnly: C.dayOfMonthOnlyOnAxis
@@ -32266,10 +32289,10 @@ const ql = class ql extends En {
   render() {
     var Q, Ne, he, Ge, yt, jt, Ue, Lr, _t, Fe, wt, Je, si, qo, ha, Ko;
     if (!this._config || !this.hass)
-      return B``;
+      return $``;
     const e = Cn(this.hass, this._config), t = Ka(e.language);
     if (this._state.status === "loading")
-      return B`<ha-card class="ebc-card">
+      return $`<ha-card class="ebc-card">
         <div class="loading">
           <ha-circular-progress active size="small"></ha-circular-progress>
           <span>${this._localizeOrError(t, "status.loading")}</span>
@@ -32277,7 +32300,7 @@ const ql = class ql extends En {
       </ha-card>`;
     if (this._state.status === "error") {
       const De = this._state.errorMessage ?? "status.error_generic";
-      return B`<ha-card class="ebc-card">
+      return $`<ha-card class="ebc-card">
         <ha-alert alert-type="error">
           ${this._localizeOrError(
         t,
@@ -32288,7 +32311,7 @@ const ql = class ql extends En {
       </ha-card>`;
     }
     if (this._state.status === "no-data")
-      return B`<ha-card class="ebc-card">
+      return $`<ha-card class="ebc-card">
         <ha-alert alert-type="info">
           ${this._localizeOrError(t, "status.no_data")}
         </ha-alert>
@@ -32325,7 +32348,7 @@ const ql = class ql extends En {
       const De = a.disabledReason === "insufficient_buckets" || a.disabledReason === "below_percent_threshold" ? "forecast.disabled.too_early" : a.disabledReason === "zero_reference_in_range" ? "forecast.disabled.zero_reference" : a.disabledReason === "no_reference" ? "forecast.disabled.no_reference" : a.disabledReason === "no_split" ? "forecast.disabled.no_split" : "forecast.disabled.unavailable";
       W.push(this._localizeOrError(t, De));
     }
-    const V = W.length > 0, $ = this._state.mergedTimeWindow ?? this._mergedTimeWindow, re = `text_summary.period.${AN($ == null ? void 0 : $.step)}`, ne = this._localizeOrError(t, re), X = LN(this._config.interpretation);
+    const H = W.length > 0, B = this._state.mergedTimeWindow ?? this._mergedTimeWindow, ne = `text_summary.period.${AN(B == null ? void 0 : B.step)}`, re = this._localizeOrError(t, ne), J = LN(this._config.interpretation);
     let se = null;
     const ce = this._interpretationSemantics(), Re = YS(ce.outcome), Xt = ZS(
       ce.outcome,
@@ -32334,43 +32357,43 @@ const ql = class ql extends En {
     if (i && !A) {
       const De = i.diffValue != null ? `${g.format(i.diffValue)} ${y}` : `— ${y}`, hr = (n == null ? void 0 : n.differencePercent) != null ? `${m.format(Math.abs(n.differencePercent))}%` : "—";
       if (ce.outcome === "insufficient_data")
-        se = B`<div class="ebc-comment-text ebc-comment-text--muted">
+        se = $`<div class="ebc-comment-text ebc-comment-text--muted">
           ${this._localizeOrError(t, "text_summary.insufficient_data")}
         </div>`;
       else if (ce.outcome === "neutral" && ce.neutralKind === "percent_band") {
         const dr = Tf(
           e.language,
-          X,
+          J,
           "neutral_band"
         ), li = Yh(e.language, dr);
-        li === void 0 ? se = B`<div class="ebc-comment-text">
+        li === void 0 ? se = $`<div class="ebc-comment-text">
             ${this._localizeOrError(t, dr)}
           </div>` : se = p_(li, {
           deltaUnit: De,
           deltaPercent: hr,
-          referencePeriod: ne
+          referencePeriod: re
         });
       } else if (ce.outcome === "neutral") {
         const dr = Tf(
           e.language,
-          X,
+          J,
           "similar"
         );
-        se = B`<div class="ebc-comment-text ebc-comment-text--muted">
-          ${this._localizeOrError(t, dr, { referencePeriod: ne })}
+        se = $`<div class="ebc-comment-text ebc-comment-text--muted">
+          ${this._localizeOrError(t, dr, { referencePeriod: re })}
         </div>`;
       } else {
         const li = ((n == null ? void 0 : n.difference) ?? 0) > 0 ? "higher" : "lower", Xo = Tf(
           e.language,
-          X,
+          J,
           li
         ), da = Yh(e.language, Xo);
-        da === void 0 ? se = B`<div class="ebc-comment-text">
+        da === void 0 ? se = $`<div class="ebc-comment-text">
             ${this._localizeOrError(t, Xo)}
           </div>` : se = p_(da, {
           deltaUnit: De,
           deltaPercent: hr,
-          referencePeriod: ne
+          referencePeriod: re
         });
       }
     }
@@ -32390,29 +32413,29 @@ const ql = class ql extends En {
         });
       }
     }
-    return B`<ha-card class="ebc-card">
+    return $`<ha-card class="ebc-card">
       <div class="content ebc-content">
-        ${d ? B`<div
+        ${d ? $`<div
               class="ebc-section ebc-section--header"
               role="region"
               aria-label=${this._localizeOrError(t, "section.header")}
             >
               <div class="ebc-header-row">
-                ${u ? B`<div class="ebc-header-icon-wrap">
-                      ${c ? B`<ha-icon class="ebc-icon" .icon=${c}></ha-icon>` : s ? B`<ha-state-icon
+                ${u ? $`<div class="ebc-header-icon-wrap">
+                      ${c ? $`<ha-icon class="ebc-icon" .icon=${c}></ha-icon>` : s ? $`<ha-state-icon
                               class="ebc-icon"
                               .hass=${this.hass}
                               .stateObj=${s}
                             ></ha-state-icon>` : null}
                     </div>` : null}
                 <div class="ebc-header-text">
-                  ${o && l ? B`<div class="ebc-header-title">${l}</div>` : null}
+                  ${o && l ? $`<div class="ebc-header-title">${l}</div>` : null}
                   <div class="ebc-header-entity">${this._config.entity}</div>
                 </div>
               </div>
             </div>` : null}
 
-        ${n && this._config.show_comparison_summary !== !1 ? B`<div
+        ${n && this._config.show_comparison_summary !== !1 ? $`<div
               class="ebc-section ebc-section--comparison"
               role="region"
               aria-label=${this._localizeOrError(t, "section.comparison")}
@@ -32436,7 +32459,7 @@ const ql = class ql extends En {
                     <span class="ebc-value-num--current">${D}</span>
                     <span class="ebc-value-unit">${y}</span>
                   </div>
-                  ${A ? null : B`<div
+                  ${A ? null : $`<div
                         class="ebc-delta-chip ${Re}"
                         aria-label=${this._localizeOrError(
       t,
@@ -32464,17 +32487,17 @@ const ql = class ql extends En {
                     ${this._localizeOrError(t, "summary.to_this_day")}
                   </div>
                   <div class="ebc-value-row">
-                    ${L != null ? B`<span class="ebc-value-num--reference"
+                    ${L != null ? $`<span class="ebc-value-num--reference"
                             >${L}</span
                           >
-                          <span class="ebc-value-unit">${y}</span>` : B`<span class="ebc-value-num--reference">—</span>
+                          <span class="ebc-value-unit">${y}</span>` : $`<span class="ebc-value-num--reference">—</span>
                           <span class="ebc-value-unit">${y}</span>`}
                   </div>
                 </div>
               </div>
             </div>` : null}
 
-        ${P && a ? B`<div
+        ${P && a ? $`<div
               class="ebc-section ebc-section--forecast-total"
               role="region"
               aria-label=${this._localizeOrError(
@@ -32488,10 +32511,10 @@ const ql = class ql extends En {
                     ${this._localizeOrError(t, "forecast.panel_forecast")}
                   </div>
                   <div class="ebc-surface-value-row">
-                    ${a.enabled && a.forecast_total != null ? B`<span class="ebc-surface-value-num"
+                    ${a.enabled && a.forecast_total != null ? $`<span class="ebc-surface-value-num"
                             >${g.format(a.forecast_total)}</span
                           >
-                          <span class="ebc-surface-value-unit">${I}</span>` : B`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                          <span class="ebc-surface-value-unit">${I}</span>` : $`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
                             >---</span
                           >
                           <span class="ebc-surface-value-unit">${I}</span>`}
@@ -32514,10 +32537,10 @@ const ql = class ql extends En {
                     ${this._localizeOrError(t, "forecast.panel_total")}
                   </div>
                   <div class="ebc-surface-value-row">
-                    ${E != null ? B`<span class="ebc-surface-value-num"
+                    ${E != null ? $`<span class="ebc-surface-value-num"
                             >${g.format(E)}</span
                           >
-                          <span class="ebc-surface-value-unit">${I}</span>` : B`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                          <span class="ebc-surface-value-unit">${I}</span>` : $`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
                             >---</span
                           >
                           <span class="ebc-surface-value-unit">${I}</span>`}
@@ -32532,7 +32555,7 @@ const ql = class ql extends En {
           aria-label=${this._localizeOrError(t, "section.chart")}
         >
           <div class="ebc-chart-controls">
-            ${Z ? B`<span class="ebc-preview-indication" role="status">
+            ${Z ? $`<span class="ebc-preview-indication" role="status">
                   ${U}
                 </span>` : null}
             <button
@@ -32558,14 +32581,19 @@ const ql = class ql extends En {
             <div
               class="chart-container ebc-chart ${this._previewLoading ? "ebc-chart--loading" : ""}"
             ></div>
-            ${this._previewLoading ? B`<div class="ebc-chart-loading-overlay" role="status">
+            ${Z && !this._previewLoading && this._state.previewChartTime != null && this._state.previewSeries == null ? $`<div class="ebc-chart-nodata-overlay" role="status">
+                  <ha-alert alert-type="info">
+                    ${this._localizeOrError(t, "status.no_data")}
+                  </ha-alert>
+                </div>` : null}
+            ${this._previewLoading ? $`<div class="ebc-chart-loading-overlay" role="status">
                   <ha-circular-progress active size="small"></ha-circular-progress>
                   <span>${this._localizeOrError(t, "preview.loading")}</span>
                 </div>` : null}
           </div>
         </div>
 
-        ${se && this._config.show_narrative_comment !== !1 ? B`<div
+        ${se && this._config.show_narrative_comment !== !1 ? $`<div
               class="ebc-section ebc-section--comment"
               role="region"
               aria-label=${this._localizeOrError(t, "section.comment")}
@@ -32579,7 +32607,7 @@ const ql = class ql extends En {
               ${se}
             </div>` : null}
 
-        ${V ? B`<div
+        ${H ? $`<div
               class="ebc-section ebc-section--warning"
               role="region"
               aria-label=${this._localizeOrError(t, "section.warning")}
@@ -32590,7 +32618,7 @@ const ql = class ql extends En {
               ></ha-icon>
               <div class="ebc-warning-lines">
                 ${W.map(
-      (De) => B`<div class="ebc-warning-line">${De}</div>`
+      (De) => $`<div class="ebc-warning-line">${De}</div>`
     )}
               </div>
             </div>` : null}
