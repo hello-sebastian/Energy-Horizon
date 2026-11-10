@@ -171,6 +171,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 - [ ] T024 Fix: snap shifted `now` to end of nominal period for legacy presets in `src/card/time-windows/preview-shift.ts` (full month/year, not partial); add unit tests in `tests/unit/preview-shift.test.ts`
 - [ ] T025 Fix: preview no-data — when the shifted period has no data, set `previewWindows`/`previewChartTime` unconditionally in `src/card/cumulative-comparison-chart.ts` and render the standard no-data alert (with preview controls and indication) instead of falling back to the default pipeline (FR-004, FR-013, SC-005, US6)
 - [ ] T026 Fix: preview no-data — keep the chart container and renderer in place (stable card height, x-axis with the period's start/end labels, empty plot) and overlay the standard no-data indication centered on the chart (FR-013, SC-005, US6)
+- [ ] T027 Fix: add the missing `preview.*` keys to `src/translations/nl.json` so the Dutch dictionary keeps full key parity with `en.json` (localize-dutch regression test)
 
 ---
 
