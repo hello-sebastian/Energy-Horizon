@@ -173,6 +173,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 - [ ] T026 Fix: preview no-data — keep the chart container and renderer in place (stable card height, x-axis with the period's start/end labels, empty plot) and overlay the standard no-data indication centered on the chart (FR-013, SC-005, US6)
 - [ ] T027 Fix: add the missing `preview.*` keys to `src/translations/nl.json` so the Dutch dictionary keeps full key parity with `en.json` (localize-dutch regression test)
 - [ ] T028 Fix: suppress the "today" x-axis marker in preview mode — `todaySlotIndex` is forced to -1 when `rendererConfig.previewMode === true`, so a shifted (past) window does not render a bold "today" tick clamped to its last bucket (FR-018, FR-021)
+- [ ] T029 Fix: preview step controls stay right-aligned with a fixed 4px gap — `.ebc-chart-controls` uses `justify-content: flex-end` and `.ebc-preview-indication` uses `margin-right: auto`, so the buttons do not shift when the indication appears/disappears (FR-017)
 
 ---
 

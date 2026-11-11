@@ -329,10 +329,13 @@ export const energyHorizonCardStyles = css`
   }
 
   /* Preview step controls (909) — a dedicated bar above the chart, in normal flow,
-     so it reserves its own space and never overlaps the chart (or future UI). */
+     so it reserves its own space and never overlaps the chart (or future UI).
+     T029: buttons stay pinned to the right edge with a fixed 4px gap; the preview
+     indication (when present) is pushed to the left via margin-right: auto, so the
+     buttons never shift when the indication appears or disappears. */
   .ebc-chart-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
@@ -340,7 +343,9 @@ export const energyHorizonCardStyles = css`
   }
 
   /* Preview indication (909 US2) — visible, screen-reader-announced text of the
-     shifted period, left-aligned in the controls bar while a preview is active. */
+     shifted period, left-aligned in the controls bar while a preview is active.
+     T029: margin-right: auto pushes the indication to the left so the step buttons
+     stay pinned to the right edge regardless of the indication's presence. */
   .ebc-preview-indication {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
@@ -348,6 +353,7 @@ export const energyHorizonCardStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-right: auto;
   }
 
   /* Wrapper that scopes the in-place loading overlay to the chart area only. */
