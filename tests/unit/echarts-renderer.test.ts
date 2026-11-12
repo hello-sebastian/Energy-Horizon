@@ -1318,6 +1318,122 @@ describe('EChartsRenderer', () => {
     });
   });
 
+  describe("T030: preview X-axis consistency (edge labels with and without data)", () => {
+    function buildBaseRendererConfig(
+      overrides: Partial<ChartRendererConfig> = {}
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: true,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: false,
+        unit: "kWh",
+        periodLabel: "",
+        ...overrides
+      };
+    }
+
+    function buildSeries(
+      points: Array<{ timestamp: number; value: number }>
+    ): ComparisonSeries {
+      const unit = "kWh";
+      return {
+        current: {
+          points: points.map((p) => ({ timestamp: p.timestamp, value: p.value })),
+          unit,
+          periodLabel: "",
+          total: 0
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+    }
+
+    function captureOption() {
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as any[];
+      return option as any;
+    }
+
+    it("preview no-data: the X-axis uses the same edge-label style as preview with data", () => {
+      const dayMs = 86400000;
+      const day0 = Date.UTC(2025, 0, 1);
+      const fullTimeline = Array.from({ length: 3 }, (_, i) => day0 + i * dayMs);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        buildSeries([]), // no points => currentSeriesVisible = false
+        fullTimeline,
+        buildBaseRendererConfig({
+          previewMode: true,
+          xAxisMode: "adaptive",
+          currentWindowStartMs: day0,
+          currentWindowEndMs: day0 + 3 * dayMs
+        }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const formatter = option.xAxis.axisLabel.formatter as (v: number) => string;
+
+      // Edge labels present (start and end), middle slot unlabeled — the data-present style.
+      expect(formatter(0)).toContain("{edge|");
+      expect(formatter(2)).toContain("{edge|");
+      expect(formatter(1)).toBe("");
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("preview with data: the X-axis uses the same edge-label style (consistency control)", () => {
+      const dayMs = 86400000;
+      const day0 = Date.UTC(2025, 0, 1);
+      const fullTimeline = Array.from({ length: 3 }, (_, i) => day0 + i * dayMs);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        buildSeries([
+          { timestamp: fullTimeline[0] + 10, value: 2 },
+          { timestamp: fullTimeline[1] + 10, value: 4 },
+          { timestamp: fullTimeline[2] + 10, value: 6 }
+        ]),
+        fullTimeline,
+        buildBaseRendererConfig({
+          previewMode: true,
+          xAxisMode: "adaptive",
+          currentWindowStartMs: day0,
+          currentWindowEndMs: day0 + 3 * dayMs
+        }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      const option = captureOption();
+      const formatter = option.xAxis.axisLabel.formatter as (v: number) => string;
+
+      // Same edge-label style as the no-data case: start and end labeled, middle unlabeled.
+      expect(formatter(0)).toContain("{edge|");
+      expect(formatter(2)).toContain("{edge|");
+      expect(formatter(1)).toBe("");
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
   describe("HA theme tokens in ECharts option", () => {
     function buildBaseRendererConfig(
       overrides: Partial<ChartRendererConfig> = {}

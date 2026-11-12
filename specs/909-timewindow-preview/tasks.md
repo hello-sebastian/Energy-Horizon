@@ -174,6 +174,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 - [ ] T027 Fix: add the missing `preview.*` keys to `src/translations/nl.json` so the Dutch dictionary keeps full key parity with `en.json` (localize-dutch regression test)
 - [ ] T028 Fix: suppress the "today" x-axis marker in preview mode — `todaySlotIndex` is forced to -1 when `rendererConfig.previewMode === true`, so a shifted (past) window does not render a bold "today" tick clamped to its last bucket (FR-018, FR-021)
 - [ ] T029 Fix: preview step controls stay right-aligned with a fixed 4px gap — `.ebc-chart-controls` uses `justify-content: flex-end` and `.ebc-preview-indication` uses `margin-right: auto`, so the buttons do not shift when the indication appears/disappears (FR-017)
+- [X] T030 Fix: preview X-axis consistency — in preview mode the X-axis always uses the data-present edge-label style (start/end labels only), so a shifted period with no data is labeled identically to one with data; introduce `xAxisUsesDataStyle = currentSeriesVisible || previewMode` in `src/card/echarts-renderer.ts` and use it for `xLabelStops`, `xAxisTickInterval`, and `xAxisRichAdaptive` (FR-021)
 
 ---
 

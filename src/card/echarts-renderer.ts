@@ -626,6 +626,10 @@ export class EChartsRenderer {
     const xMax = Math.max(fullTimeline.length - 1, 0);
     const xIntervalLegacy = xMax > 0 ? Math.max(1, Math.round(xMax / 4)) : 1;
     const currentSeriesVisible = currentValues.some((v) => v !== null);
+    // T030: in preview the X-axis always uses the data-present style (edge labels only),
+    // so a shifted period with no data is labeled identically to one with data (FR-021).
+    const xAxisUsesDataStyle =
+      currentSeriesVisible || rendererConfig.previewMode === true;
     const mode = rendererConfig.xAxisMode ?? "adaptive";
 
     // “Today” pointer = bucket within **current window** on the shared axis (006 FR-B), not the longest window’s calendar.
@@ -669,7 +673,7 @@ export class EChartsRenderer {
           xMax
         ]);
       }
-      if (currentSeriesVisible) {
+      if (xAxisUsesDataStyle) {
         const stops = new Set<number>([0, xMax]);
         if (todaySlotIndex >= 0) {
           stops.add(todaySlotIndex);
@@ -688,7 +692,7 @@ export class EChartsRenderer {
     const xAxisTickInterval =
       mode === "forced"
         ? xIntervalLegacy
-        : currentSeriesVisible
+        : xAxisUsesDataStyle
           ? 1
           : xIntervalLegacy;
 
@@ -744,7 +748,7 @@ export class EChartsRenderer {
     };
 
     /** Figma: edge ticks 11px secondary; “today” tick 14px bold primary (when in range). */
-    const xAxisRichAdaptive = mode === 'adaptive' && currentSeriesVisible;
+    const xAxisRichAdaptive = mode === 'adaptive' && xAxisUsesDataStyle;
 
 
     const xAxisAxisLabel = xAxisRichAdaptive
