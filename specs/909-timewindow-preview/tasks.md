@@ -115,11 +115,11 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 4 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T015 [US4] Integration test in `tests/integration/card-render.test.ts`: a freshly instantiated card element shows the configured default with no preview indication (the preview state does not survive re-instantiation, FR-008); and two card instances on the same dashboard keep independent preview state — shifting one does not affect the other (FR-016, US4 scenarios 1–4)
+- [X] T015 [US4] Integration test in `tests/integration/card-render.test.ts`: a freshly instantiated card element shows the configured default with no preview indication (the preview state does not survive re-instantiation, FR-008); and two card instances on the same dashboard keep independent preview state — shifting one does not affect the other (FR-016, US4 scenarios 1–4)
 
 ### Implementation for User Story 4
 
-- [ ] T016 [US4] Confirm the transient contract holds by construction in `src/card/cumulative-comparison-chart.ts`: `previewShift` is a plain element field that is never written to `_config` or any storage ("The preview never writes to `_config` or any storage" — data-model validation rule 4), so it is destroyed with the element on re-instantiation; add an assertion that stepping the preview does not mutate the saved configuration (FR-007, FR-008, research R2)
+- [X] T016 [US4] Confirm the transient contract holds by construction in `src/card/cumulative-comparison-chart.ts`: `previewShift` is a plain element field that is never written to `_config` or any storage ("The preview never writes to `_config` or any storage" — data-model validation rule 4), so it is destroyed with the element on re-instantiation; add an assertion that stepping the preview does not mutate the saved configuration (FR-007, FR-008, research R2)
 
 **Checkpoint**: The preview never leaks across navigation and never persists; each card is independent.
 
@@ -133,11 +133,11 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 5 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T017 [US5] Integration test in `tests/integration/card-render.test.ts`: the reset control is present in the DOM only while `previewShift < 0` and absent at the default (FR-009, FR-010); activating it returns the chart to the configured default and removes the preview indication and the reset control (US5 scenarios 1–3)
+- [X] T017 [US5] Integration test in `tests/integration/card-render.test.ts`: the reset control is present in the DOM only while `previewShift < 0` and absent at the default (FR-009, FR-010); activating it returns the chart to the configured default and removes the preview indication and the reset control (US5 scenarios 1–3)
 
 ### Implementation for User Story 5
 
-- [ ] T018 [US5] Add the reset control as a native `<button>` in the top-right corner of the chart in `src/card/cumulative-comparison-chart.ts`, present in the DOM only while `previewShift < 0` (removed as soon as the card is at the default — by stepping forward, by reset, or by re-instantiation), with the localized `preview.reset` `aria-label`; on activation set `previewShift = 0` (FR-009, FR-010, contract "Controls")
+- [X] T018 [US5] Add the reset control as a native `<button>` in the top-right corner of the chart in `src/card/cumulative-comparison-chart.ts`, present in the DOM only while `previewShift < 0` (removed as soon as the card is at the default — by stepping forward, by reset, or by re-instantiation), with the localized `preview.reset` `aria-label`; on activation set `previewShift = 0` (FR-009, FR-010, contract "Controls")
 
 **Checkpoint**: The user can return to the configured default in a single activation from any shifted position.
 

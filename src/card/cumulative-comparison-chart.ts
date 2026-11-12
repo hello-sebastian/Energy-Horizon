@@ -1508,6 +1508,17 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
                   ${previewIndicationText}
                 </span>`
               : null}
+            ${previewActive
+              ? html`<button
+                  class="ebc-chart-control ebc-chart-control--reset"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.reset")}
+                  @click=${() => this._onPreviewStep("reset")}
+                >
+                  <ha-icon icon="mdi:restart"></ha-icon>
+                </button>`
+              : null}
             <button
               class="ebc-chart-control"
               type="button"

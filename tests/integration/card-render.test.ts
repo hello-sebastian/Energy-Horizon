@@ -304,9 +304,9 @@ describe("energy-horizon-card integration", () => {
     expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
     // The chart container stays in place (stable card height, empty plot).
     expect(el.shadowRoot!.querySelector(".chart-container")).not.toBeNull();
-    // The preview controls (back/forward) remain available.
+    // The preview controls (back/forward/reset) remain available.
     const controls = el.shadowRoot!.querySelectorAll(".ebc-chart-control");
-    expect(controls.length).toBe(2);
+    expect(controls.length).toBe(3);
     // The preview indication remains visible.
     const indication = el.shadowRoot!.querySelector(".ebc-preview-indication");
     expect(indication).not.toBeNull();
@@ -1059,6 +1059,96 @@ describe("909 US2/US3: transient time-window preview", () => {
     const series = option.series as any[];
     expect(series.length).toBe(1);
     expect(series[0].color).toBe("rgba(127, 127, 127, 0.4)");
+    document.body.removeChild(el);
+  });
+
+  it("T015: a freshly instantiated card shows the configured default with no preview indication (FR-008)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    // No preview indication at the default.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    // No reset control at the default (FR-010).
+    expect(
+      el.shadowRoot!.querySelector(".ebc-chart-control--reset")
+    ).toBeNull();
+    // The two step controls are present (always visible in view mode).
+    const controls = el.shadowRoot!.querySelectorAll(".ebc-chart-control");
+    expect(controls.length).toBe(2);
+    document.body.removeChild(el);
+  });
+
+  it("T015: two card instances on the same dashboard keep independent preview state (FR-016)", async () => {
+    const el1 = makeCard();
+    const el2 = makeCard();
+    // Shift only the first card into preview.
+    el1._state = previewReadyState();
+    el2._state = baseYoYReadyState();
+    await el1.updateComplete;
+    await el2.updateComplete;
+    // Card 1 shows the preview indication; card 2 does not.
+    expect(el1.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    expect(el2.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    // Card 1 shows the reset control; card 2 does not.
+    expect(el1.shadowRoot!.querySelector(".ebc-chart-control--reset")).not.toBeNull();
+    expect(el2.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
+    document.body.removeChild(el1);
+    document.body.removeChild(el2);
+  });
+
+  it("T016: stepping the preview does not mutate the saved configuration (FR-007)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    const configBefore = JSON.stringify(el._config);
+    // Step back (private method, accessed via bracket notation in the test).
+    (el as any)["_onPreviewStep"]("back");
+    await el.updateComplete;
+    const configAfter = JSON.stringify(el._config);
+    // The saved configuration is unchanged by the preview step.
+    expect(configAfter).toBe(configBefore);
+    document.body.removeChild(el);
+  });
+
+  it("T017: the reset control is present only while previewShift < 0 and absent at the default (FR-009, FR-010)", async () => {
+    const el = makeCard();
+    // At the default: no reset control.
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
+    // In preview: reset control present.
+    el._state = previewReadyState();
+    await el.updateComplete;
+    const resetBtn = el.shadowRoot!.querySelector(".ebc-chart-control--reset");
+    expect(resetBtn).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("T017: activating the reset control returns the chart to the configured default (US5)", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    // Keep the private runtime field in sync with the injected state (in the real
+    // flow `_loadData` writes `_state.previewShift` from `this.previewShift`).
+    (el as any).previewShift = -1;
+    await el.updateComplete;
+    // In preview: indication + reset control present.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    const resetBtn = el.shadowRoot!.querySelector(".ebc-chart-control--reset");
+    expect(resetBtn).not.toBeNull();
+    // Activate the reset control. This triggers an in-place preview load
+    // (fire-and-forget from `updated()`); the mock connection resolves in a
+    // microtask. Poll until the state settles (previewShift >= 0 or status
+    // changes away from "ready").
+    (resetBtn as HTMLButtonElement).click();
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 5));
+      await el.updateComplete;
+      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
+      if (st && (st.status !== "ready" || (st.previewShift ?? 0) >= 0)) break;
+    }
+    // The card returns to the configured default: no indication, no reset control.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
     document.body.removeChild(el);
   });
 });

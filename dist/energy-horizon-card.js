@@ -27949,7 +27949,7 @@ class cN {
       for (const Z of Y.lines)
         g = Math.max(g, uN(Z));
     }
-    const m = Math.ceil(g) + Gr, y = Math.max(n.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, w = e.some((G) => G !== null), S = a.xAxisMode ?? "adaptive", b = a.currentWindowStartMs, x = a.currentWindowEndMs, M = a.haTimeZone ?? "UTC", k = a.primaryAggregation ?? "day", T = b != null && x != null ? JT(
+    const m = Math.ceil(g) + Gr, y = Math.max(n.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, w = e.some((G) => G !== null), S = a.xAxisMode ?? "adaptive", b = a.currentWindowStartMs, x = a.currentWindowEndMs, M = a.haTimeZone ?? "UTC", k = a.primaryAggregation ?? "day", T = a.previewMode === !0 ? -1 : b != null && x != null ? JT(
       n,
       b,
       x,
@@ -30072,10 +30072,13 @@ const FN = __`
   }
 
   /* Preview step controls (909) — a dedicated bar above the chart, in normal flow,
-     so it reserves its own space and never overlaps the chart (or future UI). */
+     so it reserves its own space and never overlaps the chart (or future UI).
+     T029: buttons stay pinned to the right edge with a fixed 4px gap; the preview
+     indication (when present) is pushed to the left via margin-right: auto, so the
+     buttons never shift when the indication appears or disappears. */
   .ebc-chart-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
@@ -30083,7 +30086,9 @@ const FN = __`
   }
 
   /* Preview indication (909 US2) — visible, screen-reader-announced text of the
-     shifted period, left-aligned in the controls bar while a preview is active. */
+     shifted period, left-aligned in the controls bar while a preview is active.
+     T029: margin-right: auto pushes the indication to the left so the step buttons
+     stay pinned to the right edge regardless of the indication's presence. */
   .ebc-preview-indication {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
@@ -30091,6 +30096,7 @@ const FN = __`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-right: auto;
   }
 
   /* Wrapper that scopes the in-place loading overlay to the chart area only. */
