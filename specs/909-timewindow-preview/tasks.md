@@ -151,11 +151,11 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ### Tests for User Story 6 (write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T019 [US6] Integration test in `tests/integration/card-render.test.ts`: a shifted period with no data renders the card's standard no-data indication (identical to existing missing-data handling) AND the preview controls (back/forward/reset) and the preview indication remain visible and functional so the user can step forward, step further back, or reset (FR-013, US6 scenario 1); a shifted period with partial data is handled by the existing partial-data behavior (FR-014, US6 scenario 2)
+- [X] T019 [US6] Integration test in `tests/integration/card-render.test.ts`: a shifted period with no data renders the card's standard no-data indication (identical to existing missing-data handling) AND the preview controls (back/forward/reset) and the preview indication remain visible and functional so the user can step forward, step further back, or reset (FR-013, US6 scenario 1); a shifted period with partial data is handled by the existing partial-data behavior (FR-014, US6 scenario 2)
 
 ### Implementation for User Story 6
 
-- [ ] T020 [US6] Ensure the no-data render path in `src/card/cumulative-comparison-chart.ts` keeps the preview controls and the preview indication mounted (not replaced by the bare no-data card) while `previewShift < 0`, so the user can step through data-less periods (e.g., seasonal gaps) or reset without leaving the preview (FR-013, FR-014, contract "Invariants" 5)
+- [X] T020 [US6] Ensure the no-data render path in `src/card/cumulative-comparison-chart.ts` keeps the preview controls and the preview indication mounted (not replaced by the bare no-data card) while `previewShift < 0`, so the user can step through data-less periods (e.g., seasonal gaps) or reset without leaving the preview (FR-013, FR-014, contract "Invariants" 5)
 
 **Checkpoint**: Data-less and partial shifted periods are handled gracefully with the preview controls still available.
 
@@ -165,16 +165,17 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 **Purpose**: Improvements that affect multiple user stories and final validation.
 
-- [ ] T021 Accessibility pass in `src/card/cumulative-comparison-chart.ts`: confirm the three controls are keyboard-operable (Enter/Space), focus-visible, and carry the localized `aria-label`s; confirm the preview indication is real text announced to screen readers; confirm contrast is inherited from the existing theme tokens (FR-017, research R7, Constitution Principle IV)
-- [ ] T022 [P] Verify all four locales (`src/card/translations/en.json`, `pl.json`, `de.json`, `fr.json`) have complete `preview.*` keys with no missing-key warnings, and that the wording is consistent across locales (research R8, Constitution Principle VI)
-- [ ] T023 Run the full validation gate and the quickstart scenarios: `npm test`, `npm run typecheck`, and `npm run lint` all green, then walk the end-to-end scenarios in `specs/909-timewindow-preview/quickstart.md` (step back, config untouched, all widths, forward bound, reset, transient, per-card independence, no-data, panels unchanged, accessibility)
-- [ ] T024 Fix: snap shifted `now` to end of nominal period for legacy presets in `src/card/time-windows/preview-shift.ts` (full month/year, not partial); add unit tests in `tests/unit/preview-shift.test.ts`
-- [ ] T025 Fix: preview no-data — when the shifted period has no data, set `previewWindows`/`previewChartTime` unconditionally in `src/card/cumulative-comparison-chart.ts` and render the standard no-data alert (with preview controls and indication) instead of falling back to the default pipeline (FR-004, FR-013, SC-005, US6)
-- [ ] T026 Fix: preview no-data — keep the chart container and renderer in place (stable card height, x-axis with the period's start/end labels, empty plot) and overlay the standard no-data indication centered on the chart (FR-013, SC-005, US6)
-- [ ] T027 Fix: add the missing `preview.*` keys to `src/translations/nl.json` so the Dutch dictionary keeps full key parity with `en.json` (localize-dutch regression test)
-- [ ] T028 Fix: suppress the "today" x-axis marker in preview mode — `todaySlotIndex` is forced to -1 when `rendererConfig.previewMode === true`, so a shifted (past) window does not render a bold "today" tick clamped to its last bucket (FR-018, FR-021)
-- [ ] T029 Fix: preview step controls stay right-aligned with a fixed 4px gap — `.ebc-chart-controls` uses `justify-content: flex-end` and `.ebc-preview-indication` uses `margin-right: auto`, so the buttons do not shift when the indication appears/disappears (FR-017)
+- [X] T021 Accessibility pass in `src/card/cumulative-comparison-chart.ts`: confirm the three controls are keyboard-operable (Enter/Space), focus-visible, and carry the localized `aria-label`s; confirm the preview indication is real text announced to screen readers; confirm contrast is inherited from the existing theme tokens (FR-017, research R7, Constitution Principle IV)
+- [X] T022 [P] Verify all four locales (`src/card/translations/en.json`, `pl.json`, `de.json`, `fr.json`) have complete `preview.*` keys with no missing-key warnings, and that the wording is consistent across locales (research R8, Constitution Principle VI)
+- [X] T023 Run the full validation gate and the quickstart scenarios: `npm test`, `npm run typecheck`, and `npm run lint` all green, then walk the end-to-end scenarios in `specs/909-timewindow-preview/quickstart.md` (step back, config untouched, all widths, forward bound, reset, transient, per-card independence, no-data, panels unchanged, accessibility)
+- [X] T024 Fix: snap shifted `now` to end of nominal period for legacy presets in `src/card/time-windows/preview-shift.ts` (full month/year, not partial); add unit tests in `tests/unit/preview-shift.test.ts`
+- [X] T025 Fix: preview no-data — when the shifted period has no data, set `previewWindows`/`previewChartTime` unconditionally in `src/card/cumulative-comparison-chart.ts` and render the standard no-data alert (with preview controls and indication) instead of falling back to the default pipeline (FR-004, FR-013, SC-005, US6)
+- [X] T026 Fix: preview no-data — keep the chart container and renderer in place (stable card height, x-axis with the period's start/end labels, empty plot) and overlay the standard no-data indication centered on the chart (FR-013, SC-005, US6)
+- [X] T027 Fix: add the missing `preview.*` keys to `src/translations/nl.json` so the Dutch dictionary keeps full key parity with `en.json` (localize-dutch regression test)
+- [X] T028 Fix: suppress the "today" x-axis marker in preview mode — `todaySlotIndex` is forced to -1 when `rendererConfig.previewMode === true`, so a shifted (past) window does not render a bold "today" tick clamped to its last bucket (FR-018, FR-021)
+- [X] T029 Fix: preview step controls stay right-aligned with a fixed 4px gap — `.ebc-chart-controls` uses `justify-content: flex-end` and `.ebc-preview-indication` uses `margin-right: auto`, so the buttons do not shift when the indication appears/disappears (FR-017)
 - [X] T030 Fix: preview X-axis consistency — in preview mode the X-axis always uses the data-present edge-label style (start/end labels only), so a shifted period with no data is labeled identically to one with data; introduce `xAxisUsesDataStyle = currentSeriesVisible || previewMode` in `src/card/echarts-renderer.ts` and use it for `xLabelStops`, `xAxisTickInterval`, and `xAxisRichAdaptive` (FR-021)
+- [X] T031 Fix: symmetric vertical rhythm around the chart controls bar — remove the 8px `padding-bottom` from `.ebc-chart-controls` and reduce `GRID_TOP_FALLBACK_PX` from 32 to 16 in `src/card/echarts-renderer.ts`, so the distance from the bottom of the buttons to the topmost grid line equals the 16px `.content` gap above the bar
 
 ---
 

@@ -1151,5 +1151,160 @@ describe("909 US2/US3: transient time-window preview", () => {
     expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
     document.body.removeChild(el);
   });
+
+  it("T019: a shifted period with no data keeps the preview controls functional — stepping back again stays in the preview (FR-013, US6 scenario 1)", async () => {
+    const el = makeCard();
+    // The mock returns data only for the default (current-year) period; the
+    // shifted preview periods (2021/2020) have no data.
+    const currentYear = String(new Date().getFullYear());
+    el.hass = {
+      ...energyCardHass(),
+      connection: {
+        sendMessagePromise: async (msg: Record<string, unknown>) => {
+          if (
+            msg?.type === "recorder/statistics_during_period" &&
+            String(msg.start_time).startsWith(currentYear)
+          ) {
+            return {
+              results: {
+                "sensor.energy": [
+                  {
+                    start: `${currentYear}-01-01T00:00:00+00:00`,
+                    end: `${currentYear}-01-02T00:00:00+00:00`,
+                    change: 10,
+                    unit_of_measurement: "kWh"
+                  }
+                ]
+              }
+            };
+          }
+          return {};
+        }
+      }
+    } as HomeAssistant;
+
+    // Ready state (the default pipeline has data) but the shifted preview
+    // period has no data: previewSeries is undefined while
+    // previewWindows/previewChartTime are set.
+    el._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2020, 0, 1)),
+          end: new Date(Date.UTC(2020, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    // Keep the private runtime field in sync with the injected state (in the
+    // real flow `_loadData` writes `_state.previewShift` from `this.previewShift`).
+    (el as any).previewShift = -3;
+    await el.updateComplete;
+
+    // The standard no-data indication is shown and the preview controls
+    // (back/forward/reset) + indication remain mounted.
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+
+    // Step back again (-3 → -4): the shifted period still has no data, but the
+    // preview stays active — the state settles back to "ready" with the new
+    // shift, the no-data overlay and the controls remain available.
+    const backBtn = el.shadowRoot!.querySelectorAll(".ebc-chart-control")[1] as HTMLButtonElement;
+    backBtn.click();
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 5));
+      await el.updateComplete;
+      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
+      if (st && st.status === "ready" && (st.previewShift ?? 0) === -4) break;
+    }
+    const st = (el as any)._state as { status?: string; previewShift?: number };
+    expect(st.status).toBe("ready");
+    expect(st.previewShift).toBe(-4);
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("T019: a shifted period with partial data is handled by the existing partial-data behavior (FR-014, US6 scenario 2)", async () => {
+    const el = makeCard();
+    // The shifted current period has only one data point (partial data) — the
+    // chart renders the partial series (no no-data overlay) and the preview
+    // controls + indication remain available.
+    el._state = {
+      ...baseYoYReadyState(),
+      previewShift: -1,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2023, 0, 1)),
+          end: new Date(Date.UTC(2023, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2022, 0, 1)),
+          end: new Date(Date.UTC(2022, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [
+          Date.UTC(2023, 0, 1),
+          Date.UTC(2023, 0, 2),
+          Date.UTC(2023, 0, 3)
+        ],
+        alignStartsMs: [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 3
+      },
+      previewSeries: {
+        current: {
+          points: [{ timestamp: Date.UTC(2023, 0, 1), value: 5 }],
+          unit: "kWh",
+          periodLabel: "2023",
+          total: 5
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      }
+    };
+    await el.updateComplete;
+
+    // Partial data: no no-data overlay, the partial series is drawn (the
+    // shifted current only — no reference data), controls + indication present.
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    expect((option.series as any[]).length).toBe(1);
+    document.body.removeChild(el);
+  });
 });
 

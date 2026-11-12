@@ -1318,6 +1318,75 @@ describe('EChartsRenderer', () => {
     });
   });
 
+  describe("T031: grid.top matches the controls-bar gap (16px)", () => {
+    function buildBaseRendererConfig(
+      overrides: Partial<ChartRendererConfig> = {}
+    ): ChartRendererConfig {
+      return {
+        primaryColor: "#00ADEF",
+        fillCurrent: true,
+        fillReference: false,
+        fillCurrentOpacity: 40,
+        fillReferenceOpacity: 40,
+        connectNulls: true,
+        comparisonMode: "year_over_year",
+        language: "en-US",
+        numberLocale: "en-US",
+        precision: 1,
+        forecastLabel: "Forecast",
+        showForecast: false,
+        showLegend: false,
+        unit: "kWh",
+        periodLabel: "",
+        ...overrides
+      };
+    }
+
+    function buildSeries(
+      points: Array<{ timestamp: number; value: number }>
+    ): ComparisonSeries {
+      const unit = "kWh";
+      return {
+        current: {
+          points: points.map((p) => ({ timestamp: p.timestamp, value: p.value })),
+          unit,
+          periodLabel: "",
+          total: 0
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+    }
+
+    it("no-legend: grid.top is 16px (matches the .content gap above the controls bar)", () => {
+      const dayMs = 86400000;
+      const day0 = Date.UTC(2025, 0, 1);
+      const fullTimeline = Array.from({ length: 3 }, (_, i) => day0 + i * dayMs);
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        buildSeries([
+          { timestamp: fullTimeline[0] + 10, value: 2 },
+          { timestamp: fullTimeline[1] + 10, value: 4 },
+          { timestamp: fullTimeline[2] + 10, value: 6 }
+        ]),
+        fullTimeline,
+        buildBaseRendererConfig({ showLegend: false }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as any[];
+      expect(option.grid.top).toBe(16);
+
+      renderer.destroy();
+      document.body.removeChild(container);
+    });
+  });
+
   describe("T030: preview X-axis consistency (edge labels with and without data)", () => {
     function buildBaseRendererConfig(
       overrides: Partial<ChartRendererConfig> = {}

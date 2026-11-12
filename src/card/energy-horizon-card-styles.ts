@@ -339,7 +339,10 @@ export const energyHorizonCardStyles = css`
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
-    padding: 0 0 8px 0;
+    /* T031: no bottom padding — the 16px gap to the topmost grid line is
+       provided entirely by grid.top (GRID_TOP_FALLBACK_PX = 16), matching
+       the 16px .content gap above the controls bar. */
+    padding: 0;
   }
 
   /* Preview indication (909 US2) — visible, screen-reader-announced text of the

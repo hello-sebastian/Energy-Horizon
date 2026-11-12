@@ -60,8 +60,13 @@ const LEGEND_BASELINE_PX = 32;
 /** Space between the legend block and the grid (aligned with axis tick label gap). */
 const LEGEND_BELOW_GAP_PX = 8;
 
-/** When legend view is missing or hidden, keep the previous fixed top inset. */
-const GRID_TOP_FALLBACK_PX = LEGEND_BASELINE_PX;
+/**
+ * T031: fixed top inset when the legend view is missing or hidden.
+ * Reduced from 32 (LEGEND_BASELINE_PX) to 16 so the distance from the bottom
+ * of the chart-controls bar to the topmost grid line equals the 16px .content
+ * gap above the bar (symmetric vertical rhythm).
+ */
+const GRID_TOP_FALLBACK_PX = 16;
 
 /**
  * Escape `{`, `}`, `|` in user/locale strings embedded in ECharts `rich` `{style|text}` pieces

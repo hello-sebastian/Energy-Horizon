@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest";
 import { createLocalize, resolveLocale } from "../../src/card/localize";
 import type { HomeAssistant } from "../../src/ha-types";
 import type { CardConfig } from "../../src/card/types";
+import en from "../../src/translations/en.json";
+import pl from "../../src/translations/pl.json";
+import de from "../../src/translations/de.json";
+import fr from "../../src/translations/fr.json";
+import nl from "../../src/translations/nl.json";
 
 /**
  * User Story 3: Adding a new language requires only adding
@@ -86,6 +91,41 @@ describe("localize dictionary loading (US3)", () => {
       const resolved = resolveLocale(hass, config);
 
       expect(resolved.language).toBe("en");
+    });
+  });
+
+  describe("T022: preview.* keys are complete in every locale", () => {
+    const enDict = en as Record<string, string>;
+    const previewKeys = Object.keys(enDict).filter((key) => key.startsWith("preview."));
+    const dictionaries: Record<string, Record<string, string>> = {
+      en: enDict,
+      pl,
+      de,
+      fr,
+      nl
+    };
+
+    it("en.json defines the full preview.* key set", () => {
+      expect([...previewKeys].sort()).toEqual([
+        "preview.indication",
+        "preview.loading",
+        "preview.reset",
+        "preview.step_back",
+        "preview.step_forward"
+      ]);
+    });
+
+    it.each(Object.keys(dictionaries))("%s has every preview.* key, non-empty, with matching placeholders", (language) => {
+      const dict = dictionaries[language]!;
+      for (const key of previewKeys) {
+        expect(dict[key], `${language}: missing key ${key}`).toBeTruthy();
+        expect(dict[key]!.trim(), `${language}: empty value for ${key}`).not.toBe("");
+        const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)]
+          .map((match) => match[1]).sort();
+        expect(placeholders(dict[key]!), `${language}: placeholder mismatch for ${key}`).toEqual(
+          placeholders(enDict[key]!)
+        );
+      }
     });
   });
 });
