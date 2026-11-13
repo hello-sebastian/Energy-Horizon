@@ -68,6 +68,10 @@ import { durationToMillis, parseDurationToken } from "./time-windows/duration-pa
 import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 import {
+  buildDemoComparisonSeries,
+  isSupportedUnit
+} from "./picker-preview";
+import {
   expandCurrentWindowForCaption,
   formatCompactPeriodCaption,
   hour12FromHaTimeFormat,
@@ -135,12 +139,22 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     hass: { type: Object, attribute: false },
     _config: { state: true },
     _state: { state: true },
-    _previewLoading: { state: true }
+    _previewLoading: { state: true },
+    preview: { type: Boolean, attribute: false }
   };
 
   declare hass: HomeAssistant;
   declare _config: CardConfig;
   _state: CardState = { status: "loading" };
+
+  /**
+   * Picker mode (910, research R2): set by `hui-card` when the card is rendered
+   * in the "Add card" picker (`element.preview = this.preview`). Not part of
+   * `_config`, not persisted. When `true`, the card renders a deterministic
+   * demo series immediately (no query on the critical path, no loading/error
+   * state) and hides the 909 time-window preview controls.
+   */
+  preview = false;
 
   /**
    * True while a preview step (back/forward/reset) is loading the shifted period (909).
@@ -230,6 +244,91 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return translated;
   }
 
+  /**
+   * Builds a synchronous, ready `CardState` from the deterministic demo series
+   * (910, FR-014/FR-011, research R4). Used in picker mode (`preview === true`)
+   * so the card renders a full chart immediately — no query on the critical
+   * path, no blank/loading/error state. The existing render pipeline and
+   * `updated()` EChartsRenderer path consume the state unchanged.
+   */
+  private _buildDemoState(now: Date): CardState {
+    const resolved = resolveLocale(this.hass, this._config);
+    const merged: MergedTimeWindowConfig = { ...this._mergedTimeWindow };
+    if (merged.aggregation === undefined) {
+      const dur = parseDurationToken(merged.duration ?? "1y");
+      const durationMs = dur ? durationToMillis(dur) : 0;
+      merged.aggregation = pickAutoAggregation(durationMs);
+    }
+    const aggregation = merged.aggregation ?? "day";
+    const windows = resolveTimeWindows(
+      merged,
+      now,
+      resolved.timeZone,
+      24,
+      aggregation
+    );
+    const chartTimeRaw = buildChartTimeline(windows, merged, resolved.timeZone);
+    const tailLabelFromIndex =
+      windows.length >= 2
+        ? firstTailAxisLabelIndex(
+            chartTimeRaw.timeline,
+            chartTimeRaw.alignStartsMs[0]!,
+            windows[0]!.end
+          )
+        : chartTimeRaw.timeline.length;
+    const period = comparisonPeriodFromResolvedWindows(
+      windows,
+      resolved.timeZone,
+      aggregation
+    );
+
+    // Unit from the entity's state when available and supported; else "kWh"
+    // (FR-009). The demo series is deterministic regardless of the unit.
+    const entityUnit =
+      (this.hass.states?.[this._config.entity]?.attributes as {
+        unit_of_measurement?: string;
+      })?.unit_of_measurement ?? "";
+    const demoUnit = isSupportedUnit(entityUnit) ? entityUnit : "kWh";
+
+    const series = buildDemoComparisonSeries(demoUnit, now, resolved.timeZone);
+    const scaledSeries = this._applyUnitScalingToSeries(series, demoUnit);
+
+    const alignOffsetMs =
+      windows.length > 1
+        ? chartTimeRaw.alignStartsMs[0]! - chartTimeRaw.alignStartsMs[1]!
+        : undefined;
+    const summary = computeSummary(scaledSeries, alignOffsetMs);
+    const forecast = computeForecast(
+      scaledSeries,
+      chartTimeRaw.forecastPeriodBuckets,
+      alignOffsetMs
+    );
+    if (!summary.unit && demoUnit) {
+      summary.unit = demoUnit;
+    }
+    if (forecast && !forecast.unit && demoUnit) {
+      forecast.unit = demoUnit;
+    }
+    const textSummary = computeTextSummary(summary);
+
+    return {
+      status: "ready",
+      comparisonSeries: scaledSeries,
+      summary,
+      forecast,
+      textSummary,
+      period,
+      resolvedWindows: windows,
+      mergedTimeWindow: merged,
+      chartTime: {
+        timeline: chartTimeRaw.timeline,
+        alignStartsMs: chartTimeRaw.alignStartsMs,
+        forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
+        tailLabelFromIndex
+      }
+    };
+  }
+
   public setConfig(config: CardConfigInput): void {
     // Bump the generation so any in-flight load (started under the previous config)
     // discards its result once it completes — a config change is never swallowed.
@@ -295,7 +394,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     // defines a new default, and a stale shift must not silently apply to it.
     this.previewShift = 0;
     this._previewLoading = false;
-    this._state = { status: "loading" };
+    if (this.preview) {
+      // Picker mode (910, FR-014/FR-011): render the deterministic demo series
+      // immediately — no query on the critical path, no blank/loading/error
+      // state. The existing render pipeline consumes the ready state unchanged.
+      this._state = this._buildDemoState(new Date());
+    } else {
+      this._state = { status: "loading" };
+    }
   }
 
   public getCardSize(): number {
@@ -1502,42 +1608,44 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           role="region"
           aria-label=${this._localizeOrError(localize, "section.chart")}
         >
-          <div class="ebc-chart-controls">
-            ${previewActive
-              ? html`<span class="ebc-preview-indication" role="status">
-                  ${previewIndicationText}
-                </span>`
-              : null}
-            ${previewActive
-              ? html`<button
-                  class="ebc-chart-control ebc-chart-control--reset"
+          ${this.preview
+            ? null
+            : html`<div class="ebc-chart-controls">
+                ${previewActive
+                  ? html`<span class="ebc-preview-indication" role="status">
+                      ${previewIndicationText}
+                    </span>`
+                  : null}
+                ${previewActive
+                  ? html`<button
+                      class="ebc-chart-control ebc-chart-control--reset"
+                      type="button"
+                      ?disabled=${this._previewLoading}
+                      aria-label=${this._localizeOrError(localize, "preview.reset")}
+                      @click=${() => this._onPreviewStep("reset")}
+                    >
+                      <ha-icon icon="mdi:restart"></ha-icon>
+                    </button>`
+                  : null}
+                <button
+                  class="ebc-chart-control"
                   type="button"
                   ?disabled=${this._previewLoading}
-                  aria-label=${this._localizeOrError(localize, "preview.reset")}
-                  @click=${() => this._onPreviewStep("reset")}
+                  aria-label=${this._localizeOrError(localize, "preview.step_back")}
+                  @click=${() => this._onPreviewStep("back")}
                 >
-                  <ha-icon icon="mdi:restart"></ha-icon>
-                </button>`
-              : null}
-            <button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(localize, "preview.step_back")}
-              @click=${() => this._onPreviewStep("back")}
-            >
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>
-            <button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(localize, "preview.step_forward")}
-              @click=${() => this._onPreviewStep("forward")}
-            >
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>
-          </div>
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>
+                <button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.step_forward")}
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>
+              </div>`}
           <div class="ebc-chart-wrap">
             <div
               class="chart-container ebc-chart ${this._previewLoading

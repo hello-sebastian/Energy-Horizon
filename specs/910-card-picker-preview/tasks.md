@@ -32,7 +32,7 @@ of each story.
 
 **Purpose**: Confirm the baseline is green before any feature work.
 
-- [ ] T001 Verify baseline is green on branch `910-card-picker-preview`: `npm test` (564 passing), `npm run typecheck` (strict, 0 errors), `npm run lint` (0 errors)
+- [X] T001 Verify baseline is green on branch `910-card-picker-preview`: `npm test` (564 passing), `npm run typecheck` (strict, 0 errors), `npm run lint` (0 errors) — verified 2025-07: baseline was 637 passing (59 files), typecheck 0 errors, lint 0 errors
 
 ---
 
@@ -44,16 +44,16 @@ any user story wiring.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 [P] Add `getEntitySuggestion` to `CustomCardDeclaration` and add the `CustomCardSuggestion` interface (`{ label?: string; config: LovelaceCardConfig }`) in `src/ha-types.ts` (research R1)
-- [ ] T003 Create `src/card/picker-preview.ts`; export `SUPPORTED_UNITS` as `readonly ["kWh", "Wh", "MWh", "m³", "l"]` and `isSupportedUnit(unit: string | undefined): boolean` using an exact, case-sensitive match (FR-003, research R3)
-- [ ] T004 Implement `buildDemoComparisonSeries(unit: string, now: Date, timeZone: string): ComparisonSeries` in `src/card/picker-preview.ts` — deterministic (no `Math.random`), returns the existing `ComparisonSeries` shape, plausible magnitudes, current series partial (ends at `now`) + reference series complete, aligned to the default `year_over_year` windows (FR-009, research R4)
-- [ ] T005 Implement `findSuitableEntity(hass: HomeAssistant, entities: string[], entitiesFallback: string[]): string` in `src/card/picker-preview.ts` — first entity in `entities` (unused) with a supported unit, else first in `entitiesFallback` (used) with a supported unit, else `""` (FR-007, research R5)
-- [ ] T006 Implement `buildSamplePreviewConfig(entity: string)` in `src/card/picker-preview.ts` returning exactly `{ type: "energy-horizon-card", entity, comparison_preset: "year_over_year", interpretation: "consumption", neutral_threshold: 2 }` (FR-005/FR-009, research R5)
-- [ ] T007 Implement `buildEntitySuggestion(hass: HomeAssistant, entityId: string): CustomCardSuggestion | null` in `src/card/picker-preview.ts` — returns `null` when the entity is missing from `hass.states` or its unit is not supported; otherwise `{ config: buildSamplePreviewConfig(entityId) }`; total and non-throwing (FR-001/FR-002/FR-004, research R1)
-- [ ] T008 Implement `queryRealDataWithLimit(...)` in `src/card/picker-preview.ts` — a time-limited wrapper (~2–3 s `Promise.race` against a timeout) over the existing `buildLtsQueriesForWindows` + `sendMessagePromise` + `mapLtsResponseToCumulativeSeries` path; resolves to a `ComparisonSeries` on success, or a sentinel (e.g. `null`) on timeout/error/empty (FR-011, research R4)
-- [ ] T009 Declare a `preview` property (`boolean`, default `false`) on `EnergyHorizonCard` in `src/card/cumulative-comparison-chart.ts` (set by `hui-card` in the picker; not part of `_config`, not persisted) (research R2)
-- [ ] T010 Implement the demo-first picker-mode render path in `src/card/cumulative-comparison-chart.ts`: when `preview === true`, immediately render `buildDemoComparisonSeries` (no query on the critical path, no blank/loading/error state) through the existing `ComparisonSeries` render pipeline (FR-014/FR-011, research R4)
-- [ ] T011 Hide the 909 time-window preview controls (back/forward/reset) when `preview === true` in `src/card/cumulative-comparison-chart.ts` so the preview is a clean, non-interactive surface (research R6)
+- [X] T002 [P] Add `getEntitySuggestion` to `CustomCardDeclaration` and add the `CustomCardSuggestion` interface (`{ label?: string; config: LovelaceCardConfig }`) in `src/ha-types.ts` (research R1)
+- [X] T003 Create `src/card/picker-preview.ts`; export `SUPPORTED_UNITS` as `readonly ["kWh", "Wh", "MWh", "m³", "l"]` and `isSupportedUnit(unit: string | undefined): boolean` using an exact, case-sensitive match (FR-003, research R3)
+- [X] T004 Implement `buildDemoComparisonSeries(unit: string, now: Date, timeZone: string): ComparisonSeries` in `src/card/picker-preview.ts` — deterministic (no `Math.random`), returns the existing `ComparisonSeries` shape, plausible magnitudes, current series partial (ends at `now`) + reference series complete, aligned to the default `year_over_year` windows (FR-009, research R4)
+- [X] T005 Implement `findSuitableEntity(hass: HomeAssistant, entities: string[], entitiesFallback: string[]): string` in `src/card/picker-preview.ts` — first entity in `entities` (unused) with a supported unit, else first in `entitiesFallback` (used) with a supported unit, else `""` (FR-007, research R5)
+- [X] T006 Implement `buildSamplePreviewConfig(entity: string)` in `src/card/picker-preview.ts` returning exactly `{ type: "energy-horizon-card", entity, comparison_preset: "year_over_year", interpretation: "consumption", neutral_threshold: 2 }` (FR-005/FR-009, research R5)
+- [X] T007 Implement `buildEntitySuggestion(hass: HomeAssistant, entityId: string): CustomCardSuggestion | null` in `src/card/picker-preview.ts` — returns `null` when the entity is missing from `hass.states` or its unit is not supported; otherwise `{ config: buildSamplePreviewConfig(entityId) }`; total and non-throwing (FR-001/FR-002/FR-004, research R1)
+- [X] T008 Implement `queryRealDataWithLimit(...)` in `src/card/picker-preview.ts` — a time-limited wrapper (~2–3 s `Promise.race` against a timeout) over the existing `buildLtsQueriesForWindows` + `sendMessagePromise` + `mapLtsResponseToCumulativeSeries` path; resolves to a `ComparisonSeries` on success, or a sentinel (e.g. `null`) on timeout/error/empty (FR-011, research R4)
+- [X] T009 Declare a `preview` property (`boolean`, default `false`) on `EnergyHorizonCard` in `src/card/cumulative-comparison-chart.ts` (set by `hui-card` in the picker; not part of `_config`, not persisted) (research R2)
+- [X] T010 Implement the demo-first picker-mode render path in `src/card/cumulative-comparison-chart.ts`: when `preview === true`, immediately render `buildDemoComparisonSeries` (no query on the critical path, no blank/loading/error state) through the existing `ComparisonSeries` render pipeline (FR-014/FR-011, research R4)
+- [X] T011 Hide the 909 time-window preview controls (back/forward/reset) when `preview === true` in `src/card/cumulative-comparison-chart.ts` so the preview is a clean, non-interactive surface (research R6)
 
 **Checkpoint**: Foundation ready — the card renders a demo chart in picker mode and the shared
 helpers are in place. User story wiring can now begin.
