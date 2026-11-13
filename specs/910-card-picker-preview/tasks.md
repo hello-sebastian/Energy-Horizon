@@ -78,7 +78,7 @@ is not suggested.
 
 ### Implementation for User Story 1
 
-- [X] T013 [US1] Register the `getEntitySuggestion` hook on the `window.customCards` entry in `src/index.ts`, delegating to `buildEntitySuggestion` (research R1) — plus integration test `tests/integration/picker-registration.test.ts` (4 tests)
+- [X] T013 [US1] Register the `getEntitySuggestion` hook on the `window.customCards` entry in `src/index.ts`, delegating to `buildEntitySuggestion` (research R1) — plus integration test `tests/integration/picker-registration.test.ts` (4 tests). Note: the sample config's `type` carries the `custom:` prefix (`custom:energy-horizon-card`) — required because the "By entity" suggestion config is fed straight into `<hui-card .config preview>`, which only resolves custom elements via the `custom:` prefix (verified against `home-assistant/frontend` `create-element-base.ts`); the `window.customCards` entry and element tag stay unprefixed
 
 **Checkpoint**: The card is discoverable from a supported entity in the "By entity" view (MVP).
 

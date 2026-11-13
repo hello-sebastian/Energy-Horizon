@@ -52,7 +52,7 @@ describe("SUPPORTED_UNITS / isSupportedUnit", () => {
 describe("buildSamplePreviewConfig", () => {
   it("returns exactly the sample preview config shape", () => {
     expect(buildSamplePreviewConfig("sensor.energy")).toEqual({
-      type: "energy-horizon-card",
+      type: "custom:energy-horizon-card",
       entity: "sensor.energy",
       comparison_preset: "year_over_year",
       interpretation: "consumption",
@@ -72,7 +72,7 @@ describe("buildEntitySuggestion", () => {
     const suggestion = buildEntitySuggestion(hass, "sensor.energy");
     expect(suggestion).not.toBeNull();
     expect(suggestion?.config).toEqual({
-      type: "energy-horizon-card",
+      type: "custom:energy-horizon-card",
       entity: "sensor.energy",
       comparison_preset: "year_over_year",
       interpretation: "consumption",

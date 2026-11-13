@@ -42,7 +42,7 @@ describe("window.customCards registration (910 US1, T013)", () => {
     const suggestion = entry?.getEntitySuggestion?.(hass, "sensor.energy");
     expect(suggestion).not.toBeNull();
     expect(suggestion?.config).toEqual({
-      type: "energy-horizon-card",
+      type: "custom:energy-horizon-card",
       entity: "sensor.energy",
       comparison_preset: "year_over_year",
       interpretation: "consumption",

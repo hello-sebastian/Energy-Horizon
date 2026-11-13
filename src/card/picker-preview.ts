@@ -174,10 +174,19 @@ export function findSuitableEntity(
 /**
  * Builds the sample preview config (FR-005/FR-009, R5).
  * Returns exactly the shape the picker expects.
+ *
+ * The `type` carries the `custom:` prefix: the "By entity" suggestion path
+ * feeds this config straight into `<hui-card .config preview>`, which only
+ * resolves a type as a custom element when it starts with `custom:`
+ * (otherwise it is looked up as a core card and fails with
+ * "Unknown type encountered"). The same config is also the starting
+ * configuration when the user picks the suggestion, so the prefix is
+ * required there too. (The "By card" gallery adds the prefix itself, and the
+ * `window.customCards` entry / element tag stay unprefixed.)
  */
 export function buildSamplePreviewConfig(entity: string): LovelaceCardConfig {
   return {
-    type: "energy-horizon-card",
+    type: "custom:energy-horizon-card",
     entity,
     comparison_preset: "year_over_year",
     interpretation: "consumption",
