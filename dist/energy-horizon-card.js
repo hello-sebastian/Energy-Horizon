@@ -32256,6 +32256,16 @@ const Xl = class Xl extends Rn {
   getCardSize() {
     return 4;
   }
+  /**
+   * Picker side-effect safety (910, FR-013): when the element is removed from
+   * the DOM (the picker tears down its preview), bump the load generation so any
+   * in-flight picker real-data query discards its result instead of writing to
+   * the detached element's state. The preview never writes to `_config` or any
+   * storage — the sample config is only the picker's starting point (FR-010).
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback(), this._loadGeneration++;
+  }
   updated(e) {
     var t, i, n, a, o, s, l, u;
     if ((e.has("hass") || e.has("_config") || e.has("_state") || e.has("_previewLoading")) && ((this._state.status === "loading" || this._previewLoading) && this._inFlightGeneration !== this._loadGeneration && this._loadData(), this._state.status === "ready" && this._state.comparisonSeries)) {
