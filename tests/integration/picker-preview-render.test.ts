@@ -266,3 +266,180 @@ describe("picker preview real-data upgrade (910 US3, T018)", () => {
     }
   });
 });
+
+describe("picker preview safety (910 US4, T020)", () => {
+  /**
+   * Creates a card in picker mode (`preview === true`) with an optional
+   * controllable `sendMessagePromise`, an optional HA language, and an optional
+   * explicit config object (so a test can assert the picker's input object is
+   * not mutated). Mirrors the `hui-card` order: hass + preview first, then
+   * `setConfig`.
+   */
+  function makeCard(opts: {
+    send?: (msg: Record<string, unknown>) => Promise<unknown>;
+    language?: string;
+    config?: Record<string, unknown>;
+  }): EnergyHorizonCardEl {
+    const el = document.createElement(
+      "energy-horizon-card"
+    ) as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    const hass = pickerHass();
+    if (opts.language) {
+      hass.language = opts.language;
+      hass.locale = { language: opts.language, number_format: "language" };
+    }
+    el.hass = {
+      ...hass,
+      connection: { sendMessagePromise: opts.send ?? (async () => ({})) }
+    } as HomeAssistant;
+    el.preview = true;
+    el.setConfig(
+      opts.config ?? {
+        type: "custom:energy-horizon-card",
+        entity: "sensor.energy",
+        comparison_preset: "year_over_year",
+        interpretation: "consumption",
+        neutral_threshold: 2
+      }
+    );
+    return el;
+  }
+
+  function stateOf(el: EnergyHorizonCardEl): { status: string } {
+    return (el as unknown as { _state: { status: string } })._state;
+  }
+
+  it("browsing the preview persists no configuration (SC-006, FR-010)", async () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+    try {
+      // The picker's starting config object — the preview must not mutate it or
+      // persist it anywhere.
+      const configInput = {
+        type: "custom:energy-horizon-card",
+        entity: "sensor.energy",
+        comparison_preset: "year_over_year",
+        interpretation: "consumption",
+        neutral_threshold: 2
+      };
+      const el = makeCard({
+        send: vi.fn().mockResolvedValue({}),
+        config: configInput
+      });
+      await el.updateComplete;
+      // Let any in-flight real-data query settle.
+      await new Promise((r) => setTimeout(r, 0));
+
+      // No storage writes happened while browsing the preview.
+      expect(setItemSpy).not.toHaveBeenCalled();
+
+      // The sample config is only the picker's starting point: the card's
+      // internal `_config` is a fresh object (not the picker's input object),
+      // and the picker's input object is left untouched.
+      const internalConfig = (
+        el as unknown as { _config: Record<string, unknown> }
+      )._config;
+      expect(internalConfig).not.toBe(configInput);
+      expect(configInput).toEqual({
+        type: "custom:energy-horizon-card",
+        entity: "sensor.energy",
+        comparison_preset: "year_over_year",
+        interpretation: "consumption",
+        neutral_threshold: 2
+      });
+
+      document.body.removeChild(el);
+    } finally {
+      setItemSpy.mockRestore();
+    }
+  });
+
+  it("preview respects the active theme via host CSS variables (FR-012)", async () => {
+    // A dark theme: the host CSS variables carry dark values. The preview must
+    // read them (via getComputedStyle on the host) and flow them into the
+    // ECharts option — no hardcoded light colors.
+    const darkVars: Record<string, string> = {
+      "--primary-text-color": "rgb(255, 255, 255)",
+      "--secondary-text-color": "rgba(255, 255, 255, 0.7)",
+      "--divider-color": "rgba(255, 255, 255, 0.12)",
+      "--ha-card-background": "rgb(30, 30, 30)",
+      "--error-color": "#ff5252",
+      "--success-color": "#69f0ae",
+      "--disabled-text-color": "rgba(255, 255, 255, 0.5)"
+    };
+    vi.stubGlobal(
+      "getComputedStyle",
+      (_el: unknown) => ({
+        getPropertyValue: (prop: string) => darkVars[prop] ?? ""
+      })
+    );
+    try {
+      const el = makeCard({});
+      await el.updateComplete;
+      const [option] = setOptionMock.mock.calls[0] as unknown[];
+      const opt = option as {
+        tooltip: { backgroundColor: string; textStyle: { color: string } };
+        yAxis:
+          | { axisLabel: { color: string } }
+          | Array<{ axisLabel: { color: string } }>;
+      };
+      const yAxis = Array.isArray(opt.yAxis) ? opt.yAxis[0] : opt.yAxis;
+      // The dark theme variables flow into the ECharts option.
+      expect(opt.tooltip.backgroundColor).toBe("rgb(30, 30, 30)");
+      expect(opt.tooltip.textStyle.color).toBe("rgb(255, 255, 255)");
+      expect(yAxis.axisLabel.color).toBe("rgb(255, 255, 255)");
+      document.body.removeChild(el);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("preview respects the card's localization (FR-012)", async () => {
+    const el = makeCard({ language: "fr", send: vi.fn().mockResolvedValue({}) });
+    await el.updateComplete;
+    const root = el.shadowRoot!;
+    const ariaLabels = Array.from(root.querySelectorAll("[aria-label]")).map(
+      (e) => e.getAttribute("aria-label") ?? ""
+    );
+    // French panel labels are rendered (not English).
+    expect(ariaLabels.some((l) => l.includes("Période actuelle"))).toBe(true);
+    expect(ariaLabels.some((l) => l.includes("Période de référence"))).toBe(
+      true
+    );
+    expect(ariaLabels.some((l) => l.includes("Current period"))).toBe(false);
+    document.body.removeChild(el);
+  });
+
+  it("preview does not interfere with other cards' previews (FR-013)", async () => {
+    const send1 = vi.fn().mockResolvedValue({});
+    const send2 = vi.fn().mockResolvedValue({});
+    const el1 = makeCard({ send: send1 });
+    const el2 = makeCard({ send: send2 });
+    await el1.updateComplete;
+    await el2.updateComplete;
+
+    // Both render independently, each with its own demo chart + panels.
+    const root1 = el1.shadowRoot!;
+    const root2 = el2.shadowRoot!;
+    expect(root1.querySelector(".chart-container")).not.toBeNull();
+    expect(root2.querySelector(".chart-container")).not.toBeNull();
+    expect(root1.querySelector(".ebc-section--comparison")).not.toBeNull();
+    expect(root2.querySelector(".ebc-section--comparison")).not.toBeNull();
+
+    // Each card fires its own real-data query independently (no shared channel):
+    // one LTS query per window (current + reference = 2 for year_over_year), on
+    // its own connection.
+    expect(send1).toHaveBeenCalledTimes(2);
+    expect(send2).toHaveBeenCalledTimes(2);
+
+    // Independent state objects — no shared mutable state between instances.
+    const state1 = stateOf(el1);
+    const state2 = stateOf(el2);
+    expect(state1.status).toBe("ready");
+    expect(state2.status).toBe("ready");
+    expect(state1).not.toBe(state2);
+
+    document.body.removeChild(el1);
+    document.body.removeChild(el2);
+  });
+});

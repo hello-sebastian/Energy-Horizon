@@ -511,6 +511,18 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return 4;
   }
 
+  /**
+   * Picker side-effect safety (910, FR-013): when the element is removed from
+   * the DOM (the picker tears down its preview), bump the load generation so any
+   * in-flight picker real-data query discards its result instead of writing to
+   * the detached element's state. The preview never writes to `_config` or any
+   * storage — the sample config is only the picker's starting point (FR-010).
+   */
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._loadGeneration++;
+  }
+
   protected updated(changedProps: Map<string, unknown>): void {
     if (
       changedProps.has("hass") ||
