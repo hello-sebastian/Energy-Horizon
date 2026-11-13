@@ -21,6 +21,24 @@ export interface LovelaceCard extends HTMLElement {
   getCardSize?(): number;
 }
 
+/**
+ * A generic Lovelace card config object. Card-specific configs (e.g.
+ * `CardConfig`) are structurally compatible with this type.
+ */
+export type LovelaceCardConfig = Record<string, unknown>;
+
+/**
+ * A suggestion returned by a card's `getEntitySuggestion` hook, used by the
+ * "Add card" picker's "by entity" view to pre-fill a card config for the
+ * selected entity.
+ */
+export interface CustomCardSuggestion {
+  /** Optional label shown in the picker (defaults to the card name). */
+  label?: string;
+  /** The card config to pre-fill for the selected entity. */
+  config: LovelaceCardConfig;
+}
+
 export type HaFormSchema =
   | { name: string; selector: { entity: { domain?: string } }; required?: boolean }
   | { name: string; selector: { text: Record<string, never> }; required?: boolean }
@@ -47,6 +65,16 @@ export interface CustomCardDeclaration {
   preview?: boolean;
   /** URL shown as a "documentation" link in the card picker / editor. */
   documentationURL?: string;
+  /**
+   * Optional hook used by the "Add card" picker's "by entity" view: given the
+   * selected entity, return a pre-filled card config suggestion, or `null`
+   * when the card does not support the entity. Must be synchronous, total,
+   * and non-throwing — throwing cards are dropped by the picker.
+   */
+  getEntitySuggestion?(
+    hass: HomeAssistant,
+    entityId: string
+  ): CustomCardSuggestion | null;
 }
 
 declare global {
