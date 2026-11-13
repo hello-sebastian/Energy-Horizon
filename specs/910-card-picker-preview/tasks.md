@@ -74,11 +74,11 @@ is not suggested.
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before the hook is registered.**
 
-- [ ] T012 [P] [US1] Unit tests in `tests/unit/picker-preview.test.ts`: `isSupportedUnit` (all five supported units `kWh`/`Wh`/`MWh`/`m³`/`l` → true; an unsupported unit and `undefined` → false), `buildEntitySuggestion` (supported entity → `{ config }` with `entity` = selected entity and the default preset/interpretation/threshold; unsupported unit → `null`; entity missing from `hass.states` → `null`; never throws), and `buildSamplePreviewConfig` shape (FR-001/FR-002/FR-004, SC-001/SC-002)
+- [X] T012 [P] [US1] Unit tests in `tests/unit/picker-preview.test.ts`: `isSupportedUnit` (all five supported units `kWh`/`Wh`/`MWh`/`m³`/`l` → true; an unsupported unit and `undefined` → false), `buildEntitySuggestion` (supported entity → `{ config }` with `entity` = selected entity and the default preset/interpretation/threshold; unsupported unit → `null`; entity missing from `hass.states` → `null`; never throws), and `buildSamplePreviewConfig` shape (FR-001/FR-002/FR-004, SC-001/SC-002) — written in Phase 2 alongside the helpers (26 tests, all passing)
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Register the `getEntitySuggestion` hook on the `window.customCards` entry in `src/index.ts`, delegating to `buildEntitySuggestion` (research R1)
+- [X] T013 [US1] Register the `getEntitySuggestion` hook on the `window.customCards` entry in `src/index.ts`, delegating to `buildEntitySuggestion` (research R1) — plus integration test `tests/integration/picker-registration.test.ts` (4 tests)
 
 **Checkpoint**: The card is discoverable from a supported entity in the "By entity" view (MVP).
 
