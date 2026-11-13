@@ -1,5 +1,9 @@
 import { LitElement, html, type TemplateResult } from "lit";
-import type { HomeAssistant, LovelaceCard } from "../ha-types";
+import type {
+  HomeAssistant,
+  LovelaceCard,
+  LovelaceCardConfig
+} from "../ha-types";
 import {
   resolveComparisonPreset,
   type CardConfig,
@@ -69,6 +73,8 @@ import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 import {
   buildDemoComparisonSeries,
+  buildSamplePreviewConfig,
+  findSuitableEntity,
   isSupportedUnit
 } from "./picker-preview";
 import {
@@ -1712,13 +1718,22 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return document.createElement("energy-horizon-card-editor");
   }
 
-  static getStubConfig(): Partial<CardConfig> {
-    return {
-      entity: "",
-      comparison_preset: "year_over_year",
-      interpretation: "consumption",
-      neutral_threshold: 2
-    };
+  /**
+   * "By card" gallery stub (910, FR-007/FR-008, research R2/R5). The picker
+   * calls this with the unused entities first and the used entities as
+   * fallback; the returned config is merged over the picker's own
+   * `{ type: "custom:energy-horizon-card" }`, so the sample config's own
+   * (prefixed) `type` is safe. When no entity has a supported unit the
+   * sample config carries `entity: ""` — the preview still renders the
+   * deterministic demo series (FR-009).
+   */
+  static getStubConfig(
+    hass: HomeAssistant,
+    entities: string[],
+    entitiesFallback: string[]
+  ): LovelaceCardConfig {
+    const entity = findSuitableEntity(hass, entities, entitiesFallback);
+    return buildSamplePreviewConfig(entity);
   }
 }
 

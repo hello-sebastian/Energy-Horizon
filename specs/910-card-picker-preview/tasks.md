@@ -96,12 +96,12 @@ not the no-data message.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T014 [P] [US2] Unit tests in `tests/unit/picker-preview.test.ts`: `findSuitableEntity` (prefers an unused entity over a used one; falls back to `entitiesFallback`; returns `""` when no entity has a supported unit) (FR-007/FR-008)
-- [ ] T015 [P] [US2] Integration test in `tests/integration/picker-preview-render.test.ts`: with `preview === true`, the card renders a chart (demo series) with the standard panels and does NOT show the no-data message (FR-005, SC-003)
+- [X] T014 [P] [US2] Unit tests in `tests/unit/picker-preview.test.ts`: `findSuitableEntity` (prefers an unused entity over a used one; falls back to `entitiesFallback`; returns `""` when no entity has a supported unit) (FR-007/FR-008) — written in Phase 2 alongside the helpers (5 tests, all passing)
+- [X] T015 [P] [US2] Integration test in `tests/integration/picker-preview-render.test.ts`: with `preview === true`, the card renders a chart (demo series) with the standard panels and does NOT show the no-data message (FR-005, SC-003) — 4 tests (render + 3 getStubConfig entity-selection cases)
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement the full `getStubConfig(hass: HomeAssistant, entities: string[], entitiesFallback: string[])` static signature on `EnergyHorizonCard` in `src/card/cumulative-comparison-chart.ts`, using `findSuitableEntity` + `buildSamplePreviewConfig` (returns the sample config with the found entity, or `entity: ""` when none) (FR-007/FR-008, research R2/R5)
+- [X] T016 [US2] Implement the full `getStubConfig(hass: HomeAssistant, entities: string[], entitiesFallback: string[])` static signature on `EnergyHorizonCard` in `src/card/cumulative-comparison-chart.ts`, using `findSuitableEntity` + `buildSamplePreviewConfig` (returns the sample config with the found entity, or `entity: ""` when none) (FR-007/FR-008, research R2/R5)
 
 **Checkpoint**: The gallery preview is recognizable (standard appearance, no no-data message).
 
