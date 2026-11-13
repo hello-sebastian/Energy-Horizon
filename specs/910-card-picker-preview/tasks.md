@@ -118,12 +118,12 @@ appearance with the fictional series.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T017 [P] [US3] Unit tests in `tests/unit/picker-preview.test.ts`: `queryRealDataWithLimit` (resolves in time with a current series → returns the real `ComparisonSeries`; exceeds the time limit → returns the fallback sentinel; query rejects → returns the fallback sentinel; empty result → returns the fallback sentinel) (FR-007/FR-011)
-- [ ] T018 [P] [US3] Integration test in `tests/integration/picker-preview-render.test.ts`: the preview renders the demo series first, then updates in place to real data when the query succeeds in time; on timeout/error the demo series stays; no loading or error state is ever shown (FR-014, SC-004)
+- [X] T017 [P] [US3] Unit tests in `tests/unit/picker-preview.test.ts`: `queryRealDataWithLimit` (resolves in time with a current series → returns the real `ComparisonSeries`; exceeds the time limit → returns the fallback sentinel; query rejects → returns the fallback sentinel; empty result → returns the fallback sentinel) (FR-007/FR-011) — written in Phase 2 alongside the helpers (5 tests, all passing)
+- [X] T018 [P] [US3] Integration test in `tests/integration/picker-preview-render.test.ts`: the preview renders the demo series first, then updates in place to real data when the query succeeds in time; on timeout/error the demo series stays; no loading or error state is ever shown (FR-014, SC-004) — 3 tests (success in place, reject keeps demo, timeout keeps demo)
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Wire the time-limited real-data query into the picker-mode render path in `src/card/cumulative-comparison-chart.ts`: after the demo render, fire `queryRealDataWithLimit`; on success with a current series, update the preview in place to the real data; on failure/timeout/empty, keep the demo series; the query is fired at most once per picker session (FR-007/FR-008/FR-014, research R4)
+- [X] T019 [US3] Wire the time-limited real-data query into the picker-mode render path in `src/card/cumulative-comparison-chart.ts`: after the demo render, fire `queryRealDataWithLimit`; on success with a current series, update the preview in place to the real data; on failure/timeout/empty, keep the demo series; the query is fired at most once per picker session (FR-007/FR-008/FR-014, research R4) — `_firePickerRealDataQuery` + `_pickerRealDataFired` guard, generation-checked stale-result discard
 
 **Checkpoint**: The preview prefers real data and falls back to the demo series safely.
 

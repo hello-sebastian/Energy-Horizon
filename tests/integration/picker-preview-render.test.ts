@@ -154,3 +154,115 @@ describe("picker preview render (910 US2, T015)", () => {
     expect(config.entity).toBe("");
   });
 });
+
+describe("picker preview real-data upgrade (910 US3, T018)", () => {
+  /**
+   * Creates a card in picker mode (`preview === true`) with a controllable
+   * `sendMessagePromise`, mirroring the `hui-card` order: hass + preview first,
+   * then `setConfig` (which renders the demo series and fires the real-data query).
+   */
+  function makePreviewCard(
+    send: (msg: Record<string, unknown>) => Promise<unknown>
+  ): EnergyHorizonCardEl {
+    const el = document.createElement(
+      "energy-horizon-card"
+    ) as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    el.hass = {
+      ...pickerHass(),
+      connection: { sendMessagePromise: send }
+    } as HomeAssistant;
+    el.preview = true;
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      interpretation: "consumption",
+      neutral_threshold: 2
+    });
+    return el;
+  }
+
+  function stateOf(el: EnergyHorizonCardEl): {
+    status: string;
+    comparisonSeries?: { current: { points: { value: number }[] } };
+  } {
+    return (el as unknown as {
+      _state: {
+        status: string;
+        comparisonSeries?: { current: { points: { value: number }[] } };
+      };
+    })._state;
+  }
+
+  it("renders the demo series first, then updates in place to real data when the query succeeds in time (FR-014, SC-004)", async () => {
+    // A valid LTS response with two distinctive buckets (999 kWh each) so the
+    // real series is distinguishable from the deterministic demo series.
+    const ltsResponse = {
+      results: {
+        "sensor.energy": [
+          { start: "2026-01-01T00:00:00Z", change: 999, unit_of_measurement: "kWh" },
+          { start: "2026-01-08T00:00:00Z", change: 999, unit_of_measurement: "kWh" }
+        ]
+      }
+    };
+    const send = vi.fn().mockResolvedValue(ltsResponse);
+    const el = makePreviewCard(send);
+    await el.updateComplete;
+
+    // The demo series is rendered first (one setOption with the demo data).
+    expect(setOptionMock).toHaveBeenCalledTimes(1);
+
+    // The time-limited query succeeds in time → the preview updates in place to
+    // the real data (a second setOption), with no loading or error state.
+    await vi.waitFor(() => {
+      expect(setOptionMock).toHaveBeenCalledTimes(2);
+    });
+
+    // The state now carries the real series (2 LTS points), not the demo
+    // (~46 weekly points), and the card is still in the ready state.
+    const state = stateOf(el);
+    expect(state.status).toBe("ready");
+    expect(state.comparisonSeries).toBeDefined();
+    expect(state.comparisonSeries!.current.points.length).toBe(2);
+
+    document.body.removeChild(el);
+  });
+
+  it("keeps the demo series when the query rejects (no loading/error state) (FR-014)", async () => {
+    const send = vi.fn().mockRejectedValue(new Error("boom"));
+    const el = makePreviewCard(send);
+    await el.updateComplete;
+    expect(setOptionMock).toHaveBeenCalledTimes(1); // demo
+
+    // Let the rejection propagate through queryRealDataWithLimit (→ null) and
+    // the .then callback (no-op: the demo series stays).
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+
+    // The demo series stays: no second setOption, still ready.
+    expect(setOptionMock).toHaveBeenCalledTimes(1);
+    expect(stateOf(el).status).toBe("ready");
+
+    document.body.removeChild(el);
+  });
+
+  it("keeps the demo series when the query exceeds the time limit (FR-014)", async () => {
+    vi.useFakeTimers();
+    try {
+      const send = vi.fn(() => new Promise<unknown>(() => {})); // never resolves
+      const el = makePreviewCard(send);
+      await el.updateComplete;
+      expect(setOptionMock).toHaveBeenCalledTimes(1); // demo
+
+      // Advance past the ~2.5 s time limit; the race resolves to null → demo stays.
+      await vi.advanceTimersByTimeAsync(2500);
+
+      expect(setOptionMock).toHaveBeenCalledTimes(1);
+      expect(stateOf(el).status).toBe("ready");
+      document.body.removeChild(el);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

@@ -75,7 +75,8 @@ import {
   buildDemoComparisonSeries,
   buildSamplePreviewConfig,
   findSuitableEntity,
-  isSupportedUnit
+  isSupportedUnit,
+  queryRealDataWithLimit
 } from "./picker-preview";
 import {
   expandCurrentWindowForCaption,
@@ -183,6 +184,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    * coalesces `hass`-triggered loads while one is in flight for the current config.
    */
   private _inFlightGeneration: number | null = null;
+
+  /**
+   * Picker real-data upgrade (910, FR-014, R4): set once the time-limited real-data
+   * query has been fired for this picker session (element instance). The query is
+   * fired at most once per session; a config change rebuilds the element in preview
+   * mode, so a new session starts fresh.
+   */
+  private _pickerRealDataFired = false;
 
   /** Merged preset + `time_window` + card `aggregation` — updated in `setConfig`, used in `_loadData`. */
   private _mergedTimeWindow!: MergedTimeWindowConfig;
@@ -335,6 +344,91 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     };
   }
 
+  /**
+   * Picker real-data upgrade (910, FR-007/FR-008/FR-014, research R4). After the
+   * deterministic demo series is rendered, fire a time-limited real-data query for
+   * the configured entity. On success with a current series, update the preview in
+   * place to the real data (reusing the demo state's windows/timeline so the series
+   * align). On failure/timeout/empty, keep the demo series. Fired at most once per
+   * picker session (element instance); a stale result is discarded via the load
+   * generation if the config changes in flight.
+   */
+  private _firePickerRealDataQuery(): void {
+    if (!this.preview || this._pickerRealDataFired) return;
+    this._pickerRealDataFired = true;
+
+    const demoState = this._state;
+    if (
+      demoState.status !== "ready" ||
+      !demoState.resolvedWindows ||
+      !demoState.chartTime
+    ) {
+      return;
+    }
+
+    const entityId = this._config.entity;
+    if (!entityId) return; // no entity → the demo series stays
+
+    const gen = this._loadGeneration;
+    const windows = demoState.resolvedWindows;
+    const chartTime = demoState.chartTime;
+    const resolved = resolveLocale(this.hass, this._config);
+    const alignOffsetMs =
+      chartTime.alignStartsMs.length > 1
+        ? chartTime.alignStartsMs[0]! - chartTime.alignStartsMs[1]!
+        : undefined;
+
+    void queryRealDataWithLimit(
+      this.hass,
+      windows,
+      entityId,
+      resolved.timeZone
+    ).then((realSeries) => {
+      // Config changed while the query was in flight → discard the stale result.
+      if (gen !== this._loadGeneration) return;
+      // No usable real data → keep the deterministic demo series.
+      if (
+        !realSeries ||
+        !realSeries.current ||
+        realSeries.current.points.length === 0
+      ) {
+        return;
+      }
+
+      const entityUnit =
+        (this.hass.states?.[entityId]?.attributes as {
+          unit_of_measurement?: string;
+        })?.unit_of_measurement ?? "";
+      const scaledSeries = this._applyUnitScalingToSeries(
+        realSeries,
+        entityUnit || realSeries.current.unit
+      );
+      const summary = computeSummary(scaledSeries, alignOffsetMs);
+      const forecast = computeForecast(
+        scaledSeries,
+        chartTime.forecastPeriodBuckets,
+        alignOffsetMs
+      );
+      if (!summary.unit && entityUnit) {
+        summary.unit = entityUnit;
+      }
+      if (forecast && !forecast.unit && entityUnit) {
+        forecast.unit = entityUnit;
+      }
+      const textSummary = computeTextSummary(summary);
+
+      // Swap the demo series for the real one, keeping the demo state's windows,
+      // timeline, and period so the real series align to the same axis.
+      this._state = {
+        ...demoState,
+        comparisonSeries: scaledSeries,
+        summary,
+        forecast,
+        textSummary
+      };
+    });
+  }
+
   public setConfig(config: CardConfigInput): void {
     // Bump the generation so any in-flight load (started under the previous config)
     // discards its result once it completes — a config change is never swallowed.
@@ -405,6 +499,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       // immediately — no query on the critical path, no blank/loading/error
       // state. The existing render pipeline consumes the ready state unchanged.
       this._state = this._buildDemoState(new Date());
+      // After the demo render, upgrade to real data when a time-limited query
+      // succeeds in time; otherwise the demo series stays (FR-007/FR-014, R4).
+      this._firePickerRealDataQuery();
     } else {
       this._state = { status: "loading" };
     }
