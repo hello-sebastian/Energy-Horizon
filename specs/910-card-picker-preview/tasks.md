@@ -154,7 +154,7 @@ cards' previews are unaffected.
 
 **Purpose**: Final validation and cross-cutting checks across all stories.
 
-- [X] T022 [P] Run the `quickstart.md` validation scenarios end-to-end (both picker views, all 12 scenarios) against a dev HA dashboard — automated scenarios covered by the integration tests; the live-dashboard pass (both picker views, all 12 scenarios) is a manual verification step for the user against a dev HA instance
+- [X] T022 [P] Run the `quickstart.md` validation scenarios end-to-end (both picker views, all 12 scenarios) against a dev HA dashboard — automated scenarios covered by the integration tests; the live-dashboard pass (both picker views, all 12 scenarios) was manually verified by the user against a dev HA instance (2026-11-14) — all scenarios pass
 - [X] T023 [P] Confirm no new translation keys are needed; if any are required, add them to all four locales (`en`, `pl`, `de`, `fr`) in `src/card/translations/` — confirmed: the picker preview reuses the existing render pipeline and its existing translation keys; `picker-preview.ts` introduces no user-facing strings, so no new keys are needed
 - [X] T024 Final regression: `npm test` (564 baseline + all new tests passing), `npm run typecheck` (strict, 0 errors), `npm run lint` (0 errors) — 678 tests passing (62 files), typecheck 0 errors, lint 0 errors
 
