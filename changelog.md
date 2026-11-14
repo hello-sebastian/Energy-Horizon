@@ -6,7 +6,11 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 
 ### Added
 
-
+- **Card picker preview (discoverable & recognizable in the HA "Add card" picker):** the card now works in **both** picker entry points instead of failing at both.
+  - **"By entity" view:** the card is now **suggested** whenever the selected entity's unit of measurement is one of the supported units (`kWh`, `Wh`, `MWh`, `m³`, `l` — exact, case-sensitive match), and **not** suggested for any other unit. The suggestion carries a sample configuration referencing the selected entity, so the preview renders the card in its standard appearance with that entity.
+  - **"By card" view (gallery):** the preview no longer shows the "There is no data to display for the selected period" message. It searches for a suitable user entity with a supported unit and uses it; when none exists it falls back to a **deterministic demo series** so the card always renders in its standard appearance (a chart with a current and a reference series plus the standard panels).
+  - **Real data first, fictional fallback:** after the demo series renders immediately (no blocking, no loading/error state), a **time-limited** real-data query (~2.5 s) upgrades the preview in place to the entity's real data when it succeeds in time; on failure, timeout, or empty result the demo series stays.
+  - **Strictly a preview:** the sample configuration is only the picker's starting point — it is **never persisted** as the card's configuration, the preview **never blocks** on data, and it **does not interfere** with other cards' previews or the picker. The preview respects the active theme (light/dark) and the card's localization. The 909 time-window preview controls are hidden in the picker.
 
 ### Changed
 
