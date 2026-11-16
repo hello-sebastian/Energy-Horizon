@@ -4,7 +4,7 @@
 **Domain**: Chart Rendering & Interaction  
 **Replaces**: `001-chart-updates`, `003-echarts-migration`, `001-aggregation-axis-labels`  
 **Primary code**: `src/card/echarts-renderer.ts`, `src/card/axis/`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-11-16  
 
 ---
 
@@ -273,7 +273,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 
 - **FR-902-N (Modular ECharts import)**: ECharts MUST be imported modularly. Forbidden: `import * as echarts from 'echarts'`. Required: imports from `echarts/core`, `echarts/charts` (`LineChart` only), `echarts/components` (only `GridComponent`, `TooltipComponent`, `LegendComponent`, `MarkLineComponent`, `MarkPointComponent`), `echarts/renderers` (`CanvasRenderer` only). Target version: `^5.6.0`.
 
-- **FR-902-O (No Chart.js dependency)**: After migration, `chart.js` and `chartjs-adapter-date-fns` MUST be absent from `package.json` `dependencies` and `devDependencies`.
+- **FR-902-O (No Chart.js dependency)**: After migration, `chart.js`, `chartjs-adapter-date-fns`, and the leftover `date-fns` MUST be absent from `package.json` `dependencies` and `devDependencies`. Satisfied as of 2026-11-16 (911/TD-1): the dead Chart.js renderer module `src/card/chart-renderer.ts` (428 lines, never bundled since the ECharts migration) was deleted and `date-fns` removed from `dependencies`.
 
 - **FR-902-P (Renderer interface)**: `EChartsRenderer` MUST implement `ChartRenderer`: `update(series, fullTimeline, config, labels)` and `destroy()`. Business logic in `cumulative-comparison-chart.ts` (`buildFullTimeline`, `_buildRendererConfig`) MUST remain unchanged.
 

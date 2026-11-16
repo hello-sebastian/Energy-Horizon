@@ -30,7 +30,6 @@ const FORBIDDEN_PHRASES = [
 /** Source files that must not contain user-visible natural language. */
 const CARD_SOURCE_FILES = [
   "cumulative-comparison-chart.ts",
-  "chart-renderer.ts",
   "ha-api.ts",
   "localize.ts",
   "types.ts",

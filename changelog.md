@@ -5,6 +5,10 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- Removed unused runtime dependency: the dead Chart.js renderer module (`src/card/chart-renderer.ts`, never bundled since the ECharts migration) and its leftover `date-fns` package — `luxon` remains the sole date library.
+
 ### Documentation
 
 - Wiki: added a "Known simplifications: number format → locale mapping" section to the Troubleshooting & FAQ page, documenting how the `number_format` option maps to the locale used for number rendering.
