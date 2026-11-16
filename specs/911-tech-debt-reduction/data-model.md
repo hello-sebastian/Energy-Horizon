@@ -19,11 +19,11 @@ CardState = LoadingState | ErrorState | NoDataState | ReadyState
 | `LoadingState` | `status: "loading"` | + any existing loading-only fields, carried over |
 | `ErrorState` | `status: "error"`, `errorMessage: string` (required), `errorParams?: Record<string, string \| number>` | defensive error path (Article II) |
 | `NoDataState` | `status: "no-data"` | + any existing no-data-only fields, carried over |
-| `ReadyState` | `status: "ready"`, **required**: `comparisonSeries: ComparisonSeries`, `summary: SummaryStats`, `forecast: ForecastStats`, `period: ComparisonPeriod`, `resolvedWindows: ResolvedWindow[]`, `chartTime: ChartTimeContext`; **optional**: `preview?: PreviewSnapshot` | the 6 required fields are the FR-011 invariant; `textSummary` and `mergedTimeWindow` (present in today's flat state) are carried into `ReadyState` — their exact optionality is finalized by the FR-017 assess |
+| `ReadyState` | `status: "ready"`, **required**: `comparisonSeries: ComparisonSeries`, `summary: SummaryStats`, `forecast: ForecastStats`, `textSummary`, `period: ComparisonPeriod`, `resolvedWindows: ResolvedWindow[]`, `mergedTimeWindow`, `chartTime: ChartTimeContext`; **optional**: `preview?: PreviewSnapshot` | the 8 required fields are the FR-011 invariant; `textSummary` and `mergedTimeWindow` (present in today's flat state) are **required**, not optional — finalized by the FR-017 assess (cardstate-union, 2026-11-16) |
 
 **Invariants (compiler-enforced after TD-11, previously comment-only):**
 
-1. `ready` ⇒ all six required fields present — "ready without series" is un-writable (the class behind several past bugs).
+1. `ready` ⇒ all eight required fields present — "ready without series" is un-writable (the class behind several past bugs).
 2. `preview` exists only on `ReadyState` — the preview fields cannot accompany loading/error/no-data.
 3. `previewShift` is removed from the top-level state: the element field remains the live source of the shift; the `PreviewSnapshot` in state exists to serve `render()` (FR-011).
 4. Transient preview state lives in exactly one place in the data model (the snapshot) — the 909 "plain element field" research decision (R3) is superseded by the snapshot, per the audit W5.

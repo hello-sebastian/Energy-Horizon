@@ -22,7 +22,7 @@ A 14-task maintenance program (TD-1…TD-14) delivered as one shared feature `91
 
 **Project Type**: Web Component (single-file artifact) — Functional Core / Imperative Shell.
 
-**Performance Goals**: no regression — existing mechanisms stay untouched (`lastHash` render-skip, load coalescing/generations, point cap + auto-aggregation); production bundle ≈1.17 MB; `dist/` ~2.3 MB smaller after sourcemap removal (TD-13).
+**Performance Goals**: no regression — existing mechanisms stay untouched (`lastHash` render-skip, load coalescing/generations, point cap + auto-aggregation); production bundle ≈1.17 MB; `dist/` ~3.86 MB smaller after sourcemap removal (TD-13 — the committed `dist/energy-horizon-card.js.map`).
 
 **Constraints**: zero user-visible change (FR-019); no new NPM dependencies; `dist/` rebuilt in every PR touching code (CI `verify-dist` rejects out-of-sync); 1 task = 1 PR (FR-015); all work on branch `911-tech-debt-reduction` (decision D4).
 
@@ -109,7 +109,7 @@ tests/unit/                              [extended] new unit tests: builder (≥
 | **W1** | TD-1, TD-3, TD-4, TD-10, TD-13 | 1–2 days | dead weight, type enforcement, single label, hygiene | full gate + `dist/` + `speckit.converge` |
 | **W2** | **TD-2 (priority)**, TD-7, TD-11 | ~1 week | pipeline unification, pure data modules, invariants in the types | full gate + `dist/` + `speckit.converge` |
 | **W3** | TD-5, TD-6, TD-8, TD-9, TD-12 | ~1 week | zero `any`/`!`, narrative and render as pure functions | full gate + `dist/` + `speckit.converge` |
-| **W4** | TD-14 (optional) | a few days | element < 1200 lines, picker as a module | full gate + `dist/` + `speckit.converge` (**= exit gate**) |
+| **W4** | TD-14 (optional) | a few days | element < 1200 lines, picker as a module | full gate + `dist/` + `speckit.converge` (**= exit gate**; if TD-14 is skipped, T021 carries it) |
 
 Full gate = `npm test && npm run typecheck && npm run lint && npm run build` + committed `dist/` rebuild (CI `verify-dist`) + `speckit.converge` drift check (code vs. spec/plan/tasks).
 
