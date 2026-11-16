@@ -4,7 +4,7 @@
 **Domain**: Data Pipeline & Forecasting  
 **Replaces**: `001-compute-forecast`  
 **Primary code**: `src/card/ha-api.ts`  
-**Last updated**: 2026-04-22  
+**Last updated**: 2026-11-16  
 
 ---
 
@@ -17,6 +17,8 @@ This domain covers the data pipeline from Home Assistant Long-Term Statistics (L
 ### LTS data fetching
 
 For each `ComparisonWindow` the card calls the HA statistics API with the window's `start`/`end` boundaries and the effective `aggregation`. Fetches for multiple windows may be issued in parallel. The results are normalized, sorted by timestamp, and converted to cumulative series (`toCumulativeSeries`).
+
+**Typed response model (911/TD-3)**: WebSocket messages arrive as `unknown` (the thin `src/ha-types.ts` transport contract is deliberately unchanged). The card applies the `LtsMessageResponse` type at the boundary where it consumes the messages (the `Promise.all` call sites), then normalizes every response through the single adapter `extractLtsResults()` in `ha-api.ts`. The adapter supports both observed shapes — the `{ success?, result? }` envelope (Shape A) and the bare `{ results }` payload (Shape B) — plus the documented legacy bare statistic record `{ [statistic_id]: LtsPoint[] }` without a `results` wrapper. It is defensive (never throws; malformed input degrades to `undefined`, which routes to the existing no-data path). Entity-id lookup (with first-key fallback) remains in the mapping layer.
 
 ### `buildChartTimeline` / `forecastPeriodBuckets`
 
@@ -214,10 +216,14 @@ As a user whose reference series covers only part of the current window's time r
 
 - **FR-901-P (Parallel LTS fetches)**: LTS data for multiple windows MAY be fetched in parallel. Time range correctness MUST be maintained regardless of fetch ordering.
 
+- **FR-901-Q (Typed LTS response adapter)**: LTS WebSocket responses MUST be consumed through the `LtsMessageResponse` type and the `extractLtsResults()` adapter in `ha-api.ts` — no `as any` cast at the call sites (satisfied as of 2026-11-16, 911/TD-3; contract: `specs/911-tech-debt-reduction/contracts/lts-websocket-response.md`). The adapter MUST support the envelope and bare payload shapes plus the legacy bare-record shape, and MUST NOT throw on malformed input (degrades to `undefined` → the existing no-data path). Mapping semantics (entity lookup, first-key fallback, point normalization) MUST remain unchanged — verified by the unmodified golden tests in `tests/unit/ha-api.test.ts` (FR-019).
+
 ---
 
 ## Key Entities
 
+- **`LtsMessageResponse`**: The LTS WebSocket message shape as the card receives it — `{ success?: boolean; result?: LtsStatisticsResponse }` (envelope, Shape A) or `LtsStatisticsResponse` itself (bare payload, Shape B). Applied at the fetch boundary in `cumulative-comparison-chart.ts` (911/TD-3).
+- **`extractLtsResults()`**: Single defensive normalization point in `ha-api.ts`; returns `LtsStatisticsResponse | undefined`. Keeps the legacy bare-record shape via a `?? data` fallback; never throws.
 - **`ForecastPoint`**: `{ timestamp: number, rawValue: number }` — a single per-bucket increment from a cumulative LTS series.
 - **`ForecastStats`**: `{ enabled, confidence, forecast_total, anomalousReference? }` — the complete output of `computeForecast`.
 - **`periodTotalBuckets`** (= `forecastPeriodBuckets`): Nominal slot count of window 0 at its aggregation grain; the denominator for `pct`. Produced by `buildChartTimeline` in `ha-api.ts`; always window 0 only.

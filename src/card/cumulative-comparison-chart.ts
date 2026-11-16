@@ -37,7 +37,8 @@ import {
   buildChartTimeline,
   comparisonPeriodFromResolvedWindows,
   firstTailAxisLabelIndex,
-  fullReferenceWindowRawTotal
+  fullReferenceWindowRawTotal,
+  type LtsMessageResponse
 } from "./ha-api";
 import {
   assertLtsHardLimits,
@@ -723,11 +724,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         console.log("[Energy Horizon] LTS queries:", queries);
       }
 
-      const responses = await Promise.all(
+      // Typed boundary (911/TD-3): HA WebSocket messages arrive as `unknown`;
+      // `ha-api.ts` normalizes them through the `LtsMessageResponse` model.
+      const responses = (await Promise.all(
         queries.map((q) =>
           this.hass.connection.sendMessagePromise(q as unknown as Record<string, unknown>)
         )
-      );
+      )) as LtsMessageResponse[];
 
       if (this._config.debug) {
         console.log("[Energy Horizon] API responses (per window):", responses);
@@ -742,7 +745,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       const seriesList: ReturnType<typeof mapLtsResponseToCumulativeSeries>[] = [];
       for (let i = 0; i < responses.length; i++) {
         const cum = mapLtsResponseToCumulativeSeries(
-          responses[i] as any,
+          responses[i],
           this._config.entity,
           labelForIndex(i)
         );
@@ -842,13 +845,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             previewWindowList,
             this._config.entity
           );
-          const previewResponses = await Promise.all(
+          // Typed boundary (911/TD-3) — same model as `_loadData` above.
+          const previewResponses = (await Promise.all(
             previewQueries.map((q) =>
               this.hass.connection.sendMessagePromise(
                 q as unknown as Record<string, unknown>
               )
             )
-          );
+          )) as LtsMessageResponse[];
           // Build the preview chart timeline from the shifted windows so the
           // preview series align to the shifted axis (909 US3, T014). This is
           // done unconditionally (even when the shifted period has no data) so
@@ -875,7 +879,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             tailLabelFromIndex: previewTailLabelFromIndex
           };
           const previewCurrent = mapLtsResponseToCumulativeSeries(
-            previewResponses[0] as any,
+            previewResponses[0],
             this._config.entity,
             localize("period.current")
           );
@@ -883,7 +887,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             const previewReference =
               previewWindowCount > 1
                 ? mapLtsResponseToCumulativeSeries(
-                    previewResponses[1] as any,
+                    previewResponses[1],
                     this._config.entity,
                     localize("period.reference")
                   )

@@ -404,8 +404,48 @@ export function buildLtsQuery(
   };
 }
 
+/**
+ * Shape of an LTS (long-term statistics) WebSocket message as the card
+ * actually receives it (911/TD-3, contract
+ * `specs/911-tech-debt-reduction/contracts/lts-websocket-response.md`):
+ * - Shape A (envelope): `{ success?: boolean; result?: LtsStatisticsResponse }`
+ * - Shape B (bare payload): the `LtsStatisticsResponse` itself.
+ *
+ * The transport (`sendMessagePromise`) deliberately returns `unknown` (thin
+ * `src/ha-types.ts` contract); this type is applied at the boundary where the
+ * card consumes the messages.
+ */
+export type LtsMessageResponse =
+  | { success?: boolean; result?: LtsStatisticsResponse }
+  | LtsStatisticsResponse;
+
+/**
+ * Single normalization point for LTS WebSocket responses (911/TD-3).
+ * Defensive by design (Constitution Article II): malformed input degrades to
+ * `undefined` and the function never throws.
+ *
+ * Preserves today's byte-for-byte behavior, including the documented legacy
+ * Home Assistant shape where the payload is a bare statistic record
+ * `{ [statistic_id]: LtsStatisticPoint[] }` without a `results` wrapper —
+ * kept alive by the `?? data` fallback below (contract edge case 4).
+ */
+export function extractLtsResults(
+  response: LtsMessageResponse
+): LtsStatisticsResponse | undefined {
+  if (response === null || typeof response !== "object") return undefined;
+  // Step 1: envelope form → its `result`; bare form → the message itself.
+  const data: unknown =
+    (response as { result?: LtsStatisticsResponse }).result ?? response;
+  if (data === null || typeof data !== "object") return undefined;
+  // Step 2: the results record must be a non-null object; the `?? data`
+  // fallback keeps the legacy bare-record shape (see doc comment).
+  const results: unknown = (data as LtsStatisticsResponse).results ?? data;
+  if (!results || typeof results !== "object") return undefined;
+  return { results: results as Record<string, LtsStatisticPoint[]> };
+}
+
 export function mapLtsResponseToSeries(
-  response: LtsStatisticsResponse | { result?: LtsStatisticsResponse },
+  response: LtsMessageResponse,
   entityId: string,
   period: ComparisonPeriod,
   periodLabel: string
@@ -425,17 +465,15 @@ export function mapLtsResponseToSeries(
 }
 
 export function mapLtsResponseToCumulativeSeries(
-  response: LtsStatisticsResponse | { result?: LtsStatisticsResponse },
+  response: LtsMessageResponse,
   entityId: string,
   periodLabel: string
 ): CumulativeSeries | undefined {
-  const data = (response as { result?: LtsStatisticsResponse }).result ?? response;
-  // HA WebSocket returns result either as { results: { [statistic_id]: [...] } }
-  // or directly as { [statistic_id]: [...] } without a wrapper.
-  const results =
-    (data as LtsStatisticsResponse).results ??
-    (data as Record<string, LtsStatisticPoint[]>);
-  if (!results || typeof results !== "object") return undefined;
+  // 911/TD-3: envelope normalization happens once in `extractLtsResults`
+  // (contract: lts-websocket-response.md); entity lookup stays in the mapper.
+  const normalized = extractLtsResults(response);
+  if (!normalized) return undefined;
+  const results = normalized.results;
 
   let points = results[entityId];
   if (!points || points.length === 0) {

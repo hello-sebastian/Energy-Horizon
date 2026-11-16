@@ -5,6 +5,10 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Internal: typed the long-term statistics WebSocket response path — new `LtsMessageResponse` model and `extractLtsResults()` adapter in `ha-api.ts`, replacing three `as any` casts in the card element with typed boundary assertions. No behavioral change: both observed response shapes (envelope and bare payload) plus the documented legacy shape are handled exactly as before.
+
 ### Removed
 
 - Removed unused runtime dependency: the dead Chart.js renderer module (`src/card/chart-renderer.ts`, never bundled since the ECharts migration) and its leftover `date-fns` package — `luxon` remains the sole date library.
