@@ -8,6 +8,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 ### Changed
 
 - Internal: typed the long-term statistics WebSocket response path — new `LtsMessageResponse` model and `extractLtsResults()` adapter in `ha-api.ts`, replacing three `as any` casts in the card element with typed boundary assertions. No behavioral change: both observed response shapes (envelope and bare payload) plus the documented legacy shape are handled exactly as before.
+- Internal: consolidated the duplicated period-label logic into a single pure function, `formatPeriodLabel()` (`src/card/labels/period-label.ts`), used by the period header, the renderer config, and the time-window preview indication. No visible change.
 
 ### Removed
 

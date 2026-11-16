@@ -27,7 +27,6 @@ import {
   parseNeutralThresholdT,
   type InterpretationSemanticsResult
 } from "./interpretation-semantics";
-import { DateTime } from "luxon";
 import {
   mapLtsResponseToCumulativeSeries,
   computeSummary,
@@ -86,6 +85,7 @@ import {
   resolvedWindowForCaption
 } from "./labels/compact-period-caption";
 import { resolveComparisonAxisLabelHints } from "./labels/comparison-label-hints";
+import { formatPeriodLabel } from "./labels/period-label";
 import "./energy-horizon-card-editor.js";
 
 export function formatSigned(
@@ -572,20 +572,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           const { timeline } = previewChartTime;
           const baseConfig = this._buildRendererConfig(timeline);
           const cs = previewWindows[0]?.start;
-          const lux = cs
-            ? DateTime.fromJSDate(cs, { zone: locResolved.timeZone })
-            : null;
-          let previewPeriodLabel = "";
-          if (lux) {
-            if (lux.month === 1 && lux.day === 1) {
-              previewPeriodLabel = String(lux.year);
-            } else {
-              previewPeriodLabel = new Intl.DateTimeFormat(locResolved.language, {
-                month: "long",
-                year: "numeric"
-              }).format(cs!);
-            }
-          }
+          // 911/TD-10: single period-label implementation (FR-010).
+          const previewPeriodLabel = cs
+            ? formatPeriodLabel(cs, locResolved.language, locResolved.timeZone)
+            : "";
           const axisHints =
             previewWindows.length >= 2
               ? resolveComparisonAxisLabelHints(
@@ -1181,16 +1171,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const ct = this._state.chartTime;
     const w0 = windows?.[0];
     const cs = w0?.start ?? period.current_start;
-    const lux = DateTime.fromJSDate(cs, { zone: resolved.timeZone });
-    let periodLabel = "";
-    if (lux.month === 1 && lux.day === 1) {
-      periodLabel = String(lux.year);
-    } else {
-      periodLabel = new Intl.DateTimeFormat(language, {
-        month: "long",
-        year: "numeric"
-      }).format(cs);
-    }
+    // 911/TD-10: single period-label implementation (FR-010).
+    const periodLabel = formatPeriodLabel(cs, language, resolved.timeZone);
 
     const displayUnit = series.current.unit;
     const precision = this._config.precision ?? 2;
@@ -1546,16 +1528,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     if (previewActive) {
       const previewStart = this._state.previewWindows?.[0]?.start;
       if (previewStart) {
-        const lux = DateTime.fromJSDate(previewStart, {
-          zone: resolved.timeZone
-        });
-        const previewPeriodLabel =
-          lux.month === 1 && lux.day === 1
-            ? String(lux.year)
-            : new Intl.DateTimeFormat(resolved.language, {
-                month: "long",
-                year: "numeric"
-              }).format(previewStart);
+        // 911/TD-10: single period-label implementation (FR-010).
+        const previewPeriodLabel = formatPeriodLabel(
+          previewStart,
+          resolved.language,
+          resolved.timeZone
+        );
         previewIndicationText = this._localizeOrError(localize, "preview.indication", {
           period: previewPeriodLabel
         });

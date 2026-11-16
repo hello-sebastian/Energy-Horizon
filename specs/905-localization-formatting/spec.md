@@ -4,7 +4,7 @@
 **Domain**: Localization & Formatting  
 **Replaces**: `002-i18n-localization`  
 **Primary code**: `src/card/localize.ts`, `src/translations/`  
-**Last updated**: 2026-04-22  
+**Last updated**: 2026-11-16  
 
 ---
 
@@ -32,6 +32,12 @@ The card resolves all user-visible text, number formats, and time zone from a th
 ### Forecast confidence level labels
 
 The forecast panel displays the confidence level (`low` / `medium` / `high` from `ForecastStats`) through per-language label keys `forecast.confidence.low`, `forecast.confidence.medium`, and `forecast.confidence.high`. The rendering layer resolves the level key for the active language before interpolating it into the `forecast.confidence` sentence template, so the displayed level is always localized (e.g. German `niedrig` / `mittel` / `hoch`). The raw enum values remain the internal data model and are never rendered directly.
+
+### Period labels (period header, renderer config, preview indication)
+
+The card's period label — the current-period header, the `periodLabel` field of the renderer config, and the transient time-window preview indication — is produced by exactly one pure function: `formatPeriodLabel(instant, locale, zone)` in `src/card/labels/period-label.ts` (added 2026-11-16, 911/TD-10; FR-905-N). A period starting on **January 1** — evaluated in `zone`, the HA time zone — is labeled with the **year alone** (`"2025"`); any other start is labeled with the **localized long month name plus year** via `Intl.DateTimeFormat` (`"October 2024"`, `"październik 2024"` — Polish month names are lowercase in ICU). No other code path formats the period label.
+
+> **Known quirk (preserved, 911 FR-019):** the January 1 edge check runs in the HA time zone, but the month name is formatted by `Intl.DateTimeFormat` **without** a `timeZone` option — i.e., in the host (browser) zone. This is pre-existing behavior, intentionally preserved for byte-for-byte parity; the two halves only diverge near month boundaries around zone offsets. Correcting it would be a user-visible change outside the scope of the tech-debt program.
 
 ### `localize()` function
 
@@ -91,7 +97,7 @@ interface ResolvedLocale {
 **Publishes to**:
 - `900-time-model-windows`: HA IANA time zone for all calendar boundary calculations and "now" resolution.
 - `901-data-pipeline-forecasting`: HA IANA time zone for timestamp interpretation in `buildChartTimeline`.
-- `902-chart-rendering-interaction`: resolved locale string and HA time zone for `Intl.DateTimeFormat` axis/tooltip label formatting.
+- `902-chart-rendering-interaction`: resolved locale string and HA time zone for `Intl.DateTimeFormat` axis/tooltip label formatting; the period label consumed by the renderer config comes from `formatPeriodLabel()` in `src/card/labels/period-label.ts` (FR-905-N).
 - `903-card-ui-composition`: resolved locale for `formatCompactPeriodCaption`; HA `locale.time_format` for clock portions of hourly-window captions; entity friendly name and icon from `hass.states`; localized strings for narrative interpretation **consumption vs production** wording.
 - `904-configuration-surface`: `localize()` function for editor label translation.
 
@@ -207,6 +213,7 @@ As a community contributor, I need to add a new language by editing only the tra
 - **Translations Dictionary**: Per-language JSON files in `src/translations/` (e.g., `en.json`, `pl.json`, `de.json`, `fr.json`, `nl.json`). Keys use descriptive dot-notation. `en` and `pl` are mandatory; additional files can be added independently.
 - **`ResolvedLocale`**: Internal object holding resolved `language`, `numberFormat`, and `timeZone` after applying the cascade. Consumed by all rendering and formatting logic.
 - **`localize(key, variables?, languageOverride?)`**: Function in `src/card/localize.ts` returning the translated string with optional variable interpolation and `en` fallback.
+- **`formatPeriodLabel()`**: Pure period-label function in `src/card/labels/period-label.ts` (911/TD-10, FR-905-N): Jan 1 (in the HA time zone) → year only; otherwise localized long month + year.
 - **HA IANA time zone**: `hass.config.time_zone` — the canonical time zone used for all calendar and datetime operations across the card.
 
 ---
@@ -295,3 +302,5 @@ Keys removed: `text_summary.*_mom`, `text_summary.higher`, `text_summary.lower`,
 - **FR-905-L (Mandatory key validation)**: An automated test or build-time check MUST assert that the 11 mandatory keys listed above are present in every language JSON file at `npm test` time. The same check MUST assert that the three forecast confidence level keys (`forecast.confidence.low`, `forecast.confidence.medium`, `forecast.confidence.high`) are present in every language JSON file.
 
 - **FR-905-M (Grammar context documentation)**: A `CONTEXT.md` file MUST exist in `src/translations/` (or equivalent inline JSON comments) documenting the positional context for `text_summary.period.*` phrases before any new language file is merged.
+
+- **FR-905-N (Single source for the period label)**: The period label MUST be produced by exactly one pure function — `formatPeriodLabel(instant: Date, locale: string, zone: string): string` in `src/card/labels/period-label.ts` — and no other code path may format it (satisfied 2026-11-16, 911/TD-10: the duplicated inline implementations in the card element were removed). The function MUST label a period starting on January 1 (evaluated in `zone`) with the year alone, and any other start with the localized long month name plus year. It MUST be unit-tested for the January 1 edge, December 31, non-UTC zones, and all five card languages (`en`, `pl`, `de`, `fr`, `nl`).
