@@ -6,7 +6,7 @@ import {
   resolvePreviewShiftedWindows,
   nextPreviewShift
 } from "../../src/card/time-windows";
-import { buildTimelineSlots } from "../../src/card/ha-api";
+import { buildTimelineSlots } from "../../src/card/timeline";
 import type { MergedTimeWindowConfig } from "../../src/card/types";
 
 const TZ = "UTC";

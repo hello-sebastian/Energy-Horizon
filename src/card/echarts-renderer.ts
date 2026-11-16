@@ -21,7 +21,7 @@ import {
 import {
   carryForwardCurrentCumulativeAtNow,
   findNowSlotIndexOnComparisonAxis
-} from './ha-api';
+} from './timeline';
 import { semanticResolvedLineColor, trendResolvedLineColor } from './trend-visual';
 import { formatTooltipHeader } from './axis/tooltip-format';
 import { findTimelineSlotContainingInstant } from './axis/now-marker-slot';

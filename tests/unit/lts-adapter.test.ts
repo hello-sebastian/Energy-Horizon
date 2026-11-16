@@ -11,13 +11,9 @@ import { describe, expect, it } from "vitest";
 import {
   extractLtsResults,
   mapLtsResponseToCumulativeSeries,
-  mapLtsResponseToSeries,
   type LtsMessageResponse
 } from "../../src/card/ha-api";
-import type {
-  ComparisonPeriod,
-  LtsStatisticsResponse
-} from "../../src/card/types";
+import type { LtsStatisticsResponse } from "../../src/card/types";
 
 /**
  * Sum-based LTS points (older HA shape, no `change`): sums 2, 4, 9 →
@@ -157,29 +153,5 @@ describe("mapLtsResponseToCumulativeSeries with LtsMessageResponse (911/TD-3)", 
         mapLtsResponseToCumulativeSeries(asMessage(value), "sensor.energy", "Current")
       ).toBeUndefined();
     }
-  });
-});
-
-describe("mapLtsResponseToSeries wrapper (911/TD-3)", () => {
-  const period: ComparisonPeriod = {
-    current_start: new Date("2024-01-01T00:00:00Z"),
-    current_end: new Date("2024-01-04T00:00:00Z"),
-    reference_start: new Date("2023-01-01T00:00:00Z"),
-    reference_end: new Date("2023-01-04T00:00:00Z"),
-    aggregation: "day",
-    time_zone: "UTC"
-  };
-
-  it("accepts the envelope shape and passes period metadata through", () => {
-    const series = mapLtsResponseToSeries(
-      { success: true, result: bare },
-      "sensor.energy",
-      period,
-      "Current"
-    );
-    expect(series).toBeDefined();
-    expect(series!.current.total).toBe(7);
-    expect(series!.aggregation).toBe("day");
-    expect(series!.time_zone).toBe("UTC");
   });
 });

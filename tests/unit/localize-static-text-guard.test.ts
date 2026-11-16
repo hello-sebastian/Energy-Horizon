@@ -33,7 +33,12 @@ const CARD_SOURCE_FILES = [
   "ha-api.ts",
   "localize.ts",
   "types.ts",
-  "energy-horizon-card-styles.ts"
+  "energy-horizon-card-styles.ts",
+  "timeline/timeline-slots.ts",
+  "timeline/now-marker.ts",
+  "timeline/tail-labels.ts",
+  "timeline/reference-alignment.ts",
+  "time-windows/comparison-period.ts"
 ];
 
 describe("localize static text guard (US4)", () => {

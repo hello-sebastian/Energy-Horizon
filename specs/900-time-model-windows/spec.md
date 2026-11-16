@@ -4,7 +4,7 @@
 **Domain**: Time Model & Windows
 **Replaces**: `001-time-windows-engine`, `006-time-windows-unify`
 **Primary code**: `src/card/time-windows/`, `src/card/ha-api.ts` 
-**Last updated**: 2026-04-22
+**Last updated**: 2026-11-17
 
 ## Clarifications
 
@@ -289,6 +289,8 @@ As a user who typed an invalid `offset` (e.g. `PT30M`, `P0.5M`, or a malformed s
 - **FR-900-O (Parallel data fetching)**: For each resolved window the engine MUST fetch LTS data with the computed `start`/`end` boundaries. Fetches for multiple windows MAY be issued in parallel; correctness of time ranges MUST be maintained.
 
 - **FR-900-P (Series draw order)**: Chart series MUST be drawn from oldest (highest window index) to youngest (index 0), with forecast on top when enabled. This ensures younger windows visually overlay older ones.
+
+- **FR-900-R (Timeline geometry module)**: Chart timeline geometry — slot construction (`buildTimelineSlots`), ordinal continuation (`advanceSlotStartMs`), per-window slot counting (`countBucketsForWindow`), full timelines (`buildFullTimeline`, `buildFullTimelineForWindows`), the chart timeline policy (`buildChartTimeline`), the "now" marker helpers (`carryForwardCurrentCumulativeAtNow`, `findNowSlotIndexOnComparisonAxis`), the tail-label index (`firstTailAxisLabelIndex`), and reference alignment at the aligned current end (`referenceCumulativeAtAlignedCurrentEnd`) — MUST live in `src/card/timeline/`, not in `src/card/ha-api.ts` (911/TD-7, 2026-11-17). The merged window model (`MergedTimeWindowConfig` → `resolveTimeWindows`) is the sole window model; the legacy single-window period construction (`buildComparisonPeriod`) MUST NOT exist. The preset-derived window boundaries MUST be pinned by frozen golden tests asserting `resolveTimeWindows` output against the values the legacy engine produced (zero behavior change, FR-019). A `ComparisonPeriod` consumed by the compute cluster MUST be derived from resolved windows only via `comparisonPeriodFromResolvedWindows` in `src/card/time-windows/`.
 
 - **FR-DATA-1 (LTS sum row timestamp)**: For LTS rows using `sum` (monotonic total), each computed increment MUST be assigned the timestamp of the **previous** row's `start` so values map to the same nominal slot index as `timeline[]`. The first bucket of the window MUST NOT be skipped on the chart while the axis labels that bucket.
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildChartTimeline,
   countBucketsForWindow
-} from "../../src/card/ha-api";
+} from "../../src/card/timeline";
 import type { MergedTimeWindowConfig, ResolvedWindow } from "../../src/card/types";
 
 const day = (y: number, m: number, d: number, h = 0, min = 0, s = 0, ms = 0): Date =>

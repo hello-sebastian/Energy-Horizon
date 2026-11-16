@@ -26,14 +26,16 @@ import type {
 import type { LocalizeFunction, ResolvedLocale } from "../localize";
 import {
   buildChartTimeline,
-  comparisonPeriodFromResolvedWindows,
+  firstTailAxisLabelIndex
+} from "../timeline";
+import {
   computeForecast,
   computeSummary,
-  computeTextSummary,
-  firstTailAxisLabelIndex
+  computeTextSummary
 } from "../ha-api";
 import { pickAutoAggregation } from "../axis";
 import {
+  comparisonPeriodFromResolvedWindows,
   durationToMillis,
   parseDurationToken,
   resolveTimeWindows

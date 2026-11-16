@@ -21,7 +21,7 @@ import {
   type ChartTimeline,
   type ReadyStateOptions
 } from "../../src/card/pipeline/ready-state-builder";
-import { firstTailAxisLabelIndex } from "../../src/card/ha-api";
+import { firstTailAxisLabelIndex } from "../../src/card/timeline";
 import type {
   CardState,
   ChartTimeContext,

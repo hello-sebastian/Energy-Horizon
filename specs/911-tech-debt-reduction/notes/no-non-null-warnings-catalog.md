@@ -1,6 +1,6 @@
 # Non-null assertion warnings — catalog
 
-**Feature**: `911-tech-debt-reduction` | **Produced by**: T006 (TD-4, W1, 2026-11-16) | **Consumed by**: T014 (TD-6, W3)
+**Feature**: `911-tech-debt-reduction` | **Produced by**: T006 (TD-4, W1, 2026-11-16) | **Updated by**: T010 (TD-7, W2, 2026-11-17) | **Consumed by**: T014 (TD-6, W3)
 
 This file is the **removal list for TD-6** (FR-006): every
 `@typescript-eslint/no-non-null-assertion` warning reported by the gate on
@@ -16,14 +16,14 @@ introduces it.
 
 - Command: `npm run lint` (ESLint 9.39.4, flat config `config/eslint.config.js`), after T006 enabled `@typescript-eslint/no-non-null-assertion: "warn"`.
 - Note: the rule is configured as `@typescript-eslint/no-non-null-assertion` (plugin rule). The core ESLint rule `no-non-null-assertion` named in FR-004 no longer exists in ESLint 9; the plugin rule is its direct replacement (it extends the core rule) and is what makes the spec's intent — warn-level detection of `!` assertions — enforceable.
-- Total: **73 warnings across 13 files** (measured in the T009/TD-2 gate, 2026-11-16). The T007/TD-10 gate measured 88 (the T006 gate measured 89; T007's consolidation removed one assertion, old line 586 of the card element). T009's TD-2 extraction removed 15 assertions from the card element — the assertions moved with the pipeline code were dropped in the extraction (no `noUncheckedIndexedAccess` in the toolchain), not re-introduced in `ready-state-builder.ts` / `unit-scaler.ts`. (FR-006's planning estimate was 65; this measured inventory supersedes it.)
+- Total: **57 warnings across 13 files** (measured in the T010/TD-7 gate, 2026-11-17). The T009/TD-2 gate measured 73 (the T007/TD-10 gate measured 88; the T006 gate measured 89; T007's consolidation removed one assertion, old line 586 of the card element). T009's TD-2 extraction removed 15 assertions from the card element — the assertions moved with the pipeline code were dropped in the extraction (no `noUncheckedIndexedAccess` in the toolchain), not re-introduced in `ready-state-builder.ts` / `unit-scaler.ts`. T010's TD-7 extraction removed 16 more, all in `ha-api.ts` (22 → 6): the timeline functions moved to `src/card/timeline/` with all their assertions dropped, and the legacy `mapLtsResponseToSeries` / `buildComparisonPeriod` assertions went away with the functions (including the single-entity fallback's `keys[0]!`); the new `src/card/timeline/` and `src/card/time-windows/comparison-period.ts` files contain 0. The 6 remaining `ha-api.ts` warnings are all inside `computeForecast` (TD-6 territory). (FR-006's planning estimate was 65; this measured inventory supersedes it.)
 - The gate stays green on these warnings (warnings do not fail `npm run lint`); they are tracked here, not suppressed.
 
-## Inventory (file → `line:col`, as of 2026-11-16)
+## Inventory (file → `line:col`, as of 2026-11-17)
 
 | File | Count | Locations |
 |---|---|---|
-| `src/card/ha-api.ts` | 22 | 32:14, 35:46, 74:14, 75:44, 244:22, 245:14, 261:27, 292:55, 295:16, 315:14, 482:24, 621:9, 621:39, 622:18, 625:23, 634:10, 728:5, 729:5, 730:20, 740:9, 740:39, 744:26 |
+| `src/card/ha-api.ts` | 6 | 284:5, 285:5, 286:20, 295:9, 295:39, 299:26 (all inside `computeForecast` — TD-6 territory) |
 | `src/card/cumulative-comparison-chart.ts` | 5 | 124:21, 495:36, 507:19, 508:19, 966:43 |
 | `src/card/echarts-renderer.ts` | 11 | 403:11, 403:44, 405:27, 408:25, 413:38, 530:10, 566:23, 567:24, 717:20, 737:53, 1510:9 |
 | `src/card/picker-preview.ts` | 10 | 71:24, 88:9, 95:14, 113:20, 114:32, 123:20, 125:32, 136:11, 143:35, 269:22 |

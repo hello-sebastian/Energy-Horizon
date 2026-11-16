@@ -6171,52 +6171,6 @@ function ga(r) {
     `Unknown datetime argument: ${r}, of type ${typeof r}`
   );
 }
-function dd(r, e) {
-  if (r.length === 0)
-    return -1;
-  const t = r[0];
-  if (e < t)
-    return -1;
-  for (let i = 0; i < r.length; i++) {
-    const n = r[i], a = i + 1 < r.length ? r[i + 1] : Number.POSITIVE_INFINITY;
-    if (e >= n && e < a)
-      return i;
-  }
-  return -1;
-}
-function iM(r, e, t) {
-  if (r.length === 0)
-    return 0;
-  const i = r[0], n = t.getTime();
-  for (let a = 0; a < r.length; a++)
-    if (!(e + (r[a] - i) <= n))
-      return a;
-  return r.length;
-}
-function nM(r, e, t, i, n, a, o, s) {
-  if (o === "hour" || e.length === 0 || r.length !== e.length)
-    return;
-  const l = jn(
-    new Date(n),
-    new Date(a),
-    o,
-    s
-  ), u = dd(l, t);
-  if (u < 0 || u >= r.length)
-    return;
-  const c = e[0], f = i + (e[u] - c);
-  if (f < n || f > a || r[u] != null)
-    return;
-  let d = null;
-  for (let h = u - 1; h >= 0; h--) {
-    const v = r[h];
-    if (v != null) {
-      d = v;
-      break;
-    }
-  }
-  d != null && (r[u] = d);
-}
 function jn(r, e, t, i) {
   const n = [], a = { zone: i }, o = B.fromJSDate(e, a);
   if (t === "hour") {
@@ -6246,7 +6200,7 @@ function jn(r, e, t, i) {
   }
   return n;
 }
-function aM(r, e, t) {
+function iM(r, e, t) {
   const i = { zone: t };
   if (e === "hour")
     return B.fromMillis(r, i).plus({ hours: 1 }).toMillis();
@@ -6257,19 +6211,7 @@ function aM(r, e, t) {
   const n = new Date(r);
   return n.setMonth(n.getMonth() + 1), n.getTime();
 }
-function oM(r, e, t, i, n, a) {
-  const o = jn(
-    new Date(e),
-    new Date(t),
-    i,
-    n
-  );
-  if (o.length === 0 || r.length === 0)
-    return -1;
-  const s = dd(o, a);
-  return s < 0 ? -1 : Math.min(s, r.length - 1);
-}
-function sM(r, e) {
+function nM(r, e) {
   return jn(
     r.start,
     r.end,
@@ -6277,7 +6219,7 @@ function sM(r, e) {
     e
   ).length;
 }
-function lM(r, e) {
+function aM(r, e) {
   if (r.length === 0)
     return { timeline: [], alignStartsMs: [] };
   const t = r[0].aggregation, i = r[0];
@@ -6294,17 +6236,17 @@ function lM(r, e) {
   const o = [...jn(i.start, i.end, t, e)];
   let s = o.length > 0 ? o[o.length - 1] : null;
   for (; o.length < n && s != null; )
-    s = aM(s, t, e), o.push(s);
+    s = iM(s, t, e), o.push(s);
   return {
     timeline: o,
     alignStartsMs: r.map((l) => l.start.getTime())
   };
 }
-function vd(r, e, t) {
+function dd(r, e, t) {
   const i = r.map((s) => s.start.getTime());
   if (r.length === 0)
     return { timeline: [], alignStartsMs: [], forecastPeriodBuckets: 0 };
-  const n = sM(r[0], t);
+  const n = nM(r[0], t);
   if (r.length === 1) {
     const s = r[0];
     return { timeline: jn(
@@ -6314,19 +6256,79 @@ function vd(r, e, t) {
       t
     ), alignStartsMs: i, forecastPeriodBuckets: n };
   }
-  const { timeline: a, alignStartsMs: o } = lM(r, t);
+  const { timeline: a, alignStartsMs: o } = aM(r, t);
   return { timeline: a, alignStartsMs: o, forecastPeriodBuckets: n };
 }
+function vd(r, e) {
+  if (r.length === 0)
+    return -1;
+  const t = r[0];
+  if (e < t)
+    return -1;
+  for (let i = 0; i < r.length; i++) {
+    const n = r[i], a = i + 1 < r.length ? r[i + 1] : Number.POSITIVE_INFINITY;
+    if (e >= n && e < a)
+      return i;
+  }
+  return -1;
+}
+function oM(r, e, t, i, n, a, o, s) {
+  if (o === "hour" || e.length === 0 || r.length !== e.length)
+    return;
+  const l = jn(
+    new Date(n),
+    new Date(a),
+    o,
+    s
+  ), u = vd(l, t);
+  if (u < 0 || u >= r.length)
+    return;
+  const c = e[0], f = i + (e[u] - c);
+  if (f < n || f > a || r[u] != null)
+    return;
+  let d = null;
+  for (let h = u - 1; h >= 0; h--) {
+    const v = r[h];
+    if (v != null) {
+      d = v;
+      break;
+    }
+  }
+  d != null && (r[u] = d);
+}
+function sM(r, e, t, i, n, a) {
+  const o = jn(
+    new Date(e),
+    new Date(t),
+    i,
+    n
+  );
+  if (o.length === 0 || r.length === 0)
+    return -1;
+  const s = vd(o, a);
+  return s < 0 ? -1 : Math.min(s, r.length - 1);
+}
+function lM(r, e, t) {
+  if (r.length === 0)
+    return 0;
+  const i = r[0], n = t.getTime();
+  for (let a = 0; a < r.length; a++)
+    if (!(e + (r[a] - i) <= n))
+      return a;
+  return r.length;
+}
 function uM(r, e, t) {
-  const i = r[0], n = r[1];
-  return {
-    current_start: i.start,
-    current_end: i.end,
-    reference_start: (n == null ? void 0 : n.start) ?? i.start,
-    reference_end: (n == null ? void 0 : n.end) ?? i.end,
-    aggregation: t,
-    time_zone: e
-  };
+  if (r.length === 0 || e.length === 0)
+    return;
+  const i = typeof t == "number" && Number.isFinite(t) ? t : r[0].timestamp - e[0].timestamp, n = r[r.length - 1].timestamp;
+  let a = -1;
+  for (let o = e.length - 1; o >= 0; o--)
+    if (e[o].timestamp + i <= n) {
+      a = o;
+      break;
+    }
+  if (a !== -1)
+    return e[a].value;
 }
 const cM = {
   day: "day",
@@ -6423,24 +6425,11 @@ function dM(r, e, t) {
     total: a
   };
 }
-function vM(r, e, t) {
-  if (r.length === 0 || e.length === 0)
-    return;
-  const i = typeof t == "number" && Number.isFinite(t) ? t : r[0].timestamp - e[0].timestamp, n = r[r.length - 1].timestamp;
-  let a = -1;
-  for (let o = e.length - 1; o >= 0; o--)
-    if (e[o].timestamp + i <= n) {
-      a = o;
-      break;
-    }
-  if (a !== -1)
-    return e[a].value;
-}
-function pM(r, e) {
+function vM(r, e) {
   var s, l, u;
   const t = r.current.points, i = ((s = t[t.length - 1]) == null ? void 0 : s.value) ?? 0;
   let n;
-  (u = (l = r.reference) == null ? void 0 : l.points) != null && u.length && (n = vM(
+  (u = (l = r.reference) == null ? void 0 : l.points) != null && u.length && (n = uM(
     t,
     r.reference.points,
     e
@@ -6457,7 +6446,7 @@ function pM(r, e) {
 function L0(r) {
   return r.reduce((e, t) => e + (t.rawValue ?? 0), 0);
 }
-function mM(r, e, t) {
+function pM(r, e, t) {
   var T, k;
   const i = (C, M) => ({
     enabled: !1,
@@ -6504,7 +6493,7 @@ function mM(r, e, t) {
   };
   return m && (x.anomalousReference = !0), x;
 }
-function gM(r) {
+function mM(r) {
   const { reference_cumulative: e, difference: t, unit: i } = r;
   if (e == null || t == null)
     return {
@@ -6526,7 +6515,7 @@ function gM(r) {
     unit: i
   };
 }
-function yM(r, e) {
+function gM(r, e) {
   const t = e ?? -1;
   return r === "year_over_year" ? {
     anchor: "start_of_year",
@@ -6570,22 +6559,22 @@ function P0(r, e) {
   }
   return t;
 }
-function _M(r, e) {
+function yM(r, e) {
   const t = r.count !== e.count, i = r.anchor !== e.anchor, n = r.step !== e.step, a = r.offset !== void 0 && r.offset !== e.offset && r.offset !== "";
   (t || i || n || a) && (delete r.currentEndIsNow, delete r.referenceFullPeriod);
 }
-function wM(r) {
-  const e = yM(r.mode, r.periodOffset);
+function _M(r) {
+  const e = gM(r.mode, r.periodOffset);
   if (!r.timeWindowPartial)
     return { ...e };
   const t = P0(
     e,
     r.timeWindowPartial
   );
-  return _M(t, e), t;
+  return yM(t, e), t;
 }
 function I0(r) {
-  const e = wM({
+  const e = _M({
     mode: r.comparison_preset,
     timeWindowPartial: r.time_window,
     periodOffset: r.period_offset
@@ -6595,7 +6584,7 @@ function I0(r) {
     aggregation: e.aggregation ?? r.aggregation
   };
 }
-const bM = {
+const wM = {
   y: "years",
   M: "months",
   w: "weeks",
@@ -6611,7 +6600,7 @@ function ur(r) {
   if (!n) return;
   const a = Number(n[1]), o = n[2];
   if (!Number.isFinite(a)) return;
-  const s = bM[o];
+  const s = wM[o];
   if (!s) return;
   const l = a * t;
   return l === 0 ? ae.fromObject({ [s]: 0 }) : ae.fromObject({ [s]: l });
@@ -6619,7 +6608,7 @@ function ur(r) {
 function qi(r) {
   return r.as("milliseconds");
 }
-const SM = {
+const bM = {
   y: { iso: "Y", isTimePart: !1 },
   Y: { iso: "Y", isTimePart: !1 },
   M: { iso: "M", isTimePart: !1 },
@@ -6632,15 +6621,15 @@ const SM = {
   m: { iso: "M", isTimePart: !0 },
   s: { iso: "S", isTimePart: !0 },
   S: { iso: "S", isTimePart: !0 }
-}, xM = /^([-+]?)\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/, TM = 3600 * 1e3;
-function MM(r) {
+}, SM = /^([-+]?)\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/, xM = 3600 * 1e3;
+function TM(r) {
   const t = r.trim().replace(/^[-+]/, ""), i = t.split("T")[0] ?? t;
   return /\d+\.\d+[yYmM]/.test(i);
 }
-function kM(r) {
-  const e = r.match(xM);
+function MM(r) {
+  const e = r.match(SM);
   if (!e) return null;
-  const t = e[1] ?? "", i = e[2], n = e[3], a = SM[n];
+  const t = e[1] ?? "", i = e[2], n = e[3], a = bM[n];
   if (!a) return null;
   if (i.includes(".")) {
     const c = n.toUpperCase();
@@ -6653,9 +6642,9 @@ function kM(r) {
   const s = t === "-" ? "-" : "", { iso: l, isTimePart: u } = a;
   return u ? `${s}PT${String(o)}${l}` : `${s}P${String(o)}${l}`;
 }
-function CM(r) {
+function kM(r) {
   const e = Math.abs(r.as("milliseconds"));
-  if (e > 0 && e < TM)
+  if (e > 0 && e < xM)
     throw new Error("Energy Horizon: invalid time_window offset (sub-hour offsets are not supported).");
 }
 function E0(r) {
@@ -6664,23 +6653,23 @@ function E0(r) {
   const e = r.trim();
   if (e === "")
     return ae.fromObject({});
-  let t = kM(e);
+  let t = MM(e);
   if (t === null) {
     if (/^[-+]?P$/i.test(e))
       throw new Error("Energy Horizon: invalid time_window offset.");
     t = e;
   }
-  if (MM(t))
+  if (TM(t))
     throw new Error("Energy Horizon: invalid time_window offset (fractional year/month).");
   const i = ae.fromISO(t);
   if (!i.isValid)
     throw new Error("Energy Horizon: invalid time_window offset.");
-  return CM(i), i;
+  return kM(i), i;
 }
-const DM = 24;
-function AM(r, e) {
+const CM = 24;
+function DM(r, e) {
   var l;
-  const t = DM, i = r.count;
+  const t = CM, i = r.count;
   if (i == null || !Number.isInteger(i) || i < 1)
     return { ok: !1, errorKey: "status.config_invalid_time_window" };
   if (i > t)
@@ -6711,9 +6700,9 @@ function AM(r, e) {
     }
   return { ok: !0, merged: r };
 }
-function LM(r, e) {
+function AM(r, e) {
   var i;
-  const t = AM(r);
+  const t = DM(r);
   if (!t.ok) {
     if (t.errorKey === "status.config_too_many_windows") {
       const n = ((i = t.errorParams) == null ? void 0 : i.max) ?? 24;
@@ -6726,25 +6715,25 @@ function LM(r, e) {
     );
   }
 }
-const PM = 3600 * 1e3, IM = /* @__PURE__ */ new Set([
+const LM = 3600 * 1e3, PM = /* @__PURE__ */ new Set([
   "start_of_year",
   "start_of_month",
   "start_of_week",
   "start_of_day",
   "start_of_hour",
   "now"
-]), EM = /* @__PURE__ */ new Set(["hour", "day", "week", "month"]);
-function OM(r) {
+]), IM = /* @__PURE__ */ new Set(["hour", "day", "week", "month"]);
+function EM(r) {
   var n, a;
   const e = (n = r.anchor) == null ? void 0 : n.trim();
-  if (e && !IM.has(e))
+  if (e && !PM.has(e))
     throw new Error(
       `Energy Horizon: invalid time anchor for LTS (long-term statistics). Allowed: start_of_year, start_of_month, start_of_week, start_of_day, start_of_hour, now. Got: "${e}".`
     );
   const t = (a = r.duration) == null ? void 0 : a.trim();
   if (t) {
     const o = ur(t);
-    if (o && qi(o) < PM)
+    if (o && qi(o) < LM)
       throw new Error(
         "Energy Horizon: duration must be at least 1 hour for LTS (long-term statistics). Sub-hour windows are not supported."
       );
@@ -6756,7 +6745,7 @@ function OM(r) {
       throw new Error(
         "Energy Horizon: aggregation must be one of hour, day, week, or month for LTS (long-term statistics)."
       );
-    if (!EM.has(o))
+    if (!IM.has(o))
       throw new Error(
         `Energy Horizon: aggregation must be one of hour, day, week, or month for LTS (long-term statistics). Got: "${o}".`
       );
@@ -6782,7 +6771,7 @@ function yp(r, e, t, i, n) {
     }
   ];
 }
-function RM(r, e, t, i) {
+function OM(r, e, t, i) {
   const n = r.comparisonMode, a = r.periodOffsetYears ?? -1, o = ur(r.duration ?? "1y");
   if (n === "year_over_year") {
     const v = e.year, p = B.fromObject(
@@ -6815,7 +6804,7 @@ function RM(r, e, t, i) {
     i
   );
 }
-function NM(r, e) {
+function RM(r, e) {
   switch (r) {
     case "start_of_year":
       return e.startOf("year");
@@ -6833,8 +6822,8 @@ function NM(r, e) {
       throw new Error(`Unknown anchor: ${r}`);
   }
 }
-function FM(r, e, t) {
-  const i = r.anchor, n = NM(i, e), a = E0(r.offset);
+function NM(r, e, t) {
+  const i = r.anchor, n = RM(i, e), a = E0(r.offset);
   if (qi(a) === 0)
     return n;
   if (i === "start_of_year") {
@@ -6845,17 +6834,17 @@ function FM(r, e, t) {
   }
   return n.plus(a);
 }
-function zM(r, e, t) {
+function FM(r, e, t) {
   const i = e;
   let n = r;
   for (let a = 0; a < t; a++)
     n = n.minus(i);
   return n;
 }
-function $M(r, e, t, i, n) {
-  const a = ur(r.duration), o = ur(r.step), s = FM(r, e), l = [];
+function zM(r, e, t, i, n) {
+  const a = ur(r.duration), o = ur(r.step), s = NM(r, e), l = [];
   for (let u = 0; u < i; u++) {
-    const c = zM(s, o, u), f = c.plus(a).minus({ milliseconds: 1 }), d = u === 0 ? "current" : u === 1 ? "reference" : "context", h = u === 0 ? "current" : u === 1 ? "reference" : `historical_${u}`;
+    const c = FM(s, o, u), f = c.plus(a).minus({ milliseconds: 1 }), d = u === 0 ? "current" : u === 1 ? "reference" : "context", h = u === 0 ? "current" : u === 1 ? "reference" : `historical_${u}`;
     l.push({
       index: u,
       id: h,
@@ -6869,7 +6858,18 @@ function $M(r, e, t, i, n) {
 }
 function wl(r, e, t, i = 24, n = "day") {
   const a = e instanceof Date ? B.fromJSDate(e, { zone: t }) : e.setZone(t), o = r.aggregation ?? n, s = Math.min(r.count ?? 1, i);
-  return r.currentEndIsNow && r.referenceFullPeriod && s === 2 ? RM(r, a, t, o) : $M(r, a, t, s, o);
+  return r.currentEndIsNow && r.referenceFullPeriod && s === 2 ? OM(r, a, t, o) : zM(r, a, t, s, o);
+}
+function $M(r, e, t) {
+  const i = r[0], n = r[1];
+  return {
+    current_start: i.start,
+    current_end: i.end,
+    reference_start: (n == null ? void 0 : n.start) ?? i.start,
+    reference_end: (n == null ? void 0 : n.end) ?? i.end,
+    aggregation: t,
+    time_zone: e
+  };
 }
 function BM(r, e) {
   switch (e) {
@@ -27958,14 +27958,14 @@ class _N {
       for (const O of H.lines)
         g = Math.max(g, yN(O));
     }
-    const m = Math.ceil(g) + Gr, y = Math.max(n.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, S = e.some((V) => V !== null) || a.previewMode === !0, b = a.xAxisMode ?? "adaptive", x = a.currentWindowStartMs, T = a.currentWindowEndMs, k = a.haTimeZone ?? "UTC", C = a.primaryAggregation ?? "day", M = a.previewMode === !0 ? -1 : x != null && T != null ? oM(
+    const m = Math.ceil(g) + Gr, y = Math.max(n.length - 1, 0), _ = y > 0 ? Math.max(1, Math.round(y / 4)) : 1, S = e.some((V) => V !== null) || a.previewMode === !0, b = a.xAxisMode ?? "adaptive", x = a.currentWindowStartMs, T = a.currentWindowEndMs, k = a.haTimeZone ?? "UTC", C = a.primaryAggregation ?? "day", M = a.previewMode === !0 ? -1 : x != null && T != null ? sM(
       n,
       x,
       T,
       C,
       k,
       Date.now()
-    ) : dd(n, Date.now()), A = a.singleWindowMode !== !0 ? {
+    ) : vd(n, Date.now()), A = a.singleWindowMode !== !0 ? {
       omitYearOnAxis: a.comparisonAxisOmitYear === !0,
       dayOfMonthOnlyOnAxis: a.comparisonAxisDayOfMonthOnly === !0
     } : void 0, L = (() => {
@@ -28540,7 +28540,7 @@ class _N {
       t,
       l
     ) : new Array(t.length).fill(null), f = i.currentWindowStartMs, d = i.currentWindowEndMs, h = i.windowAlignStartsMs;
-    f != null && d != null && h != null && h.length > 0 && nM(
+    f != null && d != null && h != null && h.length > 0 && oM(
       u,
       t,
       Date.now(),
@@ -29816,11 +29816,11 @@ function u_(r, e, t) {
     t,
     24,
     i.aggregation ?? "day"
-  ), a = vd(n, i, t);
+  ), a = dd(n, i, t);
   return { merged: i, windows: n, chartTime: a };
 }
 function yS(r, e) {
-  const t = r.length >= 2 ? iM(
+  const t = r.length >= 2 ? lM(
     e.timeline,
     e.alignStartsMs[0],
     r[0].end
@@ -29852,13 +29852,13 @@ function kf(r, e, t, i, n, a, o) {
     return { status: "no-data" };
   const s = yS(e, i), l = i.alignStartsMs.length > 1 ? i.alignStartsMs[0] - i.alignStartsMs[1] : void 0, u = gS(r, o.rawUnit, {
     force_prefix: o.forcePrefix
-  }), c = pM(u, l), f = mM(
+  }), c = vM(u, l), f = pM(
     u,
     i.forecastPeriodBuckets,
     l
   ), d = o.patchUnit ?? o.rawUnit;
   !c.unit && d && (c.unit = d), f && !f.unit && d && (f.unit = d);
-  const h = gM(c), v = uM(
+  const h = mM(c), v = $M(
     e,
     n.timeZone,
     t.aggregation ?? "day"
@@ -30471,7 +30471,7 @@ function qN(r, e, t) {
     comparison_preset: "year_over_year"
   }), n = i.aggregation ?? pS(
     qi(ur(i.duration ?? "1y"))
-  ), a = wl(i, e, t, 24, n), { timeline: o, alignStartsMs: s } = vd(a, i, t);
+  ), a = wl(i, e, t, 24, n), { timeline: o, alignStartsMs: s } = dd(a, i, t);
   if (o.length === 0)
     return {
       current: { points: [], unit: r, periodLabel: "", total: 0 },
@@ -32347,7 +32347,7 @@ const jl = class jl extends Nn {
         };
         return;
       }
-    this._mergedTimeWindow = I0(this._config), OM(this._mergedTimeWindow), LM(this._mergedTimeWindow), this.previewShift = 0, this._previewLoading = !1, this.preview ? (this._state = this._buildDemoState(/* @__PURE__ */ new Date()), this._firePickerRealDataQuery()) : this._state = { status: "loading" };
+    this._mergedTimeWindow = I0(this._config), EM(this._mergedTimeWindow), AM(this._mergedTimeWindow), this.previewShift = 0, this._previewLoading = !1, this.preview ? (this._state = this._buildDemoState(/* @__PURE__ */ new Date()), this._firePickerRealDataQuery()) : this._state = { status: "loading" };
   }
   getCardSize() {
     return 4;
@@ -32536,7 +32536,7 @@ const jl = class jl extends Nn {
             m
           )
         )
-      ), d = vd(
+      ), d = dd(
         u,
         e,
         i.timeZone

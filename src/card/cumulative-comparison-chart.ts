@@ -27,10 +27,10 @@ import {
   parseNeutralThresholdT,
   type InterpretationSemanticsResult
 } from "./interpretation-semantics";
+import { buildChartTimeline } from "./timeline";
 import {
   mapLtsResponseToCumulativeSeries,
   buildLtsQueriesForWindows,
-  buildChartTimeline,
   fullReferenceWindowRawTotal,
   type LtsMessageResponse
 } from "./ha-api";

@@ -22,8 +22,8 @@ import {
   buildMergedTimeWindowConfig,
   resolveTimeWindows
 } from "./time-windows";
+import { buildChartTimeline } from "./timeline";
 import {
-  buildChartTimeline,
   buildLtsQueriesForWindows,
   mapLtsResponseToCumulativeSeries
 } from "./ha-api";
