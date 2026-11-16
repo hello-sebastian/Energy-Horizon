@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- 911/TD-4 (temporary, decision D1): the ECharts series arrays are still `any[]` here; TD-5 (Wave 3, T013) re-types them with LineSeriesOption/EChartsOption and removes this exception. */
 // Modular ECharts imports (FR-014, FR-015)
 import { init as echartsInit, use as echartsUse } from 'echarts/core';
 import { LineChart } from 'echarts/charts';

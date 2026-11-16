@@ -19,6 +19,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ### Maintenance
 
+- Lint: enabled strict typing rules — `@typescript-eslint/no-explicit-any` (error, with a temporary scoped exception in the ECharts renderer tracked to the Wave 3 typing work) and `@typescript-eslint/consistent-type-imports` (error); non-null assertions are now reported as warnings and cataloged for a later cleanup. No runtime change.
 - Introduced `changelog.md` as the single canonical changelog; previous release notes (`release-notes-1.2.0.md`, `release-notes/`) moved to `docs/archive/`.
 - The production build no longer emits a source map: `dist/energy-horizon-card.js.map` is no longer part of the committed/published artifact (the card bundle itself is unchanged).
 - Repository hygiene: removed the working "SYNC IMPACT REPORT" comment block from the project constitution, removed the tracked `temp/` scratch directory, and dropped the unused `jsx: "react-jsx"` TypeScript compiler option.
