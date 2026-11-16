@@ -1,11 +1,3 @@
-<!-- SYNC IMPACT REPORT (materiał roboczy — do usunięcia przed commit)
-- Version: 1.1.0 → 1.2.0 (MINOR: zasadnicze rozszerzenie zasady I o wbudowany Marketplace HA 2026.11+)
-- Modified principles: "I. Zgodność z ekosystemem Home Assistant i HACS" → "I. Zgodność z ekosystemem Home Assistant i Marketplace (HACS)"
-- Added sections: brak (dodano punkty w zasadzie I; aktualizacje w sekcjach "Workflow rozwojowy i jakość" oraz "Governance")
-- Removed sections: brak
-- Follow-up TODOs: brak
--->
-
 # Energy Horizon Lovelace Card Constitution
 
 Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace dla Home Assistant, dystrybuowanych przez wbudowany Marketplace (HA 2026.11+) lub HACS (starsze wersje HA). Ma charakter ogólny i powinna być stosowana niezależnie od konkretnego typu karty czy wizualizowanych danych.

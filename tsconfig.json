@@ -9,7 +9,6 @@
     "skipLibCheck": true,
     "allowJs": false,
     "resolveJsonModule": true,
-    "jsx": "react-jsx",
     "lib": ["DOM", "ES2020"],
     "types": ["vite/client"]
   },

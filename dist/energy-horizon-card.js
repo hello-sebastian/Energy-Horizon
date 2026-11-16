@@ -33071,4 +33071,3 @@ window.customCards.push({
   // unit (kWh/Wh/MWh/m³/l). Synchronous, total, non-throwing (research R1).
   getEntitySuggestion: (r, e) => WN(r, e)
 });
-//# sourceMappingURL=energy-horizon-card.js.map

@@ -182,3 +182,23 @@ No. The card is built on long-term statistics with a hard minimum of 1 hour.
 - Forecast can be unavailable for sparse or inconsistent data.
 - Historical unit changes can distort comparisons.
 - Not designed for real-time instant power visualization.
+
+---
+
+## Known simplifications: number format → locale mapping
+
+The card resolves the `number_format` option to a BCP 47 locale and renders all numbers through `Intl.NumberFormat` for that locale. The mapping is a deliberate simplification — a small fixed set of locales rather than full locale negotiation:
+
+| `number_format` | Locale used | Example for `1234.5` |
+|---|---|---|
+| `system` (default) | the browser's locale (`navigator.language`), falling back to the active `language`, then `en` | browser-dependent |
+| `decimal` | `en` | `1,234.5` |
+| `comma` | `de` | `1.234,5` |
+| `language` | the active `language` (`en`, `pl`, `de`, or `fr`) | locale of the chosen UI language |
+
+Two honest caveats:
+
+- **`comma` means the German locale (`de`), not a generic "comma style".** You get `de`'s grouping and decimal behavior (dot-style thousands separator, comma decimal separator). For typical energy values this is exactly what most users expect from a "comma" format; if you need a different grouping style, use `language` with an explicit UI language instead.
+- **`system` follows the browser, not Home Assistant.** The locale comes from the browser viewing the dashboard, so two different browsers on the same HA instance can format the same value differently. This is the documented default behavior, not a bug.
+
+If a specific locale you rely on is not covered, set `number_format: language` together with an explicit `language` — the card will then always use that language's locale for numbers.

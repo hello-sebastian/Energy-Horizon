@@ -3,8 +3,8 @@
 
 **Domain**: Documentation & Product Knowledge  
 **Replaces**: `001-github-wiki`, `001-energy-horizon-card`  
-**Primary artifacts**: `wiki-publish/`, `README.md`, `README-advanced.md`, `CHANGELOG.md`  
-**Last updated**: 2026-04-22  
+**Primary artifacts**: `wiki-publish/`, `README.md`, `README-advanced.md`, `changelog.md`  
+**Last updated**: 2026-11-16  
 
 ---
 
@@ -22,7 +22,7 @@ Documentation for the Energy Horizon Card follows the **Diátaxis framework** (f
 | GitHub Wiki | Published documentation for card users | Advanced HA users |
 | `README.md` | Quick-start, installation, feature list | All users |
 | `README-advanced.md` | Advanced configuration reference | Power users |
-| `CHANGELOG.md` | User-visible change history per release | All users |
+| `changelog.md` | User-visible change history per release | All users |
 
 The user-facing documentation covers the installation channels: the built-in **Marketplace** integration (HA 2026.11+, installs to `www/community/` and adds the dashboard resource automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`), **HACS** (HA versions before 2026.11; resource path `/hacsfiles/energy-horizon-card/energy-horizon-card.js`), manual installation (`/local/energy-horizon-card.js`), and the **build-from-source / deploy** path for forks and self-hosted instances: the build produces a single `dist/energy-horizon-card.js` file that is copied to the HA instance's `config/www/` directory. These paths are documented in `README.md` (Development section) and in the wiki (Getting Started).
 
@@ -44,9 +44,9 @@ The user-facing documentation covers the installation channels: the built-in **M
 
 README and wiki must use identical nomenclature for the same user-facing concepts (option names, presets, modes, etc.). When a conflict is discovered: (1) resolve by reading the actual card source code; (2) if code is ambiguous, obtain a binding decision from the project maintainer; (3) harmonize README and `wiki-publish/` to the agreed term. Publishing divergent terminology is not permitted.
 
-### CHANGELOG governance
+### Changelog governance
 
-`CHANGELOG.md` follows a structured format (Unreleased → versioned sections). Every user-visible behavioral change MUST be recorded before a release. Documentation-only changes (wiki updates) are also recorded.
+`changelog.md` (canonical lower-case name, renamed from `CHANGELOG.md` in 911/TD-13 — case-sensitive file systems) follows a structured format (Unreleased → versioned sections). Every user-visible behavioral change MUST be recorded before a release. Documentation-only changes (wiki updates) are also recorded.
 
 ---
 
@@ -59,12 +59,12 @@ wiki-publish/          Canonical wiki source directory
 
 README.md              Project README (quick-start)
 README-advanced.md     Advanced configuration reference
-CHANGELOG.md           Versioned change log
+changelog.md            Versioned change log
 ```
 
 Version tagging requirement:
 - `wiki-publish/Home.md` (and the published GitHub Wiki home page) MUST display the card version (`X.Y.Z`) the content corresponds to.
-- `CHANGELOG.md` MUST have an `[Unreleased]` section at the top and versioned sections below.
+- `changelog.md` MUST have an `[Unreleased]` section at the top and versioned sections below.
 
 ---
 
@@ -80,7 +80,7 @@ Version tagging requirement:
 - `906-units-numeric-scaling`: `force_prefix`, `precision` options; SI prefix behavior; excluded units.
 
 **Publishes to**:
-- All end users and contributors via GitHub Wiki, README files, and CHANGELOG.
+- All end users and contributors via GitHub Wiki, README files, and changelog.md.
 
 ---
 
@@ -155,7 +155,7 @@ As a user reading the GitHub Wiki, I need to know which card version the documen
 2. **Experimental or frequently-changing feature**: documentation must label it as experimental or include a "last verified: X.Y.Z" note; no presenting experimental behavior as stable.
 3. **Terminology conflict between README and wiki**: follow the resolution rule (code → maintainer decision → harmonization of README and `wiki-publish/`); publishing divergent terminology is not permitted.
 4. **GitHub Wiki unavailable**: README documents that `wiki-publish/` on the default branch is the editable source and can be read directly; publication to wiki follows the release flow.
-5. **Missing how-to for a user-visible feature**: tracked as a documentation gap in `CHANGELOG.md` Unreleased section; not silently omitted.
+5. **Missing how-to for a user-visible feature**: tracked as a documentation gap in `changelog.md` Unreleased section; not silently omitted.
 6. **User expects general HA tutorial**: wiki does not provide HA basics; relevant official HA documentation links are provided instead.
 
 ---
@@ -176,7 +176,7 @@ As a user reading the GitHub Wiki, I need to know which card version the documen
 
 - **FR-907-G (Maintenance process)**: A documented maintenance process MUST exist covering: event-driven triggers (card release, user-visible behavioral change), a minimum review scope per release, a periodic review rhythm, and a documented procedure when documentation is found to be out of date.
 
-- **FR-907-H (CHANGELOG governance)**: `CHANGELOG.md` MUST follow a structured format with an `[Unreleased]` section at the top and versioned sections below. Every user-visible behavioral change MUST be recorded before the associated release. Documentation-only changes are also recorded.
+- **FR-907-H (Changelog governance)**: `changelog.md` MUST follow a structured format with an `[Unreleased]` section at the top and versioned sections below. Every user-visible behavioral change MUST be recorded before the associated release. Documentation-only changes are also recorded.
 
 - **FR-907-I (English-only wiki)**: All wiki content (pages, navigation, glossary) MUST be in English. Card UI translation strings (domain 905) are not part of the wiki content scope.
 
@@ -191,7 +191,7 @@ As a user reading the GitHub Wiki, I need to know which card version the documen
 - **Diátaxis intents**: Tutorial (guided first-time path), How-to (task-oriented), Reference (option index), Explanation (conceptual background).
 - **Terminology alignment rule**: Conflict resolution process: code analysis → maintainer decision → harmonization of README and `wiki-publish/`.
 - **Maintenance process**: Documented event-driven and periodic procedure for keeping docs synchronized with the card's behavior.
-- **`CHANGELOG.md`**: Structured release-note file. `[Unreleased]` section collects pending changes; versioned sections are finalized at release.
+- **`changelog.md`**: Structured release-note file. `[Unreleased]` section collects pending changes; versioned sections are finalized at release.
 
 ---
 
