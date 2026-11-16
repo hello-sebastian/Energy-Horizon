@@ -6,7 +6,13 @@
  * {@link ScaleResult}. Scaling uses {@link scaleSeriesValues}; decimal precision for
  * displayed numbers is **not** part of {@link UnitScaleOptions} — pass `precision`
  * from card config into {@link formatScaledValue} separately.
+ *
+ * Series-level scaling uses {@link applyUnitScalingToSeries} (911/TD-2: extracted
+ * from the card element so the ready-state pipeline can call it without element
+ * access).
  */
+
+import type { ComparisonSeries, TimeSeriesPoint } from "../card/types";
 
 /**
  * Supported SI prefixes. Internally 'u' represents µ (micro, U+00B5).
@@ -345,4 +351,114 @@ export function formatScaledValue(
   }
 
   return `${formatted} ${unit}`.trim();
+}
+
+/**
+ * Scales a full comparison series (current + reference + context) for display,
+ * applying one {@link scaleSeriesValues} result across all segments so every
+ * series shares the same SI prefix and factor. Point `rawValue`s are scaled by
+ * the same factor so downstream forecast math stays consistent. Returns a new
+ * series; the input is not mutated.
+ *
+ * 911/TD-2: extracted verbatim from the card element's private
+ * `_applyUnitScalingToSeries` (behavior pinned by
+ * `tests/integration/pipeline-characterization.test.ts`). The former
+ * `this._config.force_prefix` access is now the `options.force_prefix`
+ * parameter — the function is pure and unit-testable without a card instance.
+ *
+ * @param series - Comparison series in raw (unscaled) units.
+ * @param rawUnit - Raw unit of the series data (e.g. "kWh").
+ * @param options - Scaling options; `force_prefix` omitted = automatic prefix.
+ */
+export function applyUnitScalingToSeries(
+  series: ComparisonSeries,
+  rawUnit: string,
+  options?: UnitScaleOptions
+): ComparisonSeries {
+  const currentVals = series.current.points.map((p) => p.value) as (number | null)[];
+  const refPoints = series.reference?.points;
+  const refVals = refPoints?.map((p) => p.value) as (number | null)[] | undefined;
+  const ctxSegments =
+    series.context?.map((c) => c.points.map((p) => p.value) as (number | null)[]) ?? [];
+  const combined: (number | null)[] = [
+    ...currentVals,
+    ...(refVals ?? []),
+    ...ctxSegments.flat()
+  ];
+
+  const scaleResult = scaleSeriesValues(combined, rawUnit, options);
+  let offset = 0;
+  const n = currentVals.length;
+  const scaledCurrentVals = scaleResult.values.slice(offset, offset + n);
+  offset += n;
+  const scaledRefVals =
+    refVals?.length && refPoints?.length
+      ? scaleResult.values.slice(offset, offset + refVals.length)
+      : undefined;
+  if (refVals?.length) offset += refVals.length;
+  const factor = scaleResult.factor;
+
+  const scalePoint = (
+    p: TimeSeriesPoint,
+    idx: number,
+    scaled: (number | null)[]
+  ): TimeSeriesPoint => ({
+    ...p,
+    value: scaled[idx] ?? p.value,
+    rawValue:
+      p.rawValue != null && Number.isFinite(p.rawValue) ? p.rawValue * factor : undefined
+  });
+
+  const currentPoints = series.current.points.map((p, i) =>
+    scalePoint(p, i, scaledCurrentVals)
+  );
+  const currentTotal =
+    currentPoints.length > 0 ? currentPoints[currentPoints.length - 1].value : 0;
+
+  const scaledCurrent = {
+    ...series.current,
+    points: currentPoints,
+    unit: scaleResult.unit,
+    total: currentTotal
+  };
+
+  let scaledReference: ComparisonSeries["reference"];
+  if (series.reference && refPoints && scaledRefVals && scaledRefVals.length === refPoints.length) {
+    const refPts = refPoints.map((p, i) => scalePoint(p, i, scaledRefVals));
+    const refTotal = refPts.length > 0 ? refPts[refPts.length - 1].value : 0;
+    scaledReference = {
+      ...series.reference,
+      points: refPts,
+      unit: scaleResult.unit,
+      total: refTotal
+    };
+  } else if (series.reference) {
+    scaledReference = { ...series.reference, unit: scaleResult.unit };
+  } else {
+    scaledReference = undefined;
+  }
+
+  let scaledContext: ComparisonSeries["context"];
+  if (series.context?.length) {
+    scaledContext = series.context.map((ctx) => {
+      const len = ctx.points.length;
+      const slice = scaleResult.values.slice(offset, offset + len);
+      offset += len;
+      const pts = ctx.points.map((p, i) => scalePoint(p, i, slice));
+      const total = pts.length > 0 ? pts[pts.length - 1].value : 0;
+      return {
+        ...ctx,
+        points: pts,
+        unit: scaleResult.unit,
+        total
+      };
+    });
+  }
+
+  return {
+    ...series,
+    current: scaledCurrent,
+    reference: scaledReference,
+    ...(scaledContext ? { context: scaledContext } : {})
+  };
 }

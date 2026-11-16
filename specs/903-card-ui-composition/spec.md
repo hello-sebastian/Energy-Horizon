@@ -4,7 +4,7 @@
 **Domain**: Card UI Composition  
 **Replaces**: `001-card-ui-enhancements`, `001-figma-ui-rollout`, `001-separate-style-logic`, `001-ha-theming-classes`  
 **Primary code**: `src/card/cumulative-comparison-chart.ts`, `src/card/energy-horizon-card-styles.ts`  
-**Last updated**: 2026-04-22  
+**Last updated**: 2026-11-16  
 
 ## Clarifications
 
@@ -370,6 +370,8 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 - **FR-903-T (Editor parity)**: The visual editor MUST expose interpretation as **two options** (Consumption / Production), defaulting to **Consumption**, with shallow-merge behavior consistent with `904-configuration-surface`.
 
 - **FR-903-U (Forecast panel — interpretation)**: The Forecast \| Total panel MUST **not** alter user-visible strings, headings, or translation keys based on `interpretation`; forecast and total presentation remain as in `FR-903-I` regardless of mode.
+
+- **FR-903-X (Thin element state paths)**: The card element MUST NOT contain ready-state computation. Unit scaling MUST live in `src/utils/unit-scaler.ts` as the pure `applyUnitScalingToSeries(series, rawUnit, options?)` (shared with the ready-state pipeline, **FR-901-R**) — no element access, `force_prefix` as a parameter — and `_loadData`, `_buildDemoState`, and `_firePickerRealDataQuery` MUST be under 60 lines of orchestration each (fetch/load → single `buildReadyState(...)` call). The element retains only element-state concerns: load generation, the preview-loading flag, entity-unit lookup, debug logging, and the point-cap / no-data terminal states. Rendered output MUST NOT change (FR-019). (Satisfied as of 2026-11-16, 911/TD-2.)
 
 ---
 

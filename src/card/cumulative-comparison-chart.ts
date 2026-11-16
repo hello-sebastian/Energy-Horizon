@@ -13,9 +13,9 @@ import {
   type ChartThemeResolved,
   type ChartTimeContext,
   type ComparisonSeries,
+  type CumulativeSeries,
   type MergedTimeWindowConfig,
-  type ResolvedWindow,
-  type TimeSeriesPoint
+  type ResolvedWindow
 } from "./types";
 import {
   semanticMdiIcon,
@@ -29,13 +29,8 @@ import {
 } from "./interpretation-semantics";
 import {
   mapLtsResponseToCumulativeSeries,
-  computeSummary,
-  computeForecast,
-  computeTextSummary,
   buildLtsQueriesForWindows,
   buildChartTimeline,
-  comparisonPeriodFromResolvedWindows,
-  firstTailAxisLabelIndex,
   fullReferenceWindowRawTotal,
   type LtsMessageResponse
 } from "./ha-api";
@@ -43,7 +38,6 @@ import {
   assertLtsHardLimits,
   assertMergedTimeWindowConfig,
   buildMergedTimeWindowConfig,
-  resolveTimeWindows,
   resolvePreviewShiftedWindows,
   nextPreviewShift,
   type PreviewShiftAction
@@ -53,7 +47,6 @@ import { resolveSeriesCurrentColor } from "./series-color";
 import {
   assertPointCountWithinCap,
   MAX_POINTS_PER_SERIES,
-  pickAutoAggregation,
   PointCapExceededError,
   resolveLabelLocale,
   validateXAxisFormat
@@ -63,13 +56,21 @@ import {
   createLocalize,
   getRawTemplate,
   numberFormatToLocale,
-  MISSING_TRANSLATION_KEY
+  MISSING_TRANSLATION_KEY,
+  type LocalizeFunction,
+  type ResolvedLocale
 } from "./localize";
 import { classifyComparisonStep } from "./narrative/classify-comparison-step";
 import { interpretationToEntityKind } from "./narrative/interpretation-to-entity-kind";
 import { resolveTextSummarySentenceKey } from "./narrative/resolve-text-summary-sentence-key";
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
-import { scaleSeriesValues } from "../utils/unit-scaler";
+import { applyUnitScalingToSeries } from "../utils/unit-scaler";
+import {
+  assembleComparisonSeries,
+  buildReadyState,
+  chartTimeContext,
+  resolveChartBase
+} from "./pipeline/ready-state-builder";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 import {
   buildDemoComparisonSeries,
@@ -269,80 +270,31 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    */
   private _buildDemoState(now: Date): CardState {
     const resolved = resolveLocale(this.hass, this._config);
-    const merged: MergedTimeWindowConfig = { ...this._mergedTimeWindow };
-    if (merged.aggregation === undefined) {
-      const dur = parseDurationToken(merged.duration ?? "1y");
-      const durationMs = dur ? durationToMillis(dur) : 0;
-      merged.aggregation = pickAutoAggregation(durationMs);
-    }
-    const aggregation = merged.aggregation ?? "day";
-    const windows = resolveTimeWindows(
-      merged,
+    const { merged, windows, chartTime } = resolveChartBase(
+      this._mergedTimeWindow,
       now,
-      resolved.timeZone,
-      24,
-      aggregation
+      resolved.timeZone
     );
-    const chartTimeRaw = buildChartTimeline(windows, merged, resolved.timeZone);
-    const tailLabelFromIndex =
-      windows.length >= 2
-        ? firstTailAxisLabelIndex(
-            chartTimeRaw.timeline,
-            chartTimeRaw.alignStartsMs[0]!,
-            windows[0]!.end
-          )
-        : chartTimeRaw.timeline.length;
-    const period = comparisonPeriodFromResolvedWindows(
-      windows,
-      resolved.timeZone,
-      aggregation
-    );
+    const localize = createLocalize(resolved.language);
 
     // Unit from the entity's state when available and supported; else "kWh"
     // (FR-009). The demo series is deterministic regardless of the unit.
-    const entityUnit =
-      (this.hass.states?.[this._config.entity]?.attributes as {
-        unit_of_measurement?: string;
-      })?.unit_of_measurement ?? "";
+    const entityUnit = this._entityUnit();
     const demoUnit = isSupportedUnit(entityUnit) ? entityUnit : "kWh";
 
     const series = buildDemoComparisonSeries(demoUnit, now, resolved.timeZone);
-    const scaledSeries = this._applyUnitScalingToSeries(series, demoUnit);
-
-    const alignOffsetMs =
-      windows.length > 1
-        ? chartTimeRaw.alignStartsMs[0]! - chartTimeRaw.alignStartsMs[1]!
-        : undefined;
-    const summary = computeSummary(scaledSeries, alignOffsetMs);
-    const forecast = computeForecast(
-      scaledSeries,
-      chartTimeRaw.forecastPeriodBuckets,
-      alignOffsetMs
-    );
-    if (!summary.unit && demoUnit) {
-      summary.unit = demoUnit;
-    }
-    if (forecast && !forecast.unit && demoUnit) {
-      forecast.unit = demoUnit;
-    }
-    const textSummary = computeTextSummary(summary);
-
-    return {
-      status: "ready",
-      comparisonSeries: scaledSeries,
-      summary,
-      forecast,
-      textSummary,
-      period,
-      resolvedWindows: windows,
-      mergedTimeWindow: merged,
-      chartTime: {
-        timeline: chartTimeRaw.timeline,
-        alignStartsMs: chartTimeRaw.alignStartsMs,
-        forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
-        tailLabelFromIndex
+    return buildReadyState(
+      series,
+      windows,
+      merged,
+      chartTime,
+      resolved,
+      localize,
+      {
+        rawUnit: demoUnit,
+        forcePrefix: this._config.force_prefix
       }
-    };
+    );
   }
 
   /**
@@ -373,18 +325,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const gen = this._loadGeneration;
     const windows = demoState.resolvedWindows;
     const chartTime = demoState.chartTime;
+    const merged = demoState.mergedTimeWindow ?? this._mergedTimeWindow;
     const resolved = resolveLocale(this.hass, this._config);
-    const alignOffsetMs =
-      chartTime.alignStartsMs.length > 1
-        ? chartTime.alignStartsMs[0]! - chartTime.alignStartsMs[1]!
-        : undefined;
+    const localize = createLocalize(resolved.language);
 
-    void queryRealDataWithLimit(
-      this.hass,
-      windows,
-      entityId,
-      resolved.timeZone
-    ).then((realSeries) => {
+    void queryRealDataWithLimit(this.hass, windows, entityId, resolved.timeZone).then((realSeries) => {
       // Config changed while the query was in flight → discard the stale result.
       if (gen !== this._loadGeneration) return;
       // No usable real data → keep the deterministic demo series.
@@ -396,37 +341,17 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         return;
       }
 
-      const entityUnit =
-        (this.hass.states?.[entityId]?.attributes as {
-          unit_of_measurement?: string;
-        })?.unit_of_measurement ?? "";
-      const scaledSeries = this._applyUnitScalingToSeries(
-        realSeries,
-        entityUnit || realSeries.current.unit
-      );
-      const summary = computeSummary(scaledSeries, alignOffsetMs);
-      const forecast = computeForecast(
-        scaledSeries,
-        chartTime.forecastPeriodBuckets,
-        alignOffsetMs
-      );
-      if (!summary.unit && entityUnit) {
-        summary.unit = entityUnit;
-      }
-      if (forecast && !forecast.unit && entityUnit) {
-        forecast.unit = entityUnit;
-      }
-      const textSummary = computeTextSummary(summary);
+      const entityUnit = this._entityUnit(entityId);
 
       // Swap the demo series for the real one, keeping the demo state's windows,
-      // timeline, and period so the real series align to the same axis.
-      this._state = {
-        ...demoState,
-        comparisonSeries: scaledSeries,
-        summary,
-        forecast,
-        textSummary
-      };
+      // timeline, and period so the real series align to the same axis. The
+      // builder rebuilds the state from those same windows/merged inputs, so the
+      // swap lands on an axis-identical ready state.
+      this._state = buildReadyState(realSeries, windows, merged, chartTime, resolved, localize, {
+        rawUnit: entityUnit || realSeries.current.unit,
+        patchUnit: entityUnit,
+        forcePrefix: this._config.force_prefix
+      });
     });
   }
 
@@ -651,387 +576,246 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const now = new Date();
     const resolved = resolveLocale(this.hass, this._config);
     const localize = createLocalize(resolved.language);
+    const { merged, windows, chartTime } = resolveChartBase(this._mergedTimeWindow, now, resolved.timeZone);
 
-    const merged: MergedTimeWindowConfig = { ...this._mergedTimeWindow };
-    if (merged.aggregation === undefined) {
-      const dur = parseDurationToken(merged.duration ?? "1y");
-      const durationMs = dur ? durationToMillis(dur) : 0;
-      merged.aggregation = pickAutoAggregation(durationMs);
-    }
-
-    const windows = resolveTimeWindows(
-      merged,
-      now,
-      resolved.timeZone,
-      24,
-      merged.aggregation ?? "day"
-    );
-
-    const chartTimeRaw = buildChartTimeline(
-      windows,
-      merged,
-      resolved.timeZone
-    );
-    const tailLabelFromIndex =
-      windows.length >= 2
-        ? firstTailAxisLabelIndex(
-            chartTimeRaw.timeline,
-            chartTimeRaw.alignStartsMs[0]!,
-            windows[0]!.end
-          )
-        : chartTimeRaw.timeline.length;
+    if (this._pointCapExceeded(chartTime.timeline.length, gen)) return;
 
     try {
-      assertPointCountWithinCap(chartTimeRaw.timeline.length);
-    } catch (e) {
-      if (e instanceof PointCapExceededError) {
-        if (this._config.debug) {
-          console.warn(
-            `[Energy Horizon] Point cap exceeded: ${e.actual} timeline slots (maximum ${e.maxPoints}). Reduce aggregation step or window duration.`
-          );
-        }
-        if (gen !== this._loadGeneration) return;
-        this._previewLoading = false;
-        this._state = {
-          status: "error",
-          errorMessage: "status.point_cap_exceeded",
-          errorParams: { max: MAX_POINTS_PER_SERIES }
-        };
-        return;
-      }
-      throw e;
-    }
-    const period = comparisonPeriodFromResolvedWindows(
-      windows,
-      resolved.timeZone,
-      merged.aggregation ?? "day"
-    );
-    const queries = buildLtsQueriesForWindows(windows, this._config.entity);
-
-    try {
-      if (this._config.debug) {
-        console.log("[Energy Horizon] Time windows:", windows);
-        console.log("[Energy Horizon] LTS queries:", queries);
-      }
-
-      // Typed boundary (911/TD-3): HA WebSocket messages arrive as `unknown`;
-      // `ha-api.ts` normalizes them through the `LtsMessageResponse` model.
-      const responses = (await Promise.all(
-        queries.map((q) =>
-          this.hass.connection.sendMessagePromise(q as unknown as Record<string, unknown>)
-        )
-      )) as LtsMessageResponse[];
-
-      if (this._config.debug) {
-        console.log("[Energy Horizon] API responses (per window):", responses);
-      }
-
-      const labelForIndex = (i: number): string => {
-        if (i === 0) return localize("period.current");
-        if (i === 1) return localize("period.reference");
-        return `${localize("period.reference")} (${i})`;
-      };
-
-      const seriesList: ReturnType<typeof mapLtsResponseToCumulativeSeries>[] = [];
-      for (let i = 0; i < responses.length; i++) {
-        const cum = mapLtsResponseToCumulativeSeries(
-          responses[i],
-          this._config.entity,
-          labelForIndex(i)
-        );
-        seriesList.push(cum);
-      }
-
+      const seriesList = await this._fetchLtsSeries(windows, localize);
       const current = seriesList[0];
       if (!current) {
-        if (this._config.debug) {
-          console.log(
-            "[Energy Horizon] current series could not be built – check entity ID and results structure above"
-          );
-        }
-        if (gen !== this._loadGeneration) return;
-        this._previewLoading = false;
-        this._state = { status: "no-data" };
+        this._setNoDataState(gen);
         return;
       }
 
-      const entityUnit =
-        (this.hass.states?.[this._config.entity]?.attributes as {
-          unit_of_measurement?: string;
-        })?.unit_of_measurement ?? "";
+      const entityUnit = this._entityUnit();
+      const series = assembleComparisonSeries(seriesList, windows, merged.aggregation ?? "day", resolved.timeZone, entityUnit);
 
-      const withUnit = (
-        c: NonNullable<typeof current>
-      ): typeof current =>
-        entityUnit ? { ...c, unit: c.unit || entityUnit } : c;
-
-      const reference =
-        windows.length > 1 ? seriesList[1] : undefined;
-      const context =
-        windows.length > 2
-          ? seriesList
-              .slice(2)
-              .filter((c): c is NonNullable<typeof c> => c != null)
-              .map(withUnit)
+      // Preview branch (909, T008): when previewShift < 0, load the shifted period
+      // in place — isolated so a preview failure never clobbers the default pipeline.
+      const preview =
+        this.previewShift < 0
+          ? await this._buildPreviewSnapshot(merged, now, resolved, localize, entityUnit)
           : undefined;
-
-      const series: ComparisonSeries = {
-        current: withUnit(current),
-        reference:
-          reference != null ? withUnit(reference) : undefined,
-        ...(context && context.length > 0 ? { context } : {}),
-        aggregation: period.aggregation,
-        time_zone: period.time_zone
-      };
-
-      const scaledSeries = this._applyUnitScalingToSeries(series, entityUnit);
-
-      // Window-start alignment offset (current − reference). Correct even when the current
-      // series starts late (leading zero/missing buckets); the chart already aligns by these
-      // window starts, so the numeric pipeline now matches the visual one.
-      const alignOffsetMs =
-        windows.length > 1
-          ? chartTimeRaw.alignStartsMs[0]! - chartTimeRaw.alignStartsMs[1]!
-          : undefined;
-
-      const summary = computeSummary(scaledSeries, alignOffsetMs);
-      const forecast = computeForecast(
-        scaledSeries,
-        chartTimeRaw.forecastPeriodBuckets,
-        alignOffsetMs
-      );
-
-      if (!summary.unit && entityUnit) {
-        summary.unit = entityUnit;
-      }
-      if (forecast && !forecast.unit && entityUnit) {
-        forecast.unit = entityUnit;
-      }
-
-      const textSummary = computeTextSummary(summary);
-
-      // Preview branch (909, T008): when previewShift < 0, resolve the shifted windows via
-      // the T004 helper and query the shifted current period (shiftedWindows[0]) and, when a
-      // reference window exists, the shifted reference period (shiftedWindows[1]) via the
-      // existing LTS `statistics_during_period` path. The default analytical pipeline above
-      // (summary/forecast/interpretation/narrative) is left untouched (FR-021). A preview
-      // failure is isolated so it never clobbers the default pipeline's result.
-      let previewSeries: ComparisonSeries | undefined;
-      let previewWindows: ResolvedWindow[] | undefined;
-      let previewChartTime: ChartTimeContext | undefined;
-      if (this.previewShift < 0) {
-        try {
-          const shiftedWindows = resolvePreviewShiftedWindows(
-            merged,
-            now,
-            resolved.timeZone,
-            this.previewShift,
-            24,
-            merged.aggregation ?? "day"
-          );
-          const previewWindowCount = Math.min(2, shiftedWindows.length);
-          const previewWindowList = shiftedWindows.slice(0, previewWindowCount);
-          const previewQueries = buildLtsQueriesForWindows(
-            previewWindowList,
-            this._config.entity
-          );
-          // Typed boundary (911/TD-3) — same model as `_loadData` above.
-          const previewResponses = (await Promise.all(
-            previewQueries.map((q) =>
-              this.hass.connection.sendMessagePromise(
-                q as unknown as Record<string, unknown>
-              )
-            )
-          )) as LtsMessageResponse[];
-          // Build the preview chart timeline from the shifted windows so the
-          // preview series align to the shifted axis (909 US3, T014). This is
-          // done unconditionally (even when the shifted period has no data) so
-          // the preview period label, controls, and no-data indication can be
-          // rendered (FR-013, US6).
-          const previewTimelineRaw = buildChartTimeline(
-            previewWindowList,
-            merged,
-            resolved.timeZone
-          );
-          const previewTailLabelFromIndex =
-            previewWindowList.length >= 2
-              ? firstTailAxisLabelIndex(
-                  previewTimelineRaw.timeline,
-                  previewTimelineRaw.alignStartsMs[0]!,
-                  previewWindowList[0]!.end
-                )
-              : previewTimelineRaw.timeline.length;
-          previewWindows = previewWindowList;
-          previewChartTime = {
-            timeline: previewTimelineRaw.timeline,
-            alignStartsMs: previewTimelineRaw.alignStartsMs,
-            forecastPeriodBuckets: previewTimelineRaw.forecastPeriodBuckets,
-            tailLabelFromIndex: previewTailLabelFromIndex
-          };
-          const previewCurrent = mapLtsResponseToCumulativeSeries(
-            previewResponses[0],
-            this._config.entity,
-            localize("period.current")
-          );
-          if (previewCurrent) {
-            const previewReference =
-              previewWindowCount > 1
-                ? mapLtsResponseToCumulativeSeries(
-                    previewResponses[1],
-                    this._config.entity,
-                    localize("period.reference")
-                  )
-                : undefined;
-            const previewRaw: ComparisonSeries = {
-              current: previewCurrent,
-              reference: previewReference ?? undefined,
-              aggregation: period.aggregation,
-              time_zone: period.time_zone
-            };
-            previewSeries = this._applyUnitScalingToSeries(
-              previewRaw,
-              entityUnit
-            );
-          }
-        } catch (previewError) {
-          if (this._config.debug) {
-            console.warn(
-              "[Energy Horizon] Preview load failed; keeping the default pipeline.",
-              previewError
-            );
-          }
-        }
-      }
 
       if (gen !== this._loadGeneration) return;
       this._previewLoading = false;
-      this._state = {
-        status: "ready",
-        comparisonSeries: scaledSeries,
-        summary,
-        forecast,
-        textSummary,
-        period,
-        resolvedWindows: windows,
-        mergedTimeWindow: merged,
-        chartTime: {
-          timeline: chartTimeRaw.timeline,
-          alignStartsMs: chartTimeRaw.alignStartsMs,
-          forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
-          tailLabelFromIndex
-        },
-        previewShift: this.previewShift,
-        previewSeries,
-        previewWindows,
-        previewChartTime
-      };
+      this._state = buildReadyState(series, windows, merged, chartTime, resolved, localize, {
+        rawUnit: entityUnit,
+        forcePrefix: this._config.force_prefix,
+        preview: {
+          shift: this.previewShift,
+          series: preview?.series,
+          windows: preview?.windows,
+          chartTime: preview?.chartTime
+        }
+      });
     } catch (e) {
       console.error(e);
       if (gen !== this._loadGeneration) return;
       this._previewLoading = false;
-      this._state = {
-        status: "error",
-        errorMessage: "status.error_api"
-      };
+      this._state = { status: "error", errorMessage: "status.error_api" };
     }
   }
 
   /**
-   * Scales cumulative series (and reference) for display; same factor applied to
-   * point rawValue so computeForecast stays consistent. Does not touch component state.
+   * The entity's unit of measurement from the HA state, or "" when absent
+   * (911/TD-2: single lookup shared by the ready-state pipeline paths).
    */
-  private _applyUnitScalingToSeries(
-    series: ComparisonSeries,
-    rawUnit: string
-  ): ComparisonSeries {
-    const currentVals = series.current.points.map((p) => p.value) as (number | null)[];
-    const refPoints = series.reference?.points;
-    const refVals = refPoints?.map((p) => p.value) as (number | null)[] | undefined;
-    const ctxSegments =
-      series.context?.map((c) => c.points.map((p) => p.value) as (number | null)[]) ?? [];
-    const combined: (number | null)[] = [
-      ...currentVals,
-      ...(refVals ?? []),
-      ...ctxSegments.flat()
-    ];
-
-    const scaleResult = scaleSeriesValues(combined, rawUnit, {
-      force_prefix: this._config.force_prefix
-    });
-    let offset = 0;
-    const n = currentVals.length;
-    const scaledCurrentVals = scaleResult.values.slice(offset, offset + n);
-    offset += n;
-    const scaledRefVals =
-      refVals?.length && refPoints?.length
-        ? scaleResult.values.slice(offset, offset + refVals.length)
-        : undefined;
-    if (refVals?.length) offset += refVals.length;
-    const factor = scaleResult.factor;
-
-    const scalePoint = (
-      p: TimeSeriesPoint,
-      idx: number,
-      scaled: (number | null)[]
-    ): TimeSeriesPoint => ({
-      ...p,
-      value: scaled[idx] ?? p.value,
-      rawValue:
-        p.rawValue != null && Number.isFinite(p.rawValue) ? p.rawValue * factor : undefined
-    });
-
-    const currentPoints = series.current.points.map((p, i) =>
-      scalePoint(p, i, scaledCurrentVals)
+  private _entityUnit(entityId?: string): string {
+    const id = entityId ?? this._config.entity;
+    return (
+      (this.hass.states?.[id]?.attributes as {
+        unit_of_measurement?: string;
+      })?.unit_of_measurement ?? ""
     );
-    const currentTotal =
-      currentPoints.length > 0 ? currentPoints[currentPoints.length - 1]!.value : 0;
+  }
 
-    const scaledCurrent = {
-      ...series.current,
-      points: currentPoints,
-      unit: scaleResult.unit,
-      total: currentTotal
-    };
-
-    let scaledReference: ComparisonSeries["reference"];
-    if (series.reference && refPoints && scaledRefVals && scaledRefVals.length === refPoints.length) {
-      const refPts = refPoints.map((p, i) => scalePoint(p, i, scaledRefVals));
-      const refTotal = refPts.length > 0 ? refPts[refPts.length - 1]!.value : 0;
-      scaledReference = {
-        ...series.reference,
-        points: refPts,
-        unit: scaleResult.unit,
-        total: refTotal
+  /**
+   * Point-cap guard for the timeline (FR-017): when the timeline exceeds
+   * `MAX_POINTS_PER_SERIES` slots, log (debug) and — if this load is still the
+   * current one — set the `point_cap_exceeded` error state. Returns `true` when
+   * the caller must abort; any other error rethrows.
+   */
+  private _pointCapExceeded(timelineLength: number, gen: number): boolean {
+    try {
+      assertPointCountWithinCap(timelineLength);
+      return false;
+    } catch (e) {
+      if (!(e instanceof PointCapExceededError)) {
+        throw e;
+      }
+      if (this._config.debug) {
+        console.warn(
+          `[Energy Horizon] Point cap exceeded: ${e.actual} timeline slots (maximum ${e.maxPoints}). Reduce aggregation step or window duration.`
+        );
+      }
+      if (gen !== this._loadGeneration) return true;
+      this._previewLoading = false;
+      this._state = {
+        status: "error",
+        errorMessage: "status.point_cap_exceeded",
+        errorParams: { max: MAX_POINTS_PER_SERIES }
       };
-    } else if (series.reference) {
-      scaledReference = { ...series.reference, unit: scaleResult.unit };
-    } else {
-      scaledReference = undefined;
+      return true;
+    }
+  }
+
+  /**
+   * No-data terminal state: the current series could not be built (empty LTS
+   * result or an unrecognized response shape).
+   */
+  private _setNoDataState(gen: number): void {
+    if (this._config.debug) {
+      console.log(
+        "[Energy Horizon] current series could not be built – check entity ID and results structure above"
+      );
+    }
+    if (gen !== this._loadGeneration) return;
+    this._previewLoading = false;
+    this._state = { status: "no-data" };
+  }
+
+  /**
+   * Fetches and maps the per-window LTS responses to cumulative series with the
+   * localized period labels (911/TD-2: extracted from `_loadData` so the ready
+   * state can be assembled by the pure pipeline).
+   */
+  private async _fetchLtsSeries(
+    windows: ResolvedWindow[],
+    localize: LocalizeFunction
+  ): Promise<(CumulativeSeries | undefined)[]> {
+    const queries = buildLtsQueriesForWindows(windows, this._config.entity);
+    if (this._config.debug) {
+      console.log("[Energy Horizon] Time windows:", windows);
+      console.log("[Energy Horizon] LTS queries:", queries);
     }
 
-    let scaledContext: ComparisonSeries["context"];
-    if (series.context?.length) {
-      scaledContext = series.context.map((ctx) => {
-        const len = ctx.points.length;
-        const slice = scaleResult.values.slice(offset, offset + len);
-        offset += len;
-        const pts = ctx.points.map((p, i) => scalePoint(p, i, slice));
-        const total = pts.length > 0 ? pts[pts.length - 1]!.value : 0;
-        return {
-          ...ctx,
-          points: pts,
-          unit: scaleResult.unit,
-          total
-        };
-      });
+    // Typed boundary (911/TD-3): HA WebSocket messages arrive as `unknown`;
+    // `ha-api.ts` normalizes them through the `LtsMessageResponse` model.
+    const responses = (await Promise.all(
+      queries.map((q) =>
+        this.hass.connection.sendMessagePromise(q as unknown as Record<string, unknown>)
+      )
+    )) as LtsMessageResponse[];
+
+    if (this._config.debug) {
+      console.log("[Energy Horizon] API responses (per window):", responses);
     }
 
-    return {
-      ...series,
-      current: scaledCurrent,
-      reference: scaledReference,
-      ...(scaledContext ? { context: scaledContext } : {})
+    const labelForIndex = (i: number): string => {
+      if (i === 0) return localize("period.current");
+      if (i === 1) return localize("period.reference");
+      return `${localize("period.reference")} (${i})`;
     };
+
+    const seriesList: (CumulativeSeries | undefined)[] = [];
+    for (let i = 0; i < responses.length; i++) {
+      seriesList.push(
+        mapLtsResponseToCumulativeSeries(
+          responses[i],
+          this._config.entity,
+          labelForIndex(i)
+        )
+      );
+    }
+    return seriesList;
+  }
+
+  /**
+   * In-place preview load (909, T008; extracted for 911/TD-2): resolves the
+   * shifted windows, queries the shifted current period — and, when present, the
+   * shifted reference period — over the LTS `statistics_during_period` path, and
+   * builds the preview series + chart context. Isolated: any failure (caught
+   * here) keeps the default pipeline result; the caller only reads the returned
+   * snapshot, which always carries the active `shift`.
+   */
+  private async _buildPreviewSnapshot(
+    merged: MergedTimeWindowConfig,
+    now: Date,
+    resolved: ResolvedLocale,
+    localize: LocalizeFunction,
+    entityUnit: string
+  ): Promise<{
+    shift: number;
+    series?: ComparisonSeries;
+    windows?: ResolvedWindow[];
+    chartTime?: ChartTimeContext;
+  }> {
+    const shift = this.previewShift;
+    try {
+      const shiftedWindows = resolvePreviewShiftedWindows(
+        merged,
+        now,
+        resolved.timeZone,
+        shift,
+        24,
+        merged.aggregation ?? "day"
+      );
+      const previewWindowCount = Math.min(2, shiftedWindows.length);
+      const previewWindowList = shiftedWindows.slice(0, previewWindowCount);
+      const previewQueries = buildLtsQueriesForWindows(
+        previewWindowList,
+        this._config.entity
+      );
+      // Typed boundary (911/TD-3) — same model as `_loadData` above.
+      const previewResponses = (await Promise.all(
+        previewQueries.map((q) =>
+          this.hass.connection.sendMessagePromise(
+            q as unknown as Record<string, unknown>
+          )
+        )
+      )) as LtsMessageResponse[];
+      // Build the preview chart timeline from the shifted windows so the
+      // preview series align to the shifted axis (909 US3, T014). This is
+      // done unconditionally (even when the shifted period has no data) so
+      // the preview period label, controls, and no-data indication can be
+      // rendered (FR-013, US6).
+      const previewTimeline = buildChartTimeline(
+        previewWindowList,
+        merged,
+        resolved.timeZone
+      );
+      const previewChartTime = chartTimeContext(previewWindowList, previewTimeline);
+      const previewCurrent = mapLtsResponseToCumulativeSeries(
+        previewResponses[0],
+        this._config.entity,
+        localize("period.current")
+      );
+      if (!previewCurrent) {
+        return { shift, windows: previewWindowList, chartTime: previewChartTime };
+      }
+      const previewReference =
+        previewWindowCount > 1
+          ? mapLtsResponseToCumulativeSeries(
+              previewResponses[1],
+              this._config.entity,
+              localize("period.reference")
+            )
+          : undefined;
+      const previewRaw: ComparisonSeries = {
+        current: previewCurrent,
+        reference: previewReference ?? undefined,
+        aggregation: merged.aggregation ?? "day",
+        time_zone: resolved.timeZone
+      };
+      return {
+        shift,
+        series: applyUnitScalingToSeries(previewRaw, entityUnit, {
+          force_prefix: this._config.force_prefix
+        }),
+        windows: previewWindowList,
+        chartTime: previewChartTime
+      };
+    } catch (previewError) {
+      if (this._config.debug) {
+        console.warn(
+          "[Energy Horizon] Preview load failed; keeping the default pipeline.",
+          previewError
+        );
+      }
+      return { shift };
+    }
   }
 
   /** Merged window duration in ms (YAML `duration` after merge). */
