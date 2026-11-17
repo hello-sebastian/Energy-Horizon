@@ -6326,19 +6326,15 @@ function Ja(r, e, t) {
   const i = n.results;
   let a = i[e];
   if (!a || a.length === 0) {
-    const u = Object.keys(i);
-    if (u.length === 1) {
-      const c = u[0];
-      c !== void 0 && (a = i[c]);
+    const l = Object.keys(i);
+    if (l.length === 1) {
+      const u = l[0];
+      u !== void 0 && (a = i[u]);
     }
   }
   if (!a || a.length === 0) return;
   const { unit: o, timeSeries: s } = cM(a);
-  return fM(
-    s,
-    o,
-    t
-  );
+  return fM(s, o, t);
 }
 function cM(r) {
   let e = "";

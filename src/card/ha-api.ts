@@ -35,9 +35,8 @@ export function buildLtsQueriesForWindows(
 
 /**
  * Shape of an LTS WebSocket message as the card receives it (911/TD-3, contract
- * `lts-websocket-response.md`): Shape A envelope `{ success?, result? }` or Shape B
- * (the `LtsStatisticsResponse` itself). The transport returns `unknown` (thin `src/ha-types.ts`
- * contract); this type is applied at the card's boundary.
+ * `lts-websocket-response.md`): Shape A envelope `{ success?, result? }` or Shape B (the
+ * `LtsStatisticsResponse` itself). The transport returns `unknown`; applied at the boundary.
  */
 export type LtsMessageResponse =
   | { success?: boolean; result?: LtsStatisticsResponse }
@@ -46,8 +45,7 @@ export type LtsMessageResponse =
 /**
  * Single normalization point for LTS WebSocket responses (911/TD-3, contract
  * `lts-websocket-response.md`): malformed input degrades to `undefined`, never throws.
- * The `?? data` fallbacks keep the legacy bare-record shape `{ [statistic_id]: LtsStatisticPoint[] }`
- * (contract edge case 4).
+ * The `?? data` fallbacks keep the legacy bare shape (contract edge case 4).
  */
 export function extractLtsResults(
   response: LtsMessageResponse
@@ -87,13 +85,7 @@ export function mapLtsResponseToCumulativeSeries(
   if (!points || points.length === 0) return undefined;
 
   const { unit, timeSeries } = normalizePoints(points);
-  const cumulative = toCumulativeSeries(
-    timeSeries,
-    unit,
-    periodLabel
-  );
-
-  return cumulative;
+  return toCumulativeSeries(timeSeries, unit, periodLabel);
 }
 
 function normalizePoints(points: LtsStatisticPoint[]): {
@@ -283,8 +275,7 @@ export function computeForecast(
     return disabled(unit, "no_reference");
   }
 
-  // Guards 1–3 above already prove non-emptiness — these are compiler guards
-  // for `noUncheckedIndexedAccess` (911/TD-6), not runtime paths.
+  // Compiler guards for `noUncheckedIndexedAccess` (911/TD-6) — guards 1–3 already prove non-emptiness; not runtime paths.
   const firstCurrentPoint = currentPoints[0];
   const lastCompletedPoint = currentPoints[completedBuckets - 1];
   const firstReferencePoint = referencePoints[0];
@@ -296,10 +287,8 @@ export function computeForecast(
     lastCompletedPoint.timestamp - firstCurrentPoint.timestamp;
   const cutoffTs = firstCurrentPoint.timestamp + currentRangeMs;
 
-  // Align reference timestamps to the current period axis (same alignment as chart);
-  // prefer the window-start offset (alignOffsetMs) when provided — correct even when
-  // the current series starts late (the first-point offset drifts by the leading
-  // empty buckets).
+  // Align reference timestamps to the current axis (as the chart does); prefer the window-start
+  // offset (alignOffsetMs) — correct even when the series starts late (first-point offset drifts).
   const periodAlignMs =
     typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
       ? alignOffsetMs
