@@ -54,7 +54,6 @@ import {
 import {
   resolveLocale,
   createLocalize,
-  getRawTemplate,
   numberFormatToLocale,
   MISSING_TRANSLATION_KEY,
   type LocalizeFunction,
@@ -62,7 +61,8 @@ import {
 } from "./localize";
 import { classifyComparisonStep } from "./narrative/classify-comparison-step";
 import { interpretationToEntityKind } from "./narrative/interpretation-to-entity-kind";
-import { resolveTextSummarySentenceKey } from "./narrative/resolve-text-summary-sentence-key";
+import { forecastDisabledReasonKey } from "./narrative/forecast-disabled-reason-key";
+import { resolveNarrativeSegment } from "./narrative/resolve-narrative-segment";
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
 import { applyUnitScalingToSeries } from "../utils/unit-scaler";
 import {
@@ -1209,17 +1209,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       );
     }
     if (!singleWindow && forecast != null && forecast.enabled === false) {
-      const reasonKey =
-        forecast.disabledReason === "insufficient_buckets" ||
-        forecast.disabledReason === "below_percent_threshold"
-          ? "forecast.disabled.too_early"
-          : forecast.disabledReason === "zero_reference_in_range"
-            ? "forecast.disabled.zero_reference"
-            : forecast.disabledReason === "no_reference"
-              ? "forecast.disabled.no_reference"
-              : forecast.disabledReason === "no_split"
-                ? "forecast.disabled.no_split"
-                : "forecast.disabled.unavailable";
+      // 911/TD-8: the reason → key table lives in the pure narrative module.
+      const reasonKey = forecastDisabledReasonKey(forecast.disabledReason);
       warningMessages.push(this._localizeOrError(localize, reasonKey));
     }
     const showWarningStrip = warningMessages.length > 0;
@@ -1248,61 +1239,26 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? `${percentFormatter.format(Math.abs(summary.differencePercent))}%`
           : "—";
 
-      if (interpretationSemantics.outcome === "insufficient_data") {
-        narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-          ${this._localizeOrError(localize, "text_summary.insufficient_data")}
-        </div>`;
-      } else if (
-        interpretationSemantics.outcome === "neutral" &&
-        interpretationSemantics.neutralKind === "percent_band"
-      ) {
-        const summaryKey = resolveTextSummarySentenceKey(
-          resolved.language,
-          entityKind,
-          "neutral_band"
-        );
-        const template = getRawTemplate(resolved.language, summaryKey);
-        if (template === undefined) {
-          narrativeBody = html`<div class="ebc-comment-text">
-            ${this._localizeOrError(localize, summaryKey)}
-          </div>`;
-        } else {
-          narrativeBody = textSummaryNarrativeWithEmphasis(template, {
-            deltaUnit: deltaUnitStr,
-            deltaPercent: deltaPercentStr,
-            referencePeriod
-          });
+      // 911/TD-8: the 4-branch narrative selection (domain-903 narrative
+      // engine) is the pure `resolveNarrativeSegment`; render() only formats
+      // the result and wraps it in Lit.
+      const segment = resolveNarrativeSegment({
+        outcome: interpretationSemantics.outcome,
+        neutralKind: interpretationSemantics.neutralKind,
+        language: resolved.language,
+        entityKind,
+        values: {
+          deltaUnit: deltaUnitStr,
+          deltaPercent: deltaPercentStr,
+          referencePeriod
         }
-      } else if (interpretationSemantics.outcome === "neutral") {
-        const summaryKey = resolveTextSummarySentenceKey(
-          resolved.language,
-          entityKind,
-          "similar"
-        );
-        narrativeBody = html`<div class="ebc-comment-text ebc-comment-text--muted">
-          ${this._localizeOrError(localize, summaryKey, { referencePeriod })}
-        </div>`;
-      } else {
-        const diff = summary?.difference ?? 0;
-        const trend = diff > 0 ? "higher" : "lower";
-        const summaryKey = resolveTextSummarySentenceKey(
-          resolved.language,
-          entityKind,
-          trend
-        );
-        const template = getRawTemplate(resolved.language, summaryKey);
-        if (template === undefined) {
-          narrativeBody = html`<div class="ebc-comment-text">
-            ${this._localizeOrError(localize, summaryKey)}
+      });
+      narrativeBody =
+        segment.template !== undefined
+          ? textSummaryNarrativeWithEmphasis(segment.template, segment.vars)
+          : html`<div class="ebc-comment-text${segment.muted ? " ebc-comment-text--muted" : ""}">
+            ${this._localizeOrError(localize, segment.key, segment.vars)}
           </div>`;
-        } else {
-          narrativeBody = textSummaryNarrativeWithEmphasis(template, {
-            deltaUnit: deltaUnitStr,
-            deltaPercent: deltaPercentStr,
-            referencePeriod
-          });
-        }
-      }
     }
     const deltaChipAbs =
       !singleWindow && summary != null && summary.difference != null
