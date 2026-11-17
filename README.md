@@ -3,7 +3,7 @@
 Elegant energy comparisons for Home Assistant dashboards — **cumulative usage** now vs a historical reference, with optional forecast.
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue?style=for-the-badge&color=%2300c29e&logo=homeassistant&logoColor=white)&ensp;
-![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Custom-orange?style=for-the-badge)  
+![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Default-orange?style=for-the-badge)  
 ![Release](https://img.shields.io/badge/version-1.2.0-informational?style=for-the-badge&color=%2300c29e)&ensp;
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=for-the-badge&color=%2300c29e)](https://www.gnu.org/licenses/gpl-3.0)&ensp;
 ![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)
@@ -21,10 +21,10 @@ By querying Home Assistant's **Long-Term Statistics (LTS)**, Energy Horizon over
 
 ### 1) Install
 
-[![Open this repository in the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hello-sebastian&repository=Energy-Horizon&category=frontend)
+[![Open this repository in the Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=hello-sebastian&repository=Energy-Horizon&category=frontend)
 
-- **Marketplace (HA 2026.11+, recommended)**: Settings → **Marketplace** → search for **Energy Horizon** (or **Add from link** → `https://github.com/hello-sebastian/Energy-Horizon`) → **Install** → reload the browser. The dashboard resource is added automatically.
-- **HACS (HA < 2026.11)**: HACS → **Frontend** → **Add repository** → install **Energy Horizon Card** → restart Home Assistant.
+- **Marketplace (HA 2026.11+, recommended)**: Settings → **Marketplace** → search for **Energy Horizon** (listed in the built-in catalog) → **Install** → reload the browser. The dashboard resource is added automatically.
+- **HACS (HA < 2026.11)**: HACS → **Frontend** → search for **Energy Horizon Card** (listed in the default catalog) → **Install** → restart Home Assistant.
 - **Manual**: download `energy-horizon-card.js` from the [latest release](https://github.com/hello-sebastian/energy-horizon/releases/latest) → copy to `config/www/`.
 
 ### 2) Add the Lovelace resource
