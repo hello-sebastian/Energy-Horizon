@@ -18,10 +18,6 @@ import {
   type ResolvedWindow
 } from "./types";
 import {
-  semanticMdiIcon,
-  semanticToneClass
-} from "./trend-visual";
-import {
   computeInterpretationSemantics,
   parseInterpretationMode,
   parseNeutralThresholdT,
@@ -31,7 +27,6 @@ import { buildChartTimeline } from "./timeline";
 import {
   mapLtsResponseToCumulativeSeries,
   buildLtsQueriesForWindows,
-  fullReferenceWindowRawTotal,
   type LtsMessageResponse
 } from "./ha-api";
 import {
@@ -59,10 +54,10 @@ import {
   type LocalizeFunction,
   type ResolvedLocale
 } from "./localize";
-import { classifyComparisonStep } from "./narrative/classify-comparison-step";
-import { interpretationToEntityKind } from "./narrative/interpretation-to-entity-kind";
-import { forecastDisabledReasonKey } from "./narrative/forecast-disabled-reason-key";
-import { resolveNarrativeSegment } from "./narrative/resolve-narrative-segment";
+import {
+  buildCardViewModel,
+  type ReadyCardViewModel
+} from "./view-model";
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
 import { applyUnitScalingToSeries } from "../utils/unit-scaler";
 import {
@@ -79,56 +74,10 @@ import {
   isSupportedUnit,
   queryRealDataWithLimit
 } from "./picker-preview";
-import {
-  expandCurrentWindowForCaption,
-  formatCompactPeriodCaption,
-  hour12FromHaTimeFormat,
-  resolvedWindowForCaption
-} from "./labels/compact-period-caption";
+import { hour12FromHaTimeFormat } from "./labels/compact-period-caption";
 import { resolveComparisonAxisLabelHints } from "./labels/comparison-label-hints";
 import { formatPeriodLabel } from "./labels/period-label";
 import "./energy-horizon-card-editor.js";
-
-export function formatSigned(
-  value: number,
-  formatter: Intl.NumberFormat,
-  unit: string
-): string {
-  if (value > 0) {
-    return `+${formatter.format(value)} ${unit}`;
-  }
-  if (value < 0) {
-    return `\u2212${formatter.format(Math.abs(value))} ${unit}`;
-  }
-  return `${formatter.format(0)} ${unit}`;
-}
-
-const TEXT_SUMMARY_PLACEHOLDER = /\{\{(\w+)\}\}/g;
-
-/**
- * Renders a `text_summary.*.{higher|lower|neutral_band}` sentence template with
- * `ebc-comment-emphasis` on each `{{varName}}` value.
- */
-export function textSummaryNarrativeWithEmphasis(
-  template: string,
-  vars: Record<string, string>
-): TemplateResult {
-  const segments: (string | TemplateResult)[] = [];
-  let lastIndex = 0;
-  const re = new RegExp(TEXT_SUMMARY_PLACEHOLDER.source, "g");
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(template)) !== null) {
-    if (m.index > lastIndex) {
-      segments.push(template.slice(lastIndex, m.index));
-    }
-    const varName = m[1] ?? m[0];
-    const display = vars[varName] ?? m[0];
-    segments.push(html`<span class="ebc-comment-emphasis">${display}</span>`);
-    lastIndex = m.index + m[0].length;
-  }
-  segments.push(template.slice(lastIndex));
-  return html`<div class="ebc-comment-text">${segments}</div>`;
-}
 
 /** Chart forecast line: on unless explicitly `show_forecast: false` (alias `forecast` merged in setConfig). */
 export function isForecastLineVisible(config: CardConfig): boolean {
@@ -1028,7 +977,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     };
   }
 
-  protected render() {
+  protected render(): TemplateResult {
     if (!this._config || !this.hass) {
       return html``;
     }
@@ -1036,7 +985,18 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const resolved = resolveLocale(this.hass, this._config);
     const localize = createLocalize(resolved.language);
 
-    if (this._state.status === "loading") {
+    // 911/TD-9 (FR-903-AA): the view model owns every display value the card
+    // prints — render() is a thin template over it. The bound localize keeps
+    // the missing-key → error escalation (FR-903-NE) as an element concern;
+    // everything the VM computes is pure.
+    const vm = buildCardViewModel(
+      this._state,
+      this._config,
+      this.hass,
+      (key, vars) => this._localizeOrError(localize, key, vars)
+    );
+
+    if (vm.status === "loading") {
       return html`<ha-card class="ebc-card">
         <div class="loading">
           <ha-circular-progress active size="small"></ha-circular-progress>
@@ -1045,21 +1005,19 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       </ha-card>`;
     }
 
-    if (this._state.status === "error") {
-      const messageKey =
-        this._state.errorMessage ?? "status.error_generic";
+    if (vm.status === "error") {
       return html`<ha-card class="ebc-card">
         <ha-alert alert-type="error">
           ${this._localizeOrError(
             localize,
-            messageKey,
-            this._state.errorParams
+            vm.messageKey,
+            vm.errorParams
           )}
         </ha-alert>
       </ha-card>`;
     }
 
-    if (this._state.status === "no-data") {
+    if (vm.status === "no-data") {
       return html`<ha-card class="ebc-card">
         <ha-alert alert-type="info">
           ${this._localizeOrError(localize, "status.no_data")}
@@ -1067,497 +1025,320 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       </ha-card>`;
     }
 
-    // The early returns above leave only the ready member (911/TD-11); the
-    // local keeps the narrowed type stable across the calls below.
-    const state = this._state;
-    const textSummary = state.textSummary;
-    const summary = state.summary;
-    const forecast = state.forecast;
-
-    const showTitle = this._config.show_title !== false;
-    const entityState = this.hass?.states?.[this._config.entity];
-    const effectiveTitle = (
-      this._config.title?.trim() ||
-      (entityState?.attributes.friendly_name as string | undefined) ||
-      this._config.entity
-    ) as string;
-
-    const showIcon = this._config.show_icon !== false;
-    const effectiveIcon = this._config.icon?.trim() || undefined;
-
-    const canRenderEntityIcon = !!entityState;
-    const shouldRenderHeader =
-      (showIcon && (!!effectiveIcon || canRenderEntityIcon)) || showTitle;
-
-    const numberLocale = numberFormatToLocale(
-      resolved.numberFormat,
-      resolved.language
-    );
-    const precision = this._config.precision ?? 2;
-
-    // Jeśli z API nie przyszła jednostka, spróbuj użyć tej z encji HA.
-    const fallbackUnit =
-      (this.hass.states?.[this._config.entity]?.attributes as {
-        unit_of_measurement?: string;
-      })?.unit_of_measurement ?? "";
-
-    const numberFormatter = new Intl.NumberFormat(numberLocale, {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision
-    });
-
-    const percentFormatter = new Intl.NumberFormat(numberLocale, {
-      maximumFractionDigits: 1
-    });
-
-    const displayUnit = summary?.unit || fallbackUnit;
-
-    const currentPeriodBase = this._localizeOrError(localize, "summary.current_period");
-    const referencePeriodBase = this._localizeOrError(localize, "summary.reference_period");
-
-    let currentPeriodSuffix = "";
-    let referencePeriodSuffix = "";
-
-    if (state.status === "ready") {
-      const period = state.period;
-      const rw = state.resolvedWindows;
-      const captionLocale = resolveLabelLocale(this.hass, this._config);
-      const captionZone =
-        period.time_zone || this.hass?.config?.time_zone || "UTC";
-      const hour12 = hour12FromHaTimeFormat(this.hass?.locale?.time_format);
-
-      const w0 = resolvedWindowForCaption(rw, period, 0);
-      const w1 = resolvedWindowForCaption(rw, period, 1);
-      const mergedTw = state.mergedTimeWindow;
-      const w0Caption = expandCurrentWindowForCaption(
-        w0,
-        mergedTw,
-        this._config.comparison_preset,
-        captionZone
-      );
-      const captionOpts = {
-        zone: captionZone,
-        locale: captionLocale,
-        hour12
-      };
-
-      currentPeriodSuffix = formatCompactPeriodCaption(w0Caption, w1, captionOpts);
-      referencePeriodSuffix = formatCompactPeriodCaption(w1, w0, captionOpts);
-    }
-
-    const currentPeriodLabelFull =
-      currentPeriodSuffix !== ""
-        ? `${currentPeriodBase} (${currentPeriodSuffix})`
-        : currentPeriodBase;
-    const referencePeriodLabelFull =
-      referencePeriodSuffix !== ""
-        ? `${referencePeriodBase} (${referencePeriodSuffix})`
-        : referencePeriodBase;
-
-    const currentCaptionText =
-      currentPeriodSuffix !== "" ? currentPeriodSuffix : currentPeriodBase;
-    const referenceCaptionText =
-      referencePeriodSuffix !== "" ? referencePeriodSuffix : referencePeriodBase;
-
-    const currentSummaryNumber =
-      summary != null ? numberFormatter.format(summary.current_cumulative) : "";
-
-    const singleWindow = state.resolvedWindows.length < 2;
-
-    const referenceSummaryNumber =
-      !singleWindow &&
-      summary != null &&
-      summary.reference_cumulative != null
-        ? numberFormatter.format(summary.reference_cumulative)
-        : null;
-
-    // The Forecast | Total panel is gated by `show_forecast_total_panel` only —
-    // it is independent of `show_forecast` (which controls the forecast line on
-    // the chart, see `isForecastLineVisible` in `_buildRendererConfig`) and of
-    // `forecast.enabled` (which only decides whether the forecast *value* is
-    // computable). When the forecast is not yet available the panel still
-    // renders: the Forecast column shows a placeholder and the Total column
-    // shows the full reference-window total (or a placeholder in single-window
-    // mode, where no reference window exists).
-    const showForecastTotalPanel =
-      forecast != null && this._config.show_forecast_total_panel !== false;
-
-    const forecastUnit = forecast?.unit || displayUnit;
-
-    // Full reference-window total for the panel's Total column, computed from
-    // the (unit-scaled) reference series via the same standalone helper
-    // `computeForecast` uses, so the value matches `forecast.reference_total`
-    // when the forecast is enabled. In single-window mode there is no reference
-    // window, so the Total column shows a placeholder.
-    const panelReferenceTotal =
-      !singleWindow && state.comparisonSeries.reference?.points?.length
-        ? fullReferenceWindowRawTotal(
-            state.comparisonSeries.reference.points
-          )
-        : null;
-
-    // Warning bar: combine all data-quality messages into a single bar (one
-    // line per issue) instead of stacking separate bars.
-    const warningMessages: string[] = [];
-    if (
-      !singleWindow &&
-      summary != null &&
-      summary.reference_cumulative == null
-    ) {
-      warningMessages.push(
-        this._localizeOrError(localize, "summary.incomplete_reference")
-      );
-    }
-    if (!singleWindow && forecast != null && forecast.enabled === false) {
-      // 911/TD-8: the reason → key table lives in the pure narrative module.
-      const reasonKey = forecastDisabledReasonKey(forecast.disabledReason);
-      warningMessages.push(this._localizeOrError(localize, reasonKey));
-    }
-    const showWarningStrip = warningMessages.length > 0;
-
-    const mergedTw = state.mergedTimeWindow;
-    const stepKind = classifyComparisonStep(mergedTw?.step);
-    const periodPhraseKey = `text_summary.period.${stepKind}`;
-    const referencePeriod = this._localizeOrError(localize, periodPhraseKey);
-    const entityKind = interpretationToEntityKind(this._config.interpretation);
-
-    let narrativeBody: TemplateResult | null = null;
-    const interpretationSemantics = this._interpretationSemantics();
-    const semTone = semanticToneClass(interpretationSemantics.outcome);
-    const semIcon = semanticMdiIcon(
-      interpretationSemantics.outcome,
-      summary?.difference ?? null
-    );
-
-    if (textSummary && !singleWindow) {
-      const deltaUnitStr =
-        textSummary.diffValue != null
-          ? `${numberFormatter.format(textSummary.diffValue)} ${displayUnit}`
-          : `— ${displayUnit}`;
-      const deltaPercentStr =
-        summary?.differencePercent != null
-          ? `${percentFormatter.format(Math.abs(summary.differencePercent))}%`
-          : "—";
-
-      // 911/TD-8: the 4-branch narrative selection (domain-903 narrative
-      // engine) is the pure `resolveNarrativeSegment`; render() only formats
-      // the result and wraps it in Lit.
-      const segment = resolveNarrativeSegment({
-        outcome: interpretationSemantics.outcome,
-        neutralKind: interpretationSemantics.neutralKind,
-        language: resolved.language,
-        entityKind,
-        values: {
-          deltaUnit: deltaUnitStr,
-          deltaPercent: deltaPercentStr,
-          referencePeriod
-        }
-      });
-      narrativeBody =
-        segment.template !== undefined
-          ? textSummaryNarrativeWithEmphasis(segment.template, segment.vars)
-          : html`<div class="ebc-comment-text${segment.muted ? " ebc-comment-text--muted" : ""}">
-            ${this._localizeOrError(localize, segment.key, segment.vars)}
-          </div>`;
-    }
-    const deltaChipAbs =
-      !singleWindow && summary != null && summary.difference != null
-        ? formatSigned(summary.difference, numberFormatter, displayUnit)
-        : !singleWindow && summary != null
-          ? `--- ${displayUnit}`
-          : "";
-    const deltaChipPct =
-      !singleWindow && summary != null && summary.differencePercent != null
-        ? formatSigned(summary.differencePercent, percentFormatter, "%")
-        : !singleWindow && summary != null
-          ? "--- %"
-          : "";
-
-    // Transient time-window preview (909 US2, T011): a visible, screen-reader-announced
-    // indication of the shifted period, shown only while `previewShift < 0`. Reuses the
-    // card's period-label formatting (year for a Jan-1 start, else "Month YYYY") so the
-    // shifted period reads the same way the card already formats periods.
-    const previewActive = this.previewShift < 0;
-    let previewIndicationText = "";
-    if (previewActive) {
-      const previewStart = state.preview?.windows?.[0]?.start;
-      if (previewStart) {
-        // 911/TD-10: single period-label implementation (FR-010).
-        const previewPeriodLabel = formatPeriodLabel(
-          previewStart,
-          resolved.language,
-          resolved.timeZone
-        );
-        previewIndicationText = this._localizeOrError(localize, "preview.indication", {
-          period: previewPeriodLabel
-        });
-      }
-    }
-
+    // The early returns above leave only the ready member (911/TD-9).
     return html`<ha-card class="ebc-card">
       <div class="content ebc-content">
-        ${shouldRenderHeader
-          ? html`<div
-              class="ebc-section ebc-section--header"
-              role="region"
-              aria-label=${this._localizeOrError(localize, "section.header")}
-            >
-              <div class="ebc-header-row">
-                ${showIcon
-                  ? html`<div class="ebc-header-icon-wrap">
-                      ${effectiveIcon
-                        ? html`<ha-icon class="ebc-icon" .icon=${effectiveIcon}></ha-icon>`
-                        : entityState
-                          ? html`<ha-state-icon
-                              class="ebc-icon"
-                              .hass=${this.hass}
-                              .stateObj=${entityState}
-                            ></ha-state-icon>`
-                          : null}
-                    </div>`
-                  : null}
-                <div class="ebc-header-text">
-                  ${showTitle && effectiveTitle
-                    ? html`<div class="ebc-header-title">${effectiveTitle}</div>`
-                    : null}
-                  <div class="ebc-header-entity">${this._config.entity}</div>
-                </div>
-              </div>
-            </div>`
-          : null}
-
-        ${summary && this._config.show_comparison_summary !== false
-          ? html`<div
-              class="ebc-section ebc-section--comparison"
-              role="region"
-              aria-label=${this._localizeOrError(localize, "section.comparison")}
-            >
-              <div class="ebc-comparison-grid">
-                <div
-                  class="ebc-comparison-col"
-                  aria-label=${currentPeriodLabelFull}
-                >
-                  <div class="ebc-series-caption">
-                    <span
-                      class="ebc-series-swatch ebc-series-swatch--current"
-                      aria-hidden="true"
-                    ></span>
-                    <span class="ebc-series-caption-text">${currentCaptionText}</span>
-                  </div>
-                  <div class="ebc-caption">
-                    ${this._localizeOrError(localize, "summary.to_this_day")}
-                  </div>
-                  <div class="ebc-value-row">
-                    <span class="ebc-value-num--current">${currentSummaryNumber}</span>
-                    <span class="ebc-value-unit">${displayUnit}</span>
-                  </div>
-                  ${!singleWindow
-                    ? html`<div
-                        class="ebc-delta-chip ${semTone}"
-                        aria-label=${this._localizeOrError(
-                          localize,
-                          "summary.difference"
-                        )}
-                      >
-                        <span class="ebc-delta-abs">${deltaChipAbs}</span>
-                        <span class="ebc-delta-sep" aria-hidden="true">|</span>
-                        <span class="ebc-delta-pct">${deltaChipPct}</span>
-                      </div>`
-                    : null}
-                </div>
-                <div class="ebc-comparison-divider" aria-hidden="true"></div>
-                <div
-                  class="ebc-comparison-col"
-                  aria-label=${referencePeriodLabelFull}
-                >
-                  <div class="ebc-series-caption">
-                    <span
-                      class="ebc-series-swatch ebc-series-swatch--reference"
-                      aria-hidden="true"
-                    ></span>
-                    <span class="ebc-series-caption-text">${referenceCaptionText}</span>
-                  </div>
-                  <div class="ebc-caption">
-                    ${this._localizeOrError(localize, "summary.to_this_day")}
-                  </div>
-                  <div class="ebc-value-row">
-                    ${referenceSummaryNumber != null
-                      ? html`<span class="ebc-value-num--reference"
-                            >${referenceSummaryNumber}</span
-                          >
-                          <span class="ebc-value-unit">${displayUnit}</span>`
-                      : html`<span class="ebc-value-num--reference">—</span>
-                          <span class="ebc-value-unit">${displayUnit}</span>`}
-                  </div>
-                </div>
-              </div>
-            </div>`
-          : null}
-
-        ${showForecastTotalPanel && forecast
-          ? html`<div
-              class="ebc-section ebc-section--forecast-total"
-              role="region"
-              aria-label=${this._localizeOrError(
-                localize,
-                "section.forecast_total"
-              )}
-            >
-              <div class="ebc-surface-grid">
-                <div class="ebc-surface-col">
-                  <div class="ebc-caption ebc-caption--strong">
-                    ${this._localizeOrError(localize, "forecast.panel_forecast")}
-                  </div>
-                  <div class="ebc-surface-value-row">
-                    ${forecast.enabled && forecast.forecast_total != null
-                      ? html`<span class="ebc-surface-value-num"
-                            >${numberFormatter.format(forecast.forecast_total)}</span
-                          >
-                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`
-                      : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
-                            >---</span
-                          >
-                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`}
-                  </div>
-                  <div class="ebc-forecast-confidence">
-                    ${forecast.enabled
-                      ? this._localizeOrError(localize, "forecast.confidence", {
-                          confidence: this._localizeOrError(
-                            localize,
-                            `forecast.confidence.${forecast.confidence}`
-                          )
-                        })
-                      : this._localizeOrError(
-                          localize,
-                          "forecast.disabled.hint"
-                        )}
-                  </div>
-                </div>
-                <div class="ebc-comparison-divider" aria-hidden="true"></div>
-                <div class="ebc-surface-col">
-                  <div class="ebc-caption ebc-caption--strong">
-                    ${this._localizeOrError(localize, "forecast.panel_total")}
-                  </div>
-                  <div class="ebc-surface-value-row">
-                    ${panelReferenceTotal != null
-                      ? html`<span class="ebc-surface-value-num"
-                            >${numberFormatter.format(panelReferenceTotal)}</span
-                          >
-                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`
-                      : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
-                            >---</span
-                          >
-                          <span class="ebc-surface-value-unit">${forecastUnit}</span>`}
-                  </div>
-                </div>
-              </div>
-            </div>`
-          : null}
-
-        <div
-          class="ebc-section ebc-section--chart"
-          role="region"
-          aria-label=${this._localizeOrError(localize, "section.chart")}
-        >
-          ${this.preview
-            ? null
-            : html`<div class="ebc-chart-controls">
-                ${previewActive
-                  ? html`<span class="ebc-preview-indication" role="status">
-                      ${previewIndicationText}
-                    </span>`
-                  : null}
-                ${previewActive
-                  ? html`<button
-                      class="ebc-chart-control ebc-chart-control--reset"
-                      type="button"
-                      ?disabled=${this._previewLoading}
-                      aria-label=${this._localizeOrError(localize, "preview.reset")}
-                      @click=${() => this._onPreviewStep("reset")}
-                    >
-                      <ha-icon icon="mdi:restart"></ha-icon>
-                    </button>`
-                  : null}
-                <button
-                  class="ebc-chart-control"
-                  type="button"
-                  ?disabled=${this._previewLoading}
-                  aria-label=${this._localizeOrError(localize, "preview.step_back")}
-                  @click=${() => this._onPreviewStep("back")}
-                >
-                  <ha-icon icon="mdi:chevron-left"></ha-icon>
-                </button>
-                <button
-                  class="ebc-chart-control"
-                  type="button"
-                  ?disabled=${this._previewLoading}
-                  aria-label=${this._localizeOrError(localize, "preview.step_forward")}
-                  @click=${() => this._onPreviewStep("forward")}
-                >
-                  <ha-icon icon="mdi:chevron-right"></ha-icon>
-                </button>
-              </div>`}
-          <div class="ebc-chart-wrap">
-            <div
-              class="chart-container ebc-chart ${this._previewLoading
-                ? "ebc-chart--loading"
-                : ""}"
-            ></div>
-            ${previewActive &&
-            !this._previewLoading &&
-            state.preview?.chartTime != null &&
-            state.preview?.series == null
-              ? html`<div class="ebc-chart-nodata-overlay" role="status">
-                  <ha-alert alert-type="info">
-                    ${this._localizeOrError(localize, "status.no_data")}
-                  </ha-alert>
-                </div>`
-              : null}
-            ${this._previewLoading
-              ? html`<div class="ebc-chart-loading-overlay" role="status">
-                  <ha-circular-progress active size="small"></ha-circular-progress>
-                  <span>${this._localizeOrError(localize, "preview.loading")}</span>
-                </div>`
-              : null}
-          </div>
-        </div>
-
-        ${narrativeBody && this._config.show_narrative_comment !== false
-          ? html`<div
-              class="ebc-section ebc-section--comment"
-              role="region"
-              aria-label=${this._localizeOrError(localize, "section.comment")}
-            >
-              <div class="ebc-comment-icon-wrap ${semTone}">
-                <ha-icon
-                  class="ebc-comment-icon ${semTone}"
-                  .icon=${semIcon}
-                ></ha-icon>
-              </div>
-              ${narrativeBody}
-            </div>`
-          : null}
-
-        ${showWarningStrip
-          ? html`<div
-              class="ebc-section ebc-section--warning"
-              role="region"
-              aria-label=${this._localizeOrError(localize, "section.warning")}
-            >
-              <ha-icon
-                class="ebc-warning-icon"
-                .icon=${"mdi:alert-outline"}
-              ></ha-icon>
-              <div class="ebc-warning-lines">
-                ${warningMessages.map(
-                  (msg) => html`<div class="ebc-warning-line">${msg}</div>`
-                )}
-              </div>
-            </div>`
-          : null}
+        ${this._renderHeader(vm, localize)}
+        ${this._renderComparisonSection(vm, localize)}
+        ${this._renderForecastTotalSection(vm, localize)}
+        ${this._renderChartSection(vm, localize)}
+        ${this._renderNarrativeSection(vm, localize)}
+        ${this._renderWarningSection(vm, localize)}
       </div>
     </ha-card>`;
   }
+
+  /** Header region (icon + title + entity id) — markup 1:1 with the old render(). */
+  private _renderHeader(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult | null {
+    if (!vm.shouldRenderHeader) {
+      return null;
+    }
+    return html`<div
+      class="ebc-section ebc-section--header"
+      role="region"
+      aria-label=${this._localizeOrError(localize, "section.header")}
+    >
+      <div class="ebc-header-row">
+        ${vm.showIcon
+          ? html`<div class="ebc-header-icon-wrap">
+              ${vm.effectiveIcon
+                ? html`<ha-icon
+                    class="ebc-icon"
+                    .icon=${vm.effectiveIcon}
+                  ></ha-icon>`
+                : vm.entityState
+                  ? html`<ha-state-icon
+                      class="ebc-icon"
+                      .hass=${this.hass}
+                      .stateObj=${vm.entityState}
+                    ></ha-state-icon>`
+                  : null}
+            </div>`
+          : null}
+        <div class="ebc-header-text">
+          ${vm.showTitle && vm.effectiveTitle
+            ? html`<div class="ebc-header-title">${vm.effectiveTitle}</div>`
+            : null}
+          <div class="ebc-header-entity">${this._config.entity}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /** Figma "Data series info" panel — current vs reference "to today" values + delta chip. */
+  private _renderComparisonSection(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult | null {
+    if (!vm.showComparisonSection) {
+      return null;
+    }
+    return html`<div
+      class="ebc-section ebc-section--comparison"
+      role="region"
+      aria-label=${this._localizeOrError(localize, "section.comparison")}
+    >
+      <div class="ebc-comparison-grid">
+        <div
+          class="ebc-comparison-col"
+          aria-label=${vm.currentPeriodLabelFull}
+        >
+          <div class="ebc-series-caption">
+            <span
+              class="ebc-series-swatch ebc-series-swatch--current"
+              aria-hidden="true"
+            ></span>
+            <span class="ebc-series-caption-text">${vm.currentCaptionText}</span>
+          </div>
+          <div class="ebc-caption">
+            ${this._localizeOrError(localize, "summary.to_this_day")}
+          </div>
+          <div class="ebc-value-row">
+            <span class="ebc-value-num--current">${vm.currentSummaryNumber}</span>
+            <span class="ebc-value-unit">${vm.displayUnit}</span>
+          </div>
+          ${!vm.singleWindow
+            ? html`<div
+                class="ebc-delta-chip ${vm.semTone}"
+                aria-label=${this._localizeOrError(
+                  localize,
+                  "summary.difference"
+                )}
+              >
+                <span class="ebc-delta-abs">${vm.deltaChipAbs}</span>
+                <span class="ebc-delta-sep" aria-hidden="true">|</span>
+                <span class="ebc-delta-pct">${vm.deltaChipPct}</span>
+              </div>`
+            : null}
+        </div>
+        <div class="ebc-comparison-divider" aria-hidden="true"></div>
+        <div
+          class="ebc-comparison-col"
+          aria-label=${vm.referencePeriodLabelFull}
+        >
+          <div class="ebc-series-caption">
+            <span
+              class="ebc-series-swatch ebc-series-swatch--reference"
+              aria-hidden="true"
+            ></span>
+            <span class="ebc-series-caption-text">${vm.referenceCaptionText}</span>
+          </div>
+          <div class="ebc-caption">
+            ${this._localizeOrError(localize, "summary.to_this_day")}
+          </div>
+          <div class="ebc-value-row">
+            ${vm.referenceSummaryNumber != null
+              ? html`<span class="ebc-value-num--reference"
+                    >${vm.referenceSummaryNumber}</span
+                  >
+                  <span class="ebc-value-unit">${vm.displayUnit}</span>`
+              : html`<span class="ebc-value-num--reference">—</span>
+                  <span class="ebc-value-unit">${vm.displayUnit}</span>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /**
+   * Forecast | Total panel (903): gated by `show_forecast_total_panel` only —
+   * independent of `show_forecast` (the chart line) and of `forecast.enabled`
+   * (value computability). A disabled forecast still shows the panel with the
+   * placeholder + the full reference-window total (or a placeholder in
+   * single-window mode, where no reference window exists).
+   */
+  private _renderForecastTotalSection(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult | null {
+    if (!vm.showForecastTotalPanel) {
+      return null;
+    }
+    return html`<div
+      class="ebc-section ebc-section--forecast-total"
+      role="region"
+      aria-label=${this._localizeOrError(
+        localize,
+        "section.forecast_total"
+      )}
+    >
+      <div class="ebc-surface-grid">
+        <div class="ebc-surface-col">
+          <div class="ebc-caption ebc-caption--strong">
+            ${this._localizeOrError(localize, "forecast.panel_forecast")}
+          </div>
+          <div class="ebc-surface-value-row">
+            ${vm.forecastValueText != null
+              ? html`<span class="ebc-surface-value-num"
+                    >${vm.forecastValueText}</span
+                  >
+                  <span class="ebc-surface-value-unit">${vm.forecastUnit}</span>`
+              : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                    >---</span
+                  >
+                  <span class="ebc-surface-value-unit">${vm.forecastUnit}</span>`}
+          </div>
+          <div class="ebc-forecast-confidence">${vm.forecastConfidenceText}</div>
+        </div>
+        <div class="ebc-comparison-divider" aria-hidden="true"></div>
+        <div class="ebc-surface-col">
+          <div class="ebc-caption ebc-caption--strong">
+            ${this._localizeOrError(localize, "forecast.panel_total")}
+          </div>
+          <div class="ebc-surface-value-row">
+            ${vm.panelTotalText != null
+              ? html`<span class="ebc-surface-value-num"
+                    >${vm.panelTotalText}</span
+                  >
+                  <span class="ebc-surface-value-unit">${vm.forecastUnit}</span>`
+              : html`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                    >---</span
+                  >
+                  <span class="ebc-surface-value-unit">${vm.forecastUnit}</span>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /**
+   * Chart region with the 909 preview controls. Element-only concerns live here
+   * (FR-903-AA): `preview` (picker mode hides the controls), `previewShift < 0`
+   * (the display gate, FR-903-Y) and `_previewLoading` (disabled controls +
+   * dimmed chart overlay) — none of them are part of the view model.
+   */
+  private _renderChartSection(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult {
+    const previewActive = this.previewShift < 0;
+    return html`<div
+      class="ebc-section ebc-section--chart"
+      role="region"
+      aria-label=${this._localizeOrError(localize, "section.chart")}
+    >
+      ${this.preview
+        ? null
+        : html`<div class="ebc-chart-controls">
+            ${previewActive
+              ? html`<span class="ebc-preview-indication" role="status">
+                  ${vm.previewIndicationText}
+                </span>`
+              : null}
+            ${previewActive
+              ? html`<button
+                  class="ebc-chart-control ebc-chart-control--reset"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.reset")}
+                  @click=${() => this._onPreviewStep("reset")}
+                >
+                  <ha-icon icon="mdi:restart"></ha-icon>
+                </button>`
+              : null}
+            <button
+              class="ebc-chart-control"
+              type="button"
+              ?disabled=${this._previewLoading}
+              aria-label=${this._localizeOrError(localize, "preview.step_back")}
+              @click=${() => this._onPreviewStep("back")}
+            >
+              <ha-icon icon="mdi:chevron-left"></ha-icon>
+            </button>
+            <button
+              class="ebc-chart-control"
+              type="button"
+              ?disabled=${this._previewLoading}
+              aria-label=${this._localizeOrError(localize, "preview.step_forward")}
+              @click=${() => this._onPreviewStep("forward")}
+            >
+              <ha-icon icon="mdi:chevron-right"></ha-icon>
+            </button>
+          </div>`}
+      <div class="ebc-chart-wrap">
+        <div
+          class="chart-container ebc-chart ${this._previewLoading
+            ? "ebc-chart--loading"
+            : ""}"
+        ></div>
+        ${previewActive && !this._previewLoading && vm.previewChartNoData
+          ? html`<div class="ebc-chart-nodata-overlay" role="status">
+              <ha-alert alert-type="info">
+                ${this._localizeOrError(localize, "status.no_data")}
+              </ha-alert>
+            </div>`
+          : null}
+        ${this._previewLoading
+          ? html`<div class="ebc-chart-loading-overlay" role="status">
+              <ha-circular-progress active size="small"></ha-circular-progress>
+              <span>${this._localizeOrError(localize, "preview.loading")}</span>
+            </div>`
+          : null}
+      </div>
+    </div>`;
+  }
+
+  /** Narrative comment section (icon + rendered narrative sentence). */
+  private _renderNarrativeSection(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult | null {
+    if (!vm.showNarrativeSection || vm.narrativeBody == null) {
+      return null;
+    }
+    return html`<div
+      class="ebc-section ebc-section--comment"
+      role="region"
+      aria-label=${this._localizeOrError(localize, "section.comment")}
+    >
+      <div class="ebc-comment-icon-wrap ${vm.semTone}">
+        <ha-icon
+          class="ebc-comment-icon ${vm.semTone}"
+          .icon=${vm.semIcon}
+        ></ha-icon>
+      </div>
+      ${vm.narrativeBody}
+    </div>`;
+  }
+
+  /** Data-quality warning strip (one line per issue). */
+  private _renderWarningSection(
+    vm: ReadyCardViewModel,
+    localize: LocalizeFunction
+  ): TemplateResult | null {
+    if (!vm.showWarningStrip) {
+      return null;
+    }
+    return html`<div
+      class="ebc-section ebc-section--warning"
+      role="region"
+      aria-label=${this._localizeOrError(localize, "section.warning")}
+    >
+      <ha-icon
+        class="ebc-warning-icon"
+        .icon=${"mdi:alert-outline"}
+      ></ha-icon>
+      <div class="ebc-warning-lines">
+        ${vm.warningMessages.map(
+          (msg) => html`<div class="ebc-warning-line">${msg}</div>`
+        )}
+      </div>
+    </div>`;
+  }
+
 
   static getConfigElement(): HTMLElement {
     return document.createElement("energy-horizon-card-editor");

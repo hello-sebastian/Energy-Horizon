@@ -14,7 +14,7 @@ import {
   fullReferenceWindowRawTotal,
   mapLtsResponseToCumulativeSeries
 } from "../../src/card/ha-api";
-import { formatSigned } from "../../src/card/cumulative-comparison-chart";
+import { formatSigned } from "../../src/card/labels/signed-number";
 import type {
   ComparisonSeries,
   CumulativeSeries,
