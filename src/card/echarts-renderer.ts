@@ -1,11 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- 911/TD-4 (temporary, decision D1): the ECharts series arrays are still `any[]` here; TD-5 (Wave 3, T013) re-types them with LineSeriesOption/EChartsOption and removes this exception. */
 // Modular ECharts imports (FR-014, FR-015)
 import { init as echartsInit, use as echartsUse } from 'echarts/core';
 import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, MarkLineComponent, MarkPointComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { ECharts } from 'echarts/core';
-import type { EChartsOption } from 'echarts';
+// 911/TD-5 (W3): all ECharts *type* imports come from the single canonical `shared`
+// module so that `LineSeriesOption` matches the series type inside `EChartsOption`
+// (the per-entry re-exports carry nominal `$1` aliases that don't line up).
+import type {
+  EChartsOption,
+  LineSeriesOption,
+  MarkLineOption,
+  MarkPointOption
+} from 'echarts/types/dist/shared';
+
+// 911/TD-5 (W3): the series arrays and their markLine/markPoint payloads are typed
+// with the official ECharts option types (the TD-4 scoped `no-explicit-any` disable
+// is removed as a result — 0× `any` in this file).
+type MarkLineData = NonNullable<MarkLineOption['data']>;
+type MarkPointData = NonNullable<MarkPointOption['data']>;
+type TooltipAxisItem = { seriesName?: unknown; data?: unknown; value?: unknown };
 
 import type { ComparisonAxisLabelHints } from './labels/comparison-label-hints';
 import type {
@@ -807,7 +821,7 @@ export class EChartsRenderer {
       rendererConfig.showReferenceComparison !== false &&
       referenceValues.some((v) => v !== null);
 
-    const series: any[] = [];
+    const series: LineSeriesOption[] = [];
 
     // Transient time-window preview (909 US3, T013): draw ONLY the shifted current
     // (light gray) and, when present, the shifted reference (darker gray). The live
@@ -828,8 +842,6 @@ export class EChartsRenderer {
         symbolSize: 6,
         emphasis: {
           focus: 'series',
-          showSymbol: true,
-          symbolSize: 6,
           itemStyle: { color: theme.previewCurrent },
           lineStyle: { color: theme.previewCurrent }
         },
@@ -851,8 +863,6 @@ export class EChartsRenderer {
           symbolSize: 6,
           emphasis: {
             focus: 'series',
-            showSymbol: true,
-            symbolSize: 6,
             itemStyle: { color: theme.previewReference },
             lineStyle: { color: theme.previewReference }
           },
@@ -923,7 +933,7 @@ export class EChartsRenderer {
             });
             const valueLines: string[] = [];
             for (const p of items) {
-              const item: any = p ?? {};
+              const item: TooltipAxisItem = p ?? {};
               const seriesName = typeof item?.seriesName === 'string' ? item.seriesName : '';
               if (seriesName !== labels.current && seriesName !== labels.reference) {
                 continue;
@@ -1007,8 +1017,7 @@ export class EChartsRenderer {
         smooth: false,
         silent: true,
         tooltip: { show: false },
-        emphasis: { focus: 'none' },
-        showInLegend: false
+        emphasis: { focus: 'none' }
       });
     }
 
@@ -1032,8 +1041,6 @@ export class EChartsRenderer {
         symbolSize: 6,
         emphasis: {
           focus: 'series',
-          showSymbol: true,
-          symbolSize: 6,
           itemStyle: { color: theme.seriesReference },
           lineStyle: { color: theme.seriesReference }
         },
@@ -1055,7 +1062,6 @@ export class EChartsRenderer {
           showSymbol: false,
           smooth: false,
           itemStyle: { color: theme.seriesReference },
-          showInLegend: false,
           silent: true,
           tooltip: { show: false },
           emphasis: { focus: 'none' }
@@ -1082,8 +1088,6 @@ export class EChartsRenderer {
       symbolSize: 6,
       emphasis: {
         focus: 'series',
-        showSymbol: true,
-        symbolSize: 6,
         itemStyle: { color: primaryColor },
         lineStyle: { color: primaryColor }
       },
@@ -1106,7 +1110,6 @@ export class EChartsRenderer {
           showSymbol: false,
           smooth: false,
           itemStyle: { color: primaryColor },
-          showInLegend: false,
           silent: true,
           tooltip: { show: false },
           emphasis: { focus: 'none' }
@@ -1135,7 +1138,7 @@ export class EChartsRenderer {
           ? semanticResolvedLineColor(theme, rendererConfig.chartSemanticOutcome)
           : trendResolvedLineColor(theme, rendererConfig.chartTrend);
 
-      const markLineData: any[] = [
+      const markLineData: MarkLineData = [
         {
           xAxis: todaySlotIndex,
           lineStyle: {
@@ -1165,9 +1168,12 @@ export class EChartsRenderer {
         ]);
       }
 
-      const markPointData: any[] = [];
+      const markPointData: MarkPointData = [];
       if (todayCurrentY !== null) {
         markPointData.push({
+          // `name` is required by ECharts' MarkPointDataItemOption; the dot is silent
+          // (no tooltip/legend identity), so an empty name is the faithful "no name".
+          name: '',
           coord: [todaySlotIndex, todayCurrentY],
           symbol: 'circle',
           symbolSize: 8,
@@ -1179,7 +1185,7 @@ export class EChartsRenderer {
         });
       }
 
-      (series[solidCurrentSeriesIndex] as any).markLine = {
+      series[solidCurrentSeriesIndex].markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
@@ -1187,16 +1193,18 @@ export class EChartsRenderer {
         lineStyle: { type: 'dashed', color: theme.todayFullHeightLine, width: 1 }
       };
 
-      (series[solidCurrentSeriesIndex] as any).markPoint = {
+      series[solidCurrentSeriesIndex].markPoint = {
         silent: true,
         data: markPointData
       };
 
       if (solidReferenceSeriesIndex !== undefined && todayReferenceY !== null) {
-        (series[solidReferenceSeriesIndex] as any).markPoint = {
+        series[solidReferenceSeriesIndex].markPoint = {
           silent: true,
           data: [
             {
+              // `name` is required by ECharts' MarkPointDataItemOption; silent dot → no name.
+              name: '',
               coord: [todaySlotIndex, todayReferenceY],
               symbol: 'circle',
               symbolSize: 7,
@@ -1230,8 +1238,6 @@ export class EChartsRenderer {
           symbolSize: 6,
           emphasis: {
             focus: 'series',
-            showSymbol: true,
-            symbolSize: 6,
             itemStyle: { color: primaryColor },
             lineStyle: { color: primaryColor }
           },
@@ -1240,8 +1246,8 @@ export class EChartsRenderer {
       }
     } else {
       // No today marker - add empty mark point arrays
-      (series[solidCurrentSeriesIndex] as any).markPoint = { silent: true, data: [] };
-      (series[solidCurrentSeriesIndex] as any).markLine = {
+      series[solidCurrentSeriesIndex].markPoint = { silent: true, data: [] };
+      series[solidCurrentSeriesIndex].markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
@@ -1249,7 +1255,7 @@ export class EChartsRenderer {
         lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 }
       };
       if (solidReferenceSeriesIndex !== undefined) {
-        (series[solidReferenceSeriesIndex] as any).markPoint = { silent: true, data: [] };
+        series[solidReferenceSeriesIndex].markPoint = { silent: true, data: [] };
       }
     }
 
@@ -1347,7 +1353,7 @@ export class EChartsRenderer {
 
           const valueLines: string[] = [];
           for (const p of items) {
-            const item: any = p ?? {};
+            const item: TooltipAxisItem = p ?? {};
 
             const seriesName = typeof item?.seriesName === 'string' ? item.seriesName : '';
             if (

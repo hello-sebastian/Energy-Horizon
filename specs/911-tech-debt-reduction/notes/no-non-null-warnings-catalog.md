@@ -1,6 +1,6 @@
 # Non-null assertion warnings — catalog
 
-**Feature**: `911-tech-debt-reduction` | **Produced by**: T006 (TD-4, W1, 2026-11-16) | **Updated by**: T010 (TD-7, W2, 2026-11-17), T011 (TD-11, W2, 2026-11-17) | **Consumed by**: T014 (TD-6, W3)
+**Feature**: `911-tech-debt-reduction` | **Produced by**: T006 (TD-4, W1, 2026-11-16) | **Updated by**: T010 (TD-7, W2, 2026-11-17), T011 (TD-11, W2, 2026-11-17), T013 (TD-5, W3, 2026-11-17 — re-measured `echarts-renderer.ts` row after its typing reflow) | **Consumed by**: T014 (TD-6, W3)
 
 This file is the **removal list for TD-6** (FR-006): every
 `@typescript-eslint/no-non-null-assertion` warning reported by the gate on
@@ -25,7 +25,7 @@ introduces it.
 |---|---|---|
 | `src/card/ha-api.ts` | 6 | 284:5, 285:5, 286:20, 295:9, 295:39, 299:26 (all inside `computeForecast` — TD-6 territory) |
 | `src/card/cumulative-comparison-chart.ts` | 4 | 124:21, 507:19, 508:19, 968:43 |
-| `src/card/echarts-renderer.ts` | 11 | 403:11, 403:44, 405:27, 408:25, 413:38, 530:10, 566:23, 567:24, 717:20, 737:53, 1510:9 |
+| `src/card/echarts-renderer.ts` | 11 | 417:11, 417:44, 419:27, 422:25, 427:38, 544:10, 580:23, 581:24, 731:20, 751:53, 1516:9 |
 | `src/card/picker-preview.ts` | 10 | 71:24, 88:9, 95:14, 113:20, 114:32, 123:20, 125:32, 136:11, 143:35, 269:22 |
 | `src/card/time-windows/resolve-windows.ts` | 8 | 41:16, 43:20, 113:18, 133:13, 148:20, 148:39, 149:16, 149:35 |
 | `src/card/editor/config-merge.ts` | 5 | 56:18, 58:11, 65:24, 70:15, 76:7 |
