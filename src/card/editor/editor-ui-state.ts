@@ -93,3 +93,82 @@ export function reapplyAfterRender(state: EditorUiState): EditorUiState {
     scrollAnchor: state.scrollAnchor
   };
 }
+
+// -------------------------------------------------------------------------
+// Post-render restore decision (FR-908-K/L/M, 911/TD-12)
+// -------------------------------------------------------------------------
+
+/**
+ * The pure restore decision for the next render: which field to focus, which
+ * caret to set, and which scroll position to restore.
+ */
+export interface RestoreTargets {
+  /** Registry `key` of the field to focus, or undefined (no focus leg). */
+  focusTarget?: string;
+  /** Caret offset within that field (`0` is a valid caret). */
+  caret?: number;
+  /** `scrollTop` for the scroll container (`0` is a valid anchor). */
+  scrollTop?: number;
+}
+
+/**
+ * Decides what to restore after the next render. The focus leg applies only
+ * when a focus restore is **pending** (a passive re-render must not steal
+ * focus from wherever the user is); the scroll leg always applies. Pure.
+ */
+export function restoreTargets(
+  state: EditorUiState,
+  pendingFocusRestore: boolean
+): RestoreTargets {
+  return {
+    focusTarget: pendingFocusRestore ? state.lastFocusedField : undefined,
+    caret: pendingFocusRestore ? state.lastCaret : undefined,
+    scrollTop: state.scrollAnchor
+  };
+}
+
+/**
+ * The minimal DOM surface the restore applier needs. Injected so the
+ * decision stays pure and unit-testable without a real DOM (911/TD-12).
+ */
+export interface RestoreDom {
+  /** Finds the field's input element by registry `key`, or null. */
+  findFieldInput(field: string): HTMLInputElement | null;
+  /** Finds the scroll container, or null. */
+  findScrollContainer(): HTMLElement | null;
+  /** True when the given element is the document's active element. */
+  activeElementIs(el: HTMLInputElement): boolean;
+}
+
+/**
+ * Applies a restore decision to the DOM. The focus leg is best-effort
+ * (FR-908-L): a missing element, an already-focused element, or a
+ * `setSelectionRange` failure is silently tolerated. The scroll leg runs
+ * even when the field lookup fails.
+ */
+export function applyRestoreTargets(
+  dom: RestoreDom,
+  targets: RestoreTargets
+): void {
+  if (targets.focusTarget !== undefined) {
+    const el = dom.findFieldInput(targets.focusTarget);
+    if (el !== null) {
+      if (!dom.activeElementIs(el)) {
+        el.focus();
+      }
+      if (targets.caret !== undefined) {
+        try {
+          el.setSelectionRange(targets.caret, targets.caret);
+        } catch {
+          // best-effort (FR-908-L)
+        }
+      }
+    }
+  }
+  if (targets.scrollTop !== undefined) {
+    const container = dom.findScrollContainer();
+    if (container !== null) {
+      container.scrollTop = targets.scrollTop;
+    }
+  }
+}

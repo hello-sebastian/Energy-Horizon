@@ -1,4 +1,5 @@
 import type { CardConfig } from "../types";
+import { normalizeForSave } from "./config-normalize";
 
 /**
  * Full-Coverage Visual Editor (v1.2.0) — safe-mode YAML parsing (FR-908-Y,
@@ -22,6 +23,30 @@ import type { CardConfig } from "../types";
 export type SafeParseResult =
   | { ok: true; config: CardConfig }
   | { ok: false; error: string };
+
+/** True when the HA `window.jsyaml` global is available (FR-904-K). */
+export function yamlSupported(): boolean {
+  return typeof window !== "undefined" && typeof window.jsyaml !== "undefined";
+}
+
+/**
+ * Serializes a config to YAML (save form, via {@link normalizeForSave}).
+ * Returns `""` when `window.jsyaml` is absent or the dump throws — callers
+ * treat `""` as "serialization unavailable" (911/TD-12: moved from the
+ * editor shell, which no longer touches `window.jsyaml` directly).
+ */
+export function dumpYaml(config: CardConfig): string {
+  const jsyaml =
+    typeof window !== "undefined" ? window.jsyaml : undefined;
+  if (!jsyaml) {
+    return "";
+  }
+  try {
+    return jsyaml.dump(normalizeForSave(config));
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Parses YAML text in safe mode. Returns the parsed config on success, or a
