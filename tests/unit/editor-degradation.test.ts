@@ -105,7 +105,7 @@ describe("deprecated & unknown value handling (T022, US6)", () => {
     triggerEmit(el);
     await el.updateComplete;
 
-    const emitted = el.__emitted![el.__emitted!.length - 1];
+    const emitted = el.__emitted![el.__emitted!.length - 1]!;
     expect(emitted.comparison_preset).toBe("month_over_month");
     expect("comparison_mode" in emitted).toBe(false);
   });
@@ -125,7 +125,7 @@ describe("deprecated & unknown value handling (T022, US6)", () => {
     triggerEmit(el);
     await el.updateComplete;
 
-    const emitted = el.__emitted![el.__emitted!.length - 1];
+    const emitted = el.__emitted![el.__emitted!.length - 1]!;
     expect(emitted.force_prefix).toBe("TYPO");
   });
 

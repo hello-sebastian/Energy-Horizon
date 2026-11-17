@@ -412,19 +412,25 @@ export class EChartsRenderer {
       return result;
     }
 
+    // `?? 0` fallbacks are dead paths (the `length === 0` early return above
+    // makes every index access in range) — compiler guards for
+    // `noUncheckedIndexedAccess` (911/TD-6).
     const slotDuration =
       timeline.length > 1
-        ? timeline[timeline.length - 1]! - timeline[timeline.length - 2]!
+        ? (timeline[timeline.length - 1] ?? 0) -
+          (timeline[timeline.length - 2] ?? 0)
         : 86400000;
-    const timelineStart = timeline[0]!;
+    const timelineStart = timeline[0] ?? 0;
 
     for (let i = 0; i < timeline.length; i++) {
-      const slotStart = timeline[i]!;
+      const slotStart = timeline[i] ?? 0;
       const expectedTs = alignStartMs + (slotStart - timelineStart);
 
       let slotEndAbs: number;
       if (i + 1 < timeline.length) {
-        slotEndAbs = alignStartMs + (timeline[i + 1]! - timelineStart);
+        slotEndAbs =
+          alignStartMs +
+          ((timeline[i + 1] ?? slotStart + slotDuration) - timelineStart);
       } else {
         slotEndAbs = expectedTs + slotDuration;
       }
@@ -534,16 +540,15 @@ export class EChartsRenderer {
     const niceSteps = [1, 2, 2.5, 5, 10];
     const normalized = dataMax / step / splitCount;
 
-    let selectedStep: number;
-    for (let i = 0; i < niceSteps.length; i++) {
-      if (normalized <= niceSteps[i]) {
-        selectedStep = niceSteps[i];
+    let selectedStep: number | undefined;
+    for (const candidate of niceSteps) {
+      if (normalized <= candidate) {
+        selectedStep = candidate;
         break;
       }
     }
-    if (!selectedStep!) selectedStep = 10;
-
-    const niceStep = selectedStep * step;
+    // `10` was already the historical fallback for "no step matched" (911/TD-6).
+    const niceStep = (selectedStep ?? 10) * step;
     return Math.ceil(dataMax / niceStep) * niceStep;
   }
 
@@ -577,8 +582,11 @@ export class EChartsRenderer {
       }
 
       const leftIndex = lastNonNullIndex;
-      const leftVal = values[leftIndex]!;
-      const rightVal = values[rightIndex]!;
+      const leftVal = values[leftIndex];
+      const rightVal = values[rightIndex];
+      if (leftVal == null || rightVal == null) {
+        continue; // unreachable: both indices are in range and non-null by construction (911/TD-6)
+      }
       const span = rightIndex - leftIndex;
 
       for (let k = leftIndex; k <= rightIndex; k++) {
@@ -728,7 +736,8 @@ export class EChartsRenderer {
         rendererConfig.xAxisLabelLocale ?? rendererConfig.language ?? "en";
 
       if (modeInner === "forced" && rendererConfig.xAxisFormatPattern) {
-        const ms = fullTimeline[tick]!;
+        const ms = fullTimeline[tick];
+        if (ms === undefined) return ''; // dead path: tick is range-checked above (911/TD-6)
         return formatForcedTickLabel(
           ms,
           zone,
@@ -748,7 +757,9 @@ export class EChartsRenderer {
         comparisonAxisHints != null ||
         rendererConfig.hour12 !== undefined
           ? {
-              ...(hasTailContext ? { tailFromIndex: tailFrom! } : {}),
+              ...(hasTailContext && tailFrom != null
+                ? { tailFromIndex: tailFrom }
+                : {}),
               ...(comparisonAxisHints != null
                 ? { comparisonHints: comparisonAxisHints }
                 : {}),
@@ -1021,10 +1032,11 @@ export class EChartsRenderer {
       });
     }
 
-    let solidReferenceSeriesIndex: number | undefined;
+    // Captured object instead of an index-before-push lookup: `markLine`/
+    // `markPoint` are attached below and the flag forbids index access (911/TD-6).
+    let solidReferenceSeries: LineSeriesOption | undefined;
     if (showReferenceLine) {
-      solidReferenceSeriesIndex = series.length;
-      series.push({
+      solidReferenceSeries = {
         name: labels.reference,
         type: 'line',
         color: theme.seriesReference,
@@ -1045,7 +1057,8 @@ export class EChartsRenderer {
           lineStyle: { color: theme.seriesReference }
         },
         itemStyle: { color: theme.seriesReference }
-      });
+      };
+      series.push(solidReferenceSeries);
 
       const dashedReferenceValues = this.buildDashedNullGapValues(referenceValues);
       if (rendererConfig.connectNulls && dashedReferenceValues.some((v) => v !== null)) {
@@ -1069,9 +1082,8 @@ export class EChartsRenderer {
       }
     }
 
-    const solidCurrentSeriesIndex = series.length;
     const primaryColor = theme.seriesCurrent;
-    series.push({
+    const solidCurrentSeries: LineSeriesOption = {
       name: labels.current,
       type: 'line',
       color: primaryColor,
@@ -1092,7 +1104,8 @@ export class EChartsRenderer {
         lineStyle: { color: primaryColor }
       },
       itemStyle: { color: primaryColor }
-    });
+    };
+    series.push(solidCurrentSeries);
 
     if (rendererConfig.connectNulls) {
       const dashedCurrentValues = this.buildDashedNullGapValues(currentValues);
@@ -1185,7 +1198,7 @@ export class EChartsRenderer {
         });
       }
 
-      series[solidCurrentSeriesIndex].markLine = {
+      solidCurrentSeries.markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
@@ -1193,13 +1206,13 @@ export class EChartsRenderer {
         lineStyle: { type: 'dashed', color: theme.todayFullHeightLine, width: 1 }
       };
 
-      series[solidCurrentSeriesIndex].markPoint = {
+      solidCurrentSeries.markPoint = {
         silent: true,
         data: markPointData
       };
 
-      if (solidReferenceSeriesIndex !== undefined && todayReferenceY !== null) {
-        series[solidReferenceSeriesIndex].markPoint = {
+      if (solidReferenceSeries !== undefined && todayReferenceY !== null) {
+        solidReferenceSeries.markPoint = {
           silent: true,
           data: [
             {
@@ -1246,16 +1259,16 @@ export class EChartsRenderer {
       }
     } else {
       // No today marker - add empty mark point arrays
-      series[solidCurrentSeriesIndex].markPoint = { silent: true, data: [] };
-      series[solidCurrentSeriesIndex].markLine = {
+      solidCurrentSeries.markPoint = { silent: true, data: [] };
+      solidCurrentSeries.markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
         data: [],
         lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 }
       };
-      if (solidReferenceSeriesIndex !== undefined) {
-        series[solidReferenceSeriesIndex].markPoint = { silent: true, data: [] };
+      if (solidReferenceSeries !== undefined) {
+        solidReferenceSeries.markPoint = { silent: true, data: [] };
       }
     }
 
@@ -1502,18 +1515,17 @@ export class EChartsRenderer {
 
     const w0Start = rendererConfig.currentWindowStartMs;
     const w0End = rendererConfig.currentWindowEndMs;
-    const alignsAll = rendererConfig.windowAlignStartsMs;
+    const firstAlignStart = rendererConfig.windowAlignStartsMs?.[0];
     if (
       w0Start != null &&
       w0End != null &&
-      alignsAll != null &&
-      alignsAll.length > 0
+      firstAlignStart !== undefined
     ) {
       carryForwardCurrentCumulativeAtNow(
         currentValues,
         fullTimeline,
         Date.now(),
-        alignsAll[0]!,
+        firstAlignStart,
         w0Start,
         w0End,
         comparisonSeries.aggregation ?? "day",

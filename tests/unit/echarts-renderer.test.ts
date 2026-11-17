@@ -319,9 +319,9 @@ describe('EChartsRenderer', () => {
 
       const renderer = new EChartsRenderer(container);
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 1.234 },
-        { timestamp: fullTimeline[1] + 10, value: 9.5 },
-        { timestamp: fullTimeline[2] + 10, value: 2 }
+        { timestamp: fullTimeline[0]! + 10, value: 1.234 },
+        { timestamp: fullTimeline[1]! + 10, value: 9.5 },
+        { timestamp: fullTimeline[2]! + 10, value: 2 }
       ]);
 
       renderer.update(
@@ -396,7 +396,7 @@ describe('EChartsRenderer', () => {
 
       const renderer = new EChartsRenderer(container);
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 1 }
+        { timestamp: fullTimeline[0]! + 10, value: 1 }
       ]);
       renderer.update(
         comparisonSeries,
@@ -443,8 +443,8 @@ describe('EChartsRenderer', () => {
 
       const renderer = new EChartsRenderer(container);
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 10.12 },
-        { timestamp: fullTimeline[1] + 10, value: 1.04 }
+        { timestamp: fullTimeline[0]! + 10, value: 10.12 },
+        { timestamp: fullTimeline[1]! + 10, value: 1.04 }
       ]);
 
       renderer.update(
@@ -467,13 +467,13 @@ describe('EChartsRenderer', () => {
         day: "numeric",
         month: "long",
         timeZone: "UTC"
-      }).format(new Date(fullTimeline[0]));
+      }).format(new Date(fullTimeline[0]!));
 
       const expectedHeader2 = new Intl.DateTimeFormat(language, {
         day: "numeric",
         month: "long",
         timeZone: "UTC"
-      }).format(new Date(fullTimeline[2]));
+      }).format(new Date(fullTimeline[2]!));
 
       const html0 = formatter([
         {
@@ -1115,9 +1115,9 @@ describe('EChartsRenderer', () => {
 
       // Solid current must keep a null at slot index 1 (missing points in that slot).
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 2 },
+        { timestamp: fullTimeline[0]! + 10, value: 2 },
         // slot index 1 intentionally missing => null
-        { timestamp: fullTimeline[2] + 10, value: 6 }
+        { timestamp: fullTimeline[2]! + 10, value: 6 }
       ]);
 
       const renderer = new EChartsRenderer(container);
@@ -1168,9 +1168,9 @@ describe('EChartsRenderer', () => {
 
       // Solid current must keep a null at slot index 1 (missing points in that slot).
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 2 },
+        { timestamp: fullTimeline[0]! + 10, value: 2 },
         // slot index 1 intentionally missing => null
-        { timestamp: fullTimeline[2] + 10, value: 6 }
+        { timestamp: fullTimeline[2]! + 10, value: 6 }
       ]);
 
       const renderer = new EChartsRenderer(container);
@@ -1254,9 +1254,9 @@ describe('EChartsRenderer', () => {
       const renderer = new EChartsRenderer(container);
       renderer.update(
         buildSeries([
-          { timestamp: fullTimeline[0] + 10, value: 2 },
-          { timestamp: fullTimeline[1] + 10, value: 4 },
-          { timestamp: fullTimeline[2] + 10, value: 6 }
+          { timestamp: fullTimeline[0]! + 10, value: 2 },
+          { timestamp: fullTimeline[1]! + 10, value: 4 },
+          { timestamp: fullTimeline[2]! + 10, value: 6 }
         ]),
         fullTimeline,
         buildBaseRendererConfig({
@@ -1293,9 +1293,9 @@ describe('EChartsRenderer', () => {
       const renderer = new EChartsRenderer(container);
       renderer.update(
         buildSeries([
-          { timestamp: fullTimeline[0] + 10, value: 2 },
-          { timestamp: fullTimeline[1] + 10, value: 4 },
-          { timestamp: fullTimeline[2] + 10, value: 6 }
+          { timestamp: fullTimeline[0]! + 10, value: 2 },
+          { timestamp: fullTimeline[1]! + 10, value: 4 },
+          { timestamp: fullTimeline[2]! + 10, value: 6 }
         ]),
         fullTimeline,
         buildBaseRendererConfig({
@@ -1369,9 +1369,9 @@ describe('EChartsRenderer', () => {
       const renderer = new EChartsRenderer(container);
       renderer.update(
         buildSeries([
-          { timestamp: fullTimeline[0] + 10, value: 2 },
-          { timestamp: fullTimeline[1] + 10, value: 4 },
-          { timestamp: fullTimeline[2] + 10, value: 6 }
+          { timestamp: fullTimeline[0]! + 10, value: 2 },
+          { timestamp: fullTimeline[1]! + 10, value: 4 },
+          { timestamp: fullTimeline[2]! + 10, value: 6 }
         ]),
         fullTimeline,
         buildBaseRendererConfig({ showLegend: false }),
@@ -1476,9 +1476,9 @@ describe('EChartsRenderer', () => {
       const renderer = new EChartsRenderer(container);
       renderer.update(
         buildSeries([
-          { timestamp: fullTimeline[0] + 10, value: 2 },
-          { timestamp: fullTimeline[1] + 10, value: 4 },
-          { timestamp: fullTimeline[2] + 10, value: 6 }
+          { timestamp: fullTimeline[0]! + 10, value: 2 },
+          { timestamp: fullTimeline[1]! + 10, value: 4 },
+          { timestamp: fullTimeline[2]! + 10, value: 6 }
         ]),
         fullTimeline,
         buildBaseRendererConfig({
@@ -1574,8 +1574,8 @@ describe('EChartsRenderer', () => {
       const renderer = new EChartsRenderer(container);
       renderer.update(
         buildSeries([
-          { timestamp: fullTimeline[0] + 10, value: 1 },
-          { timestamp: fullTimeline[1] + 10, value: 2 }
+          { timestamp: fullTimeline[0]! + 10, value: 1 },
+          { timestamp: fullTimeline[1]! + 10, value: 2 }
         ]),
         fullTimeline,
         buildBaseRendererConfig({ showLegend: true }),
@@ -1639,8 +1639,8 @@ describe('EChartsRenderer', () => {
       const day0 = Date.UTC(2026, 0, 1);
       const fullTimeline = [day0, day0 + 86400000];
       const seriesData = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 1 },
-        { timestamp: fullTimeline[1] + 10, value: 2 }
+        { timestamp: fullTimeline[0]! + 10, value: 1 },
+        { timestamp: fullTimeline[1]! + 10, value: 2 }
       ]);
       const labels = { current: "Current", reference: "Reference" };
 
@@ -1758,8 +1758,8 @@ describe('EChartsRenderer', () => {
       const fullTimeline = [day0, day0 + 86400000];
       const rendererConfig = buildBaseRendererConfig({});
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 1 },
-        { timestamp: fullTimeline[1] + 10, value: 2 }
+        { timestamp: fullTimeline[0]! + 10, value: 1 },
+        { timestamp: fullTimeline[1]! + 10, value: 2 }
       ]);
       const labels = { current: "Current", reference: "Reference" };
 
@@ -1846,8 +1846,8 @@ describe('EChartsRenderer', () => {
       // Use a small value range so that the old String(value) behavior would
       // be prone to scientific notation, while the new Intl formatting is stable.
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 5e-8 },
-        { timestamp: fullTimeline[1] + 10, value: 1e-7 } // dataMax -> yMax
+        { timestamp: fullTimeline[0]! + 10, value: 5e-8 },
+        { timestamp: fullTimeline[1]! + 10, value: 1e-7 } // dataMax -> yMax
       ]);
 
       const renderer = new EChartsRenderer(container);
@@ -1890,8 +1890,8 @@ describe('EChartsRenderer', () => {
       });
 
       const comparisonSeries = buildSeries([
-        { timestamp: fullTimeline[0] + 10, value: 5e-8 },
-        { timestamp: fullTimeline[1] + 10, value: 1e-7 } // dataMax -> yMax
+        { timestamp: fullTimeline[0]! + 10, value: 5e-8 },
+        { timestamp: fullTimeline[1]! + 10, value: 1e-7 } // dataMax -> yMax
       ]);
 
       const renderer = new EChartsRenderer(container);
@@ -1992,8 +1992,8 @@ describe('EChartsRenderer', () => {
       const buildSeries = (max: number): ComparisonSeries => ({
         current: {
           points: [
-            { timestamp: fullTimeline[0] + 10, value: max / 2 },
-            { timestamp: fullTimeline[1] + 10, value: max }
+            { timestamp: fullTimeline[0]! + 10, value: max / 2 },
+            { timestamp: fullTimeline[1]! + 10, value: max }
           ],
           unit: "Wh",
           periodLabel: "",

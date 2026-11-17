@@ -209,7 +209,7 @@ describe("buildReadyState", () => {
       expect(state.chartTime?.tailLabelFromIndex).toBe(
         firstTailAxisLabelIndex(
           CHART_TIME.timeline,
-          CHART_TIME.alignStartsMs[0],
+          CHART_TIME.alignStartsMs[0]!,
           CURRENT_WINDOW.end
         )
       );
@@ -466,7 +466,7 @@ describe("chartTimeContext", () => {
       forecastPeriodBuckets: 10,
       tailLabelFromIndex: firstTailAxisLabelIndex(
         CHART_TIME.timeline,
-        CHART_TIME.alignStartsMs[0],
+        CHART_TIME.alignStartsMs[0]!,
         CURRENT_WINDOW.end
       )
     });

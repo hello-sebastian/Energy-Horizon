@@ -25,7 +25,8 @@ export function parseDurationToken(input: string): Duration | undefined {
   if (!match) return undefined;
 
   const num = Number(match[1]);
-  const unit = match[2]!;
+  const unit = match[2];
+  if (!unit) return undefined; // dead path: unit group is mandatory in the regex (911/TD-6)
   if (!Number.isFinite(num)) return undefined;
 
   const luxonKey = UNIT_TO_LUXON[unit];

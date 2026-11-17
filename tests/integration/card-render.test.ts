@@ -901,7 +901,7 @@ describe("energy-horizon-card integration", () => {
     el.hass = energyCardHass();
     const state = disabledForecastReadyState();
     // Single window: only the current window is resolved, no reference window.
-    state.resolvedWindows = [state.resolvedWindows[0]];
+    state.resolvedWindows = [state.resolvedWindows[0]!];
     state.comparisonSeries = {
       ...state.comparisonSeries,
       reference: undefined

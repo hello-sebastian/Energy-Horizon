@@ -379,7 +379,7 @@ describe("editor sections (T018, US4)", () => {
     )!;
     const headers = [...liveTimeBody.querySelectorAll<HTMLElement>(".subsection-header")];
     expect(headers).toHaveLength(1);
-    expect(headers[0].textContent).toBe("Custom settings");
+    expect(headers[0]!.textContent).toBe("Custom settings");
     // comparison_preset stays visible; the custom fields follow the header.
     expect(fieldKeys(el, "time")).toEqual([
       "comparison_preset",

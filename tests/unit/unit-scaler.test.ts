@@ -435,7 +435,7 @@ describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)',
     points,
     unit,
     periodLabel,
-    total: points.length > 0 ? points[points.length - 1].value : 0,
+    total: points[points.length - 1]?.value ?? 0,
   });
 
   it('applies one shared factor to current, reference and context, and recomputes totals', () => {
@@ -452,17 +452,17 @@ describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)',
     expect(scaled.current.points.map((p) => p.value)).toEqual([1.5, 3]);
     expect(scaled.current.total).toBe(3);
     // rawValue rides the same factor so computeForecast stays consistent.
-    expect(scaled.current.points[0].rawValue).toBe(1.5);
+    expect(scaled.current.points[0]!.rawValue).toBe(1.5);
     // Identity fields survive the scale.
     expect(scaled.current.periodLabel).toBe('p');
-    expect(scaled.current.points[1].timestamp).toBe(pt(1, 0).timestamp);
+    expect(scaled.current.points[1]!.timestamp).toBe(pt(1, 0).timestamp);
 
     expect(scaled.reference?.unit).toBe('kWh');
     expect(scaled.reference?.points.map((p) => p.value)).toEqual([2, 4]);
     expect(scaled.reference?.total).toBe(4);
 
-    expect(scaled.context?.[0].points.map((p) => p.value)).toEqual([1, 2]);
-    expect(scaled.context?.[0].total).toBe(2);
+    expect(scaled.context?.[0]!.points.map((p) => p.value)).toEqual([1, 2]);
+    expect(scaled.context?.[0]!.total).toBe(2);
 
     expect(scaled.aggregation).toBe('day');
     expect(scaled.time_zone).toBe('UTC');
@@ -474,9 +474,9 @@ describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)',
       'Wh',
       { force_prefix: 'none' },
     );
-    expect(scaled.current.points[0].value).toBe(1500);
+    expect(scaled.current.points[0]!.value).toBe(1500);
     expect(scaled.current.unit).toBe('Wh');
-    expect(scaled.current.points[0].rawValue).toBe(1500);
+    expect(scaled.current.points[0]!.rawValue).toBe(1500);
   });
 
   it('non-scalable units pass through unchanged', () => {
@@ -486,7 +486,7 @@ describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)',
     );
     expect(scaled.current.points.map((p) => p.value)).toEqual([10, 20]);
     expect(scaled.current.unit).toBe('h');
-    expect(scaled.current.points[0].rawValue).toBe(10);
+    expect(scaled.current.points[0]!.rawValue).toBe(10);
   });
 
   it('scales A -> mA with the shared factor on rawValue', () => {
@@ -495,8 +495,8 @@ describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)',
       'A',
     );
     expect(scaled.current.unit).toBe('mA');
-    expect(scaled.current.points[0].value).toBe(500);
-    expect(scaled.current.points[0].rawValue).toBe(500);
+    expect(scaled.current.points[0]!.value).toBe(500);
+    expect(scaled.current.points[0]!.rawValue).toBe(500);
   });
 
   it('patches the unit onto a reference without points and drops the context key when absent', () => {

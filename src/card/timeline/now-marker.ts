@@ -33,7 +33,9 @@ export function carryForwardCurrentCumulativeAtNow(
     return;
   }
   const t0 = timeline[0];
-  const alignedSlotStart = alignStartMs + (timeline[idx] - t0);
+  const slotStart = timeline[idx];
+  if (t0 === undefined || slotStart === undefined) return; // dead path: length- and range-checked above (911/TD-6)
+  const alignedSlotStart = alignStartMs + (slotStart - t0);
   if (alignedSlotStart < windowStartMs || alignedSlotStart > windowEndMs) {
     return;
   }

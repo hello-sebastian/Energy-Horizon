@@ -412,8 +412,7 @@ export function applyUnitScalingToSeries(
   const currentPoints = series.current.points.map((p, i) =>
     scalePoint(p, i, scaledCurrentVals)
   );
-  const currentTotal =
-    currentPoints.length > 0 ? currentPoints[currentPoints.length - 1].value : 0;
+  const currentTotal = currentPoints[currentPoints.length - 1]?.value ?? 0;
 
   const scaledCurrent = {
     ...series.current,
@@ -425,7 +424,7 @@ export function applyUnitScalingToSeries(
   let scaledReference: ComparisonSeries["reference"];
   if (series.reference && refPoints && scaledRefVals && scaledRefVals.length === refPoints.length) {
     const refPts = refPoints.map((p, i) => scalePoint(p, i, scaledRefVals));
-    const refTotal = refPts.length > 0 ? refPts[refPts.length - 1].value : 0;
+    const refTotal = refPts[refPts.length - 1]?.value ?? 0;
     scaledReference = {
       ...series.reference,
       points: refPts,
@@ -445,7 +444,7 @@ export function applyUnitScalingToSeries(
       const slice = scaleResult.values.slice(offset, offset + len);
       offset += len;
       const pts = ctx.points.map((p, i) => scalePoint(p, i, slice));
-      const total = pts.length > 0 ? pts[pts.length - 1].value : 0;
+      const total = pts[pts.length - 1]?.value ?? 0;
       return {
         ...ctx,
         points: pts,

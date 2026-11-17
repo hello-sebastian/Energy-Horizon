@@ -383,7 +383,7 @@ describe("picker preview safety (910 US4, T020)", () => {
           | { axisLabel: { color: string } }
           | Array<{ axisLabel: { color: string } }>;
       };
-      const yAxis = Array.isArray(opt.yAxis) ? opt.yAxis[0] : opt.yAxis;
+      const yAxis = Array.isArray(opt.yAxis) ? opt.yAxis[0]! : opt.yAxis;
       // The dark theme variables flow into the ECharts option.
       expect(opt.tooltip.backgroundColor).toBe("rgb(30, 30, 30)");
       expect(opt.tooltip.textStyle.color).toBe("rgb(255, 255, 255)");

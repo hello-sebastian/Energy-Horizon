@@ -132,7 +132,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     const dummies = FIELD_REGISTRY.filter((f) => f.dummy);
     expect(dummies.map((f) => f.key)).toEqual(["show_chart"]);
     // The dummy lives in the panels section and is a boolean control.
-    const dummy = dummies[0];
+    const dummy = dummies[0]!;
     expect(dummy.section).toBe("panels");
     expect(dummy.control.kind).toBe("boolean");
   });

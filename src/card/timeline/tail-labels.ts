@@ -11,9 +11,14 @@ export function firstTailAxisLabelIndex(
     return 0;
   }
   const t0 = timeline[0];
+  if (t0 === undefined) {
+    return 0;
+  }
   const endMs = windowEnd.getTime();
   for (let j = 0; j < timeline.length; j++) {
-    const alignedSlotStart = alignStartMs + (timeline[j] - t0);
+    const slot = timeline[j];
+    if (slot === undefined) continue; // dead path: j < timeline.length (911/TD-6)
+    const alignedSlotStart = alignStartMs + (slot - t0);
     if (alignedSlotStart <= endMs) {
       continue;
     }

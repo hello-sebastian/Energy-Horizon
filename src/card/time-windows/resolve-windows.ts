@@ -1,4 +1,8 @@
-import { DateTime, type DateTime as LuxonDateTime } from "luxon";
+import {
+  DateTime,
+  type DateTime as LuxonDateTime,
+  type Duration as LuxonDuration
+} from "luxon";
 import type { ResolvedWindow, WindowAggregation } from "../types";
 import type { MergedTimeWindowConfig } from "../types";
 import { durationToMillis, parseDurationToken } from "./duration-parse";
@@ -38,9 +42,13 @@ function resolveLegacy(
   timeZone: string,
   aggregation: WindowAggregation
 ): ResolvedWindow[] {
-  const mode = merged.comparisonMode!;
+  const mode = merged.comparisonMode;
   const offsetYears = merged.periodOffsetYears ?? -1;
-  const duration = parseDurationToken(merged.duration ?? "1y")!;
+  const duration = parseDurationToken(merged.duration ?? "1y");
+  if (!duration) {
+    // "1y" always parses; this only fires on a malformed merged duration (911/TD-6)
+    throw new Error("Invalid time-window config: unparseable preset duration");
+  }
 
   if (mode === "year_over_year") {
     const year = now.year;
@@ -110,7 +118,10 @@ function computeStartOfWindow0(
   now: DateTime,
   _timeZone: string
 ): DateTime {
-  const anchor = merged.anchor!;
+  const anchor = merged.anchor;
+  if (!anchor) {
+    throw new Error("Unknown anchor: undefined");
+  }
   const anchorPoint = resolveAnchorPoint(anchor, now);
   const offsetDur = parseTimeWindowOffset(merged.offset);
 
@@ -129,11 +140,14 @@ function computeStartOfWindow0(
   return anchorPoint.plus(offsetDur);
 }
 
-function minusStepRepeated(start: DateTime, step: ReturnType<typeof parseDurationToken>, i: number): DateTime {
-  const s = step!;
+function minusStepRepeated(
+  start: DateTime,
+  step: LuxonDuration,
+  i: number
+): DateTime {
   let cur = start;
   for (let k = 0; k < i; k++) {
-    cur = cur.minus(s);
+    cur = cur.minus(step);
   }
   return cur;
 }
@@ -145,8 +159,13 @@ function resolveGeneric(
   count: number,
   aggregation: WindowAggregation
 ): ResolvedWindow[] {
-  const duration = parseDurationToken(merged.duration!)!;
-  const step = parseDurationToken(merged.step!)!;
+  const duration = parseDurationToken(merged.duration ?? "");
+  const step = parseDurationToken(merged.step ?? "");
+  if (!duration || !step) {
+    throw new Error(
+      "Invalid time-window config: 'duration' and 'step' must be valid duration tokens (e.g. 30d, 6M)"
+    );
+  }
   const start0 = computeStartOfWindow0(merged, now, _timeZone);
 
   const windows: ResolvedWindow[] = [];

@@ -62,7 +62,8 @@ export function pickAutoAggregation(durationMs: number): WindowAggregation {
   let bestRank = COARSE_TO_FINE.length;
 
   for (let rank = 0; rank < COARSE_TO_FINE.length; rank++) {
-    const agg = COARSE_TO_FINE[rank]!;
+    const agg = COARSE_TO_FINE[rank];
+    if (agg === undefined) continue; // dead path: rank < COARSE_TO_FINE.length (911/TD-6)
     const n = slotCount(agg, durationMs);
     const score = Math.abs(n - 50);
     if (

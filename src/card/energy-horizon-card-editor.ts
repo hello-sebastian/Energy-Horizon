@@ -145,7 +145,9 @@ export class EnergyHorizonCardEditor extends LitElement {
       return "";
     }
     try {
-      return window.jsyaml!.dump(normalizeForSave(config));
+      const jsyaml = window.jsyaml;
+      if (!jsyaml) return ""; // defensive: _hasYamlSupport() already checked (911/TD-6)
+      return jsyaml.dump(normalizeForSave(config));
     } catch {
       return "";
     }
@@ -926,7 +928,8 @@ export class EnergyHorizonCardEditor extends LitElement {
         if (f.column !== undefined) {
           const idx = colIndex.get(f.column) ?? 0;
           colIndex.set(f.column, idx + 1);
-          const count = colCounts.get(f.column)!;
+          const count = colCounts.get(f.column);
+          if (count === undefined) continue; // defensive: set above for this column (911/TD-6)
           gridRow.set(f.key, bottomRow - (count - 1 - idx));
         }
       }
@@ -1320,6 +1323,7 @@ export class EnergyHorizonCardEditor extends LitElement {
     if (!this._config) {
       return html``;
     }
+    const config = this._config; // captured: `this._config` may change during render (911/TD-6)
 
     const localize = createLocalize(this._labelLanguage());
     const visualLabel = localize("editor.visual_mode");
@@ -1352,7 +1356,7 @@ export class EnergyHorizonCardEditor extends LitElement {
               <div class="sections" @scroll=${this._onScroll}>
                 ${SECTION_ORDER.map(
                   (section) =>
-                    this._renderSection(section, this._config!, localize)
+                    this._renderSection(section, config, localize)
                 )}
               </div>
             `

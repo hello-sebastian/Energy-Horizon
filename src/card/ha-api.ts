@@ -78,7 +78,10 @@ export function mapLtsResponseToCumulativeSeries(
   if (!points || points.length === 0) {
     const keys = Object.keys(results);
     if (keys.length === 1) {
-      points = results[keys[0]];
+      const key = keys[0];
+      if (key !== undefined) {
+        points = results[key];
+      }
     }
   }
   if (!points || points.length === 0) return undefined;
@@ -182,7 +185,7 @@ function toCumulativeSeries(
     return { ...p, value: running };
   });
 
-  const total = points.length > 0 ? points[points.length - 1].value : 0;
+  const total = points[points.length - 1]?.value ?? 0;
 
   return {
     points,
@@ -280,10 +283,18 @@ export function computeForecast(
     return disabled(unit, "no_reference");
   }
 
+  // Guards 1–3 above already prove non-emptiness — these are compiler guards
+  // for `noUncheckedIndexedAccess` (911/TD-6), not runtime paths.
+  const firstCurrentPoint = currentPoints[0];
+  const lastCompletedPoint = currentPoints[completedBuckets - 1];
+  const firstReferencePoint = referencePoints[0];
+  if (!firstCurrentPoint || !lastCompletedPoint || !firstReferencePoint) {
+    return disabled(unit, "invalid_period");
+  }
+
   const currentRangeMs =
-    currentPoints[completedBuckets - 1]!.timestamp -
-    currentPoints[0]!.timestamp;
-  const cutoffTs = currentPoints[0]!.timestamp + currentRangeMs;
+    lastCompletedPoint.timestamp - firstCurrentPoint.timestamp;
+  const cutoffTs = firstCurrentPoint.timestamp + currentRangeMs;
 
   // Align reference timestamps to the current period axis (same alignment as chart);
   // prefer the window-start offset (alignOffsetMs) when provided — correct even when
@@ -292,11 +303,13 @@ export function computeForecast(
   const periodAlignMs =
     typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
       ? alignOffsetMs
-      : currentPoints[0]!.timestamp - referencePoints[0]!.timestamp;
+      : firstCurrentPoint.timestamp - firstReferencePoint.timestamp;
 
   let splitIdx = -1;
   for (let i = referencePoints.length - 1; i >= 0; i--) {
-    const refAlignedTs = referencePoints[i]!.timestamp + periodAlignMs;
+    const refPoint = referencePoints[i];
+    if (!refPoint) continue;
+    const refAlignedTs = refPoint.timestamp + periodAlignMs;
     if (refAlignedTs <= cutoffTs) {
       splitIdx = i;
       break;

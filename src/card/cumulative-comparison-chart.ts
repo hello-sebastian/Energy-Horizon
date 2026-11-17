@@ -121,7 +121,7 @@ export function textSummaryNarrativeWithEmphasis(
     if (m.index > lastIndex) {
       segments.push(template.slice(lastIndex, m.index));
     }
-    const varName = m[1]!;
+    const varName = m[1] ?? m[0];
     const display = vars[varName] ?? m[0];
     segments.push(html`<span class="ebc-comment-emphasis">${display}</span>`);
     lastIndex = m.index + m[0].length;
@@ -501,11 +501,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           const previewPeriodLabel = cs
             ? formatPeriodLabel(cs, locResolved.language, locResolved.timeZone)
             : "";
+          // 911/T023: explicit guard instead of non-null assertions — destructuring
+          // lets the compiler and the length check agree (>= 2 ⟺ both defined).
+          const [previewW0, previewW1] = previewWindows;
           const axisHints =
-            previewWindows.length >= 2
+            previewW0 && previewW1
               ? resolveComparisonAxisLabelHints(
-                  previewWindows[0]!,
-                  previewWindows[1]!,
+                  previewW0,
+                  previewW1,
                   locResolved.timeZone
                 )
               : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
@@ -706,9 +709,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
     const seriesList: (CumulativeSeries | undefined)[] = [];
     for (let i = 0; i < responses.length; i++) {
+      const response = responses[i];
+      if (response === undefined) continue; // dead path: i < responses.length (911/TD-6)
       seriesList.push(
         mapLtsResponseToCumulativeSeries(
-          responses[i],
+          response,
           this._config.entity,
           labelForIndex(i)
         )
@@ -772,18 +777,24 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         resolved.timeZone
       );
       const previewChartTime = chartTimeContext(previewWindowList, previewTimeline);
-      const previewCurrent = mapLtsResponseToCumulativeSeries(
-        previewResponses[0],
-        this._config.entity,
-        localize("period.current")
-      );
+      // One response per window query; an absent response maps to `undefined`
+      // exactly as before — `extractLtsResults` is total over nullish input (911/TD-6).
+      const firstPreviewResponse = previewResponses[0];
+      const previewCurrent = firstPreviewResponse
+        ? mapLtsResponseToCumulativeSeries(
+            firstPreviewResponse,
+            this._config.entity,
+            localize("period.current")
+          )
+        : undefined;
       if (!previewCurrent) {
         return { shift, windows: previewWindowList, chartTime: previewChartTime };
       }
+      const secondPreviewResponse = previewResponses[1];
       const previewReference =
-        previewWindowCount > 1
+        previewWindowCount > 1 && secondPreviewResponse
           ? mapLtsResponseToCumulativeSeries(
-              previewResponses[1],
+              secondPreviewResponse,
               this._config.entity,
               localize("period.reference")
             )
@@ -963,9 +974,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const displayUnit = series.current.unit;
     const precision = this._config.precision ?? 2;
 
+    const [windowsFirst, windowsSecond] = windows ?? [];
     const axisHints =
-      !singleWindow && windows?.[0] && windows[1]
-        ? resolveComparisonAxisLabelHints(windows[0]!, windows[1], resolved.timeZone)
+      !singleWindow && windowsFirst && windowsSecond
+        ? resolveComparisonAxisLabelHints(
+            windowsFirst,
+            windowsSecond,
+            resolved.timeZone
+          )
         : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
 
     return {

@@ -35,8 +35,9 @@ function legacyTokenToIso(trimmed: string): string | null {
   if (!m) return null;
 
   const lead = m[1] ?? "";
-  const numStr = m[2]!;
-  const unitRaw = m[3]!;
+  const numStr = m[2];
+  const unitRaw = m[3];
+  if (!numStr || !unitRaw) return null; // dead path: both groups are mandatory in LEGACY_TOKEN (911/TD-6)
   const mapping = LEGACY_UNIT_TO_ISO[unitRaw];
   if (!mapping) return null;
 

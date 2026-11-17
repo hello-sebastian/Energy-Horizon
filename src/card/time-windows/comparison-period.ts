@@ -16,6 +16,11 @@ export function comparisonPeriodFromResolvedWindows(
 ): ComparisonPeriod {
   const w0 = windows[0];
   const w1 = windows[1];
+  if (!w0) {
+    throw new Error(
+      "comparisonPeriodFromResolvedWindows: windows must be non-empty (window 0 = current)"
+    );
+  }
   return {
     current_start: w0.start,
     current_end: w0.end,

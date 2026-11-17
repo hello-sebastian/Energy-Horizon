@@ -102,7 +102,8 @@ export function validateXAxisFormat(input: string): void {
 
   let i = 0;
   while (i < s.length) {
-    const c = s[i]!;
+    const c = s[i];
+    if (c === undefined) break; // dead path: i < s.length (911/TD-6)
 
     if (c === "'") {
       i++;

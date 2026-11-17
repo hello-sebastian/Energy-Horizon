@@ -106,7 +106,7 @@ describe("forecast line / panel independence (T020, US5)", () => {
     toggle(el, "show_forecast", false);
     await el.updateComplete;
 
-    const emitted = el.__emitted![el.__emitted!.length - 1];
+    const emitted = el.__emitted![el.__emitted!.length - 1]!;
     expect(emitted.show_forecast).toBe(false);
     // The editor emits the config as-is; the card (domain 903) hides the
     // forecast line but keeps the Forecast | Total panel when

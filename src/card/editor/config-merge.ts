@@ -51,29 +51,32 @@ function applyChange(base: ConfigRecord, path: string, rawValue: unknown): Confi
   const parts = path.split(".");
   const out: ConfigRecord = { ...base };
 
-  if (parts.length === 1) {
+  const [head, ...rest] = parts;
+  if (head === undefined) return out; // dead path: split never yields [] (911/TD-6)
+
+  if (rest.length === 0) {
     if (value === undefined) {
-      delete out[parts[0]!];
+      delete out[head];
     } else {
-      out[parts[0]!] = value;
+      out[head] = value;
     }
     return out;
   }
 
   // Nested path (e.g. `time_window.count`): merge the object key-by-key.
-  const [head, ...rest] = parts;
-  const existing = out[head!];
+  const existing = out[head];
   const nested: ConfigRecord =
     existing !== null && typeof existing === "object" && !Array.isArray(existing)
       ? { ...(existing as ConfigRecord) }
       : {};
-  const key = rest[rest.length - 1]!;
+  const key = rest[rest.length - 1];
+  if (key === undefined) return out; // dead path: rest is non-empty here (911/TD-6)
   if (value === undefined) {
     delete nested[key];
   } else {
     nested[key] = value;
   }
-  out[head!] = nested;
+  out[head] = nested;
   return out;
 }
 

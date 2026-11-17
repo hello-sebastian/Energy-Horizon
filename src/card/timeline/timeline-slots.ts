@@ -126,8 +126,11 @@ export function buildFullTimelineForWindows(
   if (windows.length === 0) {
     return { timeline: [], alignStartsMs: [] };
   }
-  const primaryAgg = windows[0].aggregation;
   const w0 = windows[0];
+  if (!w0) {
+    return { timeline: [], alignStartsMs: [] }; // dead path: length checked above (911/TD-6)
+  }
+  const primaryAgg = w0.aggregation;
   let maxSlots = 0;
   for (const w of windows) {
     const count = buildTimelineSlots(
@@ -173,10 +176,13 @@ export function buildChartTimeline(
     return { timeline: [], alignStartsMs: [], forecastPeriodBuckets: 0 };
   }
 
-  const forecastPeriodBuckets = countBucketsForWindow(windows[0], timeZone);
+  const w0 = windows[0];
+  if (!w0) {
+    return { timeline: [], alignStartsMs: [], forecastPeriodBuckets: 0 }; // dead path: length checked above (911/TD-6)
+  }
+  const forecastPeriodBuckets = countBucketsForWindow(w0, timeZone);
 
   if (windows.length === 1) {
-    const w0 = windows[0];
     const timeline = buildTimelineSlots(
       w0.start,
       w0.end,

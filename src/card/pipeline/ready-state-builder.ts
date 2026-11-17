@@ -122,12 +122,14 @@ export function chartTimeContext(
   windows: ResolvedWindow[],
   chartTime: ChartTimeline
 ): ChartTimeContext {
+  const firstAlignStart = chartTime.alignStartsMs[0];
+  const firstWindow = windows[0];
   const tailLabelFromIndex =
-    windows.length >= 2
+    windows.length >= 2 && firstAlignStart != null && firstWindow
       ? firstTailAxisLabelIndex(
           chartTime.timeline,
-          chartTime.alignStartsMs[0],
-          windows[0].end
+          firstAlignStart,
+          firstWindow.end
         )
       : chartTime.timeline.length;
   return {
@@ -216,9 +218,11 @@ export function buildReadyState(
   // current series starts late (leading zero/missing buckets); the chart
   // already aligns by these window starts, so the numeric pipeline matches the
   // visual one.
+  const alignStart0 = chartTime.alignStartsMs[0];
+  const alignStart1 = chartTime.alignStartsMs[1];
   const alignOffsetMs =
-    chartTime.alignStartsMs.length > 1
-      ? chartTime.alignStartsMs[0] - chartTime.alignStartsMs[1]
+    alignStart0 != null && alignStart1 != null
+      ? alignStart0 - alignStart1
       : undefined;
 
   const scaledSeries = applyUnitScalingToSeries(series, opts.rawUnit, {

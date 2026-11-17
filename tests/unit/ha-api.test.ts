@@ -612,12 +612,12 @@ describe("mapLtsResponseToCumulativeSeries (migrated from legacy single-period m
     expect(cum).toBeDefined();
     expect(cum!.unit).toBe("kWh");
     expect(cum!.points).toHaveLength(2);
-    expect(cum!.points[0].value).toBe(2);
-    expect(cum!.points[1].value).toBe(7);
+    expect(cum!.points[0]!.value).toBe(2);
+    expect(cum!.points[1]!.value).toBe(7);
     const tJan1 = new Date("2024-01-01T00:00:00Z").getTime();
     const tJan2 = new Date("2024-01-02T00:00:00Z").getTime();
-    expect(cum!.points[0].timestamp).toBe(tJan1);
-    expect(cum!.points[1].timestamp).toBe(tJan2);
+    expect(cum!.points[0]!.timestamp).toBe(tJan1);
+    expect(cum!.points[1]!.timestamp).toBe(tJan2);
   });
 
   it("places sum-delta timestamps on period start so first day matches daily axis slot 0", () => {
