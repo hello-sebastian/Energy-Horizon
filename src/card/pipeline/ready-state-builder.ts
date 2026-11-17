@@ -20,6 +20,7 @@ import type {
   ComparisonSeries,
   CumulativeSeries,
   MergedTimeWindowConfig,
+  ReadyState,
   ResolvedWindow,
   WindowAggregation
 } from "../types";
@@ -66,10 +67,11 @@ export interface ChartTimeline {
  *   scaling unit can fall back to the series' own unit while the patch must
  *   stay the entity unit.
  * - `forcePrefix` — the card-config `force_prefix`; `undefined` = automatic.
- * - `preview` — when present, the returned state carries the four `preview*`
- *   keys. The production path always passes it (with `undefined` members at
+ * - `preview` — when present, the returned state carries the `preview`
+ *   snapshot (a `PreviewSnapshot` wrapping the four 909 preview fields).
+ *   The production path always passes it (with `undefined` members at
  *   shift 0); the demo and picker paths omit it, so their states have no
- *   preview keys at all (key-presence semantics pinned by the R1 baseline).
+ *   preview key at all (key-presence semantics pinned by the R1 baseline).
  */
 export interface ReadyStateOptions {
   rawUnit: string;
@@ -246,7 +248,7 @@ export function buildReadyState(
     merged.aggregation ?? "day"
   );
 
-  const state: CardState = {
+  const state: ReadyState = {
     status: "ready",
     comparisonSeries: scaledSeries,
     summary,
@@ -258,10 +260,12 @@ export function buildReadyState(
     chartTime: ctx
   };
   if (opts.preview) {
-    state.previewShift = opts.preview.shift;
-    state.previewSeries = opts.preview.series;
-    state.previewWindows = opts.preview.windows;
-    state.previewChartTime = opts.preview.chartTime;
+    state.preview = {
+      shift: opts.preview.shift,
+      series: opts.preview.series,
+      windows: opts.preview.windows,
+      chartTime: opts.preview.chartTime
+    };
   }
   return state;
 }

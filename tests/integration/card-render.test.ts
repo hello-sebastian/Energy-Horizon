@@ -6,6 +6,7 @@ import type {
   CardState,
   ComparisonPeriod,
   ComparisonSeries,
+  ReadyState,
   ResolvedWindow
 } from "../../src/card/types";
 
@@ -66,7 +67,7 @@ function energyCardHass(): HomeAssistant {
   } as HomeAssistant;
 }
 
-function baseYoYReadyState(): CardState {
+function baseYoYReadyState(): ReadyState {
   const period: ComparisonPeriod = {
     current_start: new Date(Date.UTC(2024, 0, 1)),
     current_end: new Date(Date.UTC(2024, 11, 31)),
@@ -118,6 +119,12 @@ function baseYoYReadyState(): CardState {
       currentEndIsNow: true,
       referenceFullPeriod: true
     },
+    chartTime: {
+      timeline: [Date.UTC(2024, 0, 1)],
+      alignStartsMs: [Date.UTC(2024, 0, 1), Date.UTC(2023, 0, 1)],
+      forecastPeriodBuckets: 0,
+      tailLabelFromIndex: 1
+    },
     summary: {
       current_cumulative: 100,
       reference_cumulative: 90,
@@ -141,14 +148,14 @@ function baseYoYReadyState(): CardState {
  * month-start scenario. The reference series carries `rawValue` increments so
  * the panel's Total column can compute the full reference-window total.
  */
-function disabledForecastReadyState(): CardState {
+function disabledForecastReadyState(): ReadyState {
   const base = baseYoYReadyState();
   return {
     ...base,
     comparisonSeries: {
-      ...base.comparisonSeries!,
+      ...base.comparisonSeries,
       reference: {
-        ...base.comparisonSeries!.reference!,
+        ...base.comparisonSeries.reference!,
         points: [
           { timestamp: Date.UTC(2023, 0, 1), value: 30, rawValue: 30 },
           { timestamp: Date.UTC(2023, 0, 2), value: 60, rawValue: 30 },
@@ -262,38 +269,43 @@ describe("energy-horizon-card integration", () => {
       }
     } as HomeAssistant;
 
-    // Ready state (the default pipeline has data) but the shifted preview period
-    // has no data: previewSeries is undefined while previewWindows/previewChartTime
-    // are set.
+    // Ready state (the default pipeline has data) but the shifted preview
+    // snapshot has no data: `preview.series` is undefined while
+    // `preview.windows`/`preview.chartTime` are set.
     (el as any)._state = {
       ...baseYoYReadyState(),
-      previewShift: -3,
-      previewWindows: [
-        {
-          index: 0,
-          id: "p0",
-          role: "current",
-          start: new Date(Date.UTC(2021, 0, 1)),
-          end: new Date(Date.UTC(2021, 11, 31)),
-          aggregation: "day"
-        },
-        {
-          index: 1,
-          id: "p1",
-          role: "reference",
-          start: new Date(Date.UTC(2020, 0, 1)),
-          end: new Date(Date.UTC(2020, 11, 31)),
-          aggregation: "day"
+      preview: {
+        shift: -3,
+        series: undefined,
+        windows: [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2021, 0, 1)),
+            end: new Date(Date.UTC(2021, 11, 31)),
+            aggregation: "day"
+          },
+          {
+            index: 1,
+            id: "p1",
+            role: "reference",
+            start: new Date(Date.UTC(2020, 0, 1)),
+            end: new Date(Date.UTC(2020, 11, 31)),
+            aggregation: "day"
+          }
+        ],
+        chartTime: {
+          timeline: [Date.UTC(2021, 0, 1)],
+          alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+          forecastPeriodBuckets: 0,
+          tailLabelFromIndex: 1
         }
-      ],
-      previewChartTime: {
-        timeline: [Date.UTC(2021, 0, 1)],
-        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
-        forecastPeriodBuckets: 0,
-        tailLabelFromIndex: 1
-      },
-      previewSeries: undefined
+      }
     };
+    // Sync the element field with the injected snapshot (the preview gates
+    // read `previewShift` from the element — 911/TD-11).
+    (el as any).previewShift = -3;
     await el.updateComplete;
 
     // The standard no-data indication is overlaid centered on the chart.
@@ -328,30 +340,36 @@ describe("energy-horizon-card integration", () => {
     // Start in the preview no-data state.
     (el as any)._state = {
       ...baseYoYReadyState(),
-      previewShift: -3,
-      previewWindows: [
-        {
-          index: 0,
-          id: "p0",
-          role: "current",
-          start: new Date(Date.UTC(2021, 0, 1)),
-          end: new Date(Date.UTC(2021, 11, 31)),
-          aggregation: "day"
+      preview: {
+        shift: -3,
+        series: undefined,
+        windows: [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2021, 0, 1)),
+            end: new Date(Date.UTC(2021, 11, 31)),
+            aggregation: "day"
+          }
+        ],
+        chartTime: {
+          timeline: [Date.UTC(2021, 0, 1)],
+          alignStartsMs: [Date.UTC(2021, 0, 1)],
+          forecastPeriodBuckets: 0,
+          tailLabelFromIndex: 1
         }
-      ],
-      previewChartTime: {
-        timeline: [Date.UTC(2021, 0, 1)],
-        alignStartsMs: [Date.UTC(2021, 0, 1)],
-        forecastPeriodBuckets: 0,
-        tailLabelFromIndex: 1
-      },
-      previewSeries: undefined
+      }
     };
+    // Sync the element field with the injected snapshot (911/TD-11).
+    (el as any).previewShift = -3;
     await el.updateComplete;
     expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
 
-    // Reset: previewShift 0, no preview fields → the default chart is shown.
+    // Reset: back to the default ready state, and the element field (the live
+    // preview gate — 911/TD-11) reset to 0 → the default chart is shown.
     (el as any)._state = baseYoYReadyState();
+    (el as any).previewShift = 0;
     await el.updateComplete;
     expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).toBeNull();
     expect(el.shadowRoot!.querySelector("ha-alert")).toBeNull();
@@ -491,6 +509,12 @@ describe("energy-horizon-card integration", () => {
         currentEndIsNow: true,
         referenceFullPeriod: true
       },
+      chartTime: {
+        timeline: [Date.UTC(2024, 0, 1)],
+        alignStartsMs: [Date.UTC(2024, 0, 1), Date.UTC(2023, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
       summary: {
         current_cumulative: 100,
         reference_cumulative: 90,
@@ -594,6 +618,12 @@ describe("energy-horizon-card integration", () => {
         duration: "1y",
         currentEndIsNow: true,
         referenceFullPeriod: true
+      },
+      chartTime: {
+        timeline: [Date.UTC(2024, 0, 1)],
+        alignStartsMs: [Date.UTC(2024, 0, 1), Date.UTC(2023, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
       },
       summary: {
         current_cumulative: 100,
@@ -871,9 +901,9 @@ describe("energy-horizon-card integration", () => {
     el.hass = energyCardHass();
     const state = disabledForecastReadyState();
     // Single window: only the current window is resolved, no reference window.
-    state.resolvedWindows = [state.resolvedWindows![0]!];
+    state.resolvedWindows = [state.resolvedWindows[0]];
     state.comparisonSeries = {
-      ...state.comparisonSeries!,
+      ...state.comparisonSeries,
       reference: undefined
     };
     el._state = state;
@@ -917,11 +947,12 @@ describe("energy-horizon-card integration", () => {
 
 describe("909 US2/US3: transient time-window preview", () => {
   /**
-   * Ready state carrying the transient preview fields (909): `previewShift < 0`,
-   * the shifted series pair, the shifted window set, and the shifted chart
-   * timeline. `singleWindow` drops the reference window/series (US3 scenario 5).
+   * Ready state carrying the transient preview snapshot (909, 911/TD-11):
+   * `preview.shift < 0`, the shifted series pair, the shifted window set, and
+   * the shifted chart timeline. `singleWindow` drops the reference
+   * window/series (US3 scenario 5).
    */
-  function previewReadyState(opts: { singleWindow?: boolean } = {}): CardState {
+  function previewReadyState(opts: { singleWindow?: boolean } = {}): ReadyState {
     const base = baseYoYReadyState();
     const single = opts.singleWindow ?? false;
     const previewWindows: ResolvedWindow[] = single
@@ -984,16 +1015,18 @@ describe("909 US2/US3: transient time-window preview", () => {
     ];
     return {
       ...base,
-      previewShift: -1,
-      previewSeries,
-      previewWindows,
-      previewChartTime: {
-        timeline,
-        alignStartsMs: single
-          ? [Date.UTC(2023, 0, 1)]
-          : [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
-        forecastPeriodBuckets: 0,
-        tailLabelFromIndex: timeline.length
+      preview: {
+        shift: -1,
+        series: previewSeries,
+        windows: previewWindows,
+        chartTime: {
+          timeline,
+          alignStartsMs: single
+            ? [Date.UTC(2023, 0, 1)]
+            : [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+          forecastPeriodBuckets: 0,
+          tailLabelFromIndex: timeline.length
+        }
       }
     };
   }
@@ -1015,6 +1048,9 @@ describe("909 US2/US3: transient time-window preview", () => {
   it("T010: preview indication is visible with the shifted period when previewShift < 0", async () => {
     const el = makeCard();
     el._state = previewReadyState();
+    // Sync the element field with the injected snapshot (the preview gates
+    // read `previewShift` from the element — 911/TD-11).
+    (el as any).previewShift = -1;
     await el.updateComplete;
     const shadowText = el.shadowRoot!.textContent || "";
     // The indication reuses the card's period formatting: the shifted current
@@ -1035,6 +1071,7 @@ describe("909 US2/US3: transient time-window preview", () => {
   it("T012: preview draws exactly two gray series (light + darker), not the current color", async () => {
     const el = makeCard();
     el._state = previewReadyState();
+    (el as any).previewShift = -1;
     await el.updateComplete;
     expect(setOptionMock).toHaveBeenCalled();
     const [option] = setOptionMock.mock.calls[0] as any[];
@@ -1053,6 +1090,7 @@ describe("909 US2/US3: transient time-window preview", () => {
   it("T012: single-window preview draws exactly one light-gray series", async () => {
     const el = makeCard();
     el._state = previewReadyState({ singleWindow: true });
+    (el as any).previewShift = -1;
     await el.updateComplete;
     expect(setOptionMock).toHaveBeenCalled();
     const [option] = setOptionMock.mock.calls[0] as any[];
@@ -1083,6 +1121,7 @@ describe("909 US2/US3: transient time-window preview", () => {
     const el2 = makeCard();
     // Shift only the first card into preview.
     el1._state = previewReadyState();
+    (el1 as any).previewShift = -1;
     el2._state = baseYoYReadyState();
     await el1.updateComplete;
     await el2.updateComplete;
@@ -1118,6 +1157,7 @@ describe("909 US2/US3: transient time-window preview", () => {
     expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
     // In preview: reset control present.
     el._state = previewReadyState();
+    (el as any).previewShift = -1;
     await el.updateComplete;
     const resetBtn = el.shadowRoot!.querySelector(".ebc-chart-control--reset");
     expect(resetBtn).not.toBeNull();
@@ -1137,14 +1177,16 @@ describe("909 US2/US3: transient time-window preview", () => {
     expect(resetBtn).not.toBeNull();
     // Activate the reset control. This triggers an in-place preview load
     // (fire-and-forget from `updated()`); the mock connection resolves in a
-    // microtask. Poll until the state settles (previewShift >= 0 or status
+    // microtask. Poll until the state settles (preview.shift >= 0 or status
     // changes away from "ready").
     (resetBtn as HTMLButtonElement).click();
     for (let i = 0; i < 100; i++) {
       await new Promise((r) => setTimeout(r, 5));
       await el.updateComplete;
-      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
-      if (st && (st.status !== "ready" || (st.previewShift ?? 0) >= 0)) break;
+      const st = (el as any)._state as
+        | { status?: string; preview?: { shift?: number } }
+        | undefined;
+      if (st && (st.status !== "ready" || (st.preview?.shift ?? 0) >= 0)) break;
     }
     // The card returns to the configured default: no indication, no reset control.
     expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
@@ -1184,36 +1226,38 @@ describe("909 US2/US3: transient time-window preview", () => {
     } as HomeAssistant;
 
     // Ready state (the default pipeline has data) but the shifted preview
-    // period has no data: previewSeries is undefined while
-    // previewWindows/previewChartTime are set.
+    // period has no data: the snapshot's `series` is undefined while
+    // `windows`/`chartTime` are set.
     el._state = {
       ...baseYoYReadyState(),
-      previewShift: -3,
-      previewWindows: [
-        {
-          index: 0,
-          id: "p0",
-          role: "current",
-          start: new Date(Date.UTC(2021, 0, 1)),
-          end: new Date(Date.UTC(2021, 11, 31)),
-          aggregation: "day"
-        },
-        {
-          index: 1,
-          id: "p1",
-          role: "reference",
-          start: new Date(Date.UTC(2020, 0, 1)),
-          end: new Date(Date.UTC(2020, 11, 31)),
-          aggregation: "day"
+      preview: {
+        shift: -3,
+        series: undefined,
+        windows: [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2021, 0, 1)),
+            end: new Date(Date.UTC(2021, 11, 31)),
+            aggregation: "day"
+          },
+          {
+            index: 1,
+            id: "p1",
+            role: "reference",
+            start: new Date(Date.UTC(2020, 0, 1)),
+            end: new Date(Date.UTC(2020, 11, 31)),
+            aggregation: "day"
+          }
+        ],
+        chartTime: {
+          timeline: [Date.UTC(2021, 0, 1)],
+          alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+          forecastPeriodBuckets: 0,
+          tailLabelFromIndex: 1
         }
-      ],
-      previewChartTime: {
-        timeline: [Date.UTC(2021, 0, 1)],
-        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
-        forecastPeriodBuckets: 0,
-        tailLabelFromIndex: 1
-      },
-      previewSeries: undefined
+      }
     };
     // Keep the private runtime field in sync with the injected state (in the
     // real flow `_loadData` writes `_state.previewShift` from `this.previewShift`).
@@ -1234,12 +1278,14 @@ describe("909 US2/US3: transient time-window preview", () => {
     for (let i = 0; i < 100; i++) {
       await new Promise((r) => setTimeout(r, 5));
       await el.updateComplete;
-      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
-      if (st && st.status === "ready" && (st.previewShift ?? 0) === -4) break;
+      const st = (el as any)._state as
+        | { status?: string; preview?: { shift?: number } }
+        | undefined;
+      if (st && st.status === "ready" && (st.preview?.shift ?? 0) === -4) break;
     }
-    const st = (el as any)._state as { status?: string; previewShift?: number };
+    const st = (el as any)._state as { status?: string; preview?: { shift?: number } };
     expect(st.status).toBe("ready");
-    expect(st.previewShift).toBe(-4);
+    expect(st.preview?.shift).toBe(-4);
     expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
     expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
     expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
@@ -1253,47 +1299,50 @@ describe("909 US2/US3: transient time-window preview", () => {
     // controls + indication remain available.
     el._state = {
       ...baseYoYReadyState(),
-      previewShift: -1,
-      previewWindows: [
-        {
-          index: 0,
-          id: "p0",
-          role: "current",
-          start: new Date(Date.UTC(2023, 0, 1)),
-          end: new Date(Date.UTC(2023, 11, 31)),
-          aggregation: "day"
-        },
-        {
-          index: 1,
-          id: "p1",
-          role: "reference",
-          start: new Date(Date.UTC(2022, 0, 1)),
-          end: new Date(Date.UTC(2022, 11, 31)),
-          aggregation: "day"
-        }
-      ],
-      previewChartTime: {
-        timeline: [
-          Date.UTC(2023, 0, 1),
-          Date.UTC(2023, 0, 2),
-          Date.UTC(2023, 0, 3)
+      preview: {
+        shift: -1,
+        windows: [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2023, 0, 1)),
+            end: new Date(Date.UTC(2023, 11, 31)),
+            aggregation: "day"
+          },
+          {
+            index: 1,
+            id: "p1",
+            role: "reference",
+            start: new Date(Date.UTC(2022, 0, 1)),
+            end: new Date(Date.UTC(2022, 11, 31)),
+            aggregation: "day"
+          }
         ],
-        alignStartsMs: [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
-        forecastPeriodBuckets: 0,
-        tailLabelFromIndex: 3
-      },
-      previewSeries: {
-        current: {
-          points: [{ timestamp: Date.UTC(2023, 0, 1), value: 5 }],
-          unit: "kWh",
-          periodLabel: "2023",
-          total: 5
+        chartTime: {
+          timeline: [
+            Date.UTC(2023, 0, 1),
+            Date.UTC(2023, 0, 2),
+            Date.UTC(2023, 0, 3)
+          ],
+          alignStartsMs: [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+          forecastPeriodBuckets: 0,
+          tailLabelFromIndex: 3
         },
-        reference: undefined,
-        aggregation: "day",
-        time_zone: "UTC"
+        series: {
+          current: {
+            points: [{ timestamp: Date.UTC(2023, 0, 1), value: 5 }],
+            unit: "kWh",
+            periodLabel: "2023",
+            total: 5
+          },
+          reference: undefined,
+          aggregation: "day",
+          time_zone: "UTC"
+        }
       }
     };
+    (el as any).previewShift = -1;
     await el.updateComplete;
 
     // Partial data: no no-data overlay, the partial series is drawn (the

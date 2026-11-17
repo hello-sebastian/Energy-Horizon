@@ -28,6 +28,7 @@ import type {
   ComparisonSeries,
   CumulativeSeries,
   MergedTimeWindowConfig,
+  ReadyState,
   ResolvedWindow,
   TimeSeriesPoint
 } from "../../src/card/types";
@@ -123,6 +124,14 @@ function build(
   );
 }
 
+/** Narrows a pipeline result to its ready member (911/TD-11). */
+function readyOf(state: CardState): ReadyState {
+  if (state.status !== "ready") {
+    throw new Error(`expected a ready state, got "${state.status}"`);
+  }
+  return state;
+}
+
 describe("buildReadyState", () => {
   describe("no-data", () => {
     it("returns the bare no-data state for a null series", () => {
@@ -133,7 +142,7 @@ describe("buildReadyState", () => {
   describe("ready (multi-window)", () => {
     it("returns a ready state with the full key set", () => {
       const merged: MergedTimeWindowConfig = {};
-      const state = build({ merged });
+      const state = readyOf(build({ merged }));
       expect(state.status).toBe("ready");
       expect(state).toHaveProperty("comparisonSeries");
       expect(state).toHaveProperty("summary");
@@ -146,7 +155,7 @@ describe("buildReadyState", () => {
     });
 
     it("computes the summary at the aligned current end", () => {
-      const state = build();
+      const state = readyOf(build());
       expect(state.summary).toEqual({
         current_cumulative: 100,
         reference_cumulative: 200,
@@ -157,7 +166,7 @@ describe("buildReadyState", () => {
     });
 
     it("forecasts the period with the reference trend (A + C * trend)", () => {
-      const state = build();
+      const state = readyOf(build());
       expect(state.forecast).toMatchObject({
         enabled: true,
         forecast_total: 100,
@@ -170,7 +179,7 @@ describe("buildReadyState", () => {
     });
 
     it("derives the text summary from the difference", () => {
-      const state = build();
+      const state = readyOf(build());
       expect(state.textSummary).toEqual({
         trend: "lower",
         diffValue: 100,
@@ -179,7 +188,7 @@ describe("buildReadyState", () => {
     });
 
     it("passes the comparison period from the windows", () => {
-      const state = build();
+      const state = readyOf(build());
       expect(state.period).toEqual({
         current_start: new Date(CUR_START),
         current_end: new Date(CUR_START + 10 * DAY),
@@ -191,7 +200,7 @@ describe("buildReadyState", () => {
     });
 
     it("applies the tail-label rule from the window start", () => {
-      const state = build();
+      const state = readyOf(build());
       expect(state.chartTime).toMatchObject({
         timeline: CHART_TIME.timeline,
         alignStartsMs: CHART_TIME.alignStartsMs,
@@ -214,7 +223,7 @@ describe("buildReadyState", () => {
         aggregation: "day",
         time_zone: "UTC"
       };
-      const state = build({ series });
+      const state = readyOf(build({ series }));
       // Aligned to the current end (CUR_START + 9d): reference point i=9,
       // cumulative 200 — the two trailing buckets (220, 240) stay excluded.
       // Without the window-start offset the raw 2025 timestamps would fall
@@ -254,7 +263,7 @@ describe("buildReadyState", () => {
     });
 
     it("leaves summary reference fields empty and disables the forecast", () => {
-      const state = build(single());
+      const state = readyOf(build(single()));
       expect(state.summary).toEqual({ current_cumulative: 100, unit: "kWh" });
       expect(state.textSummary).toEqual({ trend: "unknown", unit: "kWh" });
       expect(state.forecast).toMatchObject({
@@ -269,7 +278,7 @@ describe("buildReadyState", () => {
     });
 
     it("sets tailLabelFromIndex to the timeline length for a single window", () => {
-      const state = build(single());
+      const state = readyOf(build(single()));
       expect(state.chartTime?.tailLabelFromIndex).toBe(CHART_TIME.timeline.length);
     });
   });
@@ -282,7 +291,7 @@ describe("buildReadyState", () => {
         aggregation: "day",
         time_zone: "UTC"
       };
-      const state = build({ series });
+      const state = readyOf(build({ series }));
       expect(state.forecast).toMatchObject({
         enabled: false,
         disabledReason: "insufficient_buckets",
@@ -291,7 +300,7 @@ describe("buildReadyState", () => {
     });
 
     it("disables with invalid_period (zero forecast buckets)", () => {
-      const state = build({ chartTime: { ...CHART_TIME, forecastPeriodBuckets: 0 } });
+      const state = readyOf(build({ chartTime: { ...CHART_TIME, forecastPeriodBuckets: 0 } }));
       expect(state.forecast).toMatchObject({
         enabled: false,
         disabledReason: "invalid_period",
@@ -308,7 +317,7 @@ describe("buildReadyState", () => {
         aggregation: "day",
         time_zone: "UTC"
       };
-      const state = build({ series, opts: { rawUnit: "Wh" } });
+      const state = readyOf(build({ series, opts: { rawUnit: "Wh" } }));
       expect(state.comparisonSeries?.current.unit).toBe("kWh");
       expect(state.comparisonSeries?.current.points.map((p) => p.value)).toEqual([
         1.5,
@@ -338,11 +347,11 @@ describe("buildReadyState", () => {
         aggregation: "day",
         time_zone: "UTC"
       });
-      const forced = build({ series: single(), opts: { rawUnit: "kWh", forcePrefix: "k" } });
+      const forced = readyOf(build({ series: single(), opts: { rawUnit: "kWh", forcePrefix: "k" } }));
       expect(forced.comparisonSeries?.current.unit).toBe("kWh");
       expect(forced.comparisonSeries?.current.points[0]?.value).toBe(5000);
 
-      const auto = build({ series: single() });
+      const auto = readyOf(build({ series: single() }));
       expect(auto.comparisonSeries?.current.unit).toBe("MWh");
       expect(auto.comparisonSeries?.current.points[0]?.value).toBe(5);
     });
@@ -354,33 +363,31 @@ describe("buildReadyState", () => {
         time_zone: "UTC"
       };
       // Production path shape: no entity unit -> patchUnit "" -> no patch.
-      const unpatched = build({ series, opts: { rawUnit: "" } });
+      const unpatched = readyOf(build({ series, opts: { rawUnit: "" } }));
       expect(unpatched.summary?.unit).toBe("");
 
       // Picker path shape: scaling fell back to the series unit, but the
       // patch must stay the entity unit.
-      const patched = build({ series, opts: { rawUnit: "", patchUnit: "kWh" } });
+      const patched = readyOf(build({ series, opts: { rawUnit: "", patchUnit: "kWh" } }));
       expect(patched.summary?.unit).toBe("kWh");
       expect(patched.forecast?.unit).toBe("kWh");
     });
   });
 
-  describe("preview keys", () => {
-    it("omits the preview keys when opts.preview is absent", () => {
+  describe("preview snapshot", () => {
+    it("omits the preview key when opts.preview is absent", () => {
       const state = build();
-      expect("previewShift" in state).toBe(false);
-      expect("previewSeries" in state).toBe(false);
-      expect("previewWindows" in state).toBe(false);
-      expect("previewChartTime" in state).toBe(false);
+      expect("preview" in state).toBe(false);
     });
 
-    it("carries all four preview keys (undefined members) at shift 0", () => {
-      const state = build({ opts: { rawUnit: "kWh", preview: { shift: 0 } } });
-      expect(state.previewShift).toBe(0);
-      expect("previewSeries" in state).toBe(true);
-      expect(state.previewSeries).toBeUndefined();
-      expect(state.previewWindows).toBeUndefined();
-      expect(state.previewChartTime).toBeUndefined();
+    it("carries the preview key (undefined members) at shift 0", () => {
+      const state = readyOf(build({ opts: { rawUnit: "kWh", preview: { shift: 0 } } }));
+      expect("preview" in state).toBe(true);
+      expect(state.preview?.shift).toBe(0);
+      expect(state.preview && "series" in state.preview).toBe(true);
+      expect(state.preview?.series).toBeUndefined();
+      expect(state.preview?.windows).toBeUndefined();
+      expect(state.preview?.chartTime).toBeUndefined();
     });
 
     it("passes the preview snapshot through unchanged", () => {
@@ -396,7 +403,7 @@ describe("buildReadyState", () => {
         forecastPeriodBuckets: 10,
         tailLabelFromIndex: 0
       };
-      const state = build({
+      const state = readyOf(build({
         opts: {
           rawUnit: "kWh",
           preview: {
@@ -406,11 +413,11 @@ describe("buildReadyState", () => {
             chartTime: snapshotChartTime
           }
         }
-      });
-      expect(state.previewShift).toBe(-1);
-      expect(state.previewSeries).toBe(snapshotSeries);
-      expect(state.previewWindows).toBe(snapshotWindows);
-      expect(state.previewChartTime).toBe(snapshotChartTime);
+      }));
+      expect(state.preview?.shift).toBe(-1);
+      expect(state.preview?.series).toBe(snapshotSeries);
+      expect(state.preview?.windows).toBe(snapshotWindows);
+      expect(state.preview?.chartTime).toBe(snapshotChartTime);
     });
   });
 });

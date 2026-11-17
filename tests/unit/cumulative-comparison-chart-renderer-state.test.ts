@@ -161,6 +161,14 @@ describe("EnergyHorizonCard renderer config vs _state", () => {
         reference_total: 90,
         confidence: "medium",
         unit: "kWh"
+      },
+      textSummary: { trend: "higher", unit: "kWh" },
+      mergedTimeWindow: { duration: "1y" },
+      chartTime: {
+        timeline: [],
+        alignStartsMs: [],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 0
       }
     };
 
@@ -211,6 +219,14 @@ describe("EnergyHorizonCard renderer config vs _state", () => {
         reference_total: 90,
         confidence: "medium",
         unit: "kWh"
+      },
+      textSummary: { trend: "higher", unit: "kWh" },
+      mergedTimeWindow: { duration: "1y" },
+      chartTime: {
+        timeline: [],
+        alignStartsMs: [],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 0
       }
     };
 
@@ -235,6 +251,7 @@ describe("EnergyHorizonCard renderer config vs _state", () => {
       status: "ready",
       period: buildMinimalPeriod(),
       comparisonSeries: buildMinimalComparisonSeries(),
+      resolvedWindows: [],
       summary: {
         current_cumulative: 100,
         reference_cumulative: 90,
@@ -248,6 +265,14 @@ describe("EnergyHorizonCard renderer config vs _state", () => {
         reference_total: 90,
         confidence: "medium",
         unit: "kWh"
+      },
+      textSummary: { trend: "similar", unit: "kWh" },
+      mergedTimeWindow: { duration: "1y" },
+      chartTime: {
+        timeline: [],
+        alignStartsMs: [],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 0
       }
     };
 
@@ -259,21 +284,16 @@ describe("EnergyHorizonCard renderer config vs _state", () => {
     expect(structuredClone(card._state)).toEqual(before);
   });
 
-  it("_buildRendererConfig does not mutate _state in the early-return branch (missing period)", () => {
+  it("_buildRendererConfig does not mutate _state in the early-return branch (non-ready state)", () => {
     const card = new EnergyHorizonCard();
     card.hass = createBaseHass("en");
     card.setConfig(baseConfig);
 
-    const ready: CardState = {
-      status: "ready",
-      forecast: {
-        enabled: false,
-        confidence: "low",
-        unit: "kWh"
-      }
-    };
+    // A ready state without a period is no longer writable (911/TD-11): the
+    // early-return branch is reached from any non-ready state.
+    const loading: CardState = { status: "loading" };
 
-    card._state = ready;
+    card._state = loading;
     const before = structuredClone(card._state);
 
     (card as unknown as { _buildRendererConfig: () => unknown })._buildRendererConfig();

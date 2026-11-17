@@ -122,19 +122,30 @@ const iso = (d: Date | undefined | null) => d?.toISOString() ?? null;
 /**
  * Project a CardState onto the pinned, JSON-serializable shape captured in
  * the baseline (summary / forecast / units / timeline / key presence).
+ * The ready member is projected in full; the other members contribute only
+ * their status + error fields and key presence (toEqual ignores the
+ * absent/undefined fields).
  */
 function pin(state: CardState): Record<string, unknown> {
+  if (state.status !== "ready") {
+    return {
+      status: state.status,
+      keys: Object.keys(state).sort(),
+      errorMessage: state.status === "error" ? state.errorMessage : undefined,
+      errorParams: state.status === "error" ? state.errorParams : undefined,
+      resolvedWindows: []
+    };
+  }
   const cs = state.comparisonSeries;
   const ct = state.chartTime;
-  const rw = state.resolvedWindows ?? [];
+  const rw = state.resolvedWindows;
+  const preview = state.preview;
   return {
     status: state.status,
     keys: Object.keys(state).sort(),
     summary: state.summary,
     forecast: state.forecast,
     textSummary: state.textSummary,
-    errorMessage: state.errorMessage,
-    errorParams: state.errorParams,
     period: state.period
       ? {
           current_start: iso(state.period.current_start),
@@ -180,32 +191,36 @@ function pin(state: CardState): Record<string, unknown> {
       aggregation: w.aggregation
     })),
     mergedTimeWindow: state.mergedTimeWindow,
-    previewShift: state.previewShift,
-    previewSeries: state.previewSeries
+    preview: preview
       ? {
-          current: {
-            unit: state.previewSeries.current.unit,
-            total: state.previewSeries.current.total,
-            points: state.previewSeries.current.points.length
-          },
-          reference: state.previewSeries.reference
+          shift: preview.shift,
+          series: preview.series
             ? {
-                unit: state.previewSeries.reference.unit,
-                total: state.previewSeries.reference.total,
-                points: state.previewSeries.reference.points.length
+                current: {
+                  unit: preview.series.current.unit,
+                  total: preview.series.current.total,
+                  points: preview.series.current.points.length
+                },
+                reference: preview.series.reference
+                  ? {
+                      unit: preview.series.reference.unit,
+                      total: preview.series.reference.total,
+                      points: preview.series.reference.points.length
+                    }
+                  : undefined
+              }
+            : undefined,
+          windows: preview.windows
+            ? preview.windows.map((w) => ({ start: iso(w.start), end: iso(w.end) }))
+            : undefined,
+          chartTime: preview.chartTime
+            ? {
+                timelineLength: preview.chartTime.timeline.length,
+                first: preview.chartTime.timeline[0],
+                last: preview.chartTime.timeline[preview.chartTime.timeline.length - 1],
+                tailLabelFromIndex: preview.chartTime.tailLabelFromIndex
               }
             : undefined
-        }
-      : undefined,
-    previewWindows: state.previewWindows
-      ? state.previewWindows.map((w) => ({ start: iso(w.start), end: iso(w.end) }))
-      : undefined,
-    previewChartTime: state.previewChartTime
-      ? {
-          timelineLength: state.previewChartTime.timeline.length,
-          first: state.previewChartTime.timeline[0],
-          last: state.previewChartTime.timeline[state.previewChartTime.timeline.length - 1],
-          tailLabelFromIndex: state.previewChartTime.tailLabelFromIndex
         }
       : undefined
   };
@@ -278,24 +293,21 @@ const REAL_SERIES = {
   time_zone: "UTC"
 };
 
-/** 13-key production ready state (preview* keys present, `undefined` at shift 0). */
+/** 10-key production ready state (`preview` key present, undefined members at shift 0). */
 const READY_KEYS = [
   "chartTime",
   "comparisonSeries",
   "forecast",
   "mergedTimeWindow",
   "period",
-  "previewChartTime",
-  "previewSeries",
-  "previewShift",
-  "previewWindows",
+  "preview",
   "resolvedWindows",
   "status",
   "summary",
   "textSummary"
 ];
 
-/** 9-key demo / picker state (no preview* keys at all). */
+/** 9-key demo / picker state (no preview key at all). */
 const SIMPLE_READY_KEYS = [
   "chartTime",
   "comparisonSeries",
@@ -331,7 +343,7 @@ const A = {
   chartTime: CHART_TIME_YOY,
   resolvedWindows: WINDOWS_YOY,
   mergedTimeWindow: MERGED_YOY,
-  previewShift: 0
+  preview: { shift: 0 }
 };
 
 const B = {
@@ -426,20 +438,22 @@ const F = {
   chartTime: CHART_TIME_YOY,
   resolvedWindows: WINDOWS_YOY,
   mergedTimeWindow: MERGED_YOY,
-  previewShift: -1,
-  previewSeries: {
-    current: { unit: "kWh", total: 730, points: 365 },
-    reference: { unit: "kWh", total: 732, points: 366 }
-  },
-  previewWindows: [
-    { start: "2025-01-01T00:00:00.000Z", end: "2025-12-31T23:59:59.999Z" },
-    { start: "2024-01-01T00:00:00.000Z", end: "2024-12-31T23:59:59.999Z" }
-  ],
-  previewChartTime: {
-    timelineLength: 53,
-    first: 1735689600000,
-    last: 1767139200000,
-    tailLabelFromIndex: 53
+  preview: {
+    shift: -1,
+    series: {
+      current: { unit: "kWh", total: 730, points: 365 },
+      reference: { unit: "kWh", total: 732, points: 366 }
+    },
+    windows: [
+      { start: "2025-01-01T00:00:00.000Z", end: "2025-12-31T23:59:59.999Z" },
+      { start: "2024-01-01T00:00:00.000Z", end: "2024-12-31T23:59:59.999Z" }
+    ],
+    chartTime: {
+      timelineLength: 53,
+      first: 1735689600000,
+      last: 1767139200000,
+      tailLabelFromIndex: 53
+    }
   }
 };
 

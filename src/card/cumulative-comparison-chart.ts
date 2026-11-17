@@ -466,10 +466,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         }
       }
 
-      if (
-        this._state.status === "ready" &&
-        this._state.comparisonSeries
-      ) {
+      if (this._state.status === "ready") {
+        // The ready member carries all chart data (911/TD-11); the local
+        // keeps the narrowed type stable across the calls below.
+        const state = this._state;
         if (!this._chartRenderer) {
           const container = this.renderRoot.querySelector(".chart-container") as
             | HTMLElement
@@ -483,17 +483,17 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         const localize = createLocalize(locResolved.language);
 
         // Transient time-window preview (909 US3, T014): while `previewShift < 0` and the
-        // shifted series + timeline are available, draw the shifted series on the shifted
+        // shifted timeline is available, draw the shifted series on the shifted
         // timeline in preview mode (gray tones). The default pipeline is left untouched.
+        // The element field `previewShift` is the live source of the shift (911/TD-11);
+        // the snapshot in state carries the shifted series + timeline.
+        const previewChartTime = state.preview?.chartTime;
         const previewActive =
-          this._state.previewShift != null &&
-          this._state.previewShift < 0 &&
-          this._state.previewChartTime != null;
+          this.previewShift < 0 && previewChartTime != null;
 
         if (this._chartRenderer && previewActive) {
-          const previewSeries = this._state.previewSeries;
-          const previewChartTime = this._state.previewChartTime!;
-          const previewWindows = this._state.previewWindows ?? [];
+          const previewSeries = state.preview?.series;
+          const previewWindows = state.preview?.windows ?? [];
           const { timeline } = previewChartTime;
           const baseConfig = this._buildRendererConfig(timeline);
           const cs = previewWindows[0]?.start;
@@ -516,13 +516,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           const seriesForChart: ComparisonSeries = previewSeries ?? {
             current: {
               points: [],
-              unit: this._state.comparisonSeries?.current.unit ?? "",
+              unit: state.comparisonSeries.current.unit ?? "",
               periodLabel: this._localizeOrError(localize, "period.current"),
               total: 0
             },
             aggregation: previewWindows[0]?.aggregation ?? "day",
             time_zone:
-              this._state.comparisonSeries?.time_zone ?? locResolved.timeZone
+              state.comparisonSeries.time_zone ?? locResolved.timeZone
           };
           const rendererConfig: ChartRendererConfig = {
             ...baseConfig,
@@ -548,15 +548,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             current: this._localizeOrError(localize, "period.current"),
             reference: this._localizeOrError(localize, "period.reference")
           });
-        } else if (
-          this._chartRenderer &&
-          this._state.period &&
-          this._state.resolvedWindows &&
-          this._state.chartTime
-        ) {
-          const { timeline } = this._state.chartTime;
+        } else if (this._chartRenderer) {
+          const { timeline } = state.chartTime;
           const rendererConfig = this._buildRendererConfig(timeline);
-          this._chartRenderer.update(this._state.comparisonSeries, timeline, rendererConfig, {
+          this._chartRenderer.update(state.comparisonSeries, timeline, rendererConfig, {
             current: this._localizeOrError(localize, "period.current"),
             reference: this._localizeOrError(localize, "period.reference")
           });
@@ -820,16 +815,19 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   /** Merged window duration in ms (YAML `duration` after merge). */
   private _mergedDurationMs(): number {
-    const merged = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
-    const dur = parseDurationToken(merged?.duration ?? "1y");
+    const merged =
+      this._state.status === "ready"
+        ? this._state.mergedTimeWindow
+        : this._mergedTimeWindow;
+    const dur = parseDurationToken(merged.duration ?? "1y");
     return dur ? durationToMillis(dur) : 0;
   }
 
   private _interpretationSemantics(): InterpretationSemanticsResult {
-    const summary = this._state.summary;
-    if (this._state.status !== "ready" || !summary) {
+    if (this._state.status !== "ready") {
       return { outcome: "insufficient_data" };
     }
+    const summary = this._state.summary;
     return computeInterpretationSemantics({
       current_cumulative: summary.current_cumulative,
       reference_cumulative: summary.reference_cumulative,
@@ -912,7 +910,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const mergedDurationMs = this._mergedDurationMs();
     const tf = this._config.tooltip_format?.trim();
 
-    if (!this._state.period || !this._state.comparisonSeries) {
+    // Ready guard (911/TD-11): a ready state always carries `period` and
+    // `comparisonSeries`, so the placeholder config is reachable only from a
+    // non-ready state (non-ready states never carry a forecast).
+    if (this._state.status !== "ready") {
       return {
         primaryColor: this._config.primary_color ?? "",
         fillCurrent: this._config.fill_current ?? true,
@@ -923,8 +924,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
         showLegend: this._config.show_legend === true,
         showForecast: isForecastLineVisible(this._config),
         showReferenceComparison: false,
-        forecastTotal: this._state.forecast?.forecast_total,
-        unit: this._state.forecast?.unit ?? "",
+        forecastTotal: undefined,
+        unit: "",
         periodLabel: "",
         comparisonMode: this._config.comparison_preset,
         language,
@@ -947,12 +948,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       };
     }
 
-    const period = this._state.period;
-    const series = this._state.comparisonSeries;
-    const windows = this._state.resolvedWindows;
-    const singleWindow = !windows || windows.length < 2;
+    const state = this._state;
+    const period = state.period;
+    const series = state.comparisonSeries;
+    const windows = state.resolvedWindows;
+    const singleWindow = windows.length < 2;
     const interpretationSemantics = this._interpretationSemantics();
-    const ct = this._state.chartTime;
+    const ct = state.chartTime;
     const w0 = windows?.[0];
     const cs = w0?.start ?? period.current_start;
     // 911/TD-10: single period-label implementation (FR-010).
@@ -976,8 +978,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       showLegend: this._config.show_legend === true,
       showForecast: isForecastLineVisible(this._config) && !singleWindow,
       showReferenceComparison: !singleWindow && series.reference != null,
-      forecastTotal: this._state.forecast?.forecast_total,
-      panelReferenceCumulative: this._state.summary?.reference_cumulative,
+      forecastTotal: state.forecast.forecast_total,
+      panelReferenceCumulative: state.summary.reference_cumulative,
       unit: displayUnit,
       periodLabel,
       referencePeriodStart: period.reference_start.getTime(),
@@ -1001,7 +1003,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       mergedDurationMs,
       tooltipFormatPattern: tf || undefined,
       chartTheme: this._resolveChartTheme(),
-      chartTrend: this._state.textSummary?.trend ?? "unknown",
+      chartTrend: state.textSummary.trend,
       chartSemanticOutcome: singleWindow
         ? "neutral"
         : interpretationSemantics.outcome,
@@ -1049,9 +1051,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       </ha-card>`;
     }
 
-    const textSummary = this._state.textSummary;
-    const summary = this._state.summary;
-    const forecast = this._state.forecast;
+    // The early returns above leave only the ready member (911/TD-11); the
+    // local keeps the narrowed type stable across the calls below.
+    const state = this._state;
+    const textSummary = state.textSummary;
+    const summary = state.summary;
+    const forecast = state.forecast;
 
     const showTitle = this._config.show_title !== false;
     const entityState = this.hass?.states?.[this._config.entity];
@@ -1097,9 +1102,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     let currentPeriodSuffix = "";
     let referencePeriodSuffix = "";
 
-    if (this._state.status === "ready" && this._state.period) {
-      const period = this._state.period;
-      const rw = this._state.resolvedWindows;
+    if (state.status === "ready") {
+      const period = state.period;
+      const rw = state.resolvedWindows;
       const captionLocale = resolveLabelLocale(this.hass, this._config);
       const captionZone =
         period.time_zone || this.hass?.config?.time_zone || "UTC";
@@ -1107,8 +1112,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       const w0 = resolvedWindowForCaption(rw, period, 0);
       const w1 = resolvedWindowForCaption(rw, period, 1);
-      const mergedTw =
-        this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+      const mergedTw = state.mergedTimeWindow;
       const w0Caption = expandCurrentWindowForCaption(
         w0,
         mergedTw,
@@ -1142,10 +1146,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const currentSummaryNumber =
       summary != null ? numberFormatter.format(summary.current_cumulative) : "";
 
-    const singleWindow =
-      this._state.status === "ready" &&
-      this._state.resolvedWindows &&
-      this._state.resolvedWindows.length < 2;
+    const singleWindow = state.resolvedWindows.length < 2;
 
     const referenceSummaryNumber =
       !singleWindow &&
@@ -1173,9 +1174,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     // when the forecast is enabled. In single-window mode there is no reference
     // window, so the Total column shows a placeholder.
     const panelReferenceTotal =
-      !singleWindow && this._state.comparisonSeries?.reference?.points?.length
+      !singleWindow && state.comparisonSeries.reference?.points?.length
         ? fullReferenceWindowRawTotal(
-            this._state.comparisonSeries.reference.points
+            state.comparisonSeries.reference.points
           )
         : null;
 
@@ -1207,7 +1208,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
     const showWarningStrip = warningMessages.length > 0;
 
-    const mergedTw = this._state.mergedTimeWindow ?? this._mergedTimeWindow;
+    const mergedTw = state.mergedTimeWindow;
     const stepKind = classifyComparisonStep(mergedTw?.step);
     const periodPhraseKey = `text_summary.period.${stepKind}`;
     const referencePeriod = this._localizeOrError(localize, periodPhraseKey);
@@ -1304,13 +1305,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     // indication of the shifted period, shown only while `previewShift < 0`. Reuses the
     // card's period-label formatting (year for a Jan-1 start, else "Month YYYY") so the
     // shifted period reads the same way the card already formats periods.
-    const previewActive =
-      this._state.status === "ready" &&
-      this._state.previewShift != null &&
-      this._state.previewShift < 0;
+    const previewActive = this.previewShift < 0;
     let previewIndicationText = "";
     if (previewActive) {
-      const previewStart = this._state.previewWindows?.[0]?.start;
+      const previewStart = state.preview?.windows?.[0]?.start;
       if (previewStart) {
         // 911/TD-10: single period-label implementation (FR-010).
         const previewPeriodLabel = formatPeriodLabel(
@@ -1535,8 +1533,8 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             ></div>
             ${previewActive &&
             !this._previewLoading &&
-            this._state.previewChartTime != null &&
-            this._state.previewSeries == null
+            state.preview?.chartTime != null &&
+            state.preview?.series == null
               ? html`<div class="ebc-chart-nodata-overlay" role="status">
                   <ha-alert alert-type="info">
                     ${this._localizeOrError(localize, "status.no_data")}

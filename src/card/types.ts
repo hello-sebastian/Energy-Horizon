@@ -286,45 +286,79 @@ export interface ChartTimeContext {
   tailLabelFromIndex: number;
 }
 
-export interface CardState {
-  status: "loading" | "error" | "no-data" | "ready";
-  errorMessage?: string;
+export interface LoadingState {
+  status: "loading";
+}
+
+export interface ErrorState {
+  status: "error";
+  /** Localized message key (or plain message) shown in the error alert. */
+  errorMessage: string;
   /** Variables for `errorMessage` translation (e.g. `max` for too-many-windows). */
   errorParams?: Record<string, string | number>;
-  comparisonSeries?: ComparisonSeries;
-  summary?: SummaryStats;
-  forecast?: ForecastStats;
-  textSummary?: TextSummary;
-  period?: ComparisonPeriod;
-  resolvedWindows?: ResolvedWindow[];
-  mergedTimeWindow?: MergedTimeWindowConfig;
-  chartTime?: ChartTimeContext;
+}
+
+export interface NoDataState {
+  status: "no-data";
+}
+
+/**
+ * Transient time-window preview (909): the display snapshot captured for the
+ * active shift. `shift` is always present; `series`, `windows`, and
+ * `chartTime` are present when the preview load produced a shifted display
+ * (a preview with no data carries the windows + timeline but no series, so
+ * the standard no-data indication can be overlaid — 909 FR-013).
+ */
+export interface PreviewSnapshot {
+  /** Active shift in nominal window widths (negative = earlier period; never positive, FR-003). */
+  shift: number;
+  /** The shifted current + shifted reference cumulative series pair (unit-scaled). */
+  series?: ComparisonSeries;
   /**
-   * Transient time-window preview (909): the active shift in nominal window widths.
-   * `0`/absent = default (no preview); negative = earlier periods. Mirrors the element field
-   * into state so `render()` can branch. Never positive (FR-003).
-   */
-  previewShift?: number;
-  /**
-   * Transient time-window preview (909): the shifted current + shifted reference cumulative
-   * series pair (unit-scaled), present only while `previewShift < 0` and `status === "ready"`.
-   * Absent at the default.
-   */
-  previewSeries?: ComparisonSeries;
-  /**
-   * Transient time-window preview (909): the shifted window set (current + reference,
-   * max 2) resolved for the active `previewShift`. Present only while `previewShift < 0`
-   * and `status === "ready"`. Used to derive the preview period label and the preview
+   * The shifted window set (current + reference, max 2) resolved for the
+   * active shift. Used to derive the preview period label and the preview
    * chart timeline.
    */
-  previewWindows?: ResolvedWindow[];
+  windows?: ResolvedWindow[];
   /**
-   * Transient time-window preview (909): the chart timeline built from the shifted
-   * windows (`previewWindows`), so the preview series align to the shifted axis.
-   * Present only while `previewShift < 0` and `status === "ready"`.
+   * The chart timeline built from the shifted windows (`windows`), so the
+   * preview series align to the shifted axis.
    */
-  previewChartTime?: ChartTimeContext;
+  chartTime?: ChartTimeContext;
 }
+
+export interface ReadyState {
+  status: "ready";
+  comparisonSeries: ComparisonSeries;
+  summary: SummaryStats;
+  forecast: ForecastStats;
+  textSummary: TextSummary;
+  period: ComparisonPeriod;
+  resolvedWindows: ResolvedWindow[];
+  mergedTimeWindow: MergedTimeWindowConfig;
+  chartTime: ChartTimeContext;
+  /**
+   * Transient time-window preview (909): the snapshot for the active shift.
+   * The element field `previewShift` is the live source of the shift; the
+   * snapshot in state is what `render()`/`updated()` branch on. Always
+   * present on states built by the production path (`{shift: 0}` with
+   * `undefined` members at the default); absent on the demo and picker
+   * paths (key-presence semantics pinned by the R1 baseline).
+   */
+  preview?: PreviewSnapshot;
+}
+
+/**
+ * Card state as a discriminated union (911/TD-11, FR-011): the invariants
+ * "ready implies the chart's data is present" and "preview fields exist only
+ * while a preview is active" are enforced by the compiler (assessment
+ * `.specify/assessments/cardstate-union/`).
+ */
+export type CardState =
+  | LoadingState
+  | ErrorState
+  | NoDataState
+  | ReadyState;
 
 /** Theme colors read from the card host via `getComputedStyle` (US-7 / T020). */
 export interface ChartThemeResolved {

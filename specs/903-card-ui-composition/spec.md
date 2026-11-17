@@ -4,7 +4,7 @@
 **Domain**: Card UI Composition  
 **Replaces**: `001-card-ui-enhancements`, `001-figma-ui-rollout`, `001-separate-style-logic`, `001-ha-theming-classes`  
 **Primary code**: `src/card/cumulative-comparison-chart.ts`, `src/card/energy-horizon-card-styles.ts`  
-**Last updated**: 2026-11-16  
+**Last updated**: 2026-11-17  
 
 ## Clarifications
 
@@ -372,6 +372,8 @@ As a user analyzing **consumption**, I need the card to behave **as today** when
 - **FR-903-U (Forecast panel — interpretation)**: The Forecast \| Total panel MUST **not** alter user-visible strings, headings, or translation keys based on `interpretation`; forecast and total presentation remain as in `FR-903-I` regardless of mode.
 
 - **FR-903-X (Thin element state paths)**: The card element MUST NOT contain ready-state computation. Unit scaling MUST live in `src/utils/unit-scaler.ts` as the pure `applyUnitScalingToSeries(series, rawUnit, options?)` (shared with the ready-state pipeline, **FR-901-R**) — no element access, `force_prefix` as a parameter — and `_loadData`, `_buildDemoState`, and `_firePickerRealDataQuery` MUST be under 60 lines of orchestration each (fetch/load → single `buildReadyState(...)` call). The element retains only element-state concerns: load generation, the preview-loading flag, entity-unit lookup, debug logging, and the point-cap / no-data terminal states. Rendered output MUST NOT change (FR-019). (Satisfied as of 2026-11-16, 911/TD-2.)
+
+- **FR-903-Y (Card state discriminated union)**: The card element's state MUST be the `CardState` discriminated union on `status`: `LoadingState | ErrorState | NoDataState | ReadyState`. `ReadyState` MUST require `comparisonSeries`, `summary`, `forecast`, `textSummary`, `period`, `resolvedWindows`, `mergedTimeWindow`, and `chartTime`, and carry an optional nested `preview?: PreviewSnapshot` (`shift` + `series?` + `windows?` + `chartTime?`) — the four former flat `previewShift` / `previewSeries` / `previewWindows` / `previewChartTime` state fields MUST NOT exist at the top level of the state. `ErrorState` MUST require `errorMessage`. The live preview shift MUST remain an element field (`previewShift` on the element) and MUST NOT be part of `CardState`. `render()` and `updated()` MUST contain zero non-null assertions on state (the "ready implies the chart data is present" and "preview fields exist only while a preview is active" invariants are compiler-enforced). Rendered output MUST NOT change (FR-019). (Satisfied as of 2026-11-17, 911/TD-11.)
 
 ---
 
