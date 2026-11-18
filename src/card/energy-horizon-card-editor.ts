@@ -686,11 +686,23 @@ export class EnergyHorizonCardEditor extends LitElement {
     :host {
       display: block;
     }
+    /*
+      Dialog-height fill (FR-908-AA/AB, SC-908-10, research R14): a flex
+      column capped by the documented geometry of the HA card-editor dialog —
+      209px of dialog chrome + 56px of tab-bar (Config/Visibility) budget +
+      16px of tab margin = 281px, rounded up to 284px (3px of conservative
+      slack: if we overestimate, only an imperceptible gap remains, never a
+      double scroll). Re-derive if HA changes the dialog or tab chrome.
+    */
     .editor {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 284px);
       padding: 8px;
     }
     .toggle-row {
       display: flex;
+      flex: 0 0 auto;
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -708,11 +720,14 @@ export class EnergyHorizonCardEditor extends LitElement {
       border-color: var(--primary-color);
       color: var(--primary-color);
     }
+    /* THE visual-mode scroll container (FR-908-M scroll anchor): grows to
+       fill the remaining height of the capped .editor column. */
     .sections {
       display: flex;
+      flex: 1 1 auto;
       flex-direction: column;
       gap: 8px;
-      max-height: 60vh;
+      min-height: 0;
       overflow-y: auto;
     }
     .editor-section {
@@ -875,8 +890,11 @@ export class EnergyHorizonCardEditor extends LitElement {
     .req {
       color: var(--error-color, #c62828);
     }
+    /* YAML-mode textarea: fills the same remaining height as .sections,
+       keeping its 200px floor as a minimum (FR-908-AB). */
     .yaml-editor {
       width: 100%;
+      flex: 1 1 auto;
       min-height: 200px;
       box-sizing: border-box;
       font-family: monospace;
