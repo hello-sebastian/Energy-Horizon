@@ -159,7 +159,7 @@ aggregation: month
 1. Use the two arrow controls in the **top-right of the chart area**: the left arrow steps to the **earlier** period, the right arrow steps to the **later** period.
 2. The **reset** control returns to the current period.
 
-**Expected outcome:** the chart shows the selected period with the same layout as the configured window — the shifted series render in **gray** and the card shows a `Preview: <period>` indication. The summary panels and the narrative text stay unchanged. The preview is transient: it is never written to the card's configuration and is lost on any reload; the controls are hidden in the HA card picker.
+**Expected outcome:** the chart shows the selected period with the same layout as the configured window — the shifted series render in **gray** and the card shows a `Preview: <period>` indication. The summary panels and the narrative text stay unchanged. The preview is transient: it is never written to the card's configuration and is lost on any reload; in preview contexts such as the HA card picker, dashboard edit mode, and the card editor the controls stay visible but do not respond to input (the preview period can only be changed in the dashboard view mode).
 
 **When it fails:**
 

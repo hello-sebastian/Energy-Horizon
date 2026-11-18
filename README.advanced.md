@@ -53,7 +53,7 @@ comparison_preset: year_over_year
 | **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_threshold`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
 | **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode. The chart **line** is hidden with `show_forecast: false`; the **Forecast \| Total** panel is controlled separately by `show_forecast_total_panel`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
-| **Transient preview** | Top-right chart controls step the displayed window to earlier/later periods for a quick look-back — transient state, never written to the config; the shifted series render in gray; the controls are hidden in the HA card picker. |
+| **Transient preview** | Top-right chart controls step the displayed window to earlier/later periods for a quick look-back — transient state, never written to the config; the shifted series render in gray; the controls are visible but non-interactive in preview contexts (picker, dashboard edit mode, editor). |
 
 ---
 
