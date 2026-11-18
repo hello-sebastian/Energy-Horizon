@@ -2,14 +2,19 @@
   "version": "1.0.13",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "copilot"
+    "copilot",
+    "opencode"
   ],
   "integration_settings": {
     "copilot": {
       "script": "sh",
       "invoke_separator": "-"
+    },
+    "opencode": {
+      "script": "sh",
+      "invoke_separator": "."
     }
   },
-  "integration": "copilot",
-  "default_integration": "copilot"
+  "integration": "opencode",
+  "default_integration": "opencode"
 }
