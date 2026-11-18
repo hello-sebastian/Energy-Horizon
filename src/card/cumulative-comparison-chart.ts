@@ -89,11 +89,15 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   _state: CardState = { status: "loading" };
 
   /**
-   * Picker mode (910, research R2): set by `hui-card` when the card is rendered
-   * in the "Add card" picker (`element.preview = this.preview`). Not part of
-   * `_config`, not persisted. When `true`, the card renders a deterministic
-   * demo series immediately (no query on the critical path, no loading/error
-   * state) and hides the 909 time-window preview controls.
+   * Standard HA card `preview` property (910, research R2; 909 FR-024): set by
+   * `hui-card` whenever the card is rendered in a preview context — the "Add
+   * card" picker, dashboard edit mode, or the card editor's live preview
+   * (`element.preview = this.preview`). Not part of `_config`, not persisted.
+   * When `true`, the card renders a deterministic demo series immediately (no
+   * query on the critical path, no loading/error state) and renders the 909
+   * time-window preview controls visible but non-interactive — no response to
+   * any input, `aria-disabled="true"` + `tabindex="-1"`, no `disabled`
+   * attribute (909 FR-022–FR-025, research R10).
    */
   preview = false;
 
@@ -149,6 +153,14 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    * any in-flight load is discarded (data-model validation rule 2).
    */
   private _onPreviewStep(action: PreviewShiftAction): void {
+    // Preview contexts (909 FR-022, research R10): the controls are visible
+    // but non-interactive. This handler is the single activation entry point
+    // for all three controls — mouse, touch, and keyboard (Enter/Space on a
+    // native button) all dispatch the same `click` event — so this guard
+    // makes every input a no-op: no state change, no data load.
+    if (this.preview) {
+      return;
+    }
     const next = nextPreviewShift(this.previewShift, action);
     if (next === this.previewShift) {
       // No-op (e.g. step forward at the default) — nothing to reload.
@@ -996,9 +1008,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   /**
    * Chart region with the 909 preview controls. Element-only concerns live here
-   * (FR-903-AA): `preview` (picker mode hides the controls), `previewShift < 0`
-   * (the display gate, FR-903-Y) and `_previewLoading` (disabled controls +
-   * dimmed chart overlay) — none of them are part of the view model.
+   * (FR-903-AA): `preview` (preview contexts render the controls visible but
+   * non-interactive, FR-022–FR-025), `previewShift < 0` (the display gate,
+   * FR-903-Y) and `_previewLoading` (disabled controls + dimmed chart overlay)
+   * — none of them are part of the view model.
    */
   private _renderChartSection(
     vm: ReadyCardViewModel,
@@ -1010,44 +1023,83 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       role="region"
       aria-label=${this._localizeOrError(localize, "section.chart")}
     >
-      ${this.preview
-        ? null
-        : html`<div class="ebc-chart-controls">
-            ${previewActive
-              ? html`<span class="ebc-preview-indication" role="status">
-                  ${vm.previewIndicationText}
-                </span>`
-              : null}
-            ${previewActive
-              ? html`<button
-                  class="ebc-chart-control ebc-chart-control--reset"
-                  type="button"
-                  ?disabled=${this._previewLoading}
-                  aria-label=${this._localizeOrError(localize, "preview.reset")}
-                  @click=${() => this._onPreviewStep("reset")}
-                >
-                  <ha-icon icon="mdi:restart"></ha-icon>
-                </button>`
-              : null}
-            <button
-              class="ebc-chart-control"
+      <div class="ebc-chart-controls">
+        ${previewActive
+          ? html`<span class="ebc-preview-indication" role="status">
+              ${vm.previewIndicationText}
+            </span>`
+          : null}
+        ${previewActive
+          ? html`<button
+              class="ebc-chart-control ebc-chart-control--reset"
               type="button"
               ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(localize, "preview.step_back")}
+              aria-label=${this._localizeOrError(localize, "preview.reset")}
+              @click=${() => this._onPreviewStep("reset")}
+            >
+              <ha-icon icon="mdi:restart"></ha-icon>
+            </button>`
+          : null}
+        <!-- 909 FR-023/FR-025: in preview contexts the buttons keep their
+             normal appearance (no "disabled" attribute) but carry
+             aria-disabled="true" and tabindex="-1". The inert variant omits
+             the ?disabled binding entirely — _previewLoading can never be
+             true in a preview context (the _onPreviewStep guard blocks it).
+             The reset button above is never rendered in a preview context
+             (FR-010: a shift cannot be activated there). -->
+        ${this.preview
+          ? html`<button
+              class="ebc-chart-control"
+              type="button"
+              aria-disabled="true"
+              tabindex="-1"
+              aria-label=${this._localizeOrError(
+                localize,
+                "preview.step_back"
+              )}
               @click=${() => this._onPreviewStep("back")}
             >
               <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>
-            <button
+            </button>`
+          : html`<button
               class="ebc-chart-control"
               type="button"
               ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(localize, "preview.step_forward")}
+              aria-label=${this._localizeOrError(
+                localize,
+                "preview.step_back"
+              )}
+              @click=${() => this._onPreviewStep("back")}
+            >
+              <ha-icon icon="mdi:chevron-left"></ha-icon>
+            </button>`}
+        ${this.preview
+          ? html`<button
+              class="ebc-chart-control"
+              type="button"
+              aria-disabled="true"
+              tabindex="-1"
+              aria-label=${this._localizeOrError(
+                localize,
+                "preview.step_forward"
+              )}
               @click=${() => this._onPreviewStep("forward")}
             >
               <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>
-          </div>`}
+            </button>`
+          : html`<button
+              class="ebc-chart-control"
+              type="button"
+              ?disabled=${this._previewLoading}
+              aria-label=${this._localizeOrError(
+                localize,
+                "preview.step_forward"
+              )}
+              @click=${() => this._onPreviewStep("forward")}
+            >
+              <ha-icon icon="mdi:chevron-right"></ha-icon>
+            </button>`}
+      </div>
       <div class="ebc-chart-wrap">
         <div
           class="chart-container ebc-chart ${this._previewLoading
