@@ -8,6 +8,7 @@ import {
   findSuitableEntity,
   buildSamplePreviewConfig,
   buildEntitySuggestion,
+  entityUnitOf,
   queryRealDataWithLimit
 } from "../../src/card/picker-preview";
 
@@ -111,6 +112,38 @@ describe("buildEntitySuggestion", () => {
       connection: { sendMessagePromise: async () => ({}) }
     } as unknown as HomeAssistant;
     expect(() => buildEntitySuggestion(bare, "sensor.x")).not.toThrow();
+  });
+});
+
+describe("entityUnitOf", () => {
+  it("returns the entity's unit_of_measurement from hass.states", () => {
+    const hass = makeHass({
+      "sensor.energy": {
+        state: "10",
+        attributes: { unit_of_measurement: "kWh" }
+      }
+    });
+    expect(entityUnitOf(hass, "sensor.energy")).toBe("kWh");
+  });
+
+  it('returns "" when the entity is missing from hass.states', () => {
+    const hass = makeHass({});
+    expect(entityUnitOf(hass, "sensor.missing")).toBe("");
+  });
+
+  it('returns "" when hass.states is absent entirely', () => {
+    const bare = {
+      language: "en",
+      connection: { sendMessagePromise: async () => ({}) }
+    } as unknown as HomeAssistant;
+    expect(entityUnitOf(bare, "sensor.x")).toBe("");
+  });
+
+  it('returns "" when the entity has no unit attribute', () => {
+    const hass = makeHass({
+      "sensor.bare": { state: "1", attributes: {} }
+    });
+    expect(entityUnitOf(hass, "sensor.bare")).toBe("");
   });
 });
 

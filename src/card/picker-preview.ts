@@ -49,6 +49,19 @@ export function isSupportedUnit(unit: string | undefined): boolean {
 }
 
 /**
+ * The entity's unit of measurement from the HA state, or `""` when absent
+ * (911/TD-14: single lookup shared by the ready-state pipeline paths and the
+ * picker module).
+ */
+export function entityUnitOf(hass: HomeAssistant, entityId: string): string {
+  return (
+    (hass.states?.[entityId]?.attributes as {
+      unit_of_measurement?: string;
+    })?.unit_of_measurement ?? ""
+  );
+}
+
+/**
  * Builds a deterministic demo `ComparisonSeries` for the picker preview (FR-009, R4).
  *
  * - No `Math.random` — values are a pure function of `unit`, `now`, and `timeZone`.

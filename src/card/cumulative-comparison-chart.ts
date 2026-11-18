@@ -10,7 +10,6 @@ import {
   type CardConfigInput,
   type CardState,
   type ChartRendererConfig,
-  type ChartThemeResolved,
   type ChartTimeContext,
   type ComparisonSeries,
   type CumulativeSeries,
@@ -38,18 +37,15 @@ import {
   type PreviewShiftAction
 } from "./time-windows";
 import { EChartsRenderer } from "./echarts-renderer";
-import { resolveSeriesCurrentColor } from "./series-color";
 import {
   assertPointCountWithinCap,
   MAX_POINTS_PER_SERIES,
   PointCapExceededError,
-  resolveLabelLocale,
   validateXAxisFormat
 } from "./axis";
 import {
   resolveLocale,
   createLocalize,
-  numberFormatToLocale,
   MISSING_TRANSLATION_KEY,
   type LocalizeFunction,
   type ResolvedLocale
@@ -68,29 +64,16 @@ import {
 } from "./pipeline/ready-state-builder";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
 import {
-  buildDemoComparisonSeries,
   buildSamplePreviewConfig,
-  findSuitableEntity,
-  isSupportedUnit,
-  queryRealDataWithLimit
+  entityUnitOf,
+  findSuitableEntity
 } from "./picker-preview";
-import { hour12FromHaTimeFormat } from "./labels/compact-period-caption";
+import { attachPicker, type PickerController } from "./picker/attach-picker";
+import { buildRendererConfig } from "./renderer-config";
+export { isForecastLineVisible } from "./renderer-config";
 import { resolveComparisonAxisLabelHints } from "./labels/comparison-label-hints";
 import { formatPeriodLabel } from "./labels/period-label";
 import "./energy-horizon-card-editor.js";
-
-/** Chart forecast line: on unless explicitly `show_forecast: false` (alias `forecast` merged in setConfig). */
-export function isForecastLineVisible(config: CardConfig): boolean {
-  return config.show_forecast !== false;
-}
-
-function clampOpacity(value: unknown): number {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n < 0 || n > 100) {
-    return 30;
-  }
-  return n;
-}
 
 export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   static properties = {
@@ -137,12 +120,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   private _inFlightGeneration: number | null = null;
 
   /**
-   * Picker real-data upgrade (910, FR-014, R4): set once the time-limited real-data
-   * query has been fired for this picker session (element instance). The query is
-   * fired at most once per session; a config change rebuilds the element in preview
-   * mode, so a new session starts fresh.
+   * Picker session controller (910, 911/TD-14) — created lazily, once per
+   * element instance, so the real-data "fired at most once" flag spans
+   * repeated `setConfig` calls on the same instance; the picker rebuilds the
+   * element per session, so a new element starts a new session (FR-014, R4).
    */
-  private _pickerRealDataFired = false;
+  private _picker?: PickerController;
 
   /** Merged preset + `time_window` + card `aggregation` — updated in `setConfig`, used in `_loadData`. */
   private _mergedTimeWindow!: MergedTimeWindowConfig;
@@ -208,100 +191,6 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
 
     return translated;
-  }
-
-  /**
-   * Builds a synchronous, ready `CardState` from the deterministic demo series
-   * (910, FR-014/FR-011, research R4). Used in picker mode (`preview === true`)
-   * so the card renders a full chart immediately — no query on the critical
-   * path, no blank/loading/error state. The existing render pipeline and
-   * `updated()` EChartsRenderer path consume the state unchanged.
-   */
-  private _buildDemoState(now: Date): CardState {
-    const resolved = resolveLocale(this.hass, this._config);
-    const { merged, windows, chartTime } = resolveChartBase(
-      this._mergedTimeWindow,
-      now,
-      resolved.timeZone
-    );
-    const localize = createLocalize(resolved.language);
-
-    // Unit from the entity's state when available and supported; else "kWh"
-    // (FR-009). The demo series is deterministic regardless of the unit.
-    const entityUnit = this._entityUnit();
-    const demoUnit = isSupportedUnit(entityUnit) ? entityUnit : "kWh";
-
-    const series = buildDemoComparisonSeries(demoUnit, now, resolved.timeZone);
-    return buildReadyState(
-      series,
-      windows,
-      merged,
-      chartTime,
-      resolved,
-      localize,
-      {
-        rawUnit: demoUnit,
-        forcePrefix: this._config.force_prefix
-      }
-    );
-  }
-
-  /**
-   * Picker real-data upgrade (910, FR-007/FR-008/FR-014, research R4). After the
-   * deterministic demo series is rendered, fire a time-limited real-data query for
-   * the configured entity. On success with a current series, update the preview in
-   * place to the real data (reusing the demo state's windows/timeline so the series
-   * align). On failure/timeout/empty, keep the demo series. Fired at most once per
-   * picker session (element instance); a stale result is discarded via the load
-   * generation if the config changes in flight.
-   */
-  private _firePickerRealDataQuery(): void {
-    if (!this.preview || this._pickerRealDataFired) return;
-    this._pickerRealDataFired = true;
-
-    const demoState = this._state;
-    if (
-      demoState.status !== "ready" ||
-      !demoState.resolvedWindows ||
-      !demoState.chartTime
-    ) {
-      return;
-    }
-
-    const entityId = this._config.entity;
-    if (!entityId) return; // no entity → the demo series stays
-
-    const gen = this._loadGeneration;
-    const windows = demoState.resolvedWindows;
-    const chartTime = demoState.chartTime;
-    const merged = demoState.mergedTimeWindow ?? this._mergedTimeWindow;
-    const resolved = resolveLocale(this.hass, this._config);
-    const localize = createLocalize(resolved.language);
-
-    void queryRealDataWithLimit(this.hass, windows, entityId, resolved.timeZone).then((realSeries) => {
-      // Config changed while the query was in flight → discard the stale result.
-      if (gen !== this._loadGeneration) return;
-      // No usable real data → keep the deterministic demo series.
-      if (
-        !realSeries ||
-        !realSeries.current ||
-        realSeries.current.points.length === 0
-      ) {
-        return;
-      }
-
-      const entityUnit = this._entityUnit(entityId);
-
-      // Swap the demo series for the real one, keeping the demo state's windows,
-      // timeline, and period so the real series align to the same axis. The
-      // builder rebuilds the state from those same windows/merged inputs, so the
-      // swap lands on an axis-identical ready state.
-      this._state = buildReadyState(realSeries, windows, merged, chartTime, resolved, localize, {
-        rawUnit: entityUnit || realSeries.current.unit,
-        patchUnit: entityUnit,
-        forcePrefix: this._config.force_prefix
-      });
-    });
   }
 
   public setConfig(config: CardConfigInput): void {
@@ -370,13 +259,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     this.previewShift = 0;
     this._previewLoading = false;
     if (this.preview) {
-      // Picker mode (910, FR-014/FR-011): render the deterministic demo series
-      // immediately — no query on the critical path, no blank/loading/error
-      // state. The existing render pipeline consumes the ready state unchanged.
-      this._state = this._buildDemoState(new Date());
-      // After the demo render, upgrade to real data when a time-limited query
-      // succeeds in time; otherwise the demo series stays (FR-007/FR-014, R4).
-      this._firePickerRealDataQuery();
+      // Picker mode (910, FR-014/FR-011, 911/TD-14): the picker module owns the
+      // demo-first render and the one-shot real-data upgrade — 910 semantics
+      // (FR-010/013/014) preserved 1:1.
+      this._pickerController().startSession(new Date());
     } else {
       this._state = { status: "loading" };
     }
@@ -395,7 +281,67 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    */
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this._pickerController().onDisconnected();
+  }
+
+  // ── module host surface (911/TD-14, FR-903-AB) ──────────────────────────
+  // Live values the picker module and the renderer-config module read, plus
+  // the element concerns they cannot own (the missing-key escalation, the
+  // interpretation semantics, the merged duration). Both modules treat the
+  // element as a read-only host.
+
+  /** Live card config (911/TD-14 host surface). */
+  get cardConfig(): CardConfig {
+    return this._config;
+  }
+
+  /** Live card state (911/TD-14 host surface). */
+  get state(): CardState {
+    return this._state;
+  }
+
+  /** Merged window config (911/TD-14 host surface). */
+  get mergedTimeWindow(): MergedTimeWindowConfig {
+    return this._mergedTimeWindow;
+  }
+
+  /** Load-generation counter (911/TD-14 host surface). */
+  get loadGeneration(): number {
+    return this._loadGeneration;
+  }
+
+  /** The host DOM node for the CSS theme-token reads (911/TD-14 host surface). */
+  get hostNode(): HTMLElement {
+    return this;
+  }
+
+  /** Bumps the load generation — discards in-flight loads (911/TD-14 host surface). */
+  bumpLoadGeneration(): void {
     this._loadGeneration++;
+  }
+
+  /**
+   * The missing-translation-key → error escalation (FR-903-NE) bound to the
+   * current locale — the element concern the renderer-config module calls
+   * instead of building its own `localize`.
+   */
+  localizeOrError(key: string, vars?: Record<string, string | number>): string {
+    const resolved = resolveLocale(this.hass, this._config);
+    const localize = createLocalize(resolved.language);
+    return this._localizeOrError(localize, key, vars);
+  }
+
+  /**
+   * The picker session controller (910, 911/TD-14) — created lazily, once per
+   * element instance (see `_picker`).
+   */
+  private _pickerController(): PickerController {
+    if (!this._picker) {
+      this._picker = attachPicker(this, this._config, (state) => {
+        this._state = state;
+      });
+    }
+    return this._picker;
   }
 
   protected updated(changedProps: Map<string, unknown>): void {
@@ -567,15 +513,12 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   /**
    * The entity's unit of measurement from the HA state, or "" when absent
-   * (911/TD-2: single lookup shared by the ready-state pipeline paths).
+   * (911/TD-2: single lookup shared by the ready-state pipeline paths;
+   * 911/TD-14: delegates to the pure `entityUnitOf`).
    */
   private _entityUnit(entityId?: string): string {
     const id = entityId ?? this._config.entity;
-    return (
-      (this.hass.states?.[id]?.attributes as {
-        unit_of_measurement?: string;
-      })?.unit_of_measurement ?? ""
-    );
+    return entityUnitOf(this.hass, id);
   }
 
   /**
@@ -773,8 +716,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
   }
 
-  /** Merged window duration in ms (YAML `duration` after merge). */
-  private _mergedDurationMs(): number {
+  /**
+   * Merged window duration in ms (YAML `duration` after merge). Element
+   * concern exposed on the renderer-config host surface (911/TD-14).
+   */
+  mergedDurationMs(): number {
     const merged =
       this._state.status === "ready"
         ? this._state.mergedTimeWindow
@@ -783,7 +729,11 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return dur ? durationToMillis(dur) : 0;
   }
 
-  private _interpretationSemantics(): InterpretationSemanticsResult {
+  /**
+   * Interpretation semantics of the current state (FR-903-Q/V). Element
+   * concern exposed on the renderer-config host surface (911/TD-14).
+   */
+  interpretationSemantics(): InterpretationSemanticsResult {
     if (this._state.status !== "ready") {
       return { outcome: "insufficient_data" };
     }
@@ -798,183 +748,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     });
   }
 
-  /** Theme tokens for ECharts — read from `:host` CSS variables (US-7 / T020). */
-  private _resolveChartTheme(): ChartThemeResolved {
-    const host = this as unknown as HTMLElement;
-    const readVar = (prop: string): string =>
-      typeof globalThis.getComputedStyle === "function"
-        ? globalThis.getComputedStyle(host).getPropertyValue(prop).trim()
-        : "";
-    const seriesCurrent = resolveSeriesCurrentColor(
-      host,
-      this._config.primary_color
-    );
-    const seriesReference =
-      readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
-    const grid =
-      readVar("--divider-color") || "rgba(127, 127, 127, 0.3)";
-    const primaryText =
-      readVar("--primary-text-color") || "rgba(0, 0, 0, 0.87)";
-    const secondaryText =
-      readVar("--secondary-text-color") || primaryText;
-    const tooltipBackground =
-      readVar("--ha-card-background") ||
-      readVar("--card-background-color") ||
-      "#ffffff";
-    const trendHigher = readVar("--error-color") || "#f44336";
-    const trendLower = readVar("--success-color") || "#4caf50";
-    const trendSimilar =
-      readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.55)";
-    const trendUnknown = readVar("--disabled-text-color") || trendSimilar;
-    const trendMuted = readVar("--disabled-text-color") || trendSimilar;
-    const todayFullHeightLine = grid || "rgba(127, 127, 127, 0.35)";
-    const referenceDotBorder = tooltipBackground || "#ffffff";
-    const previewCurrent =
-      readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
-    const previewReference =
-      readVar("--disabled-text-color") || "rgba(127, 127, 127, 0.55)";
-
-    return {
-      seriesCurrent,
-      seriesReference,
-      referenceDotBorder,
-      grid,
-      primaryText,
-      secondaryText,
-      tooltipBackground,
-      tooltipBorder: grid,
-      todayFullHeightLine,
-      trendHigher,
-      trendLower,
-      trendSimilar,
-      trendUnknown,
-      trendMuted,
-      previewCurrent,
-      previewReference
-    };
-  }
-
+  /**
+   * The ECharts renderer config for the current state (911/TD-14, FR-903-AB):
+   * built by the pure `renderer-config` module — the element only provides
+   * the host surface.
+   */
   private _buildRendererConfig(fullTimeline: number[] = []): ChartRendererConfig {
-    const resolved = resolveLocale(this.hass ?? null, this._config);
-    const language = resolved.language;
-    const numberLocale = numberFormatToLocale(resolved.numberFormat, resolved.language);
-    const localize = createLocalize(language);
-    const forecastLabel = this._localizeOrError(
-      localize,
-      "forecast.current_forecast"
-    );
-    const xAxisLabelLocale = resolveLabelLocale(this.hass, this._config);
-    const hour12 = hour12FromHaTimeFormat(this.hass?.locale?.time_format);
-    const xf = this._config.x_axis_format?.trim();
-    const xAxisMode = xf ? ("forced" as const) : ("adaptive" as const);
-    const mergedDurationMs = this._mergedDurationMs();
-    const tf = this._config.tooltip_format?.trim();
-
-    // Ready guard (911/TD-11): a ready state always carries `period` and
-    // `comparisonSeries`, so the placeholder config is reachable only from a
-    // non-ready state (non-ready states never carry a forecast).
-    if (this._state.status !== "ready") {
-      return {
-        primaryColor: this._config.primary_color ?? "",
-        fillCurrent: this._config.fill_current ?? true,
-        fillReference: this._config.fill_reference ?? false,
-        fillCurrentOpacity: clampOpacity(this._config.fill_current_opacity),
-        fillReferenceOpacity: clampOpacity(this._config.fill_reference_opacity),
-        connectNulls: this._config.connect_nulls ?? true,
-        showLegend: this._config.show_legend === true,
-        showForecast: isForecastLineVisible(this._config),
-        showReferenceComparison: false,
-        forecastTotal: undefined,
-        unit: "",
-        periodLabel: "",
-        comparisonMode: this._config.comparison_preset,
-        language,
-        numberLocale,
-        precision: this._config.precision ?? 2,
-        forecastLabel,
-        singleWindowMode: true,
-        xAxisMode,
-        xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,
-        xAxisLabelLocale,
-        hour12,
-        haTimeZone: resolved.timeZone,
-        primaryAggregation: "day",
-        fullTimeline,
-        mergedDurationMs,
-        tooltipFormatPattern: tf || undefined,
-        chartTheme: this._resolveChartTheme(),
-        chartTrend: "unknown",
-        chartSemanticOutcome: "insufficient_data"
-      };
-    }
-
-    const state = this._state;
-    const period = state.period;
-    const series = state.comparisonSeries;
-    const windows = state.resolvedWindows;
-    const singleWindow = windows.length < 2;
-    const interpretationSemantics = this._interpretationSemantics();
-    const ct = state.chartTime;
-    const w0 = windows?.[0];
-    const cs = w0?.start ?? period.current_start;
-    // 911/TD-10: single period-label implementation (FR-010).
-    const periodLabel = formatPeriodLabel(cs, language, resolved.timeZone);
-
-    const displayUnit = series.current.unit;
-    const precision = this._config.precision ?? 2;
-
-    const [windowsFirst, windowsSecond] = windows ?? [];
-    const axisHints =
-      !singleWindow && windowsFirst && windowsSecond
-        ? resolveComparisonAxisLabelHints(
-            windowsFirst,
-            windowsSecond,
-            resolved.timeZone
-          )
-        : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
-
-    return {
-      primaryColor: this._config.primary_color ?? "",
-      fillCurrent: this._config.fill_current ?? true,
-      fillReference: this._config.fill_reference ?? false,
-      fillCurrentOpacity: clampOpacity(this._config.fill_current_opacity),
-      fillReferenceOpacity: clampOpacity(this._config.fill_reference_opacity),
-      connectNulls: this._config.connect_nulls ?? true,
-      showLegend: this._config.show_legend === true,
-      showForecast: isForecastLineVisible(this._config) && !singleWindow,
-      showReferenceComparison: !singleWindow && series.reference != null,
-      forecastTotal: state.forecast.forecast_total,
-      panelReferenceCumulative: state.summary.reference_cumulative,
-      unit: displayUnit,
-      periodLabel,
-      referencePeriodStart: period.reference_start.getTime(),
-      windowAlignStartsMs: windows?.map((w) => w.start.getTime()),
-      tailLabelFromIndex: ct?.tailLabelFromIndex,
-      currentWindowStartMs: w0?.start?.getTime(),
-      currentWindowEndMs: w0?.end?.getTime(),
-      comparisonMode: this._config.comparison_preset,
-      language,
-      numberLocale,
-      precision,
-      forecastLabel,
-      singleWindowMode: singleWindow,
-      xAxisMode,
-      xAxisFormatPattern: xAxisMode === "forced" ? xf : undefined,
-      xAxisLabelLocale,
-      hour12,
-      haTimeZone: resolved.timeZone,
-      primaryAggregation: period.aggregation,
-      fullTimeline,
-      mergedDurationMs,
-      tooltipFormatPattern: tf || undefined,
-      chartTheme: this._resolveChartTheme(),
-      chartTrend: state.textSummary.trend,
-      chartSemanticOutcome: singleWindow
-        ? "neutral"
-        : interpretationSemantics.outcome,
-      comparisonAxisOmitYear: axisHints.omitYearOnAxis,
-      comparisonAxisDayOfMonthOnly: axisHints.dayOfMonthOnlyOnAxis
-    };
+    return buildRendererConfig(this, fullTimeline);
   }
 
   protected render(): TemplateResult {
