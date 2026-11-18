@@ -1,77 +1,103 @@
 # Energy Horizon Lovelace Card Constitution
 
-Konstytucja dotyczy rozwoju, utrzymania i ewolucji uniwersalnych kart Lovelace dla Home Assistant, dystrybuowanych przez wbudowany Marketplace (HA 2026.11+) lub HACS (starsze wersje HA). Ma charakter ogólny i powinna być stosowana niezależnie od konkretnego typu karty czy wizualizowanych danych.
+This constitution governs the development, maintenance, and evolution of universal Lovelace cards for Home Assistant, distributed through the built-in Marketplace (HA 2026.11+) or HACS (older HA versions). It is general in nature and applies independently of the specific card type or the visualized data.
 
 ## Core Principles
 
-### I. Zgodność z ekosystemem Home Assistant i Marketplace (HACS)
+### I. Compliance with the Home Assistant ecosystem and Marketplace (HACS)
 
-- Karta musi być zgodna z oficjalnymi wytycznymi Home Assistant dla kart Lovelace (API, konfiguracja YAML/Storage UI, eventy, theming).
-- Projekt domyślnie zakłada instalację i aktualizację przez wbudowany Marketplace (HA 2026.11+) lub HACS (HA < 2026.11), z poprawnie utrzymywanym manifestem `hacs.json` (wymagany przez oba kanały), semantycznym wersjonowaniem i czytelnym changelogiem.
-- Repozytorium i artefakt wydawniczy muszą spełniać wymagania Marketplace: publiczne repozytorium GitHub, manifest `hacs.json`, poprawna struktura plików; deploy docelowo trafia do `www/community/` (ścieżka, pod którą Marketplace instaluje i serwuje zasoby dashboardu).
-- Dokumentacja użytkownika (README, wiki, changelog) opisuje oba kanały instalacji — Marketplace (HA 2026.11+) i HACS (starsze wersje HA) — wraz ze ścieżkami zasobów dashboardu: `/local/community/…` (Marketplace), `/hacsfiles/…` (HACS, działa dalej) oraz `/local/…` (instalacja ręczna).
-- Konfiguracja karty nie może naruszać istniejących wzorców HA (np. nazewnictwa encji, sposobu użycia `state`, `attributes`, `unit_of_measurement`).
-- Karta powinna zachowywać się przewidywalnie w trybach `edit`/`view` dashboardu oraz nie wpływać negatywnie na inne karty.
-- Tam gdzie to tylko mozliwe nalezy wykorzystać wbudoane rozwiązania, standardy, style wizualne, zachowania, biblioteki z Home Assistant.
+- The card MUST comply with the official Home Assistant guidelines for Lovelace cards (API, YAML/Storage UI configuration, events, theming).
+- The project assumes, by default, installation and updates through the built-in Marketplace (HA 2026.11+) or HACS (HA < 2026.11), with a properly maintained `hacs.json` manifest (required by both channels), semantic versioning, and a readable changelog.
+- The repository and the release artifact MUST meet the Marketplace requirements: a public GitHub repository, a `hacs.json` manifest, a correct file structure; the deployment target is `www/community/` (the path under which the Marketplace installs and serves dashboard assets).
+- User documentation (README, wiki, changelog) describes both installation channels — Marketplace (HA 2026.11+) and HACS (older HA versions) — together with the dashboard asset paths: `/local/community/…` (Marketplace), `/hacsfiles/…` (HACS, still works), and `/local/…` (manual installation).
+- Card configuration MUST NOT violate existing HA patterns (e.g., entity naming, the use of `state`, `attributes`, `unit_of_measurement`).
+- The card SHOULD behave predictably in the dashboard's `edit`/`view` modes and MUST NOT negatively affect other cards.
+- Wherever possible, built-in Home Assistant solutions, standards, visual styles, behaviors, and libraries MUST be reused.
+- **Custom element name persistence:** `energy-horizon-card` and `energy-horizon-card-editor` are part of the public API (user YAML) and MUST NOT change after first publication.
 
-### II. Bezpieczeństwo i odporność na błędy
+### II. Security and fault tolerance
 
-- Cała logika działa wyłącznie w przeglądarce użytkownika i komunikuje się z Home Assistantem wyłącznie poprzez natywne API kart Lovelace oraz oficjalne mechanizmy HA – bez własnych, niestandardowych kanałów komunikacji.
-- Wejścia z YAML, Storage UI oraz wartości z encji są traktowane jako dane nieufne: podlegają rygorystycznej sanityzacji i walidacji (m.in. ochrona przed XSS, filtrowanie HTML, bezpośredniego wstrzykiwania skryptów i niebezpiecznych atrybutów).
-- Dane konfiguracyjne i stany nie mogą zawierać wrażliwych informacji ujawnianych w UI, logach czy komunikatach błędów.
-- Karta musi być odporna na brakujące encje, niespójne dane, nietypowe jednostki oraz błędne konfiguracje – zamiast crasha: czytelny, nienachalny komunikat dla użytkownika.
-- Wszystkie operacje na danych muszą być defensywne: sprawdzanie typów, zakresów, istnienia atrybutów, z sensownymi wartościami domyślnymi i wariantami „graceful degradation”, które nie blokują działania całego dashboardu.
-- Błędy powinny być logowane w sposób pomagający w diagnostyce, ale bez ujawniania prywatnych danych.
+- All logic runs exclusively in the user's browser and communicates with Home Assistant exclusively through the native Lovelace card API and the official HA mechanisms — with no custom communication channels of its own.
+- Input from YAML, Storage UI, and entity values is treated as untrusted data: it undergoes rigorous sanitization and validation (including protection against XSS, HTML filtering, direct script injection, and dangerous attributes).
+- Configuration data and states MUST NOT contain sensitive information exposed in the UI, logs, or error messages.
+- The card MUST be resilient to missing entities, inconsistent data, unusual units, and misconfigurations — instead of crashing: a clear, non-intrusive message for the user.
+- All data operations MUST be defensive: checking types, ranges, and attribute presence, with sensible default values and "graceful degradation" variants that do not block the operation of the whole dashboard.
+- Errors SHOULD be logged in a way that aids diagnosis, without exposing private data.
+- **Prohibition of dynamic code execution:** `eval()`, `Function()`/`new Function()`, and fetching and running external JavaScript code during the card's operation are forbidden. All executable code MUST reside in the built card bundle.
 
-### III. Jakość kodu, testy i utrzymanie
+### III. Code quality, tests, and maintenance
 
-- Cały kod aplikacyjny jest tworzony w TypeScript z rygorystycznymi ustawieniami kompilatora (`strict`, ścisłe typowanie, unikanie `any`) oraz dbałością o poprawne modele typów dla encji i konfiguracji YAML.
-- Kod frontendu opiera się na rekomendowanych technologiach dla kart HA (np. Web Components/Lit) oraz jest modularny, czytelny i konsekwentnie sformatowany.
-- Kluczowe funkcje (np. agregacja danych, przeliczanie energii, logika zakresów czasowych) muszą być pokryte testami jednostkowymi lub przynajmniej łatwe do przetestowania.
-- Zmiany funkcjonalne wymagają aktualizacji dokumentacji, przykładów konfiguracji oraz – jeśli dotyczy – zrzutów ekranu.
-- API konfiguracji karty traktujemy jak kontrakt publiczny: zmiany łamiące kompatybilność są wyraźnie oznaczane w wersjonowaniu i dokumentacji, z opisem ścieżki migracji.
+- All application code is written in TypeScript with strict compiler settings (`strict`, strict typing, avoidance of `any`) and with careful type models for entities and YAML configuration.
+- Frontend code is built on the technologies recommended for HA cards (e.g., Web Components/Lit) and is modular, readable, and consistently formatted.
+- **Test-Driven Development for domain logic:** all domain logic (data processing/aggregation, energy calculation, time windows, forecast, unit scaling, narrative/labels, config normalize/merge) MUST be developed test-first (Red-Green-Refactor); writing production domain code without a previously written failing unit test is forbidden. *Grandfathering (baseline 2026-11-16: 62 test files / 678 tests):* the existing codebase is a documented one-time exception — its regression tests establish the baseline. Refactoring existing logic MUST be preceded by characterization tests freezing the current behavior.
+- Functional changes require updates to the documentation, configuration examples, and — where applicable — screenshots.
+- The card configuration API is treated as a public contract: compatibility-breaking changes are clearly marked in versioning and documentation, together with a description of the migration path.
+- **Domain isolation from the Home Assistant API (Testability by Design):** domain modules MUST NOT import Lit/DOM or use the `hass` object directly; access to entity states, WebSocket LTS, and HA services MUST go through a single boundary (`ha-api.ts` + the `HomeAssistant` contract in `ha-types.ts`) so that every domain module is fully testable without Home Assistant (mocks).
+- **Strict lifecycle management:** removal of the card from the DOM (dashboard change, edit mode, reload) MUST release all resources — the chart instance (`dispose`), timers, and listeners; in-flight requests are protected by the load-generation mechanism (stale-load discard).
+- **Language Policy:** SpecKit documentation (`specs/`, `.specify/`), this constitution, source code and comments, the changelog, and product documentation (README, wiki) are maintained in English — to speed up LLM processing and ensure readability for the international HA community. The AI agent's reasoning process (chain-of-thought) is conducted in English. Agent responses to the user in the IDE are in the language used by the user.
 
-### IV. UX/UI, dostępność i wizualizacja danych
+### IV. UX/UI, accessibility, and data visualization
 
-- Interfejs karty jest projektowany w duchu „Home Assistant look & feel”: spójne typografie, odstępy, kolory i komponenty, z poszanowaniem motywów jasnych/ciemnych.
-- Informacje prezentowane są w sposób zwięzły i hierarchiczny: kluczowe dane (np. bieżące zużycie, trend, porównania) są najbardziej wyeksponowane; szczegóły dostępne na żądanie (hover, klik, rozwinięcia).
-- Wybór typów wykresów, kolorów i skali musi wspierać zrozumienie danych, a nie tylko estetykę (np. konsekwentne użycie koloru dla „zużycie”, „produkcja”, „limit”, „prognoza”).
-- Karta powinna być responsywna, czytelna na różnych rozmiarach kafelków i ekranach (od telefonu po duży monitor).
-- Dostępność jest wymogiem, nie opcją: odpowiedni kontrast, obsługa klawiatury, etykiety ARIA, przemyślane komunikaty dla czytników ekranu.
+- The card interface is designed in the spirit of the "Home Assistant look & feel": consistent typography, spacing, colors, and components, with full respect for light and dark themes.
+- Information is presented concisely and hierarchically: key data (e.g., current usage, trend, comparisons) is the most exposed; details are available on demand (hover, click, expansion).
+- The choice of chart types, colors, and scale MUST support the comprehension of the data, not only aesthetics (e.g., consistent use of color for "consumption", "production", "limit", "forecast").
+- The card SHOULD be responsive and readable across different tile and screen sizes (from a phone to a large monitor).
+- Accessibility is a requirement, not an option: sufficient contrast, keyboard support, ARIA labels, thoughtful screen-reader messages.
 
-### V. Wydajność, prostota i obserwowalność
+### V. Performance, simplicity, and observability
 
-- Przetwarzanie danych musi być efektywne – minimalizujemy liczbę odświeżeń, unikamy zbędnych re-renderów, nie blokujemy głównego wątku ciężkimi obliczeniami.
-- Preferujemy proste, zrozumiałe rozwiązania nad „magię” – każda dodatkowa złożoność musi przynosić wyraźną wartość użytkownikowi.
-- Karta powinna w przejrzysty sposób reagować na typowe problemy (brak uprawnień, brak danych, błędna konfiguracja) i dostarczać sygnałów, które ułatwiają debugowanie (logi w konsoli, komunikaty w UI, sekcja „troubleshooting” w dokumentacji).
-- Wszelkie mechanizmy cache’owania, agregacji lub optymalizacji danych muszą być czytelnie zaimplementowane i łatwe do wyłączenia lub przeprojektowania w przyszłości.
+- Data processing MUST be efficient — minimize the number of refreshes, avoid unnecessary re-renders, and do not block the main thread with heavy computation.
+- Simple, understandable solutions are preferred over "magic" — every additional complexity MUST bring clear value to the user.
+- The card SHOULD react in a transparent way to typical problems (missing permissions, missing data, misconfiguration) and provide signals that ease debugging (console logs, in-UI messages, a "troubleshooting" section in the documentation).
+- All caching, aggregation, or data-optimization mechanisms MUST be clearly implemented and easy to disable or redesign in the future.
+- The card reacts to state updates delivered by Lovelace and MUST NOT open its own subscriptions or polling beyond LTS requests triggered by configuration or state changes.
 
-### VI. Dbałość językowa i UX writing
+### VI. Language care and UX writing
 
-- Każdy tekst skierowany do użytkownika — dokumentacja, README, wiki, etykiety w formularzach, komunikaty błędów, komunikaty w UI — musi być redagowany z pozycji specjalisty języka, w którym tekst ma być napisany: lingwisty, redaktora i specjalisty UX writing.
-- Agent traktuje każdy otrzymany szkic jako tekst wymagający redakcji: zbyt długie i złożone zdania, błędnie użyte spójniki, błędy odmiany oraz niezrozumiałe komunikaty i etykiety muszą zostać poprawione, a nie przeniesione do tekstu docelowego.
-- Tekst docelowy musi być zrozumiały po pierwszej lekturze, pisany prostym językiem, tonem życzliwym, ale profesjonalnym, zgodnie ze standardami UX writing.
-- Komunikaty błędów i etykiety muszą być krótkie i konkretne; żargon techniczny jest używany tylko tam, gdzie jest niezbędny dla zrozumienia.
+- Every piece of user-facing text — documentation, README, wiki, form labels, error messages, in-UI messages — MUST be edited from the standpoint of a specialist in the language in which the text is written: a linguist, an editor, and a UX-writing specialist.
+- The agent treats every received draft as text requiring editing: overly long and complex sentences, incorrectly used conjunctions, inflection errors, and unclear messages and labels MUST be corrected, not carried over into the target text.
+- The target text MUST be understandable on first reading, written in simple language, in a friendly but professional tone, in accordance with UX-writing standards.
+- Error messages and labels MUST be short and concrete; technical jargon is used only where it is necessary for understanding.
 
-## Dodatkowe wymagania i ograniczenia
+### VII. Pragmatic Architecture & Anti-Over-Engineering (AI Guardrails)
 
-- Projekt utrzymuje spójny styl pracy z ekosystemem open‑source: przejrzysty `README`,`changelog`, wiki na github, jasne zasady zgłaszania problemów i kontrybucji, szacunek dla użytkowników i współtwórców.
-- Biblioteki zewnętrzne dobieramy rozważnie: preferujemy lekkie, dobrze utrzymane, szeroko stosowane pakiety; unikamy nadmiernych zależności i „vendor lock‑in”, a każda nowa zależność NPM musi być uzasadniona i nie duplikować funkcjonalności dostępnej natywnie, w Home Assistant lub w istniejącym kodzie.
-- Wszelkie operacje na danych energii powinny szanować lokalne uwarunkowania (strefa czasowa, jednostki, formaty dat/liczb) i jak najpełniej wykorzystywać natywne możliwości Home Assistant.
-- Funkcje eksperymentalne lub „zaawansowane” muszą być wyraźnie oznaczone i domyślnie nie powinny komplikować podstawowego doświadczenia użytkownika.
+- **Pure functions over class hierarchies:** domain logic MUST be implemented using simple, exported pure functions rather than complex class hierarchies, factories, or dependency-injection frameworks; classes are permitted only as thin Lit element shells.
+- **Unidirectional dependency direction:** dependencies MUST flow one way — pure core → Home Assistant boundary → UI; import cycles are forbidden.
+- **No abstractions without a concrete, identified use** (cross-reference V: simple, understandable solutions over "magic").
+- **Three-tier state allocation:** (1) the only persistent user data is the card configuration in the dashboard (YAML/Storage UI) — fully declarative and portable; (2) HA entity states are the source of truth for data (read-only); (3) transient state (loading, preview, editor state) lives only in memory of the element instance. The card MUST NOT create its own persistence (localStorage/sessionStorage/IndexedDB).
+- **Styling discipline:** visual styling is done exclusively through CSS classes in a single module (`energy-horizon-card-styles.ts`); inline `style` is permitted only for functional geometry (e.g., chart container sizing), never for visual styling; chart appearance is defined in one place (the ECharts option builder), with colors derived from configuration/theme.
 
-## Workflow rozwojowy i jakość
+## Additional requirements and constraints
 
-- Wszystkie zmiany wprowadzane są poprzez pull requesty, z co najmniej jedną niezależną recenzją przy istotnych modyfikacjach logiki lub UI.
-- Każda nowa funkcja lub istotna zmiana istniejącej musi być poparta opisem przypadku użycia oraz wpływu na UX, wydajność i kompatybilność z istniejącymi konfiguracjami.
-- Przed wydaniem wersji produkcyjnej karty przeprowadzamy testy w realistycznym środowisku Home Assistant (różne encje, różne konfiguracje dashboardu, co najmniej kilka motywów).
-- Pipeline wydawniczy (ręczny lub automatyczny) zapewnia: budowanie artefaktów, podstawową walidację, aktualizację wersji i changeloga, a także weryfikację poprawności metadanych Marketplace/HACS (`hacs.json`).
+- The project maintains a consistent open-source workflow: a transparent `README`, a maintained `changelog`, a GitHub wiki, clear rules for reporting issues and contributing, and respect for users and co-creators.
+- External libraries are chosen deliberately: prefer light, well-maintained, widely used packages; avoid excessive dependencies and "vendor lock-in"; every new NPM dependency MUST be justified and MUST NOT duplicate functionality available natively, in Home Assistant, or in the existing code.
+- **License compatibility of dependencies:** the project is licensed under GPL v3; every external dependency MUST have a license compatible with GPL v3. Including a dependency with a conflicting license is forbidden without an explicit, documented decision.
+- All operations on energy data SHOULD respect local conditions (time zone, units, date/number formats) and make fullest use of Home Assistant's native capabilities.
+- Experimental or "advanced" features MUST be clearly marked and, by default, MUST NOT complicate the basic user experience.
+
+## Development workflow and quality
+
+- All changes are introduced through pull requests, with at least one independent review for significant modifications to logic or UI.
+- Every new feature or significant change to an existing one MUST be supported by a description of its use case and of its impact on UX, performance, and compatibility with existing configurations.
+- Before releasing a production version of the card, testing is conducted in a realistic Home Assistant environment (different entities, different dashboard configurations, at least several themes).
+- The release pipeline (manual or automated) ensures: building the artifacts, basic validation, updating the version and changelog, and verifying the correctness of the Marketplace/HACS metadata (`hacs.json`).
+- Every PR modifying business logic MUST include corresponding tests; all tests MUST pass automatically before release artifacts are built.
+
+### Task Breakdown & Execution Rules (Logical Atomicity)
+
+- **Single behavioral increment:** every task in `tasks.md` represents a single, coherent behavioral change or architectural step.
+- **Self-contained & compilable:** after completing a single task, the project MUST build and pass the full gate (test/typecheck/lint/build); splitting tasks in a way that leaves the project in a broken state is forbidden.
+- **Immediate checkoff:** immediately after successfully completing and verifying a task, the task MUST be marked `[x]` in `tasks.md`; batch checkoff of tasks at the end of a session is forbidden.
+- **Session interruption & context compaction:** after any session interruption or context compaction, `tasks.md` MUST be re-read and completed-but-unmarked tasks checked off before starting new work.
+- **Parallel execution:** only for tasks explicitly marked `[P]`; per-spec rules (e.g., a spec's program rules) may strengthen, never weaken, this protocol.
 
 ## Governance
 
-- Niniejsza konstytucja ma pierwszeństwo przed lokalnymi preferencjami implementacyjnymi; w razie konfliktu praktyka musi zostać dopasowana do zasad konstytucji lub należy formalnie zmienić konstytucję.
-- Zmiany konstytucji wymagają: (1) uzasadnienia (np. nowe wytyczne HA/Marketplace/HACS, nowe potrzeby użytkowników, problemy bezpieczeństwa), (2) omówienia w dokumentacji projektu, (3) planu migracji, jeśli wpływają na istniejących użytkowników.
-- Każda większa decyzja projektowa (nowy typ wizualizacji, istotne rozszerzenie konfiguracji, zmiana domyślnych zachowań) powinna być weryfikowana pod kątem zgodności z tą konstytucją.
-- Przeglądy okresowe projektu (np. przy większych wydaniach) powinny zawierać punkt „zgodność z konstytucją” i identyfikować miejsca wymagające refaktoryzacji.
+- This constitution takes precedence over local implementation preferences; in case of conflict, the practice MUST be brought in line with the constitution's principles, or the constitution MUST be formally amended.
+- Constitution changes require: (1) justification (e.g., new HA/Marketplace/HACS guidelines, new user needs, security issues), (2) discussion in the project documentation, (3) a migration plan if the change affects existing users.
+- Every major project decision (a new visualization type, a significant configuration extension, a change of default behaviors) SHOULD be verified for compliance with this constitution.
+- Periodic project reviews (e.g., at major releases) SHOULD include a "constitution compliance" item and identify places requiring refactoring.
+- **Versioning policy:** the constitution version follows semantic versioning (MAJOR.MINOR.PATCH). MAJOR: backward-incompatible removal or redefinition of a principle. MINOR: a new principle/section added or materially expanded guidance. PATCH: clarifications, wording, or typo fixes.
+- **Compliance review:** a constitution compliance review is a mandatory checkpoint before every production release.
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-11-06
+**Version**: 1.3.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-11-18
