@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-05
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: "Wykorzystując powyższe podsumowanie i artefakty z assessments opracuj specyfikację" — based on the assessment pipeline artifacts for the `timewindow-preview` idea: a card-level feature to temporarily shift the configured time window forward/backward to inspect past periods, without modifying the card configuration.
 

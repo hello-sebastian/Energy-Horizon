@@ -63,6 +63,7 @@ YAML mode inside the editor is still available as a first-class input path (live
 
 ## Common next steps
 
+- Browse a past period without touching the configuration: [How-To: Time Windows](How-To-Time-Windows) (transient preview)
 - Add a 3rd context series: [How-To: Time Windows](How-To-Time-Windows)
 - Reduce points / fix performance: [How-To: Aggregation & Performance](How-To-Aggregation-and-Performance)
 - Understand forecast: [Forecast and Data Internals](Forecast-and-Data-Internals)

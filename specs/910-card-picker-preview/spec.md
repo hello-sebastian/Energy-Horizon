@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-13
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description (Polish): "Kiedy dodaję kartę Energy Horizon do dashboardu w HA: 1) poprzez wybór encji, kiedy zaznaczę encję w obsługiwanych jednostkach przez kartę, karta Energy Horizon nie pojawia się w proponowanych kartach. Pożądane zachowanie: karta EH wyświetla się pokazując przykładową konfigurację dla zaznaczonej encji – o ile encja jest w jednostkach obsługiwanych przez kartę. 2) kiedy dodaję poprzez wybór karty, w galerii dostępnych kart karta Energy Horizon wyświetla się w formie informacji 'There is no data to display for the selected period' co uniemożliwia użytkownikowi wizualne rozpoznanie karty. Pożądane zachowanie: podczas wyboru karty EH poprzez wybór karty, karta wyświetla się z przykładową konfiguracją – schemat generowania podglądu zgodny ze standardami HA – jeśli takiego schematu brakuje przykładowe propozycje rozwiązań a) wyświetlić przykładową zgodną encję użytkownika w przykładowej konfiguracji karty lub b) jeśli brakuje takiej encji lub z innych powodów jest to nieoptymalne wyświetlić przykładową fikcyjną serię danych, która umożliwi wyświetlenie karty w swoim standardowym wyglądzie i ze standardowymi informacjami, co umożliwi użytkownikowi ocenę przydatności karty do jego scenariusza."
 

@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-16
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: self-contained specify prompt for feature `911-tech-debt-reduction` — a tech-debt reduction program for the Energy Horizon Card, modeled as ONE shared speckit feature (not 14 separate features, and not a bug triad). Requirements source: `architecture-audit-2026-11-15.md` (repo root). The prompt was pasted inline into the `/speckit.specify` command; its canonical, uncorrupted copy is `911-specify-prompt.md` in the repo root (the inline paste was partially corrupted by shell expansion, so the on-disk file is the reference).
 

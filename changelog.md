@@ -5,6 +5,8 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-18
+
 ### Added
 
 - **Official catalog listing:** Energy Horizon Card is now listed in the built-in **Marketplace** catalog (HA 2026.11+) and in the **default HACS** catalog — installing is a plain catalog search, no custom repository needs to be added.
@@ -13,6 +15,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
   - **"By card" view (gallery):** the preview no longer shows the "There is no data to display for the selected period" message. It searches for a suitable user entity with a supported unit and uses it; when none exists it falls back to a **deterministic demo series** so the card always renders in its standard appearance (a chart with a current and a reference series plus the standard panels).
   - **Real data first, fictional fallback:** after the demo series renders immediately (no blocking, no loading/error state), a **time-limited** real-data query (~2.5 s) upgrades the preview in place to the entity's real data when it succeeds in time; on failure, timeout, or empty result the demo series stays.
   - **Strictly a preview:** the sample configuration is only the picker's starting point — it is **never persisted** as the card's configuration, the preview **never blocks** on data, and it **does not interfere** with other cards' previews or the picker. The preview respects the active theme (light/dark) and the card's localization. The 909 time-window preview controls are hidden in the picker.
+- **Transient time-window preview:** a pair of arrow controls in the top-right of the chart area steps the displayed time window to an earlier or a later period, and a reset control returns to the current period — inspect past periods without touching the card's configuration. The shifted series render in gray and the card shows a `Preview: <period>` indication. The preview is transient: it is never written to the configuration, the summary panels and the narrative stay unchanged, and the controls are hidden in the HA card picker.
 
 ### Changed
 
@@ -37,6 +40,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 - Installation docs (README quick start, Getting Started wiki page) now present the default **Marketplace** and **HACS** catalogs as the install path — searching for the card is the default method, the README **Marketplace / HACS** badge now reads **Default**, and the "Open this repository in the Marketplace" button opens the card's plugin page in the Marketplace instead of the custom-repository flow. The HACS section notes that the built-in Marketplace replaces HACS on HA 2026.11+ and migrates existing HACS installations automatically.
 - Wiki: added a "Known simplifications: number format → locale mapping" section to the Troubleshooting & FAQ page, documenting how the `number_format` option maps to the locale used for number rendering.
+- Wiki: added a "How-to: browse past periods with the transient preview (no config change)" section to the How-To: Time Windows page, with a pointer from the First Comparisons quick recipes. README and Getting Started now present the dashboard add-card picker + visual form as the default way to add the card, with the YAML snippet below for advanced users.
 
 ### Maintenance
 
@@ -45,6 +49,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 - The production build no longer emits a source map: `dist/energy-horizon-card.js.map` is no longer part of the committed/published artifact (the card bundle itself is unchanged).
 - Repository hygiene: removed the working "SYNC IMPACT REPORT" comment block from the project constitution, removed the tracked `temp/` scratch directory, and dropped the unused `jsx: "react-jsx"` TypeScript compiler option.
 - Constitution amended to **v1.3.0** (MINOR): full Polish-to-English translation under the new Language Policy (no provision dropped, weakened, or redefined — no MAJOR), a new core principle **VII. Pragmatic Architecture & Anti-Over-Engineering (AI Guardrails)** (pure functions, unidirectional dependencies, three-tier state allocation, styling discipline), a TDD rule for domain logic with the grandfathered baseline (2026-11-16: 62 test files / 678 tests), and new clauses for domain isolation from the HA API, strict lifecycle management, prohibition of dynamic code execution, GPL v3 dependency license compatibility, custom element name persistence, PR test requirements, task-execution logical atomicity, and a Governance versioning policy with a mandatory constitution compliance review before every production release. Documentation-only change — no code or build artifact impact. See `docs/constitution-amendment-1.3.0.md`.
+- Constitution amended to **v1.4.0** (MINOR): the "Task Breakdown & Execution Rules (Logical Atomicity)" section gained two clauses — **No feature bundling** (a task covering several separate concerns MUST be split into separate tasks, one concern per task) and **Sequencing gate** (task N+1 MUST NOT start until task N is marked `[x]` in `tasks.md`) — and a mandatory `eh.task-protocol` hook was registered in `.specify/extensions.yml` (`before_implement`, `optional: false`) to inject the per-task protocol into every `/speckit-implement` run. Documentation-only change — no code or build artifact impact.
 
 ## [1.2.0] - 2026-11-07
 

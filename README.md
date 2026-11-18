@@ -4,7 +4,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue?style=for-the-badge&color=%2300c29e&logo=homeassistant&logoColor=white)&ensp;
 ![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Default-orange?style=for-the-badge)  
-![Release](https://img.shields.io/badge/version-1.2.0-informational?style=for-the-badge&color=%2300c29e)&ensp;
+![Release](https://img.shields.io/badge/version-1.3.0-informational?style=for-the-badge&color=%2300c29e)&ensp;
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=for-the-badge&color=%2300c29e)](https://www.gnu.org/licenses/gpl-3.0)&ensp;
 ![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)
 
@@ -51,6 +51,14 @@ type: module
 ```
 
 ### 3) Add the card
+
+**Easiest way — the dashboard add-card picker + visual form (no YAML):**
+
+1. Open the dashboard in **Edit** mode and open the **add-card picker** (the **+** button — pick **by entity** or **by card**).
+2. In the **by entity** view the card is suggested automatically when the selected entity uses a supported unit (`kWh`, `Wh`, `MWh`, `m³`, `l`); in the **by card** view (gallery) it renders a live preview. Select **Energy Horizon** and click **Add**.
+3. Configure the card in the **visual form** — seven sections (General, Time windows, Panels, Formatting & Localization, Chart settings, Style, Diagnostics) with a live preview — and click **Done**.
+
+**YAML (for advanced users):**
 
 ```yaml
 type: custom:energy-horizon-card
@@ -100,6 +108,10 @@ Extrapolates your current rate of energy generation or usage to project your fin
 Dynamically selects the optimal temporal resolution (hourly, daily, weekly, or monthly slots) depending on your selected time window, ensuring smooth charts and high performance on mobile devices without cluttering the screen.
 - Learn more: [Aggregation and Axis Labels](https://github.com/hello-sebastian/energy-horizon/wiki/Aggregation-and-Axis-Labels) and [How-To: Aggregation & Performance](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Aggregation-and-Performance)
 
+### Transient Time-Window Preview
+
+Step the displayed time window to earlier or later periods with the controls in the top-right of the chart area — see what a previous month or year looked like without changing or saving your card's configuration. The shifted series render in gray; a reset control returns to the current period.
+- Learn more: [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows)
 
 ### Zero-Backend Overhead
 

@@ -6,7 +6,7 @@ Ten plik zbiera skrótową architekturę funkcji i powiązania ze Speckit (`spec
 
 Tabela **wszystkich** katalogów `specs/*` z mapowaniem na kod i statusem: [specs/README.md](specs/README.md).
 
-Dokumentacja Energy Horizon Card jest podzielona na 8 domen domenowych (`900–907`). Każda domena ma plik `spec.md` będący jedynym źródłem prawdy dla danego obszaru.
+Dokumentacja Energy Horizon Card jest podzielona na 12 domen (`900–911`). Każda domena ma plik `spec.md` będący jedynym źródłem prawdy dla danego obszaru.
 
 ## Silnik okien czasowych — `900-time-model-windows`
 

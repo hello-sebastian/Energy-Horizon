@@ -150,6 +150,23 @@ aggregation: month
 
 ---
 
+## How-to: browse past periods with the transient preview (no config change)
+
+**Goal:** See what a previous month or year looked like on this card — without editing the configured time window, saving anything, or affecting other viewers of the dashboard.
+
+**Steps:**
+
+1. Use the two arrow controls in the **top-right of the chart area**: the left arrow steps to the **earlier** period, the right arrow steps to the **later** period.
+2. The **reset** control returns to the current period.
+
+**Expected outcome:** the chart shows the selected period with the same layout as the configured window — the shifted series render in **gray** and the card shows a `Preview: <period>` indication. The summary panels and the narrative text stay unchanged. The preview is transient: it is never written to the card's configuration and is lost on any reload; the controls are hidden in the HA card picker.
+
+**When it fails:**
+
+- If a stepped-back period is empty, that period has no long-term statistics yet — see [Troubleshooting and FAQ](Troubleshooting-and-FAQ).
+
+---
+
 ## See also
 
 - [Time Window Reference](Time-Window-Reference)

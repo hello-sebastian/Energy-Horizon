@@ -78,33 +78,13 @@ If you forked the repository (or want to build a specific commit):
 
 ## 3) Add your first card
 
-```yaml
-type: custom:energy-horizon-card
-entity: sensor.your_energy_statistic
-comparison_preset: year_over_year
-aggregation: day
-```
+**Easiest way — the dashboard add-card picker + visual form (no YAML):**
+
+1. Open the dashboard in **Edit** mode and open the **add-card picker** (the **+** button — pick **by entity** or **by card**).
+2. Find **Energy Horizon** in the list — in the **by entity** view the card is suggested automatically when the selected entity uses a supported unit (`kWh`, `Wh`, `MWh`, `m³`, `l`); in the **by card** view (gallery) it renders a live preview. Select the card and click **Add**.
+3. Configure the card in the **visual form** — **seven sections**: General, Time windows, Panels, Formatting & Localization, Chart settings, Style, Diagnostics (General and Time windows are expanded by default). The **live preview** updates as you change values; click **Done** to save.
 
 The forecast line is **on by default**. Set `show_forecast: false` only if you want to hide it.
-
-### Optional: consecutive calendar months
-
-For **this calendar month** vs the **previous full month** (not “same month last year”):
-
-```yaml
-type: custom:energy-horizon-card
-entity: sensor.your_energy_statistic
-comparison_preset: month_over_month
-aggregation: day
-```
-
-### Optional: configure with the visual editor (no YAML)
-
-Since **v1.2.0** you can configure the card entirely in the GUI:
-
-1. Open the dashboard in **Edit** mode and click the card’s **pencil** (or three-dot menu → **Options**).
-2. The editor shows **seven sections** — General, Time windows, Panels, Formatting & Localization, Chart settings, Style, Diagnostics (General and Time windows are expanded by default). Expand any section to edit its fields.
-3. The **live preview** updates as you change values; click **Done** to save.
 
 **A quick tour of the sections** (what to do in each on first configuration):
 
@@ -120,7 +100,27 @@ Since **v1.2.0** you can configure the card entirely in the GUI:
 
 <!-- IMAGE PLACEHOLDER: Screenshot of the visual editor in its default state (General and Time windows expanded, the rest collapsed) — the view a first-time user sees when opening the editor. -->
 
+**YAML (for advanced users):**
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.your_energy_statistic
+comparison_preset: year_over_year
+aggregation: day
+```
+
 You do not need to touch YAML. Advanced users can switch to **YAML mode** inside the editor — both modes show the full config and switching is lossless. See [Configuration and Customization](Configuration-and-Customization#visual-editor-v120).
+
+### Optional: consecutive calendar months
+
+For **this calendar month** vs the **previous full month** (not “same month last year”):
+
+```yaml
+type: custom:energy-horizon-card
+entity: sensor.your_energy_statistic
+comparison_preset: month_over_month
+aggregation: day
+```
 
 ---
 

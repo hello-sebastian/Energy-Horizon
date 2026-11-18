@@ -21,6 +21,13 @@ Cross-check option names against [Configuration and Customization](Configuration
 
 ## Notable behavior changes
 
+### 1.3.0 — Transient preview & picker discoverability (909, 910)
+
+- **No breaking changes:** no renamed, removed, or re-scoped options — existing YAML works unchanged, and the tech-debt program (911) left the configuration schema, i18n keys, rendering, and public API untouched.
+- **Transient time-window preview:** a pair of arrow controls + reset in the top-right of the chart area step the displayed window to earlier/later periods — a quick look-back that never touches the card's configuration (shifted series in gray, `Preview: <period>` indication).
+- **Card picker preview:** in the add-card picker the card is suggested for supported units (`kWh`, `Wh`, `MWh`, `m³`, `l`) with a sample configuration, and the card gallery renders a standard preview (demo series, time-limited upgrade to real data) instead of “There is no data to display for the selected period”.
+- **Catalog listing:** the card is listed in the built-in **Marketplace** catalog (HA 2026.11+) and in the **default HACS** catalog.
+
 ### 1.2.0 — Full-coverage visual editor (908)
 
 - **Full-coverage visual editor:** the Lovelace editor now exposes **every** configuration parameter, organized into seven sections — **General**, **Time windows**, **Panels**, **Formatting & Localization**, **Chart settings**, **Style**, **Diagnostics** (with subsections such as **Custom settings**, **Unit**, **Dates**, **Current series**, **Reference series**). **General** and **Time windows** are expanded by default. No YAML is required to configure the card.
