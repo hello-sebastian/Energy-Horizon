@@ -12,4 +12,6 @@ pnpm-debug.log*
 .turbo/
 .vite/
 
+graphify-out/
+
 design/

@@ -86,8 +86,10 @@ This constitution governs the development, maintenance, and evolution of univers
 ### Task Breakdown & Execution Rules (Logical Atomicity)
 
 - **Single behavioral increment:** every task in `tasks.md` represents a single, coherent behavioral change or architectural step.
+- **No feature bundling:** a task covering several separate concerns (for example business logic, user interface, and localization text) MUST be split into separate tasks — one concern per task.
 - **Self-contained & compilable:** after completing a single task, the project MUST build and pass the full gate (test/typecheck/lint/build); splitting tasks in a way that leaves the project in a broken state is forbidden.
 - **Immediate checkoff:** immediately after successfully completing and verifying a task, the task MUST be marked `[x]` in `tasks.md`; batch checkoff of tasks at the end of a session is forbidden.
+- **Sequencing gate:** task N+1 MUST NOT be started until task N is marked `[x]` in `tasks.md`.
 - **Session interruption & context compaction:** after any session interruption or context compaction, `tasks.md` MUST be re-read and completed-but-unmarked tasks checked off before starting new work.
 - **Parallel execution:** only for tasks explicitly marked `[P]`; per-spec rules (e.g., a spec's program rules) may strengthen, never weaken, this protocol.
 
@@ -100,4 +102,4 @@ This constitution governs the development, maintenance, and evolution of univers
 - **Versioning policy:** the constitution version follows semantic versioning (MAJOR.MINOR.PATCH). MAJOR: backward-incompatible removal or redefinition of a principle. MINOR: a new principle/section added or materially expanded guidance. PATCH: clarifications, wording, or typo fixes.
 - **Compliance review:** a constitution compliance review is a mandatory checkpoint before every production release.
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-11-18
+**Version**: 1.4.0 | **Ratified**: 2026-03-05 | **Last Amended**: 2026-11-18

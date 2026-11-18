@@ -3,4 +3,12 @@ installed:
 - bug
 settings:
   auto_execute_hooks: true
-hooks: {}
+hooks:
+  before_implement:
+  - command: eh.task-protocol
+    description: 'Inject the mandatory per-task execution protocol (Constitution: Task
+      Breakdown & Execution Rules — Logical Atomicity). Each task MUST be checked off
+      in tasks.md immediately after it is completed and verified; batch checkoff is
+      forbidden, and task N+1 MUST NOT start until task N is marked [x].
+      '
+    optional: false
