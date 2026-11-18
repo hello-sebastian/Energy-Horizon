@@ -106,9 +106,24 @@ describe("picker preview render (910 US2, T015)", () => {
     expect(root.querySelector("ha-alert")).toBeNull();
     expect(root.textContent ?? "").not.toContain("No data");
 
-    // The 909 time-window preview controls are hidden in picker mode (R6).
-    expect(root.querySelector(".ebc-chart-controls")).toBeNull();
-    expect(root.querySelectorAll(".ebc-chart-control").length).toBe(0);
+    // 909 FR-022–FR-025 (refinement 2026-11-18; 910 R6 superseded): the 909
+    // time-window preview controls are rendered in picker mode — visible with
+    // their normal appearance (no `disabled` attribute) and non-interactive.
+    // Back + forward are the always-rendered controls; reset is contextual
+    // (FR-009/FR-010: only while a shift is active, which cannot occur in a
+    // preview context).
+    const controls = root.querySelector(".ebc-chart-controls");
+    expect(controls).not.toBeNull();
+    const pickerButtons = Array.from(
+      root.querySelectorAll(".ebc-chart-control")
+    );
+    expect(pickerButtons.length).toBe(2);
+    for (const btn of pickerButtons) {
+      expect(btn.hasAttribute("disabled")).toBe(false);
+      expect(btn.getAttribute("aria-disabled")).toBe("true");
+      expect(btn.getAttribute("tabindex")).toBe("-1");
+      expect(btn.getAttribute("aria-label")).not.toBeNull();
+    }
 
     document.body.removeChild(el);
   });
@@ -441,5 +456,182 @@ describe("picker preview safety (910 US4, T020)", () => {
 
     document.body.removeChild(el1);
     document.body.removeChild(el2);
+  });
+});
+
+describe("preview controls in preview contexts (909 FR-022–FR-025, T032)", () => {
+  function stateFields(el: EnergyHorizonCardEl): {
+    previewShift: number;
+    _previewLoading: boolean;
+    _state: { status: string };
+  } {
+    return (el as unknown as {
+      previewShift: number;
+      _previewLoading: boolean;
+      _state: { status: string };
+    });
+  }
+
+  /**
+   * A `preview === true` card (picker / edit mode / editor dialog) with a
+   * controllable `sendMessagePromise`. Mirrors the `hui-card` order: hass +
+   * preview first, then `setConfig` (which renders the demo series and fires
+   * the real-data query).
+   */
+  function makePreviewCard(
+    send: (msg: Record<string, unknown>) => Promise<unknown> =
+      async () => ({})
+  ): EnergyHorizonCardEl {
+    const el = document.createElement(
+      "energy-horizon-card"
+    ) as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    el.hass = {
+      ...pickerHass(),
+      connection: { sendMessagePromise: send }
+    } as HomeAssistant;
+    el.preview = true;
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      interpretation: "consumption",
+      neutral_threshold: 2
+    });
+    return el;
+  }
+
+  it("preview=true: the back/forward controls are rendered with their normal appearance and inert attributes (FR-022, FR-023, FR-025)", async () => {
+    const el = makePreviewCard();
+    await el.updateComplete;
+    const root = el.shadowRoot!;
+
+    // The controls block is rendered in the preview context (no longer hidden).
+    expect(root.querySelector(".ebc-chart-controls")).not.toBeNull();
+
+    const buttons = Array.from(root.querySelectorAll(".ebc-chart-control"));
+    // Back + forward always render; reset is contextual (FR-009/FR-010: only
+    // while a shift is active) and a shift cannot be activated in a preview
+    // context, so it is not rendered here.
+    expect(buttons.length).toBe(2);
+    for (const btn of buttons) {
+      // Normal appearance: no `disabled` attribute (it would dim the button
+      // via `.ebc-chart-control:disabled`, which the user ruled out).
+      expect(btn.hasAttribute("disabled")).toBe(false);
+      // Inert to assistive technology and removed from the tab order (FR-025),
+      // with the localized `aria-label` preserved.
+      expect(btn.getAttribute("aria-disabled")).toBe("true");
+      expect(btn.getAttribute("tabindex")).toBe("-1");
+      expect(btn.getAttribute("aria-label")).not.toBeNull();
+    }
+
+    // No preview indication (the shift is 0 and cannot be activated here).
+    expect(root.querySelector(".ebc-preview-indication")).toBeNull();
+
+    document.body.removeChild(el);
+  });
+
+  it("preview=true: activating the controls is a no-op — no shift, no state change, no data load (FR-022, SC-008)", async () => {
+    const send = vi.fn(async () => ({}));
+    const el = makePreviewCard(send);
+    await el.updateComplete;
+    // Let the picker's real-data query (2 LTS calls for year_over_year) settle.
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    const baseline = send.mock.calls.length;
+
+    const root = el.shadowRoot!;
+    const buttons = Array.from(
+      root.querySelectorAll<HTMLButtonElement>(".ebc-chart-control")
+    );
+    expect(buttons.length).toBe(2);
+
+    // A click is the single activation entry point for all three controls:
+    // mouse, touch, and keyboard (Enter/Space on a native button dispatch the
+    // same `click` event) all converge on it, so this covers every input
+    // path (FR-022). The reset handler shares the same entry point and is
+    // not rendered in a preview context (FR-010).
+    for (const btn of buttons) {
+      btn.click();
+    }
+    await el.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Nothing happened: no shift, no loading state, no data load.
+    const fields = stateFields(el);
+    expect(fields.previewShift).toBe(0);
+    expect(fields._previewLoading).toBe(false);
+    expect(send.mock.calls.length).toBe(baseline);
+    // The controls remain mounted, inert, and the indication stays absent.
+    expect(root.querySelectorAll(".ebc-chart-control").length).toBe(2);
+    expect(root.querySelector(".ebc-preview-indication")).toBeNull();
+
+    document.body.removeChild(el);
+  });
+
+  it("preview=false (dashboard view mode): the controls stay interactive, with no inert overrides (FR-022, FR-025)", async () => {
+    // A valid LTS response so the view-mode card reaches the ready state and
+    // renders the controls bar (same pattern as the US3 real-data upgrade).
+    const ltsResponse = {
+      results: {
+        "sensor.energy": [
+          { start: "2026-01-01T00:00:00Z", change: 55, unit_of_measurement: "kWh" },
+          { start: "2026-01-08T00:00:00Z", change: 66, unit_of_measurement: "kWh" }
+        ]
+      }
+    };
+    const send = vi.fn(async () => ltsResponse);
+    const el = document.createElement(
+      "energy-horizon-card"
+    ) as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    el.hass = {
+      ...pickerHass(),
+      connection: { sendMessagePromise: send }
+    } as HomeAssistant;
+    // View mode: `preview` is never set (defaults to `false`).
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      interpretation: "consumption",
+      neutral_threshold: 2
+    });
+    await el.updateComplete;
+    await vi.waitFor(() => {
+      expect(stateFields(el)._state.status).toBe("ready");
+    });
+
+    const root = el.shadowRoot!;
+    const buttons = Array.from(
+      root.querySelectorAll<HTMLButtonElement>(".ebc-chart-control")
+    );
+    expect(buttons.length).toBe(2); // back + forward; reset only while shifted
+    for (const btn of buttons) {
+      // View mode is unchanged: no inert overrides, no disabled.
+      expect(btn.hasAttribute("disabled")).toBe(false);
+      expect(btn.hasAttribute("aria-disabled")).toBe(false);
+      expect(btn.hasAttribute("tabindex")).toBe(false);
+    }
+
+    const baseline = send.mock.calls.length;
+    buttons[0]!.click(); // step back
+
+    // The activation took effect synchronously in the handler.
+    expect(stateFields(el).previewShift).toBe(-1);
+    await el.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+    // The shifted-period load fired — view mode stays fully interactive.
+    expect(send.mock.calls.length).toBeGreaterThan(baseline);
+
+    // The contextual reset control now renders (FR-009), without any inert
+    // overrides, and the preview indication is visible (FR-903-Y).
+    const reset = root.querySelector(".ebc-chart-control--reset");
+    expect(reset).not.toBeNull();
+    expect(reset!.hasAttribute("aria-disabled")).toBe(false);
+    expect(reset!.hasAttribute("tabindex")).toBe(false);
+    expect(root.querySelector(".ebc-preview-indication")).not.toBeNull();
+
+    document.body.removeChild(el);
   });
 });
