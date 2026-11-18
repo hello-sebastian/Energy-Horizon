@@ -4,7 +4,7 @@
 **Domain**: Documentation & Product Knowledge  
 **Replaces**: `001-github-wiki`, `001-energy-horizon-card`  
 **Primary artifacts**: `wiki-publish/`, `README.md`, `README-advanced.md`, `CHANGELOG.md`  
-**Last updated**: 2026-04-22  
+**Last updated**: 2026-11-17  
 
 ---
 
@@ -24,7 +24,7 @@ Documentation for the Energy Horizon Card follows the **Diátaxis framework** (f
 | `README-advanced.md` | Advanced configuration reference | Power users |
 | `CHANGELOG.md` | User-visible change history per release | All users |
 
-The user-facing documentation covers the installation channels: the built-in **Marketplace** integration (HA 2026.11+, installs to `www/community/` and adds the dashboard resource automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`), **HACS** (HA versions before 2026.11; resource path `/hacsfiles/energy-horizon-card/energy-horizon-card.js`), manual installation (`/local/energy-horizon-card.js`), and the **build-from-source / deploy** path for forks and self-hosted instances: the build produces a single `dist/energy-horizon-card.js` file that is copied to the HA instance's `config/www/` directory. These paths are documented in `README.md` (Development section) and in the wiki (Getting Started).
+The user-facing documentation covers the installation channels: the built-in **Marketplace** integration (HA 2026.11+, installs to `www/community/` and adds the dashboard resource automatically; YAML-managed resources use `/local/community/Energy-Horizon/energy-horizon-card.js`), **HACS** (HA versions before 2026.11; resource path `/hacsfiles/energy-horizon-card/energy-horizon-card.js`), manual installation (`/local/energy-horizon-card.js`), and the **build-from-source / deploy** path for forks and self-hosted instances: the build produces a single `dist/energy-horizon-card.js` file that is copied to the HA instance's `config/www/` directory. The card is listed in the built-in **Marketplace** catalog and the default **HACS** catalog, so the default installation path on both channels is a catalog search — no manual repository addition is required. These paths are documented in `README.md` (Development section) and in the wiki (Getting Started).
 
 ### Diátaxis intents
 

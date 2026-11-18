@@ -6,6 +6,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 
 ### Added
 
+- **Official catalog listing:** Energy Horizon Card is now listed in the built-in **Marketplace** catalog (HA 2026.11+) and in the **default HACS** catalog — installing is a plain catalog search, no custom repository needs to be added.
 
 
 ### Changed
@@ -18,7 +19,7 @@ All notable changes to **Energy Horizon Card** (Home Assistant Lovelace — Mark
 
 ### Documentation
 
-
+- Installation docs (README quick start, Getting Started wiki page) now present the default **Marketplace** and **HACS** catalogs as the install path — searching for the card is the default method, the README **Marketplace / HACS** badge now reads **Default**, and the "Open this repository in the Marketplace" button opens the card's plugin page in the Marketplace instead of the custom-repository flow. The HACS section notes that the built-in Marketplace replaces HACS on HA 2026.11+ and migrates existing HACS installations automatically.
 
 ---
 

@@ -27,17 +27,18 @@ If the entity has no statistics, the chart will usually be empty.
 ### Marketplace (HA 2026.11+, recommended)
 
 1. Open **Settings → Marketplace**  
-2. Search for **Energy Horizon** — or select **Add from link** and enter `https://github.com/hello-sebastian/Energy-Horizon`  
+2. Search for **Energy Horizon** (listed in the built-in catalog)  
 3. Select **Install**  
 4. Reload the browser — the dashboard resource is added automatically  
 
 ### HACS (HA < 2026.11)
 
 1. Open **HACS → Frontend**  
-2. Click **Add repository**  
-3. Add `https://github.com/hello-sebastian/Energy-Horizon`  
-4. Install **Energy Horizon Card**  
-5. Restart Home Assistant  
+2. Search for **Energy Horizon Card** (it is listed in the default HACS catalog)  
+3. Install **Energy Horizon Card**  
+4. Restart Home Assistant  
+
+> **Upgrading to HA 2026.11+?** The built-in **Marketplace** replaces HACS: existing HACS installations are migrated automatically when Home Assistant starts after the update — no manual migration is needed. See the [official Marketplace docs](https://www.home-assistant.io/integrations/marketplace/#coming-from-hacs).  
 
 ### Manual installation
 
