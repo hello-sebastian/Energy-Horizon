@@ -31,7 +31,7 @@ describe("editor i18n dictionaries", () => {
     expect(enKeys.length).toBeGreaterThanOrEqual(60);
 
     for (const lang of ["pl", "de", "fr", "nl"] as const) {
-      const dict = DICTS[lang];
+      const dict = DICTS[lang]!;
       const missing = enKeys.filter((k) => !(k in dict));
       expect(missing, `missing in ${lang}`).toEqual([]);
 
@@ -43,7 +43,7 @@ describe("editor i18n dictionaries", () => {
   it("all five dictionaries have the same editor.* key set", () => {
     const enSet = new Set(editorKeys(en));
     for (const lang of ["pl", "de", "fr", "nl"] as const) {
-      const other = new Set(editorKeys(DICTS[lang]));
+      const other = new Set(editorKeys(DICTS[lang]!));
       const missingInOther = [...enSet].filter((k) => !other.has(k));
       const extraInOther = [...other].filter((k) => !enSet.has(k));
       expect(missingInOther, `missing in ${lang}`).toEqual([]);
@@ -78,7 +78,8 @@ describe("editor i18n dictionaries", () => {
     }
 
     for (const [lang, dict] of Object.entries(DICTS)) {
-      const missing = [...referenced].filter((k) => !(k in dict) || dict[k].trim() === "");
+      if (!dict) continue;
+      const missing = [...referenced].filter((k) => !(k in dict) || dict[k]!.trim() === "");
       expect(missing, `unresolved in ${lang}`).toEqual([]);
     }
   });

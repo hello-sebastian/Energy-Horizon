@@ -4,7 +4,7 @@
 **Domain**: Chart Rendering & Interaction  
 **Replaces**: `001-chart-updates`, `003-echarts-migration`, `001-aggregation-axis-labels`  
 **Primary code**: `src/card/echarts-renderer.ts`, `src/card/axis/`  
-**Last updated**: 2026-04-21  
+**Last updated**: 2026-11-17  
 
 ---
 
@@ -273,7 +273,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 
 - **FR-902-N (Modular ECharts import)**: ECharts MUST be imported modularly. Forbidden: `import * as echarts from 'echarts'`. Required: imports from `echarts/core`, `echarts/charts` (`LineChart` only), `echarts/components` (only `GridComponent`, `TooltipComponent`, `LegendComponent`, `MarkLineComponent`, `MarkPointComponent`), `echarts/renderers` (`CanvasRenderer` only). Target version: `^5.6.0`.
 
-- **FR-902-O (No Chart.js dependency)**: After migration, `chart.js` and `chartjs-adapter-date-fns` MUST be absent from `package.json` `dependencies` and `devDependencies`.
+- **FR-902-O (No Chart.js dependency)**: After migration, `chart.js`, `chartjs-adapter-date-fns`, and the leftover `date-fns` MUST be absent from `package.json` `dependencies` and `devDependencies`. Satisfied as of 2026-11-16 (911/TD-1): the dead Chart.js renderer module `src/card/chart-renderer.ts` (428 lines, never bundled since the ECharts migration) was deleted and `date-fns` removed from `dependencies`.
 
 - **FR-902-P (Renderer interface)**: `EChartsRenderer` MUST implement `ChartRenderer`: `update(series, fullTimeline, config, labels)` and `destroy()`. Business logic in `cumulative-comparison-chart.ts` (`buildFullTimeline`, `_buildRendererConfig`) MUST remain unchanged.
 
@@ -302,6 +302,8 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 - **FR-902-AB (Y-axis unit wrapping)**: When the number part of the highest Y-axis tick is longer than 3 characters (e.g. `10 000`), the unit MUST move to a second line below the number, both lines right-aligned (ECharts `axisLabel.rich`), so the label width is capped at the number width and the plot area is not squeezed. Short number parts (≤ 3 characters, e.g. `1.5 kWh`) keep the single-line `"<number> <unit>"` format. The wrapping decision MUST be made in the same formatter that sizes `grid.left` (FR-902-Z).
 
 - **FR-902-AC (Tooltip ↔ panel consistency at the today slot)**: At the today slot (the slot containing "now"), the tooltip's reference row and the delta segment's reference endpoint MUST use the panel's reference cumulative (`panelReferenceCumulative` in `ChartRendererConfig`, sourced from `summary.reference_cumulative`) instead of the raw reference series value at that slot — the raw value can differ because the current series may or may not include a point at the today slot depending on the comparison preset (open today bucket vs. closed bucket). When `panelReferenceCumulative` is absent or non-finite, the tooltip MUST fall back to the raw series value. The forecast row MUST be omitted from the tooltip at the today slot. This guarantees the tooltip, the delta segment, and the "TO THIS DAY" panel (see `903-card-ui-composition`) always agree regardless of preset (bug: tooltip-reference-mismatch).
+
+- **FR-902-AD (Typed ECharts option payloads)**: The series array passed to `setOption` MUST be typed with the official ECharts option types — line series entries as `LineSeriesOption` with their `markLine`/`markPoint` payloads as `MarkLineOption`/`MarkPointOption` — with all ECharts *type* imports taken from the single canonical `echarts/types/dist/shared` module so the whole option object is checked against `EChartsOption` at compile time. Local `any`-typed series arrays and `as any` mutations on series entries (e.g. assigning `markLine`/`markPoint` post-hoc) are forbidden. Config keys the line-series runtime never reads MUST NOT be emitted (verified inert: `showInLegend`, `emphasis.showSymbol`, `emphasis.symbolSize`). Satisfied as of 2026-11-17 (911/TD-5).
 
 ---
 

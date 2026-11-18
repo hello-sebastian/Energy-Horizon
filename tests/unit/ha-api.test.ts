@@ -3,17 +3,18 @@ import { describe, it, expect } from "vitest";
 import {
   buildChartTimeline,
   carryForwardCurrentCumulativeAtNow,
+  countBucketsForWindow,
+  findNowSlotIndexOnComparisonAxis,
+  buildTimelineSlots
+} from "../../src/card/timeline";
+import {
   computeSummary,
   computeForecast,
   computeTextSummary,
-  countBucketsForWindow,
-  findNowSlotIndexOnComparisonAxis,
   fullReferenceWindowRawTotal,
-  buildTimelineSlots,
-  mapLtsResponseToCumulativeSeries,
-  mapLtsResponseToSeries
+  mapLtsResponseToCumulativeSeries
 } from "../../src/card/ha-api";
-import { formatSigned } from "../../src/card/cumulative-comparison-chart";
+import { formatSigned } from "../../src/card/labels/signed-number";
 import type {
   ComparisonSeries,
   CumulativeSeries,
@@ -592,8 +593,8 @@ describe("computeSummary", () => {
   });
 });
 
-describe("mapLtsResponseToSeries", () => {
-  it("maps LTS response to ComparisonSeries with cumulative points", () => {
+describe("mapLtsResponseToCumulativeSeries (migrated from legacy single-period mapper, 911/TD-7)", () => {
+  it("maps LTS response to cumulative points", () => {
     // Implementation treats sum as running total: first sum is reference, deltas become points.
     // Sums 2, 4, 9 → deltas 2, 5 → cumulative 2, 7.
     const response: LtsStatisticsResponse = {
@@ -606,29 +607,17 @@ describe("mapLtsResponseToSeries", () => {
       }
     };
 
-    const series = mapLtsResponseToSeries(
-      response,
-      "sensor.energy",
-      {
-        current_start: new Date("2024-01-01T00:00:00Z"),
-        current_end: new Date("2024-01-04T00:00:00Z"),
-        reference_start: new Date("2023-01-01T00:00:00Z"),
-        reference_end: new Date("2023-01-04T00:00:00Z"),
-        aggregation: "day",
-        time_zone: "UTC"
-      },
-      "Current period"
-    );
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.energy", "Current period");
 
-    expect(series).toBeDefined();
-    expect(series!.current.unit).toBe("kWh");
-    expect(series!.current.points).toHaveLength(2);
-    expect(series!.current.points[0].value).toBe(2);
-    expect(series!.current.points[1].value).toBe(7);
+    expect(cum).toBeDefined();
+    expect(cum!.unit).toBe("kWh");
+    expect(cum!.points).toHaveLength(2);
+    expect(cum!.points[0]!.value).toBe(2);
+    expect(cum!.points[1]!.value).toBe(7);
     const tJan1 = new Date("2024-01-01T00:00:00Z").getTime();
     const tJan2 = new Date("2024-01-02T00:00:00Z").getTime();
-    expect(series!.current.points[0].timestamp).toBe(tJan1);
-    expect(series!.current.points[1].timestamp).toBe(tJan2);
+    expect(cum!.points[0]!.timestamp).toBe(tJan1);
+    expect(cum!.points[1]!.timestamp).toBe(tJan2);
   });
 
   it("places sum-delta timestamps on period start so first day matches daily axis slot 0", () => {
@@ -708,24 +697,12 @@ describe("mapLtsResponseToSeries", () => {
       }
     };
 
-    const series = mapLtsResponseToSeries(
-      response,
-      "sensor.energy",
-      {
-        current_start: new Date("2024-01-01T00:00:00Z"),
-        current_end: new Date("2024-01-03T00:00:00Z"),
-        reference_start: new Date("2023-01-01T00:00:00Z"),
-        reference_end: new Date("2023-01-03T00:00:00Z"),
-        aggregation: "day",
-        time_zone: "UTC"
-      },
-      "Current period"
-    );
+    const cum = mapLtsResponseToCumulativeSeries(response, "sensor.energy", "Current period");
 
-    // First point (sum) is skipped as reference; second point has Wh so we get one point before unit mismatch is detected per current logic
-    expect(series).toBeDefined();
-    expect(series!.current.points.length).toBeLessThanOrEqual(1);
-    expect(series!.current.unit).toBeDefined();
+    // First point (sum) is consumed as baseline; second unit mismatch yields no further points
+    expect(cum).toBeDefined();
+    expect(cum!.points.length).toBeLessThanOrEqual(1);
+    expect(cum!.unit).toBeDefined();
   });
 });
 

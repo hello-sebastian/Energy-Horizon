@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { scaleSeriesValues, formatScaledValue } from '../../src/utils/unit-scaler';
+import {
+  applyUnitScalingToSeries,
+  formatScaledValue,
+  scaleSeriesValues,
+} from '../../src/utils/unit-scaler';
+import type {
+  ComparisonSeries,
+  CumulativeSeries,
+  TimeSeriesPoint,
+} from '../../src/card/types';
 
 describe('scaleSeriesValues — auto mode', () => {
   it('should scale 1500 Wh → 1.5 kWh', () => {
@@ -408,5 +417,98 @@ describe('scaleSeriesValues — edge cases', () => {
     // Intl.NumberFormat with Infinity rounds; just ensure it contains the unit and doesn't crash
     expect(result).toContain('kWh');
     expect(result).toContain('1');
+  });
+});
+
+describe('applyUnitScalingToSeries (911/TD-2: extracted from the card element)', () => {
+  const pt = (i: number, value: number, rawValue?: number): TimeSeriesPoint => ({
+    timestamp: 1_700_000_000_000 + i * 86_400_000,
+    value,
+    ...(rawValue !== undefined ? { rawValue } : {}),
+  });
+
+  const cum = (
+    points: TimeSeriesPoint[],
+    unit: string,
+    periodLabel = 'p',
+  ): CumulativeSeries => ({
+    points,
+    unit,
+    periodLabel,
+    total: points[points.length - 1]?.value ?? 0,
+  });
+
+  it('applies one shared factor to current, reference and context, and recomputes totals', () => {
+    const series: ComparisonSeries = {
+      current: cum([pt(0, 1500, 1500), pt(1, 3000, 3000)], 'Wh'),
+      reference: cum([pt(0, 2000, 2000), pt(1, 4000, 4000)], 'Wh', 'ref'),
+      context: [cum([pt(0, 1000, 1000), pt(1, 2000, 2000)], 'Wh', 'ctx')],
+      aggregation: 'day',
+      time_zone: 'UTC',
+    };
+    const scaled = applyUnitScalingToSeries(series, 'Wh');
+
+    expect(scaled.current.unit).toBe('kWh');
+    expect(scaled.current.points.map((p) => p.value)).toEqual([1.5, 3]);
+    expect(scaled.current.total).toBe(3);
+    // rawValue rides the same factor so computeForecast stays consistent.
+    expect(scaled.current.points[0]!.rawValue).toBe(1.5);
+    // Identity fields survive the scale.
+    expect(scaled.current.periodLabel).toBe('p');
+    expect(scaled.current.points[1]!.timestamp).toBe(pt(1, 0).timestamp);
+
+    expect(scaled.reference?.unit).toBe('kWh');
+    expect(scaled.reference?.points.map((p) => p.value)).toEqual([2, 4]);
+    expect(scaled.reference?.total).toBe(4);
+
+    expect(scaled.context?.[0]!.points.map((p) => p.value)).toEqual([1, 2]);
+    expect(scaled.context?.[0]!.total).toBe(2);
+
+    expect(scaled.aggregation).toBe('day');
+    expect(scaled.time_zone).toBe('UTC');
+  });
+
+  it('force_prefix "none" returns raw values with the original unit', () => {
+    const scaled = applyUnitScalingToSeries(
+      { current: cum([pt(0, 1500, 1500)], 'Wh'), aggregation: 'day', time_zone: 'UTC' },
+      'Wh',
+      { force_prefix: 'none' },
+    );
+    expect(scaled.current.points[0]!.value).toBe(1500);
+    expect(scaled.current.unit).toBe('Wh');
+    expect(scaled.current.points[0]!.rawValue).toBe(1500);
+  });
+
+  it('non-scalable units pass through unchanged', () => {
+    const scaled = applyUnitScalingToSeries(
+      { current: cum([pt(0, 10, 10), pt(1, 20, 20)], 'h'), aggregation: 'day', time_zone: 'UTC' },
+      'h',
+    );
+    expect(scaled.current.points.map((p) => p.value)).toEqual([10, 20]);
+    expect(scaled.current.unit).toBe('h');
+    expect(scaled.current.points[0]!.rawValue).toBe(10);
+  });
+
+  it('scales A -> mA with the shared factor on rawValue', () => {
+    const scaled = applyUnitScalingToSeries(
+      { current: cum([pt(0, 0.5, 0.5)], 'A'), aggregation: 'day', time_zone: 'UTC' },
+      'A',
+    );
+    expect(scaled.current.unit).toBe('mA');
+    expect(scaled.current.points[0]!.value).toBe(500);
+    expect(scaled.current.points[0]!.rawValue).toBe(500);
+  });
+
+  it('patches the unit onto a reference without points and drops the context key when absent', () => {
+    const series: ComparisonSeries = {
+      current: cum([pt(0, 1500, 1500)], 'Wh'),
+      reference: { points: [], unit: 'Wh', periodLabel: 'ref', total: 0 },
+      aggregation: 'day',
+      time_zone: 'UTC',
+    };
+    const scaled = applyUnitScalingToSeries(series, 'Wh');
+    expect(scaled.reference?.unit).toBe('kWh');
+    expect(scaled.reference?.points).toEqual([]);
+    expect('context' in scaled).toBe(false);
   });
 });

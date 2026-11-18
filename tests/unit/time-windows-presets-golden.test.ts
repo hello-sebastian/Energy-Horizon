@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { DateTime } from "luxon";
-import type { CardConfig } from "../../src/card/types";
-import { buildComparisonPeriod } from "../../src/card/ha-api";
 import {
   mergeTimeWindowConfig,
   validateMergedTimeWindowConfig,
@@ -12,22 +10,14 @@ function assertClose(a: Date, b: Date): void {
   expect(Math.abs(a.getTime() - b.getTime())).toBeLessThan(3000);
 }
 
-describe("preset golden vs buildComparisonPeriod", () => {
+describe("preset golden window boundaries (frozen values, 911/TD-7)", () => {
   const now = new Date(2026, 2, 15, 12, 0, 0, 0);
   const timeZone = "UTC";
 
-  it("year_over_year matches legacy period boundaries", () => {
-    const config = {
-      type: "custom:energy-horizon-card",
-      entity: "sensor.e",
-      comparison_preset: "year_over_year",
-      period_offset: -1
-    } as CardConfig;
-
-    const period = buildComparisonPeriod(config, now, timeZone);
+  it("year_over_year matches the legacy period boundaries", () => {
     const merged = mergeTimeWindowConfig({
       mode: "year_over_year",
-      periodOffset: config.period_offset
+      periodOffset: -1
     });
     const v = validateMergedTimeWindowConfig({
       ...merged,
@@ -38,24 +28,17 @@ describe("preset golden vs buildComparisonPeriod", () => {
 
     const windows = resolveTimeWindows(v.merged, now, timeZone, 24, "day");
     expect(windows).toHaveLength(2);
-    assertClose(windows[0]!.start, period.current_start);
-    assertClose(windows[0]!.end, period.current_end);
-    assertClose(windows[1]!.start, period.reference_start);
-    assertClose(windows[1]!.end, period.reference_end);
+    // Frozen golden values — the boundaries the legacy buildComparisonPeriod produced.
+    assertClose(windows[0]!.start, new Date(2026, 0, 1, 0, 0, 0, 0));
+    assertClose(windows[0]!.end, now);
+    assertClose(windows[1]!.start, new Date(2025, 0, 1, 0, 0, 0, 0));
+    assertClose(windows[1]!.end, new Date(2025, 11, 31, 23, 59, 59, 999));
   });
 
-  it("month_over_year matches legacy period boundaries", () => {
-    const config = {
-      type: "custom:energy-horizon-card",
-      entity: "sensor.e",
-      comparison_preset: "month_over_year",
-      period_offset: -1
-    } as CardConfig;
-
-    const period = buildComparisonPeriod(config, now, timeZone);
+  it("month_over_year matches the legacy period boundaries", () => {
     const merged = mergeTimeWindowConfig({
       mode: "month_over_year",
-      periodOffset: config.period_offset
+      periodOffset: -1
     });
     const v = validateMergedTimeWindowConfig({
       ...merged,
@@ -66,10 +49,11 @@ describe("preset golden vs buildComparisonPeriod", () => {
 
     const windows = resolveTimeWindows(v.merged, now, timeZone, 24, "day");
     expect(windows).toHaveLength(2);
-    assertClose(windows[0]!.start, period.current_start);
-    assertClose(windows[0]!.end, period.current_end);
-    assertClose(windows[1]!.start, period.reference_start);
-    assertClose(windows[1]!.end, period.reference_end);
+    // Frozen golden values — the boundaries the legacy buildComparisonPeriod produced.
+    assertClose(windows[0]!.start, new Date(2026, 2, 1, 0, 0, 0, 0));
+    assertClose(windows[0]!.end, now);
+    assertClose(windows[1]!.start, new Date(2025, 2, 1, 0, 0, 0, 0));
+    assertClose(windows[1]!.end, new Date(2025, 3, 0, 23, 59, 59, 999));
   });
 
   it("month_over_month resolves two consecutive calendar months via resolveGeneric", () => {

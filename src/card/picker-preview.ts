@@ -5,7 +5,7 @@
  * preview mode. No side effects, no `Math.random`, no DOM access.
  */
 
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 import type {
   HomeAssistant,
   CustomCardSuggestion,
@@ -22,8 +22,8 @@ import {
   buildMergedTimeWindowConfig,
   resolveTimeWindows
 } from "./time-windows";
+import { buildChartTimeline } from "./timeline";
 import {
-  buildChartTimeline,
   buildLtsQueriesForWindows,
   mapLtsResponseToCumulativeSeries
 } from "./ha-api";
@@ -49,6 +49,19 @@ export function isSupportedUnit(unit: string | undefined): boolean {
 }
 
 /**
+ * The entity's unit of measurement from the HA state, or `""` when absent
+ * (911/TD-14: single lookup shared by the ready-state pipeline paths and the
+ * picker module).
+ */
+export function entityUnitOf(hass: HomeAssistant, entityId: string): string {
+  return (
+    (hass.states?.[entityId]?.attributes as {
+      unit_of_measurement?: string;
+    })?.unit_of_measurement ?? ""
+  );
+}
+
+/**
  * Builds a deterministic demo `ComparisonSeries` for the picker preview (FR-009, R4).
  *
  * - No `Math.random` — values are a pure function of `unit`, `now`, and `timeZone`.
@@ -65,10 +78,12 @@ export function buildDemoComparisonSeries(
   const merged = buildMergedTimeWindowConfig({
     comparison_preset: "year_over_year"
   });
+  const demoDuration = parseDurationToken(merged.duration ?? "1y");
   const aggregation: WindowAggregation =
     merged.aggregation ??
     pickAutoAggregation(
-      durationToMillis(parseDurationToken(merged.duration ?? "1y")!)
+      // "1y" always parses — the fallback is a dead path the flag requires (911/TD-6)
+      durationToMillis(demoDuration ?? Duration.fromObject({ years: 1 }))
     );
   const windows = resolveTimeWindows(merged, now, timeZone, 24, aggregation);
   const { timeline, alignStartsMs } = buildChartTimeline(windows, merged, timeZone);
@@ -85,14 +100,23 @@ export function buildDemoComparisonSeries(
   const nowMs = now.getTime();
   let nowSlotIndex = 0;
   for (let i = 0; i < timeline.length; i++) {
-    if (timeline[i]! <= nowMs) {
+    const slotTs = timeline[i];
+    if (slotTs === undefined) break; // dead path: i < timeline.length (911/TD-6)
+    if (slotTs <= nowMs) {
       nowSlotIndex = i;
     } else {
       break;
     }
   }
 
-  const t0 = timeline[0]!;
+  const t0 = timeline[0];
+  if (t0 === undefined) {
+    return {
+      current: { points: [], unit, periodLabel: "", total: 0 },
+      aggregation,
+      time_zone: timeZone
+    };
+  }
   const refAlignStart = alignStartsMs[1] ?? t0;
 
   // Seasonal daily-consumption factor (index = month 0–11).
@@ -110,8 +134,9 @@ export function buildDemoComparisonSeries(
   const currentPoints: TimeSeriesPoint[] = [];
   let currentRunning = 0;
   for (let i = 0; i <= nowSlotIndex; i++) {
-    const slotTs = timeline[i]!;
-    const daily = BASE_DAILY * SEASONAL[slotMonth(slotTs)]! * noise(i);
+    const slotTs = timeline[i] ?? 0; // 0 = dead path (911/TD-6)
+    const daily =
+      BASE_DAILY * (SEASONAL[slotMonth(slotTs)] ?? 1) * noise(i);
     currentRunning += daily;
     currentPoints.push({ timestamp: slotTs, value: currentRunning, rawValue: daily });
   }
@@ -120,9 +145,10 @@ export function buildDemoComparisonSeries(
   const refPoints: TimeSeriesPoint[] = [];
   let refRunning = 0;
   for (let i = 0; i < timeline.length; i++) {
-    const slotTs = timeline[i]!;
+    const slotTs = timeline[i] ?? 0; // 0 = dead path (911/TD-6)
     const refTs = refAlignStart + (slotTs - t0);
-    const daily = BASE_DAILY * SEASONAL[slotMonth(slotTs)]! * noise(i) * 1.1;
+    const daily =
+      BASE_DAILY * (SEASONAL[slotMonth(slotTs)] ?? 1) * noise(i) * 1.1;
     refRunning += daily;
     refPoints.push({ timestamp: refTs, value: refRunning, rawValue: daily });
   }
@@ -131,16 +157,13 @@ export function buildDemoComparisonSeries(
     points: currentPoints,
     unit,
     periodLabel: "",
-    total:
-      currentPoints.length > 0
-        ? currentPoints[currentPoints.length - 1]!.value
-        : 0
+    total: currentPoints[currentPoints.length - 1]?.value ?? 0
   };
   const reference: CumulativeSeries = {
     points: refPoints,
     unit,
     periodLabel: "",
-    total: refPoints.length > 0 ? refPoints[refPoints.length - 1]!.value : 0
+    total: refPoints[refPoints.length - 1]?.value ?? 0
   };
 
   return { current, reference, aggregation, time_zone: timeZone };
@@ -253,6 +276,8 @@ export async function queryRealDataWithLimit(
         ""
       );
       if (!current) return null;
+      const firstWindow = windows[0];
+      if (!firstWindow) return null; // one query per window, so a window implies a query (911/TD-6)
 
       const reference =
         windows.length > 1
@@ -266,7 +291,7 @@ export async function queryRealDataWithLimit(
       return {
         current,
         ...(reference ? { reference } : {}),
-        aggregation: windows[0]!.aggregation,
+        aggregation: firstWindow.aggregation,
         time_zone: timeZone
       };
     })();

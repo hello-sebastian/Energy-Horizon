@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildFullTimeline } from "../../src/card/ha-api";
+import { buildFullTimeline } from "../../src/card/timeline";
 import type { ComparisonPeriod } from "../../src/card/types";
 
 describe("buildFullTimeline", () => {

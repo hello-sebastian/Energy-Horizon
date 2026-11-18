@@ -10,7 +10,10 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    sourcemap: true,
+    // Production artifact ships without a source map (911/TD-13): the ~3.86 MB
+    // `dist/energy-horizon-card.js.map` is not needed by HA and bloats the repo.
+    // Dev/preview serve their own maps from `vite dev` regardless of this flag.
+    sourcemap: false,
     lib: {
       entry: "src/index.ts",
       name: "EnergyHorizonCard",

@@ -1,328 +1,17 @@
-import { DateTime } from "luxon";
-import { findTimelineSlotContainingInstant } from "./axis/now-marker-slot";
+import { referenceCumulativeAtAlignedCurrentEnd } from "./timeline";
 import type {
-  CardConfig,
-  ComparisonPeriod,
+  ComparisonSeries,
+  CumulativeSeries,
+  ForecastStats,
   LtsStatisticPoint,
   LtsStatisticsQuery,
   LtsStatisticsResponse,
-  TimeSeriesPoint,
-  CumulativeSeries,
-  ComparisonSeries,
-  SummaryStats,
-  ForecastStats,
-  TextSummary,
   ResolvedWindow,
-  WindowAggregation,
-  MergedTimeWindowConfig
+  SummaryStats,
+  TextSummary,
+  TimeSeriesPoint,
+  WindowAggregation
 } from "./types";
-
-/**
- * First timeline index whose aligned slot start (for series 0) is strictly after `windowEnd`.
- * Used for FR-B tail labeling when another window extends the axis past the current window.
- */
-export function firstTailAxisLabelIndex(
-  timeline: number[],
-  alignStartMs: number,
-  windowEnd: Date
-): number {
-  if (timeline.length === 0) {
-    return 0;
-  }
-  const t0 = timeline[0]!;
-  const endMs = windowEnd.getTime();
-  for (let j = 0; j < timeline.length; j++) {
-    const alignedSlotStart = alignStartMs + (timeline[j]! - t0);
-    if (alignedSlotStart <= endMs) {
-      continue;
-    }
-    return j;
-  }
-  return timeline.length;
-}
-
-/**
- * FR-G: if “now” falls in a day/week/month bucket on the chart timeline and the aligned
- * current series has no LTS point there, repeat the last known cumulative value in-window.
- */
-export function carryForwardCurrentCumulativeAtNow(
-  alignedValues: (number | null)[],
-  timeline: number[],
-  nowMs: number,
-  alignStartMs: number,
-  windowStartMs: number,
-  windowEndMs: number,
-  aggregation: WindowAggregation,
-  timeZone: string
-): void {
-  if (aggregation === "hour") {
-    return;
-  }
-  if (timeline.length === 0 || alignedValues.length !== timeline.length) {
-    return;
-  }
-  const prefix = buildTimelineSlots(
-    new Date(windowStartMs),
-    new Date(windowEndMs),
-    aggregation,
-    timeZone
-  );
-  const idx = findTimelineSlotContainingInstant(prefix, nowMs);
-  if (idx < 0 || idx >= alignedValues.length) {
-    return;
-  }
-  const t0 = timeline[0]!;
-  const alignedSlotStart = alignStartMs + (timeline[idx]! - t0);
-  if (alignedSlotStart < windowStartMs || alignedSlotStart > windowEndMs) {
-    return;
-  }
-  if (alignedValues[idx] != null) {
-    return;
-  }
-  let last: number | null = null;
-  for (let i = idx - 1; i >= 0; i--) {
-    const v = alignedValues[i];
-    if (v != null) {
-      last = v;
-      break;
-    }
-  }
-  if (last == null) {
-    return;
-  }
-  alignedValues[idx] = last;
-}
-
-/** Timeline slot timestamps (ms) from `rangeStart` through `rangeEnd` for the given aggregation. */
-export function buildTimelineSlots(
-  rangeStart: Date,
-  rangeEnd: Date,
-  aggregation: WindowAggregation,
-  timeZone: string
-): number[] {
-  const timeline: number[] = [];
-  const zone = { zone: timeZone };
-  const endDt = DateTime.fromJSDate(rangeEnd, zone);
-
-  if (aggregation === "hour") {
-    let cursor = DateTime.fromJSDate(rangeStart, zone).startOf("hour");
-    while (cursor.toMillis() <= endDt.toMillis()) {
-      timeline.push(cursor.toMillis());
-      cursor = cursor.plus({ hours: 1 });
-    }
-    return timeline;
-  }
-
-  if (aggregation === "day") {
-    let cursor = DateTime.fromJSDate(rangeStart, zone).startOf("day");
-    while (cursor.toMillis() <= endDt.toMillis()) {
-      timeline.push(cursor.toMillis());
-      cursor = cursor.plus({ days: 1 });
-    }
-    return timeline;
-  }
-
-  if (aggregation === "week") {
-    let cursor = DateTime.fromJSDate(rangeStart, zone);
-    while (cursor.toMillis() <= endDt.toMillis()) {
-      timeline.push(cursor.toMillis());
-      cursor = cursor.plus({ weeks: 1 });
-    }
-    return timeline;
-  }
-
-  // Month slots: keep native `Date` calendar math to match legacy chart behavior
-  // (tests and card use `new Date(y, m, d)` local dates; mixing with Luxon+UTC shifts boundaries).
-  {
-    const cursor = new Date(rangeStart.getTime());
-    cursor.setHours(0, 0, 0, 0);
-    cursor.setDate(1);
-    const fullEnd = new Date(rangeEnd.getTime());
-    while (
-      cursor.getFullYear() < fullEnd.getFullYear() ||
-      (cursor.getFullYear() === fullEnd.getFullYear() &&
-        cursor.getMonth() <= fullEnd.getMonth())
-    ) {
-      timeline.push(cursor.getTime());
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-  }
-  return timeline;
-}
-
-/** Next bucket start after `prevStartMs`, same rules as {@link buildTimelineSlots} steps (FR-H zone). */
-export function advanceSlotStartMs(
-  prevStartMs: number,
-  aggregation: WindowAggregation,
-  timeZone: string
-): number {
-  const zone = { zone: timeZone };
-  if (aggregation === "hour") {
-    return DateTime.fromMillis(prevStartMs, zone).plus({ hours: 1 }).toMillis();
-  }
-  if (aggregation === "day") {
-    return DateTime.fromMillis(prevStartMs, zone).plus({ days: 1 }).toMillis();
-  }
-  if (aggregation === "week") {
-    return DateTime.fromMillis(prevStartMs, zone).plus({ weeks: 1 }).toMillis();
-  }
-  const d = new Date(prevStartMs);
-  d.setMonth(d.getMonth() + 1);
-  return d.getTime();
-}
-
-/**
- * “Now” on the shared comparison axis: bucket within **window 0** that contains `nowMs`, mapped to
- * `fullTimeline` index (006 FR-B / FR-G). Does not use the reference/longest calendar on the axis.
- */
-export function findNowSlotIndexOnComparisonAxis(
-  fullTimeline: number[],
-  windowStartMs: number,
-  windowEndMs: number,
-  aggregation: WindowAggregation,
-  timeZone: string,
-  nowMs: number
-): number {
-  const prefix = buildTimelineSlots(
-    new Date(windowStartMs),
-    new Date(windowEndMs),
-    aggregation,
-    timeZone
-  );
-  if (prefix.length === 0 || fullTimeline.length === 0) {
-    return -1;
-  }
-  const idx = findTimelineSlotContainingInstant(prefix, nowMs);
-  if (idx < 0) {
-    return -1;
-  }
-  return Math.min(idx, fullTimeline.length - 1);
-}
-
-/**
- * Slot count for one resolved window — use as `periodTotalBuckets` for {@link computeForecast}.
- * Chart X-axis may use a longer span (longest window, FR-009); forecast progress must use
- * the current window (index 0) only.
- */
-export function countBucketsForWindow(
-  window: ResolvedWindow,
-  timeZone: string
-): number {
-  return buildTimelineSlots(
-    window.start,
-    window.end,
-    window.aggregation,
-    timeZone
-  ).length;
-}
-
-export function buildFullTimeline(
-  period: ComparisonPeriod,
-  fullEnd: Date
-): number[] {
-  return buildTimelineSlots(
-    period.current_start,
-    fullEnd,
-    period.aggregation,
-    period.time_zone
-  );
-}
-
-/**
- * Multi-window chart axis (006 FR-C + FR-B): axis **length** = max nominal slot count at
- * `windows[0].aggregation`; timeline **millis** = prefix from **window 0** + ordinal tail
- * (`advanceSlotStartMs`) so ticks and alignment follow the current window’s calendar, not the
- * longest reference window alone.
- */
-export function buildFullTimelineForWindows(
-  windows: ResolvedWindow[],
-  timeZone: string
-): { timeline: number[]; alignStartsMs: number[] } {
-  if (windows.length === 0) {
-    return { timeline: [], alignStartsMs: [] };
-  }
-  const primaryAgg = windows[0]!.aggregation;
-  const w0 = windows[0]!;
-  let maxSlots = 0;
-  for (const w of windows) {
-    const count = buildTimelineSlots(
-      w.start,
-      w.end,
-      primaryAgg,
-      timeZone
-    ).length;
-    if (count > maxSlots) {
-      maxSlots = count;
-    }
-  }
-  const prefix = buildTimelineSlots(w0.start, w0.end, primaryAgg, timeZone);
-  const timeline = [...prefix];
-  let lastMs =
-    timeline.length > 0 ? timeline[timeline.length - 1]! : null;
-  while (timeline.length < maxSlots && lastMs != null) {
-    lastMs = advanceSlotStartMs(lastMs, primaryAgg, timeZone);
-    timeline.push(lastMs);
-  }
-  return {
-    timeline,
-    alignStartsMs: windows.map((w) => w.start.getTime())
-  };
-}
-
-/**
- * Single timeline policy for `N >= 2`: longest-window axis span (FR-C) + `forecastPeriodBuckets` from window 0 (FR-D).
- * `merged` is reserved for future label hints; geometry does not branch on preset name (006 FR-A / FR-F).
- */
-export function buildChartTimeline(
-  windows: ResolvedWindow[],
-  _merged: MergedTimeWindowConfig,
-  timeZone: string
-): {
-  timeline: number[];
-  alignStartsMs: number[];
-  /** Denominator for `computeForecast` — full current-window bucket count, not always `timeline.length` when windows differ in length. */
-  forecastPeriodBuckets: number;
-} {
-  void _merged;
-  const alignStartsMs = windows.map((w) => w.start.getTime());
-  if (windows.length === 0) {
-    return { timeline: [], alignStartsMs: [], forecastPeriodBuckets: 0 };
-  }
-
-  const forecastPeriodBuckets = countBucketsForWindow(windows[0]!, timeZone);
-
-  if (windows.length === 1) {
-    const w0 = windows[0]!;
-    const timeline = buildTimelineSlots(
-      w0.start,
-      w0.end,
-      w0.aggregation,
-      timeZone
-    );
-    return { timeline, alignStartsMs, forecastPeriodBuckets };
-  }
-
-  const { timeline, alignStartsMs: align } =
-    buildFullTimelineForWindows(windows, timeZone);
-  return { timeline, alignStartsMs: align, forecastPeriodBuckets };
-}
-
-export function comparisonPeriodFromResolvedWindows(
-  windows: ResolvedWindow[],
-  timeZone: string,
-  aggregation: WindowAggregation
-): ComparisonPeriod {
-  const w0 = windows[0]!;
-  const w1 = windows[1];
-  return {
-    current_start: w0.start,
-    current_end: w0.end,
-    reference_start: w1?.start ?? w0.start,
-    reference_end: w1?.end ?? w0.end,
-    aggregation,
-    time_zone: timeZone
-  };
-}
 
 const LTS_PERIOD_MAP: Record<WindowAggregation, LtsStatisticsQuery["period"]> = {
   day: "day",
@@ -344,116 +33,59 @@ export function buildLtsQueriesForWindows(
   }));
 }
 
-export function buildComparisonPeriod(
-  config: CardConfig,
-  now: Date,
-  timeZone: string
-): ComparisonPeriod {
-  const current = new Date(now.getTime());
-  const offsetYears = config.period_offset ?? -1;
+/**
+ * Shape of an LTS WebSocket message as the card receives it (911/TD-3, contract
+ * `lts-websocket-response.md`): Shape A envelope `{ success?, result? }` or Shape B (the
+ * `LtsStatisticsResponse` itself). The transport returns `unknown`; applied at the boundary.
+ */
+export type LtsMessageResponse =
+  | { success?: boolean; result?: LtsStatisticsResponse }
+  | LtsStatisticsResponse;
 
-  let current_start: Date;
-  let current_end: Date;
-  let reference_start: Date;
-  let reference_end: Date;
-
-  if (config.comparison_preset === "year_over_year") {
-    const year = current.getFullYear();
-
-    current_start = new Date(year, 0, 1, 0, 0, 0, 0);
-    current_end = current;
-
-    const refYear = year + offsetYears;
-    reference_start = new Date(refYear, 0, 1, 0, 0, 0, 0);
-    // Koniec roku referencyjnego – ostatni dzień roku o 23:59:59.999
-    reference_end = new Date(refYear, 11, 31, 23, 59, 59, 999);
-  } else {
-    // month_over_year
-    const year = current.getFullYear();
-    const month = current.getMonth(); // 0‑based
-
-    current_start = new Date(year, month, 1, 0, 0, 0, 0);
-    current_end = current;
-
-    const refYear = year + offsetYears;
-    reference_start = new Date(refYear, month, 1, 0, 0, 0, 0);
-    // Ostatni dzień tego samego miesiąca w roku referencyjnym
-    reference_end = new Date(refYear, month + 1, 0, 23, 59, 59, 999);
-  }
-
-  return {
-    current_start,
-    current_end,
-    reference_start,
-    reference_end,
-    aggregation: config.aggregation ?? "day",
-    time_zone: timeZone
-  };
-}
-
-export function buildLtsQuery(
-  period: ComparisonPeriod,
-  entityId: string
-): LtsStatisticsQuery {
-  return {
-    type: "recorder/statistics_during_period",
-    start_time: period.current_start.toISOString(),
-    end_time: period.current_end.toISOString(),
-    statistic_ids: [entityId],
-    period: LTS_PERIOD_MAP[period.aggregation]
-  };
-}
-
-export function mapLtsResponseToSeries(
-  response: LtsStatisticsResponse | { result?: LtsStatisticsResponse },
-  entityId: string,
-  period: ComparisonPeriod,
-  periodLabel: string
-): ComparisonSeries | undefined {
-  const cumulative = mapLtsResponseToCumulativeSeries(
-    response,
-    entityId,
-    periodLabel
-  );
-  if (!cumulative) return undefined;
-
-  return {
-    current: cumulative,
-    aggregation: period.aggregation,
-    time_zone: period.time_zone
-  };
+/**
+ * Single normalization point for LTS WebSocket responses (911/TD-3, contract
+ * `lts-websocket-response.md`): malformed input degrades to `undefined`, never throws.
+ * The `?? data` fallbacks keep the legacy bare shape (contract edge case 4).
+ */
+export function extractLtsResults(
+  response: LtsMessageResponse
+): LtsStatisticsResponse | undefined {
+  if (response === null || typeof response !== "object") return undefined;
+  // Step 1: envelope form → its `result`; bare form → the message itself.
+  const data: unknown =
+    (response as { result?: LtsStatisticsResponse }).result ?? response;
+  if (data === null || typeof data !== "object") return undefined;
+  // Step 2: results record (the `?? data` fallback keeps the legacy bare shape).
+  const results: unknown = (data as LtsStatisticsResponse).results ?? data;
+  if (!results || typeof results !== "object") return undefined;
+  return { results: results as Record<string, LtsStatisticPoint[]> };
 }
 
 export function mapLtsResponseToCumulativeSeries(
-  response: LtsStatisticsResponse | { result?: LtsStatisticsResponse },
+  response: LtsMessageResponse,
   entityId: string,
   periodLabel: string
 ): CumulativeSeries | undefined {
-  const data = (response as { result?: LtsStatisticsResponse }).result ?? response;
-  // HA WebSocket returns result either as { results: { [statistic_id]: [...] } }
-  // or directly as { [statistic_id]: [...] } without a wrapper.
-  const results =
-    (data as LtsStatisticsResponse).results ??
-    (data as Record<string, LtsStatisticPoint[]>);
-  if (!results || typeof results !== "object") return undefined;
+  // 911/TD-3: envelope normalization happens once in `extractLtsResults`
+  // (contract: lts-websocket-response.md); entity lookup stays in the mapper.
+  const normalized = extractLtsResults(response);
+  if (!normalized) return undefined;
+  const results = normalized.results;
 
   let points = results[entityId];
   if (!points || points.length === 0) {
     const keys = Object.keys(results);
     if (keys.length === 1) {
-      points = results[keys[0]!];
+      const key = keys[0];
+      if (key !== undefined) {
+        points = results[key];
+      }
     }
   }
   if (!points || points.length === 0) return undefined;
 
   const { unit, timeSeries } = normalizePoints(points);
-  const cumulative = toCumulativeSeries(
-    timeSeries,
-    unit,
-    periodLabel
-  );
-
-  return cumulative;
+  return toCumulativeSeries(timeSeries, unit, periodLabel);
 }
 
 function normalizePoints(points: LtsStatisticPoint[]): {
@@ -463,7 +95,7 @@ function normalizePoints(points: LtsStatisticPoint[]): {
   let unit = "";
   const series: TimeSeriesPoint[] = [];
   let previousSum: number | undefined;
-  /** Start of the LTS row that `previousSum` belongs to; delta timestamps use this (bucket start). */
+  /** Start of the LTS row `previousSum` belongs to; delta timestamps use this (bucket start). */
   let previousSumStartMs: number | undefined;
 
   for (const p of points) {
@@ -473,21 +105,16 @@ function normalizePoints(points: LtsStatisticPoint[]): {
     let timestampMs = startMs;
 
     if (typeof p.change === "number") {
-      // `total` / `total_increasing` statistics: HA already returns the per-bucket
-      // increment as `change`. Prefer it over differencing `sum` — that keeps the
-      // first bucket (no baseline loss), preserves zero-consumption buckets, and
-      // stamps each value with its own bucket start (no one-bucket shift).
-      // See issue #56 ("new month problem").
+      // `total` / `total_increasing` statistics: HA returns the per-bucket increment as
+      // `change`; prefer it over differencing `sum` — keeps the first bucket, preserves
+      // zero-consumption buckets, stamps each value with its own bucket start (issue #56).
       if (Number.isFinite(p.change) && p.change >= 0) {
         rawValue = p.change;
       }
       // Negative `change` = meter reset / inconsistent data — skip the bucket.
     } else if (typeof p.sum === "number") {
-      // Fallback for responses that carry `sum` without `change` (older HA / edge
-      // cases): treat `sum` as a running total and emit per-bucket deltas.
+      // Fallback for `sum` without `change` (older HA): treat `sum` as a running total, emit deltas.
       if (previousSum === undefined) {
-        // Pierwszy punkt przy braku `change` traktujemy jako punkt odniesienia
-        // dla bieżącego okresu (różnice liczymy względem niego).
         previousSum = p.sum;
         previousSumStartMs = startMs;
         continue;
@@ -511,11 +138,9 @@ function normalizePoints(points: LtsStatisticPoint[]): {
       typeof p.min === "number" &&
       Number.isFinite(p.min)
     ) {
-      // `state_class: measurement` sensors only record mean/min/max. When the underlying
-      // reading is a monotonically increasing counter (e.g. a template sensor that sums
-      // cumulative sensors but was not declared as `total_increasing`), `max - min` is
-      // the per-bucket delta — see issue #45. Negative values would indicate a decreasing
-      // reading (not a cumulative counter), so skip rather than pollute the chart.
+      // `state_class: measurement` sensors only record mean/min/max: for a monotonically
+      // increasing counter, `max - min` is the per-bucket delta (issue #45). Negative
+      // values would indicate a decreasing reading — skip rather than pollute the chart.
       const delta = p.max - p.min;
       if (!Number.isFinite(delta) || delta < 0) continue;
       rawValue = delta;
@@ -552,7 +177,7 @@ function toCumulativeSeries(
     return { ...p, value: running };
   });
 
-  const total = points.length > 0 ? points[points.length - 1].value : 0;
+  const total = points[points.length - 1]?.value ?? 0;
 
   return {
     points,
@@ -560,40 +185,6 @@ function toCumulativeSeries(
     periodLabel,
     total
   };
-}
-
-/**
- * Cumulative reference value at the same aligned time as the last current point
- * (same periodAlignMs logic as {@link computeForecast} / chart).
- */
-export function referenceCumulativeAtAlignedCurrentEnd(
-  currentPoints: TimeSeriesPoint[],
-  refPoints: TimeSeriesPoint[],
-  alignOffsetMs?: number
-): number | undefined {
-  if (currentPoints.length === 0 || refPoints.length === 0) {
-    return undefined;
-  }
-  // Prefer the window-start offset when provided: it is correct even when the current
-  // series starts late (leading zero/missing buckets), whereas the first-point offset
-  // drifts by the number of leading empty buckets.
-  const periodAlignMs =
-    typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
-      ? alignOffsetMs
-      : currentPoints[0]!.timestamp - refPoints[0]!.timestamp;
-  const lastTs = currentPoints[currentPoints.length - 1]!.timestamp;
-  let bestIdx = -1;
-  for (let i = refPoints.length - 1; i >= 0; i--) {
-    const alignedTs = refPoints[i]!.timestamp + periodAlignMs;
-    if (alignedTs <= lastTs) {
-      bestIdx = i;
-      break;
-    }
-  }
-  if (bestIdx === -1) {
-    return undefined;
-  }
-  return refPoints[bestIdx]!.value;
 }
 
 export function computeSummary(
@@ -632,10 +223,8 @@ export function computeSummary(
   };
 }
 
-/**
- * Sum of per-bucket increments (`rawValue`) over the full reference LTS series —
- * total consumption for the **whole** reference window (Figma **Total** / §1.3).
- */
+/** Sum of per-bucket increments (`rawValue`) over the full reference LTS series — the whole
+ * reference window's total consumption (Figma **Total** / §1.3). */
 export function fullReferenceWindowRawTotal(points: TimeSeriesPoint[]): number {
   return points.reduce((acc, p) => acc + (p.rawValue ?? 0), 0);
 }
@@ -686,24 +275,30 @@ export function computeForecast(
     return disabled(unit, "no_reference");
   }
 
-  const currentRangeMs =
-    currentPoints[completedBuckets - 1]!.timestamp -
-    currentPoints[0]!.timestamp;
-  const cutoffTs = currentPoints[0]!.timestamp + currentRangeMs;
+  // Compiler guards for `noUncheckedIndexedAccess` (911/TD-6) — guards 1–3 already prove non-emptiness; not runtime paths.
+  const firstCurrentPoint = currentPoints[0];
+  const lastCompletedPoint = currentPoints[completedBuckets - 1];
+  const firstReferencePoint = referencePoints[0];
+  if (!firstCurrentPoint || !lastCompletedPoint || !firstReferencePoint) {
+    return disabled(unit, "invalid_period");
+  }
 
-  // Align reference timestamps to current period axis (same alignment as chart).
-  // YoY: reference is in year N, current in N+1; raw comparison would put all ref ≤ cutoff.
-  // Prefer the window-start offset (alignOffsetMs) when provided: it is correct even when
-  // the current series starts late (leading zero/missing buckets), whereas the first-point
-  // offset drifts by the number of leading empty buckets.
+  const currentRangeMs =
+    lastCompletedPoint.timestamp - firstCurrentPoint.timestamp;
+  const cutoffTs = firstCurrentPoint.timestamp + currentRangeMs;
+
+  // Align reference timestamps to the current axis (as the chart does); prefer the window-start
+  // offset (alignOffsetMs) — correct even when the series starts late (first-point offset drifts).
   const periodAlignMs =
     typeof alignOffsetMs === "number" && Number.isFinite(alignOffsetMs)
       ? alignOffsetMs
-      : currentPoints[0]!.timestamp - referencePoints[0]!.timestamp;
+      : firstCurrentPoint.timestamp - firstReferencePoint.timestamp;
 
   let splitIdx = -1;
   for (let i = referencePoints.length - 1; i >= 0; i--) {
-    const refAlignedTs = referencePoints[i]!.timestamp + periodAlignMs;
+    const refPoint = referencePoints[i];
+    if (!refPoint) continue;
+    const refAlignedTs = refPoint.timestamp + periodAlignMs;
     if (refAlignedTs <= cutoffTs) {
       splitIdx = i;
       break;
@@ -802,4 +397,3 @@ export function computeTextSummary(
     unit
   };
 }
-

@@ -191,7 +191,8 @@ describe("energy-horizon-card load coalescing (issue #58)", () => {
 
     // Final state reflects the NEW config (gen 2), not the stale gen-1 data.
     expect(el._state.status).toBe("ready");
-    expect(el._state.comparisonSeries?.current.total).toBe(300);
+    if (el._state.status !== "ready") throw new Error("expected a ready state");
+    expect(el._state.comparisonSeries.current.total).toBe(300);
   });
 
   it("does not write an error state from a stale in-flight load after a config change", async () => {

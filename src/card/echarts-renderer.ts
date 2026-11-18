@@ -4,7 +4,22 @@ import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, MarkLineComponent, MarkPointComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { ECharts } from 'echarts/core';
-import type { EChartsOption } from 'echarts';
+// 911/TD-5 (W3): all ECharts *type* imports come from the single canonical `shared`
+// module so that `LineSeriesOption` matches the series type inside `EChartsOption`
+// (the per-entry re-exports carry nominal `$1` aliases that don't line up).
+import type {
+  EChartsOption,
+  LineSeriesOption,
+  MarkLineOption,
+  MarkPointOption
+} from 'echarts/types/dist/shared';
+
+// 911/TD-5 (W3): the series arrays and their markLine/markPoint payloads are typed
+// with the official ECharts option types (the TD-4 scoped `no-explicit-any` disable
+// is removed as a result — 0× `any` in this file).
+type MarkLineData = NonNullable<MarkLineOption['data']>;
+type MarkPointData = NonNullable<MarkPointOption['data']>;
+type TooltipAxisItem = { seriesName?: unknown; data?: unknown; value?: unknown };
 
 import type { ComparisonAxisLabelHints } from './labels/comparison-label-hints';
 import type {
@@ -20,7 +35,7 @@ import {
 import {
   carryForwardCurrentCumulativeAtNow,
   findNowSlotIndexOnComparisonAxis
-} from './ha-api';
+} from './timeline';
 import { semanticResolvedLineColor, trendResolvedLineColor } from './trend-visual';
 import { formatTooltipHeader } from './axis/tooltip-format';
 import { findTimelineSlotContainingInstant } from './axis/now-marker-slot';
@@ -397,19 +412,25 @@ export class EChartsRenderer {
       return result;
     }
 
+    // `?? 0` fallbacks are dead paths (the `length === 0` early return above
+    // makes every index access in range) — compiler guards for
+    // `noUncheckedIndexedAccess` (911/TD-6).
     const slotDuration =
       timeline.length > 1
-        ? timeline[timeline.length - 1]! - timeline[timeline.length - 2]!
+        ? (timeline[timeline.length - 1] ?? 0) -
+          (timeline[timeline.length - 2] ?? 0)
         : 86400000;
-    const timelineStart = timeline[0]!;
+    const timelineStart = timeline[0] ?? 0;
 
     for (let i = 0; i < timeline.length; i++) {
-      const slotStart = timeline[i]!;
+      const slotStart = timeline[i] ?? 0;
       const expectedTs = alignStartMs + (slotStart - timelineStart);
 
       let slotEndAbs: number;
       if (i + 1 < timeline.length) {
-        slotEndAbs = alignStartMs + (timeline[i + 1]! - timelineStart);
+        slotEndAbs =
+          alignStartMs +
+          ((timeline[i + 1] ?? slotStart + slotDuration) - timelineStart);
       } else {
         slotEndAbs = expectedTs + slotDuration;
       }
@@ -519,16 +540,15 @@ export class EChartsRenderer {
     const niceSteps = [1, 2, 2.5, 5, 10];
     const normalized = dataMax / step / splitCount;
 
-    let selectedStep: number;
-    for (let i = 0; i < niceSteps.length; i++) {
-      if (normalized <= niceSteps[i]) {
-        selectedStep = niceSteps[i];
+    let selectedStep: number | undefined;
+    for (const candidate of niceSteps) {
+      if (normalized <= candidate) {
+        selectedStep = candidate;
         break;
       }
     }
-    if (!selectedStep!) selectedStep = 10;
-
-    const niceStep = selectedStep * step;
+    // `10` was already the historical fallback for "no step matched" (911/TD-6).
+    const niceStep = (selectedStep ?? 10) * step;
     return Math.ceil(dataMax / niceStep) * niceStep;
   }
 
@@ -562,8 +582,11 @@ export class EChartsRenderer {
       }
 
       const leftIndex = lastNonNullIndex;
-      const leftVal = values[leftIndex]!;
-      const rightVal = values[rightIndex]!;
+      const leftVal = values[leftIndex];
+      const rightVal = values[rightIndex];
+      if (leftVal == null || rightVal == null) {
+        continue; // unreachable: both indices are in range and non-null by construction (911/TD-6)
+      }
       const span = rightIndex - leftIndex;
 
       for (let k = leftIndex; k <= rightIndex; k++) {
@@ -713,7 +736,8 @@ export class EChartsRenderer {
         rendererConfig.xAxisLabelLocale ?? rendererConfig.language ?? "en";
 
       if (modeInner === "forced" && rendererConfig.xAxisFormatPattern) {
-        const ms = fullTimeline[tick]!;
+        const ms = fullTimeline[tick];
+        if (ms === undefined) return ''; // dead path: tick is range-checked above (911/TD-6)
         return formatForcedTickLabel(
           ms,
           zone,
@@ -733,7 +757,9 @@ export class EChartsRenderer {
         comparisonAxisHints != null ||
         rendererConfig.hour12 !== undefined
           ? {
-              ...(hasTailContext ? { tailFromIndex: tailFrom! } : {}),
+              ...(hasTailContext && tailFrom != null
+                ? { tailFromIndex: tailFrom }
+                : {}),
               ...(comparisonAxisHints != null
                 ? { comparisonHints: comparisonAxisHints }
                 : {}),
@@ -806,7 +832,7 @@ export class EChartsRenderer {
       rendererConfig.showReferenceComparison !== false &&
       referenceValues.some((v) => v !== null);
 
-    const series: any[] = [];
+    const series: LineSeriesOption[] = [];
 
     // Transient time-window preview (909 US3, T013): draw ONLY the shifted current
     // (light gray) and, when present, the shifted reference (darker gray). The live
@@ -827,8 +853,6 @@ export class EChartsRenderer {
         symbolSize: 6,
         emphasis: {
           focus: 'series',
-          showSymbol: true,
-          symbolSize: 6,
           itemStyle: { color: theme.previewCurrent },
           lineStyle: { color: theme.previewCurrent }
         },
@@ -850,8 +874,6 @@ export class EChartsRenderer {
           symbolSize: 6,
           emphasis: {
             focus: 'series',
-            showSymbol: true,
-            symbolSize: 6,
             itemStyle: { color: theme.previewReference },
             lineStyle: { color: theme.previewReference }
           },
@@ -922,7 +944,7 @@ export class EChartsRenderer {
             });
             const valueLines: string[] = [];
             for (const p of items) {
-              const item: any = p ?? {};
+              const item: TooltipAxisItem = p ?? {};
               const seriesName = typeof item?.seriesName === 'string' ? item.seriesName : '';
               if (seriesName !== labels.current && seriesName !== labels.reference) {
                 continue;
@@ -1006,15 +1028,15 @@ export class EChartsRenderer {
         smooth: false,
         silent: true,
         tooltip: { show: false },
-        emphasis: { focus: 'none' },
-        showInLegend: false
+        emphasis: { focus: 'none' }
       });
     }
 
-    let solidReferenceSeriesIndex: number | undefined;
+    // Captured object instead of an index-before-push lookup: `markLine`/
+    // `markPoint` are attached below and the flag forbids index access (911/TD-6).
+    let solidReferenceSeries: LineSeriesOption | undefined;
     if (showReferenceLine) {
-      solidReferenceSeriesIndex = series.length;
-      series.push({
+      solidReferenceSeries = {
         name: labels.reference,
         type: 'line',
         color: theme.seriesReference,
@@ -1031,13 +1053,12 @@ export class EChartsRenderer {
         symbolSize: 6,
         emphasis: {
           focus: 'series',
-          showSymbol: true,
-          symbolSize: 6,
           itemStyle: { color: theme.seriesReference },
           lineStyle: { color: theme.seriesReference }
         },
         itemStyle: { color: theme.seriesReference }
-      });
+      };
+      series.push(solidReferenceSeries);
 
       const dashedReferenceValues = this.buildDashedNullGapValues(referenceValues);
       if (rendererConfig.connectNulls && dashedReferenceValues.some((v) => v !== null)) {
@@ -1054,7 +1075,6 @@ export class EChartsRenderer {
           showSymbol: false,
           smooth: false,
           itemStyle: { color: theme.seriesReference },
-          showInLegend: false,
           silent: true,
           tooltip: { show: false },
           emphasis: { focus: 'none' }
@@ -1062,9 +1082,8 @@ export class EChartsRenderer {
       }
     }
 
-    const solidCurrentSeriesIndex = series.length;
     const primaryColor = theme.seriesCurrent;
-    series.push({
+    const solidCurrentSeries: LineSeriesOption = {
       name: labels.current,
       type: 'line',
       color: primaryColor,
@@ -1081,13 +1100,12 @@ export class EChartsRenderer {
       symbolSize: 6,
       emphasis: {
         focus: 'series',
-        showSymbol: true,
-        symbolSize: 6,
         itemStyle: { color: primaryColor },
         lineStyle: { color: primaryColor }
       },
       itemStyle: { color: primaryColor }
-    });
+    };
+    series.push(solidCurrentSeries);
 
     if (rendererConfig.connectNulls) {
       const dashedCurrentValues = this.buildDashedNullGapValues(currentValues);
@@ -1105,7 +1123,6 @@ export class EChartsRenderer {
           showSymbol: false,
           smooth: false,
           itemStyle: { color: primaryColor },
-          showInLegend: false,
           silent: true,
           tooltip: { show: false },
           emphasis: { focus: 'none' }
@@ -1134,7 +1151,7 @@ export class EChartsRenderer {
           ? semanticResolvedLineColor(theme, rendererConfig.chartSemanticOutcome)
           : trendResolvedLineColor(theme, rendererConfig.chartTrend);
 
-      const markLineData: any[] = [
+      const markLineData: MarkLineData = [
         {
           xAxis: todaySlotIndex,
           lineStyle: {
@@ -1164,9 +1181,12 @@ export class EChartsRenderer {
         ]);
       }
 
-      const markPointData: any[] = [];
+      const markPointData: MarkPointData = [];
       if (todayCurrentY !== null) {
         markPointData.push({
+          // `name` is required by ECharts' MarkPointDataItemOption; the dot is silent
+          // (no tooltip/legend identity), so an empty name is the faithful "no name".
+          name: '',
           coord: [todaySlotIndex, todayCurrentY],
           symbol: 'circle',
           symbolSize: 8,
@@ -1178,7 +1198,7 @@ export class EChartsRenderer {
         });
       }
 
-      (series[solidCurrentSeriesIndex] as any).markLine = {
+      solidCurrentSeries.markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
@@ -1186,16 +1206,18 @@ export class EChartsRenderer {
         lineStyle: { type: 'dashed', color: theme.todayFullHeightLine, width: 1 }
       };
 
-      (series[solidCurrentSeriesIndex] as any).markPoint = {
+      solidCurrentSeries.markPoint = {
         silent: true,
         data: markPointData
       };
 
-      if (solidReferenceSeriesIndex !== undefined && todayReferenceY !== null) {
-        (series[solidReferenceSeriesIndex] as any).markPoint = {
+      if (solidReferenceSeries !== undefined && todayReferenceY !== null) {
+        solidReferenceSeries.markPoint = {
           silent: true,
           data: [
             {
+              // `name` is required by ECharts' MarkPointDataItemOption; silent dot → no name.
+              name: '',
               coord: [todaySlotIndex, todayReferenceY],
               symbol: 'circle',
               symbolSize: 7,
@@ -1229,8 +1251,6 @@ export class EChartsRenderer {
           symbolSize: 6,
           emphasis: {
             focus: 'series',
-            showSymbol: true,
-            symbolSize: 6,
             itemStyle: { color: primaryColor },
             lineStyle: { color: primaryColor }
           },
@@ -1239,16 +1259,16 @@ export class EChartsRenderer {
       }
     } else {
       // No today marker - add empty mark point arrays
-      (series[solidCurrentSeriesIndex] as any).markPoint = { silent: true, data: [] };
-      (series[solidCurrentSeriesIndex] as any).markLine = {
+      solidCurrentSeries.markPoint = { silent: true, data: [] };
+      solidCurrentSeries.markLine = {
         silent: true,
         symbol: ['none', 'none'],
         label: { show: false },
         data: [],
         lineStyle: { type: 'dashed', color: primaryColor, width: 1.5 }
       };
-      if (solidReferenceSeriesIndex !== undefined) {
-        (series[solidReferenceSeriesIndex] as any).markPoint = { silent: true, data: [] };
+      if (solidReferenceSeries !== undefined) {
+        solidReferenceSeries.markPoint = { silent: true, data: [] };
       }
     }
 
@@ -1346,7 +1366,7 @@ export class EChartsRenderer {
 
           const valueLines: string[] = [];
           for (const p of items) {
-            const item: any = p ?? {};
+            const item: TooltipAxisItem = p ?? {};
 
             const seriesName = typeof item?.seriesName === 'string' ? item.seriesName : '';
             if (
@@ -1495,18 +1515,17 @@ export class EChartsRenderer {
 
     const w0Start = rendererConfig.currentWindowStartMs;
     const w0End = rendererConfig.currentWindowEndMs;
-    const alignsAll = rendererConfig.windowAlignStartsMs;
+    const firstAlignStart = rendererConfig.windowAlignStartsMs?.[0];
     if (
       w0Start != null &&
       w0End != null &&
-      alignsAll != null &&
-      alignsAll.length > 0
+      firstAlignStart !== undefined
     ) {
       carryForwardCurrentCumulativeAtNow(
         currentValues,
         fullTimeline,
         Date.now(),
-        alignsAll[0]!,
+        firstAlignStart,
         w0Start,
         w0End,
         comparisonSeries.aggregation ?? "day",

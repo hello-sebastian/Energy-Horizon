@@ -5,7 +5,10 @@ import {
   withFocus,
   withScroll,
   reapplyAfterRender,
-  type EditorUiState
+  restoreTargets,
+  applyRestoreTargets,
+  type EditorUiState,
+  type RestoreDom
 } from "../../src/card/editor/editor-ui-state";
 
 describe("EditorUiState (data-model.md §5, research R4)", () => {
@@ -86,5 +89,129 @@ describe("EditorUiState (data-model.md §5, research R4)", () => {
     expect(reRendered.expanded.style).toBe(true);
     expect(reRendered.lastFocusedField).toBe("language");
     expect(reRendered.lastCaret).toBe(3);
+  });
+});
+
+describe("restore decision (FR-908-K/L/M, 911/TD-12)", () => {
+  it("pending focus restore → focusTarget + caret from state; scroll always", () => {
+    let s = defaultUiState();
+    s = withFocus(s, "title", 7);
+    s = withScroll(s, 42);
+    expect(restoreTargets(s, true)).toEqual({
+      focusTarget: "title",
+      caret: 7,
+      scrollTop: 42
+    });
+  });
+
+  it("not pending → no focus leg (a passive re-render must not steal focus)", () => {
+    let s = defaultUiState();
+    s = withFocus(s, "title", 7);
+    s = withScroll(s, 42);
+    const t = restoreTargets(s, false);
+    expect(t.focusTarget).toBeUndefined();
+    expect(t.caret).toBeUndefined();
+    expect(t.scrollTop).toBe(42); // the scroll leg always applies
+  });
+
+  it("caret 0 survives (0 is a valid caret, not falsy-coerced)", () => {
+    const s = withFocus(defaultUiState(), "title", 0);
+    expect(restoreTargets(s, true).caret).toBe(0);
+  });
+
+  it("scroll anchor 0 survives (0 is a valid anchor)", () => {
+    const s = withScroll(defaultUiState(), 0);
+    expect(restoreTargets(s, false).scrollTop).toBe(0);
+  });
+
+  it("no focus record → no focus leg even when pending", () => {
+    const s = withScroll(defaultUiState(), 9);
+    const t = restoreTargets(s, true);
+    expect(t.focusTarget).toBeUndefined();
+    expect(t.caret).toBeUndefined();
+    expect(t.scrollTop).toBe(9);
+  });
+});
+
+describe("applyRestoreTargets (FR-908-L, 911/TD-12)", () => {
+  function makeFakeInput(opts: { caretThrows?: boolean } = {}) {
+    return {
+      focusCalls: 0,
+      carets: [] as Array<[number, number]>,
+      focus() {
+        this.focusCalls += 1;
+      },
+      setSelectionRange(start: number, end: number) {
+        if (opts.caretThrows) {
+          throw new Error("not a real input");
+        }
+        this.carets.push([start, end]);
+      }
+    };
+  }
+  type FakeInput = ReturnType<typeof makeFakeInput>;
+  const makeContainer = () => ({ scrollTop: 0 });
+
+  it("restores focus + caret on the found field and scroll on the container", () => {
+    const input = makeFakeInput();
+    const container = makeContainer();
+    const dom: RestoreDom = {
+      findFieldInput: (f) => (f === "title" ? (input as unknown as HTMLInputElement) : null),
+      findScrollContainer: () => container as unknown as HTMLElement,
+      activeElementIs: () => false
+    };
+    applyRestoreTargets(dom, { focusTarget: "title", caret: 5, scrollTop: 99 });
+    expect(input.focusCalls).toBe(1);
+    expect(input.carets).toEqual([[5, 5]]);
+    expect(container.scrollTop).toBe(99);
+  });
+
+  it("does not refocus an already-active element, but still sets the caret", () => {
+    const input = makeFakeInput();
+    const dom: RestoreDom = {
+      findFieldInput: () => input as unknown as HTMLInputElement,
+      findScrollContainer: () => null,
+      activeElementIs: () => true
+    };
+    applyRestoreTargets(dom, { focusTarget: "title", caret: 3 });
+    expect(input.focusCalls).toBe(0);
+    expect(input.carets).toEqual([[3, 3]]);
+  });
+
+  it("a missing field is tolerated; the scroll leg still runs", () => {
+    const container = makeContainer();
+    const dom: RestoreDom = {
+      findFieldInput: () => null,
+      findScrollContainer: () => container as unknown as HTMLElement,
+      activeElementIs: () => false
+    };
+    applyRestoreTargets(dom, {
+      focusTarget: "nope",
+      caret: 2,
+      scrollTop: 17
+    });
+    expect(container.scrollTop).toBe(17);
+  });
+
+  it("a missing container skips the scroll leg silently", () => {
+    const dom: RestoreDom = {
+      findFieldInput: () => null,
+      findScrollContainer: () => null,
+      activeElementIs: () => false
+    };
+    expect(() => applyRestoreTargets(dom, { scrollTop: 10 })).not.toThrow();
+  });
+
+  it("a setSelectionRange failure is swallowed (best-effort, FR-908-L)", () => {
+    const input = makeFakeInput({ caretThrows: true });
+    const dom: RestoreDom = {
+      findFieldInput: () => input as unknown as HTMLInputElement,
+      findScrollContainer: () => null,
+      activeElementIs: () => false
+    };
+    expect(() =>
+      applyRestoreTargets(dom, { focusTarget: "title", caret: 4 })
+    ).not.toThrow();
+    expect(input.focusCalls).toBe(1); // the focus leg still ran
   });
 });

@@ -246,6 +246,8 @@ As a user opening the editor in edge conditions (missing `hass` object during in
 
 - **FR-904-O (Semantic validation on card)**: The editor MUST NOT be required to validate `time_window` or `time_window.offset` semantics. The main card MUST perform validation at `setConfig` and surface failures (including invalid or forbidden `offset` per `900` FR-900-Q) as the same card error pattern used for other invalid `time_window` values. The editor MUST still preserve YAML text and emit full config on change so the user can correct mistakes in YAML.
 
+- **FR-904-P (YAML mode state machine)**: The YAML text mode's state and behavior MUST live in a DOM-free state machine (`src/card/editor/yaml-mode.ts`) that owns the YAML `text`, the inline `parseError`, the `lastEmitted` config (save form), the self-echo guard, and all YAML/emit debouncing. The machine MUST be injectable (codec, authoritative config, parse/emit/render hooks) so it is unit-testable without a DOM. Its observable behavior MUST be unchanged by the extraction (911/TD-12, FR-019): a `setConfig` structurally equal to `lastEmitted` (self-echo) MUST NOT re-serialize the textarea; Visual → YAML entry MUST re-serialize unconditionally; a YAML parse MUST replace the config wholesale and, on failure, keep the last valid config; and a forced flush MUST run a pending parse before the emit gate (atomic parse-before-emit ordering).
+
 ---
 
 ## Key Entities

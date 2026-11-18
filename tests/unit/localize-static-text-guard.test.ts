@@ -30,11 +30,15 @@ const FORBIDDEN_PHRASES = [
 /** Source files that must not contain user-visible natural language. */
 const CARD_SOURCE_FILES = [
   "cumulative-comparison-chart.ts",
-  "chart-renderer.ts",
   "ha-api.ts",
   "localize.ts",
   "types.ts",
-  "energy-horizon-card-styles.ts"
+  "energy-horizon-card-styles.ts",
+  "timeline/timeline-slots.ts",
+  "timeline/now-marker.ts",
+  "timeline/tail-labels.ts",
+  "timeline/reference-alignment.ts",
+  "time-windows/comparison-period.ts"
 ];
 
 describe("localize static text guard (US4)", () => {

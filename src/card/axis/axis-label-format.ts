@@ -54,10 +54,9 @@ export function formatAdaptiveTickLabel(
   const cur = DateTime.fromMillis(ms, { zone });
   const tailFrom = opts?.tailFromIndex;
   const isTail = tailFrom != null && index >= tailFrom && tailFrom < fullTimeline.length;
+  const prevMs = index > 0 ? fullTimeline[index - 1] : undefined;
   const prev =
-    index > 0
-      ? DateTime.fromMillis(fullTimeline[index - 1]!, { zone })
-      : undefined;
+    prevMs != null ? DateTime.fromMillis(prevMs, { zone }) : undefined;
 
   const dayChanged =
     !!prev &&

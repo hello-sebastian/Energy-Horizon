@@ -4,12 +4,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "allowJs": false,
     "resolveJsonModule": true,
-    "jsx": "react-jsx",
     "lib": ["DOM", "ES2020"],
     "types": ["vite/client"]
   },

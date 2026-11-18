@@ -25,7 +25,7 @@ vi.mock("echarts/core", () => ({
 
 import "../../src/index";
 import type { HomeAssistant } from "../../src/ha-types";
-import type { CardState } from "../../src/card/types";
+import type { ReadyState } from "../../src/card/types";
 
 type EnergyHorizonCardEl = import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & {
   setConfig: (c: unknown) => void;
@@ -47,7 +47,7 @@ const dayMs = 86400000;
  * Panel reference = referenceCumulativeAtAlignedCurrentEnd = the reference value aligned
  * to the last current point (2026-01-02 → 2025-01-02) = 15.
  */
-function openBucketYoYState(): CardState {
+function openBucketYoYState(): ReadyState {
   const currentStart = Date.UTC(2026, 0, 1);
   const currentEnd = Date.UTC(2026, 0, 5);
   const refStart = Date.UTC(2025, 0, 1);

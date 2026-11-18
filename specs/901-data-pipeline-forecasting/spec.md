@@ -4,7 +4,7 @@
 **Domain**: Data Pipeline & Forecasting  
 **Replaces**: `001-compute-forecast`  
 **Primary code**: `src/card/ha-api.ts`  
-**Last updated**: 2026-04-22  
+**Last updated**: 2026-11-17  
 
 ---
 
@@ -17,6 +17,8 @@ This domain covers the data pipeline from Home Assistant Long-Term Statistics (L
 ### LTS data fetching
 
 For each `ComparisonWindow` the card calls the HA statistics API with the window's `start`/`end` boundaries and the effective `aggregation`. Fetches for multiple windows may be issued in parallel. The results are normalized, sorted by timestamp, and converted to cumulative series (`toCumulativeSeries`).
+
+**Typed response model (911/TD-3)**: WebSocket messages arrive as `unknown` (the thin `src/ha-types.ts` transport contract is deliberately unchanged). The card applies the `LtsMessageResponse` type at the boundary where it consumes the messages (the `Promise.all` call sites), then normalizes every response through the single adapter `extractLtsResults()` in `ha-api.ts`. The adapter supports both observed shapes — the `{ success?, result? }` envelope (Shape A) and the bare `{ results }` payload (Shape B) — plus the documented legacy bare statistic record `{ [statistic_id]: LtsPoint[] }` without a `results` wrapper. It is defensive (never throws; malformed input degrades to `undefined`, which routes to the existing no-data path). Entity-id lookup (with first-key fallback) remains in the mapping layer.
 
 ### `buildChartTimeline` / `forecastPeriodBuckets`
 
@@ -100,7 +102,7 @@ interface ForecastStats {
 - Machine-learning or non-linear forecast models.
 - Per-entity anomaly thresholds (threshold `0.3`/`3.3` is fixed).
 - Sub-hour aggregation (excluded until LTS supports it).
-- Changing `computeSummary`, `computeTextSummary`, `buildComparisonPeriod`, or the chart renderer interface.
+- Changing `computeSummary`, `computeTextSummary`, `mapLtsResponseToCumulativeSeries`, or the chart renderer interface.
 
 ---
 
@@ -210,14 +212,22 @@ As a user whose reference series covers only part of the current window's time r
 
 - **FR-901-N (Data normalization)**: `normalizePoints()` MUST sort points ascending by `timestamp` before passing them to `computeForecast`. `computeForecast` itself MUST NOT re-sort (it may rely on sorted input as a precondition).
 
-- **FR-901-O (No regression)**: `computeSummary`, `computeTextSummary`, `buildComparisonPeriod`, and the chart renderer interface MUST NOT require changes as a result of this domain's implementation.
+- **FR-901-O (No regression)**: `computeSummary`, `computeTextSummary`, `mapLtsResponseToCumulativeSeries`, and the chart renderer interface MUST NOT require changes as a result of this domain's implementation.
 
 - **FR-901-P (Parallel LTS fetches)**: LTS data for multiple windows MAY be fetched in parallel. Time range correctness MUST be maintained regardless of fetch ordering.
+
+- **FR-901-Q (Typed LTS response adapter)**: LTS WebSocket responses MUST be consumed through the `LtsMessageResponse` type and the `extractLtsResults()` adapter in `ha-api.ts` — no `as any` cast at the call sites (satisfied as of 2026-11-16, 911/TD-3; contract: `specs/911-tech-debt-reduction/contracts/lts-websocket-response.md`). The adapter MUST support the envelope and bare payload shapes plus the legacy bare-record shape, and MUST NOT throw on malformed input (degrades to `undefined` → the existing no-data path). Mapping semantics (entity lookup, first-key fallback, point normalization) MUST remain unchanged — verified by the unmodified golden tests in `tests/unit/ha-api.test.ts` (FR-019).
+
+- **FR-901-R (Single ready-state pipeline)**: The series → ready-`CardState` transform (unit scaling → `computeSummary` → `computeForecast` → unit patching → `computeTextSummary` → comparison period → state assembly) MUST be implemented once, as the pure function `buildReadyState(series, windows, merged, chartTime, resolved, localize, opts?)` in `src/card/pipeline/ready-state-builder.ts` (zero Lit/DOM, `time-windows/` pattern), covering **every** state variant the paths can produce — ready with/without reference or context, forecast-disabled, single-window, no-data — not a happy-path-only builder. The three element paths (`_loadData`, `_buildDemoState`, `_firePickerRealDataQuery`) MUST each end in a single `buildReadyState(...)` call and MUST NOT call `computeSummary`, `computeForecast`, or `computeTextSummary` directly. Per-path differences (raw/patch unit, `force_prefix`, preview-key presence) MUST ride on the `ReadyStateOptions` parameter. Behavior MUST stay byte-identical to the pre-extraction pipeline (FR-019) — pinned by the unmodified expected values in `tests/integration/pipeline-characterization.test.ts` (R1 baseline) and the hand-computed expectations in `tests/unit/ready-state-builder.test.ts`. (Satisfied as of 2026-11-16, 911/TD-2.)
+
+- **FR-901-S (Single-responsibility `ha-api.ts` boundary)**: `src/card/ha-api.ts` MUST be limited to: LTS query building for resolved windows (`buildLtsQueriesForWindows`), the typed LTS response adapter (`LtsMessageResponse` + `extractLtsResults`), LTS → cumulative-series mapping (`mapLtsResponseToCumulativeSeries` with its normalizers), and the compute cluster (`computeSummary`, `computeForecast`, `computeTextSummary`, `fullReferenceWindowRawTotal`). The legacy single-window API (`buildLtsQuery`, `mapLtsResponseToSeries`, `buildComparisonPeriod`) MUST NOT exist in `src/` (removed 2026-11-17, 911/TD-7). Chart timeline geometry MUST live in `src/card/timeline/` (domain 900, FR-900-R), not in `ha-api.ts`. The window → `ComparisonPeriod` bridge MUST be the single function `comparisonPeriodFromResolvedWindows` in `src/card/time-windows/` — no other code path constructs a `ComparisonPeriod`. The public contracts of the remaining functions MUST stay unchanged (FR-019: zero behavior change — pinned by the golden tests, whose expected values were migrated to frozen multi-window boundary values without any semantic change).
 
 ---
 
 ## Key Entities
 
+- **`LtsMessageResponse`**: The LTS WebSocket message shape as the card receives it — `{ success?: boolean; result?: LtsStatisticsResponse }` (envelope, Shape A) or `LtsStatisticsResponse` itself (bare payload, Shape B). Applied at the fetch boundary in `cumulative-comparison-chart.ts` (911/TD-3).
+- **`extractLtsResults()`**: Single defensive normalization point in `ha-api.ts`; returns `LtsStatisticsResponse | undefined`. Keeps the legacy bare-record shape via a `?? data` fallback; never throws.
 - **`ForecastPoint`**: `{ timestamp: number, rawValue: number }` — a single per-bucket increment from a cumulative LTS series.
 - **`ForecastStats`**: `{ enabled, confidence, forecast_total, anomalousReference? }` — the complete output of `computeForecast`.
 - **`periodTotalBuckets`** (= `forecastPeriodBuckets`): Nominal slot count of window 0 at its aggregation grain; the denominator for `pct`. Produced by `buildChartTimeline` in `ha-api.ts`; always window 0 only.
@@ -235,7 +245,7 @@ As a user whose reference series covers only part of the current window's time r
 - **SC-901-3**: When the current series has a time gap, the resulting B and C match the expected reference proportions based on time range — verified by unit test with gap fixtures.
 - **SC-901-4**: A reference year with `rawTrend > 3.3` or `< 0.3` never produces `confidence` above `"low"` — verified by unit tests covering all anomaly scenarios.
 - **SC-901-5**: `forecastPeriodBuckets` from `buildChartTimeline` equals window 0's nominal slot count; a Vitest test confirms it is independent of `timeline.length` when the shared axis is longer due to Longest-window axis span.
-- **SC-901-6**: No regression in `computeSummary`, `computeTextSummary`, or `buildComparisonPeriod`; existing tests for those functions continue to pass unchanged.
+- **SC-901-6**: No regression in `computeSummary`, `computeTextSummary`, or `mapLtsResponseToCumulativeSeries`; existing tests for those functions continue to pass unchanged.
 - **SC-901-7 (Verification — compound `offset`)**: For windows produced with compound ISO `time_window.offset` (domain `900`), `forecastPeriodBuckets` and LTS `start`/`end` per window remain derived only from resolved `ComparisonWindow[]`; unit tests confirm no change to `ha-api.ts` public contracts and that `periodTotalBuckets` still equals window 0’s nominal slot count, not `timeline.length` when Longest-window axis span applies.
 
 ---

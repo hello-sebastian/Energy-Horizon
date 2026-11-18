@@ -36,7 +36,8 @@ for (const path of Object.keys(translationModules)) {
     const lang = match[1];
     const mod = translationModules[path];
     const dict = mod?.default;
-    if (dict && typeof dict === "object") {
+    // `lang` is always defined — the capture group is mandatory in the regex (911/TD-6)
+    if (lang !== undefined && dict && typeof dict === "object") {
       DICTIONARIES[lang] = dict;
     }
   }

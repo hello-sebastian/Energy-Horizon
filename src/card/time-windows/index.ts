@@ -9,6 +9,7 @@ export {
 export { assertLtsHardLimits } from "./lts-hard-limits";
 export type { ValidateMergedResult } from "./validate";
 export { resolveTimeWindows } from "./resolve-windows";
+export { comparisonPeriodFromResolvedWindows } from "./comparison-period";
 export {
   resolvePreviewShiftedWindows,
   nextPreviewShift,
