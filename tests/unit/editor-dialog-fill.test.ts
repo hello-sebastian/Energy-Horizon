@@ -1,6 +1,6 @@
 /**
  * T068 — SC-908-10: the editor responsively fills the height of the HA card
- * editor dialog (FR-908-AA / FR-908-AB).
+ * editor dialog (FR-908-AC / FR-908-AD).
  *
  * jsdom has no layout, so the fill contract is verified declaratively: the
  * test reads the CSS text from the editor's `static styles` block and asserts
@@ -44,7 +44,7 @@ function ruleFor(selector: string): string {
   return m![1]!;
 }
 
-describe("T068 — editor dialog height fill (FR-908-AA/AB, SC-908-10)", () => {
+describe("T068 — editor dialog height fill (FR-908-AC/AD, SC-908-10)", () => {
   it(".editor is a flex column capped at calc(100vh - 284px) (R14 derivation)", () => {
     const rule = ruleFor(".editor");
     expect(rule).toContain("display: flex");

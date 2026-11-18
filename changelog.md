@@ -7,6 +7,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ### Fixed
 
+- **Editor did not fill the card editor dialog height (908 refinement, FR-908-AC/AD, SC-908-10):** in the HA card editor dialog the editor's scrollable area (visual mode and YAML mode) now responsively fills the whole allocated editor pane regardless of the browser window size — scrolling happens only inside the editor, and the Config/Visibility tab bar and the dialog chrome stay visible. Previously the visual-mode scroll area was capped at a fixed `60vh` unrelated to the dialog geometry (a gap under the scroller on tall windows, a double scrollbar on short ones).
 - **Time-window preview controls hidden in the HA card picker, dashboard edit mode, and the card editor (909 refinement, FR-022–FR-025):** the preview controls (back/forward) are now visible in every card context — including the "Add card" picker (both views), dashboard edit mode, and the editor's live preview — where they keep their normal appearance and do not respond to any input (no state change, no data load; the preview state can only be changed in the dashboard view mode; the reset control remains contextual — it appears only while a preview shift is active). Previously the controls were hidden in those contexts.
 
 ## [1.3.0] - 2026-11-18

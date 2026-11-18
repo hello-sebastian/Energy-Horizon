@@ -177,6 +177,18 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 
 ---
 
+## R14. Dialog-height fill — viewport-relative cap vs runtime measurement (FR-908-AC/AD, SC-908-10)
+
+**Decision**: The editor's scrollable area fills the allocated dialog pane height with a **declarative, viewport-relative cap** on the `.editor` shell — `max-height: calc(100vh - 284px)` — plus a flex column that delegates the remaining height to the scroll container (`.sections` in visual mode, the `.yaml-editor` textarea in YAML mode: `flex: 1 1 auto; min-height: 0`; `.toggle-row` stays `flex: 0 0 auto`). The constant **284** is derived from the documented HA dialog geometry (verified against `home-assistant/frontend` dev): **209 px** of dialog chrome (header + footer + padding/margins, as decomposed in the `--code-mirror-max-height` comment in `hui-dialog-edit-card.ts`) + **56 px** of Config/Visibility tab-bar budget (webawesome tab: `1em` vertical padding + text line + 2 px track, 14–16 px font) + **16 px** of tab margin (`ha-tab-group { margin-bottom: 16px }`) = 281 px, rounded up to 284 px (3 px conservative slack: if the estimate is off, only an imperceptible gap remains, never a double scrollbar). The CSS comment mandates re-derivation if HA changes the dialog or tab chrome.
+
+**Rationale**: HA applies exactly this mechanism to the in-dialog YAML code editor in the same dialog (`--code-mirror-max-height: calc(100vh - 209px)` on the dialog's `.content` row, viewport ≥ 1000 px) — so the cap is an HA-idiomatic, declarative solution, not a workaround. A pure `height: 100%` chain is impossible: the intermediates between the dialog and our host (`hui-card-element-editor` host, `.wrapper`, `.gui-editor`) have content-based (indefinite) height and sit behind shadow boundaries we cannot style, so a percentage height chain is broken at the first shadow boundary. **Accepted residual limitation**: when the dialog is shorter than its cap (short form next to a tall preview column), the editor remains content-sized; a pure-CSS stretch across the HA shadow boundary is impossible, and built-in HA editors behave the same. **Narrow layout** (viewport < 1000 px, column dialog): the same cap acts as the bound, and the dialog scrolls as a whole (unchanged).
+
+**Alternatives considered**:
+- *`ResizeObserver` + `closest(".element-editor")` px measurement* — rejected: runtime detection of HA's internal DOM structure (a workaround, contrary to the no-workarounds policy and to the 909 R10 decision against runtime HA-DOM detection); fragile across HA versions; requires JS where declarative CSS suffices.
+- *`height: 100%` flex chain* — rejected: impossible (see Rationale — HA intermediates have indefinite height behind shadow boundaries).
+
+---
+
 ## Consolidated decisions
 
 | # | Decision | Drives |
@@ -194,5 +206,6 @@ All spec-level clarifications were resolved in `spec.md` → `## Clarifications`
 | R11 | Declarative `visibleWhen`/`disabledWhen` for cascades | FR-908-G/H |
 | R12 | No blocking validation; graceful degradation | FR-908-S/T |
 | R13 | YAML first-class input path: two-tier debounce (150 ms parse / 1 s emit, safe-mode parser) + no-op suppression + self-echo → no reserialization; parse **replaces** `_config` (not a merge); atomic ordered flush; `setConfig` preserves mode; values persist, formatting canonicalized by HA | FR-908-Y, SC-908-9 |
+| R14 | Viewport-relative cap `calc(100vh - 284px)` (209 px dialog chrome + 56 px tab bar + 16 px tab margin, 3 px conservative slack) + flex delegation of the remaining height to the scroll container; no runtime measurement | FR-908-AC/AD, SC-908-10 |
 
 **All NEEDS CLARIFICATION items resolved.** No open unknowns remain for Phase 1.
