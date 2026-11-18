@@ -113,6 +113,8 @@ tests/unit/                              [extended] new unit tests: builder (≥
 
 Full gate = `npm test && npm run typecheck && npm run lint && npm run build` + committed `dist/` rebuild (CI `verify-dist`) + `speckit.converge` drift check (code vs. spec/plan/tasks).
 
+**Wave status (program close, 2026-11-18)**: W1 ✅ (2026-11-16, gate T008) · W2 ✅ (2026-11-17, gate T012) · W3 ✅ (2026-11-17, gate T018) · W4 ✅ (2026-11-18, gate T020 = the program's **exit gate** — `speckit.converge` drift = 0, Phase 9 of `tasks.md`). All four waves delivered with FR-018 gates (SC-009); the single tracked exception (TD-4 scoped `eslint-disable`) was removed in TD-5 (W3) — Complexity Tracking spent. Phase 6 closeout (T021/T022) completed 2026-11-18; branch `911-tech-debt-reduction` is ready for the maintainer's per-PR merges to `main` (D4).
+
 ## Plan Decisions (delegated from the spec)
 
 Full Decision / Rationale / Alternatives for each: [research.md §6](research.md#6-phase-0--open-unknowns-and-plan-decisions).
