@@ -179,6 +179,41 @@ description: "Task list for the Transient Time-Window Preview feature"
 
 ---
 
+## Phase 10: Refinement — Controls visible in HA preview contexts (2026-11-18)
+
+**Goal**: The 909 preview controls are visible in every card context — including all HA
+contexts that set `preview = true` (picker, dashboard edit mode, editor dialog), where they
+keep their normal appearance and are non-interactive (no response to any input) — while the
+dashboard view mode stays fully interactive. Back/forward are the always-rendered controls;
+the reset control stays contextual (FR-009/FR-010 — rendered only while a shift is active)
+and is never rendered in a `preview = true` context (a shift cannot be activated there)
+(FR-022–FR-025, research R10).
+**Branch**: `1.3-dev` (user decision 2026-11-18).
+
+**Independent Test**: In a dev HA install: (1) "Add card" picker (both "By entity" and "By
+card" views), (2) dashboard edit mode, (3) card editor dialog — the card's preview shows the
+back/forward controls with their normal appearance (the reset control is contextual —
+FR-010 — and is not shown, since a shift cannot be activated in a preview context), and
+clicking/tapping/keyboard-activating them changes nothing (no shift, no data load, no
+preview indication); (4) dashboard view mode — the controls work exactly as before
+(step back/forward/reset).
+
+### Tests (write FIRST, ensure they FAIL before implementation) ⚠️
+
+- [X] T032 In `tests/integration/picker-preview-render.test.ts`: update the existing "controls hidden" assertion (currently expects `.ebc-chart-controls` to be absent when `preview === true`) to assert the controls ARE present with `aria-disabled="true"` and `tabindex="-1"` and NO `disabled` attribute, and add inertness tests — clicking the back/forward buttons on a `preview === true` card (the reset control is not rendered in a preview context — FR-010 — and shares the same guarded entry point) leaves `previewShift` at `0`, keeps `_previewLoading` at `false`, and triggers no data load; and a dashboard view-mode card (`preview` false) is unchanged: controls interactive, no `aria-disabled`/`tabindex` overrides (FR-022, FR-023, FR-025)
+
+### Implementation
+
+- [X] T033 In `src/card/cumulative-comparison-chart.ts`: (a) in `_renderChartSection`, remove the `this.preview ? null :` guard so the `.ebc-chart-controls` block is always rendered (back/forward always; indication and reset stay contextual — FR-903-Y/FR-009/FR-010) (FR-022); (b) add an early `return` at the top of `_onPreviewStep` when `this.preview === true` — the single activation entry point for all three buttons, covering mouse, touch, and keyboard in every preview context (FR-022); (c) while `this.preview` is true, render the back/forward buttons with `aria-disabled="true"` and `tabindex="-1"` (omitted otherwise — NO `disabled` attribute, normal appearance; FR-023, FR-025) — the reset button is never rendered in a preview context (FR-010) and its handler is inert by the same guard; (d) update the `preview` property doc comment (and the `_renderChartSection` header) from "hides the 909 time-window preview controls" to "renders them visible but non-interactive" (research R10)
+
+- [X] T034 [P] Cross-domain documentation consistency (no code change): 910 `spec.md` Assumptions ("non-interactive" reworded — visible, not hidden), 910 `research.md` (R2 wording; R6 SUPERSEDED banner; R7 wording), 910 `plan.md` (technical approach, constitution check, structure notes, test note), 910 `data-model.md` (`preview` semantics), 910 `quickstart.md` (where-to-edit, tests, scenario 12), 910 `contracts/picker-integration.md` (§4 Interactivity row), 903 `spec.md` FR-903-AA ("picker-mode control hiding" → non-interactivity wording), and `changelog.md` `[Unreleased]` entry (FR-022–FR-025). (910 `tasks.md` T011 and 911 T016 stay as completed history.)
+
+**Checkpoint**: In all three preview contexts the controls are visible with normal appearance
+and inert to any input; the dashboard view mode is unchanged; `npm test`, `npm run typecheck`,
+and `npm run lint` are green.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -187,6 +222,7 @@ description: "Task list for the Transient Time-Window Preview feature"
 - **Foundational (Phase 2)**: Depends on Setup completion — BLOCKS all user stories.
 - **User Stories (Phases 3–8)**: All depend on Foundational (Phase 2) completion.
 - **Polish (Phase 9)**: Depends on all desired user stories being complete.
+- **Refinement (Phase 10)**: Depends on a green baseline on `1.3-dev`. T032 (tests, TDD) before T033 (implementation); T034 (docs) is parallel to T033 (different files).
 
 ### User Story Dependencies
 

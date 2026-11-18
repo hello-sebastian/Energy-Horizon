@@ -70,6 +70,16 @@ has at least ~3 months of history.
    narrative remain visible and unchanged, reflecting the default configuration and current data.
 10. **Accessibility (FR-017)**: Tab to each control → focus-visible; activate with Enter/Space;
     screen reader announces the localized labels and the preview indication.
+11. **Preview contexts (FR-022–FR-025, 2026-11-18 refinement)**: (a) "Add card" picker — both
+    "By entity" and "By card" views: the Energy Horizon preview shows the back/forward
+    preview controls with their normal appearance (the reset control is contextual —
+    FR-010 — and is not shown, because a shift cannot be activated in a preview context);
+    clicking or keyboard-activating them changes nothing (no shift, no data load, no
+    preview indication).
+    (b) Dashboard edit mode (hover a card / open the editor): same — controls visible, normal
+    appearance, inert. (c) Card editor dialog (live preview): same. (d) Dashboard view mode:
+    the controls work exactly as before (step back/forward/reset, indication, transient
+    contract).
 
 ## Manual sanity (optional)
 

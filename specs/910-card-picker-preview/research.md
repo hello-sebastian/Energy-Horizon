@@ -59,8 +59,9 @@ the picker with `preview = true` (and `editMode = true` for backwards compatibil
   so the card element **can detect picker mode** via a `preview` property. Our element does not
   currently declare one — `hui-card`'s assignment is a no-op today. Adding a plain
   `preview` property (plus `editMode` alias handling) is required for the demo-series fallback
-  (R4) and for hiding the 909 preview controls in picker mode (spec Assumptions: the preview is
-  non-interactive).
+  (R4) and for making the 909 preview controls non-interactive in picker mode — visible with
+  normal appearance, no response to input (spec Assumptions; 909 FR-022–FR-025, refined
+  2026-11-18 — see R6).
 - The picker passes `unusedEntities` first and `usedEntities` as fallback — the same
   `findEntities`-style heuristic core cards use. We mirror it: prefer an unused entity with a
   supported unit, then a used one.
@@ -179,21 +180,31 @@ and period-label pipeline can consume it unchanged.
   run); a special short window would make the preview's real-data view differ from what the user
   gets after adding the card, and adds config surface that is never persisted (FR-010).
 
-## R6. Hiding the 909 preview controls in picker mode
+## R6. The 909 preview controls in picker mode
 
-**Decision**: The card's transient time-window preview controls (909: back/forward/reset,
-rendered around `cumulative-comparison-chart.ts` L1516–1535) are **not rendered** when
-`preview === true` (picker mode). The picker preview is non-interactive (spec Assumptions).
+> **SUPERSEDED (2026-11-18)** — the decision below (hide the controls when `preview === true`)
+> is no longer the required behavior. The 909 spec refinement (FR-022–FR-025, research R10)
+> mandates that the controls be **visible in all contexts**, including picker mode, with their
+> **normal appearance** and **non-interactive** (no response to any input). The hidden-controls
+> render guard is replaced by an always-render + event-guard approach (909, Phase 10). The
+> original entry is kept below as a historical record.
 
-**Rationale**:
+**Decision (original)**: The card's transient time-window preview controls (909:
+back/forward/reset, rendered around `cumulative-comparison-chart.ts` L1516–1535) are
+**not rendered** when `preview === true` (picker mode). The picker preview is non-interactive
+(spec Assumptions).
+
+**Rationale (original)**:
 - The 909 controls are a view-mode feature of the card on a dashboard; in the picker the card is
   a static preview — interactive controls there would be confusing and could fire loads the
   picker does not expect (FR-013: the preview must not interfere with the picker).
 - Hiding them is a single render guard (`this.preview`), no new state.
 
-**Alternatives considered**:
+**Alternatives considered (original)**:
 - *Leave the controls visible but inert*: rejected — dead UI in a preview is worse than no UI
-  (Principle IV), and "inert" still requires state.
+  (Principle IV), and "inert" still requires state. → **Reversed 2026-11-18**: the user
+  decision (2026-11-18) requires visibility in all preview contexts; visible-but-inert is now
+  the mandated behavior (909 FR-022–FR-025).
 
 ## R7. Testability strategy
 
@@ -210,9 +221,9 @@ without a live HA instance:
 - The time-limited query wrapper (R4) — testable with a fake `sendMessagePromise` that resolves
   late / rejects.
 
-The element-level behavior (picker-mode render, demo-first-then-real update, controls hidden)
-is covered by integration tests with a stubbed `hass` (the existing `tests/integration/`
-pattern).
+The element-level behavior (picker-mode render, demo-first-then-real update, controls visible
+but inert) is covered by integration tests with a stubbed `hass` (the existing
+`tests/integration/` pattern).
 
 **Rationale**:
 - The constitution (Principle III) requires key functions to be covered by tests; pure functions

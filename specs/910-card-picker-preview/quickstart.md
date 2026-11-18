@@ -34,8 +34,9 @@ npx vitest run tests/integration/picker-preview-render.test.ts
   `buildDemoComparisonSeries`, and the time-limited query wrapper (research R3/R4/R5/R7).
 - **Element picker-mode behavior**: `src/card/cumulative-comparison-chart.ts` — the `preview`
   property, the full `getStubConfig(hass, entities, entitiesFallback)` signature, the
-  demo-first render path with the time-limited real-data update, and hiding the 909 controls in
-  picker mode (research R2/R4/R6).
+  demo-first render path with the time-limited real-data update, and the 909 controls visible
+  but non-interactive in picker mode (research R2/R4/R6 as superseded 2026-11-18; 909
+  FR-022–FR-025).
 - **Reused, unmodified**: `src/card/ha-api.ts` (LTS query/mapping), `src/card/types.ts`
   (`ComparisonSeries`/`CumulativeSeries`), `src/card/time-windows/` (window resolution).
 - **Translations**: `src/card/translations/{en,pl,de,fr}.json` — only if a new string turns out
@@ -43,7 +44,7 @@ npx vitest run tests/integration/picker-preview-render.test.ts
 - **Tests**: `tests/unit/picker-preview.test.ts` (supported-units check, entity search,
   suggestion hook, demo-series determinism, time-limited query fallback) and
   `tests/integration/picker-preview-render.test.ts` (demo-first render, real-data update, no
-  loading/error state, 909 controls hidden).
+  loading/error state, 909 controls present but inert).
 
 ## Validation scenarios (end-to-end)
 
@@ -86,8 +87,11 @@ These map to the spec's acceptance scenarios; run them against a dev HA dashboar
     Horizon preview does not affect other cards' previews or the picker's responsiveness.
 11. **Theme & localization (FR-012)**: Toggle light/dark theme and change the HA language → the
     preview respects the active theme and the card's localization.
-12. **Non-interactive (Assumptions)**: In the picker preview, the 909 time-window preview
-    controls (back/forward/reset) are not shown.
+12. **Non-interactive (Assumptions; 909 FR-022–FR-025)**: In the picker preview (and in
+    dashboard edit mode and the editor dialog), the 909 time-window preview controls
+    (back/forward) are visible with their normal appearance but do not respond to any
+    input — no state change, no data load. (The reset control is contextual — 909
+    FR-010 — and is not shown, since a shift cannot be activated in a preview context.)
 
 ## Regression checks
 

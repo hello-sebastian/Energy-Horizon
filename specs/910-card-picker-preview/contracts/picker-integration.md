@@ -62,7 +62,7 @@ The card element detects picker mode via the `preview` property forwarded by `hu
 | **Real-data update** | A real-data query (the existing LTS path) is fired with a short time limit (~2–3 s). If it succeeds in time and yields a current series, the preview updates **in place** to the real data (FR-007, FR-014). The update happens at most once per picker session. |
 | **Fallback** | On query failure, timeout, or empty result, the demo series stays (FR-008). No loading or error state is ever shown in the picker (FR-011). |
 | **No-data message** | The no-data message ("There is no data to display for the selected period") is **never** shown in picker mode (FR-005). |
-| **Interactivity** | The 909 preview controls (back/forward/reset) are **not rendered** in picker mode — the preview is non-interactive (spec Assumptions, research R6). |
+| **Interactivity** | The 909 preview controls (back/forward) are **rendered with their normal appearance but non-interactive** in picker mode — no response to any input, no state change, no data load (the reset control is contextual, 909 FR-010, and is not rendered in picker mode — a shift cannot be activated there) (spec Assumptions; research R6 as superseded 2026-11-18; 909 FR-022–FR-025). |
 | **Theme & localization** | The preview respects the active HA theme (light/dark) and the card's localization (FR-012). |
 | **Isolation** | The preview does not interfere with other cards, the picker, or the dashboard (FR-013). No preview state leaks between picker sessions or into the dashboard (spec Edge Cases). |
 | **Normal mode** | When `preview === false` (dashboard), the demo path is never taken; the card behaves exactly as before this feature. |

@@ -13,7 +13,7 @@ Make the Energy Horizon card **discoverable and recognizable** in the Home Assis
 1. **"By entity" view** — the card is suggested for every entity whose `unit_of_measurement` is in the card's supported units (`kWh`, `Wh`, `MWh`, `m³`, `l`) and only for those, via the `getEntitySuggestion(hass, entityId)` hook on the `window.customCards` registration (research R1/R3). The suggestion carries a sample configuration referencing the selected entity (FR-001–FR-004).
 2. **"By card" view** — the card's gallery preview renders the card in its standard appearance (chart with current + reference series, standard panels) instead of the no-data message (FR-005). The static `getStubConfig(hass, entities, entitiesFallback)` is implemented with the full HA signature and picks a suitable user entity by supported unit (research R2/R5).
 
-**Technical approach**: In picker mode (detected via the `preview` property that `hui-card` forwards to the card element), the card **immediately renders a deterministic fictional demo series** (no query, no loading state — FR-014), then fires the normal LTS data query with a **short time limit** (`Promise.race` against a timeout); if it succeeds in time with a current series, the preview updates in place to the real data, otherwise the demo series stays (FR-007/FR-008/FR-011). The demo series is a pure function producing the existing `ComparisonSeries` shape, so the preview reuses the card's normal render pipeline unchanged (research R4). The 909 preview controls are hidden in picker mode (research R6). No new npm dependencies, no new HA APIs, no persisted state (research R1–R7).
+**Technical approach**: In picker mode (detected via the `preview` property that `hui-card` forwards to the card element), the card **immediately renders a deterministic fictional demo series** (no query, no loading state — FR-014), then fires the normal LTS data query with a **short time limit** (`Promise.race` against a timeout); if it succeeds in time with a current series, the preview updates in place to the real data, otherwise the demo series stays (FR-007/FR-008/FR-011). The demo series is a pure function producing the existing `ComparisonSeries` shape, so the preview reuses the card's normal render pipeline unchanged (research R4). The 909 preview controls are visible but non-interactive in picker mode — normal appearance, no response to input (research R6, superseded 2026-11-18; 909 FR-022–FR-025). No new npm dependencies, no new HA APIs, no persisted state (research R1–R7).
 
 ## Technical Context
 
@@ -50,7 +50,7 @@ Make the Energy Horizon card **discoverable and recognizable** in the Home Assis
 | I | HA/HACS ecosystem compliance | ✅ Pass | Uses only the documented `window.customCards` hooks (`getEntitySuggestion`, static `getStubConfig`) and the existing LTS `statistics_during_period` query; follows the standard HA card preview scheme (FR-006); no config-schema change |
 | II | Security & fault tolerance | ✅ Pass | The suggestion hook is a total, non-throwing function (the picker drops throwing cards); the real-data query is time-limited with a demo-series fallback on error/timeout/empty (FR-008/FR-011); no new untrusted input surface |
 | III | Code quality & tests | ✅ Pass | TypeScript strict; the new logic is split into pure, exported, unit-testable functions (research R7); key functions (suggestion check, entity search, demo series, time-limited query) covered by tests |
-| IV | UX/UI, accessibility | ✅ Pass (design) | The preview renders the card's standard appearance with its existing localized panels (FR-012); no new UI strings expected; the 909 controls are hidden in picker mode so the preview is a clean, non-interactive surface (research R6) |
+| IV | UX/UI, accessibility | ✅ Pass (design) | The preview renders the card's standard appearance with its existing localized panels (FR-012); no new UI strings expected; the 909 controls remain visible in picker mode but are non-interactive — normal appearance, no response to input, `aria-disabled` (research R6 as superseded 2026-11-18; 909 FR-022–FR-025) |
 | V | Performance & simplicity | ✅ Pass (design) | Demo series renders synchronously on the critical path (no query); the optional real-data query reuses the existing LTS path and is bounded by a `Promise.race` timeout; no new render pipeline (research R4) |
 | VI | Language care / UX writing | ✅ Pass (design) | No new user-facing strings expected (the demo series reuses the card's existing translations); if any are added, they go to all four locales (en/pl/de/fr) |
 
@@ -83,7 +83,7 @@ src/
 ├── index.ts                            # Card registration: add getEntitySuggestion hook (R1/R3)
 ├── ha-types.ts                         # CustomCardDeclaration: add getEntitySuggestion typing (R1)
 └── card/
-    ├── cumulative-comparison-chart.ts  # EnergyHorizonCard: `preview` property, full getStubConfig signature (R2/R5), picker-mode render path (demo-first, time-limited real-data update, R4), 909 controls hidden in picker mode (R6)
+    ├── cumulative-comparison-chart.ts  # EnergyHorizonCard: `preview` property, full getStubConfig signature (R2/R5), picker-mode render path (demo-first, time-limited real-data update, R4), 909 controls visible but non-interactive in picker mode (R6 as superseded 2026-11-18; 909 FR-022–FR-025)
     ├── picker-preview.ts               # (new) pure helpers: SUPPORTED_UNITS, isSupportedUnit, findSuitableEntity, buildEntitySuggestion, buildDemoComparisonSeries, time-limited query wrapper (R3/R4/R5/R7)
     ├── ha-api.ts                       # Existing LTS query/mapping path (reused, unmodified)
     └── types.ts                        # (possibly) no changes — demo series reuses ComparisonSeries/CumulativeSeries
@@ -92,7 +92,7 @@ tests/
 ├── unit/
 │   └── (new) picker-preview tests: supported-units check, entity search, suggestion hook, demo-series determinism, time-limited query fallback
 └── integration/
-    └── (new) picker-mode render tests: demo-first render, real-data update, no loading/error state, 909 controls hidden
+    └── (new) picker-mode render tests: demo-first render, real-data update, no loading/error state, 909 controls present but inert
 ```
 
 **Structure Decision**: Single-project layout (existing). The feature is contained within the

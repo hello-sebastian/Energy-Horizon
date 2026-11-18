@@ -55,7 +55,7 @@ sample config is **never persisted** (FR-010): it is only the picker's starting 
   - render the demo series **immediately** (no query on the critical path, FR-014);
   - fire the real-data query with a short time limit; update in place on success (FR-007/FR-014);
   - never show a loading or error state (FR-011);
-  - hide the 909 preview controls (back/forward/reset) — the preview is non-interactive.
+  - render the 909 preview controls (back/forward) with their normal appearance, non-interactive — no response to any input (the reset control is contextual, 909 FR-010, and is not rendered in picker mode — a shift cannot be activated there; the preview is non-interactive; 909 FR-022–FR-025, refined 2026-11-18).
 - `preview === false` → normal dashboard mode: behavior unchanged (the demo path is never taken).
 
 ## Demo data series (new, deterministic, in-memory)

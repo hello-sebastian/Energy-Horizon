@@ -5,6 +5,10 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Time-window preview controls hidden in the HA card picker, dashboard edit mode, and the card editor (909 refinement, FR-022–FR-025):** the preview controls (back/forward) are now visible in every card context — including the "Add card" picker (both views), dashboard edit mode, and the editor's live preview — where they keep their normal appearance and do not respond to any input (no state change, no data load; the preview state can only be changed in the dashboard view mode; the reset control remains contextual — it appears only while a preview shift is active). Previously the controls were hidden in those contexts.
+
 ## [1.3.0] - 2026-11-18
 
 ### Added

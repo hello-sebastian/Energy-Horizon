@@ -102,3 +102,30 @@ tests/
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
 No Constitution Check violations — this section is not applicable.
+
+## Refinement 2026-11-18 — Controls visible in HA preview contexts (FR-022–FR-025)
+
+**Status**: planned (implementation pending approval) | **Branch**: `1.3-dev`
+
+The 2026-11-05 plan covered the dashboard view mode only. Feature 910 later hid the 909
+controls in picker mode as an implementation choice (910 research R6); the 2026-11-18 user
+decision supersedes it — the controls must be **visible in all contexts**, non-interactive
+wherever `preview === true` (picker, dashboard edit mode, editor dialog) (spec FR-022–FR-025,
+research R10).
+
+**Change surface** (minimally invasive; no HA-internal coupling, no workarounds, no new state,
+no CSS change, no new strings):
+
+| # | Change | File |
+|---|--------|------|
+| 1 | Always render `.ebc-chart-controls` — remove the `this.preview ? null :` guard in `_renderChartSection` | `src/card/cumulative-comparison-chart.ts` |
+| 2 | Non-interactivity guard: early `return` in `_onPreviewStep` while `this.preview === true` (single entry point for all three buttons — covers mouse, touch, and keyboard) | `src/card/cumulative-comparison-chart.ts` |
+| 3 | Buttons carry `aria-disabled="true"` + `tabindex="-1"` while `preview === true` (normal appearance; the `disabled` attribute is NOT used) | `src/card/cumulative-comparison-chart.ts` |
+| 4 | `preview` property doc comment updated ("hides the 909 controls" → "renders them visible but non-interactive") | `src/card/cumulative-comparison-chart.ts` |
+| 5 | "controls hidden" test assertions → present + inert; new inertness tests (click/keyboard no-op, no load, no state change; view mode unchanged) | `tests/integration/picker-preview-render.test.ts` |
+| 6 | Cross-domain doc consistency: 910 spec/research/plan/data-model/quickstart/contracts (R6 SUPERSEDED), 903 FR-903-AA wording, `changelog.md` `[Unreleased]` | `specs/910-card-picker-preview/`, `specs/903-card-ui-composition/`, `changelog.md` |
+
+**Constitution notes**: I — no HA-internal coupling (only the standard `preview` property
+forwarded by `hui-card`, already accepted in 910 R2); III — tests first (TDD mandate); IV —
+honest accessibility (`aria-disabled` + tab-order exclusion, no misleading disabled look); V —
+two-line guard + one render change, no new state or queries; VI — no new user-facing strings.

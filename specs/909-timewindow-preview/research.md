@@ -187,6 +187,52 @@ drive the shift for each width class.
 **Rationale**: FR-006 and the "All supported widths" edge case require uniform behavior; the
 shifted-`now` approach guarantees it by construction.
 
+## R10. The preview controls in HA preview contexts (refinement 2026-11-18)
+
+**Decision**: The preview controls are **always rendered** — including in every HA context
+that sets the card's `preview` property to `true` (the "Add card" picker, dashboard edit
+mode, and the editor dialog's live preview). Back/forward are the always-rendered controls;
+the reset control stays contextual (FR-009/FR-010 — rendered only while a shift is active)
+and is therefore never rendered in a preview context, since a shift cannot be activated
+there. In those contexts the controls are **visible with their normal appearance but
+non-interactive**: the single activation entry point `_onPreviewStep` returns early while
+`this.preview === true`, so no input (click, touch, or keyboard) can change the preview
+state or trigger a load. The buttons additionally carry `aria-disabled="true"` and
+`tabindex="-1"` while `preview === true` (FR-022–FR-025).
+
+**Rationale**:
+- The 909 spec specifies the controls unconditionally (FR-001/FR-002/FR-009); hiding them in
+  preview contexts was feature 910's implementation choice (910 research R6), not a spec
+  requirement. The 2026-11-18 user decision: the controls must be visible in all contexts;
+  "non-interactive" was always the intent for preview contexts, and hiding violated it.
+- The existing `preview` property (910 R2 — a standard HA property forwarded by `hui-card` in
+  all three preview contexts) already distinguishes preview contexts from dashboard view mode,
+  so no context detection is needed: one render change (drop the `this.preview ? null :` guard
+  in `_renderChartSection`) + one guard in `_onPreviewStep` + two ARIA attributes. No CSS
+  change, no new state, no coupling to HA-internal DOM (e.g. no `closest("hui-dialog-edit-card")`
+  detection); the user explicitly rejected context-specific detection and workarounds (FR-024).
+- The editor dialog's live preview keeps the same non-interactive behavior (explicit user
+  decision 2026-11-18: at this stage the less-invasive uniform option is preferred over
+  making the controls work in the editor).
+- The HTML `disabled` attribute is not used: the existing `.ebc-chart-control:disabled` style
+  dims the button (opacity 0.45) and the user required the normal appearance; non-interactivity
+  is enforced in the event path instead, which also covers keyboard (FR-023).
+- The preview indication (`.ebc-preview-indication`) renders only when `previewShift < 0`; the
+  guard makes activation impossible in preview contexts (and `hui-card` rebuilds the element
+  per config change while `preview === true`, so each context starts fresh), so the indication
+  can never appear in a preview context. No extra handling needed.
+
+**Alternatives considered**:
+- *Keep hiding the controls in preview contexts* (910 R6, the status quo): rejected — the
+  2026-11-18 user decision requires visibility in all contexts.
+- *Detect the editor dialog (DOM-ancestor `closest("hui-dialog-edit-card")`) and make the
+  controls interactive there*: rejected — couples the card to HA-internal markup, is a
+  workaround the user explicitly excluded, and the user accepted uniform non-interactivity as
+  the less-invasive option.
+- *Use the HTML `disabled` attribute for non-interactivity*: rejected — dims the buttons
+  (existing CSS) against the required normal appearance, and the event-path guard already
+  covers mouse/touch/keyboard without changing native button semantics.
+
 ## Open items (non-blocking)
 
 - None. All Technical Context unknowns are resolved above. The two design commitments (R7
