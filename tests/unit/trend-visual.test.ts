@@ -23,7 +23,9 @@ const mockTheme: ChartThemeResolved = {
   trendLower: "#e2",
   trendSimilar: "#e3",
   trendUnknown: "#e4",
-  trendMuted: "#e5"
+  trendMuted: "#e5",
+  previewCurrent: "#p1",
+  previewReference: "#p2"
 };
 
 describe("trend-visual", () => {

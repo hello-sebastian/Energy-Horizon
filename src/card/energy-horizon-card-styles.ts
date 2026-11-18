@@ -328,10 +328,121 @@ export const energyHorizonCardStyles = css`
     flex-direction: column;
   }
 
+  /* Preview step controls (909) — a dedicated bar above the chart, in normal flow,
+     so it reserves its own space and never overlaps the chart (or future UI).
+     T029: buttons stay pinned to the right edge with a fixed 4px gap; the preview
+     indication (when present) is pushed to the left via margin-right: auto, so the
+     buttons never shift when the indication appears or disappears. */
+  .ebc-chart-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    /* T031: no bottom padding — the 16px gap to the topmost grid line is
+       provided entirely by grid.top (GRID_TOP_FALLBACK_PX = 16), matching
+       the 16px .content gap above the controls bar. */
+    padding: 0;
+  }
+
+  /* Preview indication (909 US2) — visible, screen-reader-announced text of the
+     shifted period, left-aligned in the controls bar while a preview is active.
+     T029: margin-right: auto pushes the indication to the left so the step buttons
+     stay pinned to the right edge regardless of the indication's presence. */
+  .ebc-preview-indication {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: auto;
+  }
+
+  /* Wrapper that scopes the in-place loading overlay to the chart area only. */
+  .ebc-chart-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .chart-container {
     position: relative;
     flex: 1 1 auto;
     min-height: 240px;
+  }
+
+  .ebc-chart-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 30%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+    color: var(--primary-text-color);
+    cursor: pointer;
+    --mdc-icon-size: 20px;
+  }
+
+  .ebc-chart-control:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--divider-color) 45%,
+      var(--card-background-color, var(--ha-card-background, transparent))
+    );
+  }
+
+  .ebc-chart-control:focus-visible {
+    outline: 2px solid var(--primary-color, #03a9f4);
+    outline-offset: 1px;
+  }
+
+  .ebc-chart-control:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* In-place preview load (909): the chart stays in the DOM, dimmed, with a
+     "loading" overlay on top — the card content is never torn down. */
+  .chart-container.ebc-chart--loading {
+    opacity: 0.5;
+    transition: opacity 120ms ease;
+  }
+
+  .ebc-chart-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    pointer-events: none;
+  }
+
+  /* Preview no-data (909 T026): the chart stays in place (stable card height,
+     x-axis with the period's start/end labels, empty plot); the standard
+     no-data indication is overlaid centered on the chart area. */
+  .ebc-chart-nodata-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
   }
 
   .ebc-section--comment {

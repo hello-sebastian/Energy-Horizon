@@ -14,6 +14,22 @@
         "speckit-bug-test"
       ],
       "installed_at": "2026-10-30T20:04:07.324218+00:00"
+    },
+    "assess": {
+      "version": "1.0.1",
+      "source": "local",
+      "manifest_hash": "sha256:a1c87d9ce8088e7865f1d352137777a693b0595ccc310957c7c051a604ca1db2",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {},
+      "registered_skills": [
+        "speckit-assess-intake",
+        "speckit-assess-research",
+        "speckit-assess-define",
+        "speckit-assess-shape",
+        "speckit-assess-decide"
+      ],
+      "installed_at": "2026-11-05T11:14:01.336192+00:00"
     }
   }
 }

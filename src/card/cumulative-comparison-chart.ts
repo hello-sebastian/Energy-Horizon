@@ -1,5 +1,9 @@
 import { LitElement, html, type TemplateResult } from "lit";
-import type { HomeAssistant, LovelaceCard } from "../ha-types";
+import type {
+  HomeAssistant,
+  LovelaceCard,
+  LovelaceCardConfig
+} from "../ha-types";
 import {
   resolveComparisonPreset,
   type CardConfig,
@@ -7,8 +11,10 @@ import {
   type CardState,
   type ChartRendererConfig,
   type ChartThemeResolved,
+  type ChartTimeContext,
   type ComparisonSeries,
   type MergedTimeWindowConfig,
+  type ResolvedWindow,
   type TimeSeriesPoint
 } from "./types";
 import {
@@ -37,7 +43,10 @@ import {
   assertLtsHardLimits,
   assertMergedTimeWindowConfig,
   buildMergedTimeWindowConfig,
-  resolveTimeWindows
+  resolveTimeWindows,
+  resolvePreviewShiftedWindows,
+  nextPreviewShift,
+  type PreviewShiftAction
 } from "./time-windows";
 import { EChartsRenderer } from "./echarts-renderer";
 import { resolveSeriesCurrentColor } from "./series-color";
@@ -62,6 +71,13 @@ import { resolveTextSummarySentenceKey } from "./narrative/resolve-text-summary-
 import { durationToMillis, parseDurationToken } from "./time-windows/duration-parse";
 import { scaleSeriesValues } from "../utils/unit-scaler";
 import { energyHorizonCardStyles } from "./energy-horizon-card-styles";
+import {
+  buildDemoComparisonSeries,
+  buildSamplePreviewConfig,
+  findSuitableEntity,
+  isSupportedUnit,
+  queryRealDataWithLimit
+} from "./picker-preview";
 import {
   expandCurrentWindowForCaption,
   formatCompactPeriodCaption,
@@ -129,12 +145,32 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
   static properties = {
     hass: { type: Object, attribute: false },
     _config: { state: true },
-    _state: { state: true }
+    _state: { state: true },
+    _previewLoading: { state: true },
+    preview: { type: Boolean, attribute: false }
   };
 
   declare hass: HomeAssistant;
   declare _config: CardConfig;
   _state: CardState = { status: "loading" };
+
+  /**
+   * Picker mode (910, research R2): set by `hui-card` when the card is rendered
+   * in the "Add card" picker (`element.preview = this.preview`). Not part of
+   * `_config`, not persisted. When `true`, the card renders a deterministic
+   * demo series immediately (no query on the critical path, no loading/error
+   * state) and hides the 909 time-window preview controls.
+   */
+  preview = false;
+
+  /**
+   * True while a preview step (back/forward/reset) is loading the shifted period (909).
+   * Unlike the initial load, a preview load must NOT replace the card's content with the
+   * full-card loading state — the card stays intact with its current data, the chart is
+   * dimmed with a "loading" overlay, and the step controls are disabled until the new
+   * series arrive (research R6: "in-place chart-only update").
+   */
+  _previewLoading = false;
 
   /**
    * Incremented on every `setConfig`. A load captures this value at start and discards its
@@ -149,12 +185,49 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    */
   private _inFlightGeneration: number | null = null;
 
+  /**
+   * Picker real-data upgrade (910, FR-014, R4): set once the time-limited real-data
+   * query has been fired for this picker session (element instance). The query is
+   * fired at most once per session; a config change rebuilds the element in preview
+   * mode, so a new session starts fresh.
+   */
+  private _pickerRealDataFired = false;
+
   /** Merged preset + `time_window` + card `aggregation` — updated in `setConfig`, used in `_loadData`. */
   private _mergedTimeWindow!: MergedTimeWindowConfig;
 
   private _chartRenderer?: EChartsRenderer;
 
+  /**
+   * Transient preview shift (909): `0` (or absent) = the default window; a negative integer
+   * = that many nominal window widths back. Plain runtime field — **not** part of `_config`,
+   * not persisted, and discarded on re-instantiation (FR-003, FR-004, FR-009). Always an
+   * integer `≤ 0` (data-model validation rule 1).
+   */
+  private previewShift = 0;
+
   static styles = energyHorizonCardStyles;
+
+  /**
+   * Step the preview window by one nominal width (909). `back` always allowed (no lower
+   * bound); `forward` clamped at `0` (a no-op at the default); `reset` returns to `0`.
+   * Each *change* bumps the load generation so rapid stepping coalesces (research R6) and
+   * any in-flight load is discarded (data-model validation rule 2).
+   */
+  private _onPreviewStep(action: PreviewShiftAction): void {
+    const next = nextPreviewShift(this.previewShift, action);
+    if (next === this.previewShift) {
+      // No-op (e.g. step forward at the default) — nothing to reload.
+      return;
+    }
+    this.previewShift = next;
+    this._loadGeneration++;
+    // In-place preview load (research R6): keep the card intact with its current data;
+    // the chart is dimmed with a "loading" overlay and the controls are disabled until
+    // the shifted series arrive. `_state` is NOT replaced with the full-card loading
+    // state, so the chart container stays in the DOM and the renderer survives.
+    this._previewLoading = true;
+  }
 
   private _localizeOrError(
     baseLocalize: (_key: string, _vars?: Record<string, string | number>) => string,
@@ -184,6 +257,176 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
 
     return translated;
+  }
+
+  /**
+   * Builds a synchronous, ready `CardState` from the deterministic demo series
+   * (910, FR-014/FR-011, research R4). Used in picker mode (`preview === true`)
+   * so the card renders a full chart immediately — no query on the critical
+   * path, no blank/loading/error state. The existing render pipeline and
+   * `updated()` EChartsRenderer path consume the state unchanged.
+   */
+  private _buildDemoState(now: Date): CardState {
+    const resolved = resolveLocale(this.hass, this._config);
+    const merged: MergedTimeWindowConfig = { ...this._mergedTimeWindow };
+    if (merged.aggregation === undefined) {
+      const dur = parseDurationToken(merged.duration ?? "1y");
+      const durationMs = dur ? durationToMillis(dur) : 0;
+      merged.aggregation = pickAutoAggregation(durationMs);
+    }
+    const aggregation = merged.aggregation ?? "day";
+    const windows = resolveTimeWindows(
+      merged,
+      now,
+      resolved.timeZone,
+      24,
+      aggregation
+    );
+    const chartTimeRaw = buildChartTimeline(windows, merged, resolved.timeZone);
+    const tailLabelFromIndex =
+      windows.length >= 2
+        ? firstTailAxisLabelIndex(
+            chartTimeRaw.timeline,
+            chartTimeRaw.alignStartsMs[0]!,
+            windows[0]!.end
+          )
+        : chartTimeRaw.timeline.length;
+    const period = comparisonPeriodFromResolvedWindows(
+      windows,
+      resolved.timeZone,
+      aggregation
+    );
+
+    // Unit from the entity's state when available and supported; else "kWh"
+    // (FR-009). The demo series is deterministic regardless of the unit.
+    const entityUnit =
+      (this.hass.states?.[this._config.entity]?.attributes as {
+        unit_of_measurement?: string;
+      })?.unit_of_measurement ?? "";
+    const demoUnit = isSupportedUnit(entityUnit) ? entityUnit : "kWh";
+
+    const series = buildDemoComparisonSeries(demoUnit, now, resolved.timeZone);
+    const scaledSeries = this._applyUnitScalingToSeries(series, demoUnit);
+
+    const alignOffsetMs =
+      windows.length > 1
+        ? chartTimeRaw.alignStartsMs[0]! - chartTimeRaw.alignStartsMs[1]!
+        : undefined;
+    const summary = computeSummary(scaledSeries, alignOffsetMs);
+    const forecast = computeForecast(
+      scaledSeries,
+      chartTimeRaw.forecastPeriodBuckets,
+      alignOffsetMs
+    );
+    if (!summary.unit && demoUnit) {
+      summary.unit = demoUnit;
+    }
+    if (forecast && !forecast.unit && demoUnit) {
+      forecast.unit = demoUnit;
+    }
+    const textSummary = computeTextSummary(summary);
+
+    return {
+      status: "ready",
+      comparisonSeries: scaledSeries,
+      summary,
+      forecast,
+      textSummary,
+      period,
+      resolvedWindows: windows,
+      mergedTimeWindow: merged,
+      chartTime: {
+        timeline: chartTimeRaw.timeline,
+        alignStartsMs: chartTimeRaw.alignStartsMs,
+        forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
+        tailLabelFromIndex
+      }
+    };
+  }
+
+  /**
+   * Picker real-data upgrade (910, FR-007/FR-008/FR-014, research R4). After the
+   * deterministic demo series is rendered, fire a time-limited real-data query for
+   * the configured entity. On success with a current series, update the preview in
+   * place to the real data (reusing the demo state's windows/timeline so the series
+   * align). On failure/timeout/empty, keep the demo series. Fired at most once per
+   * picker session (element instance); a stale result is discarded via the load
+   * generation if the config changes in flight.
+   */
+  private _firePickerRealDataQuery(): void {
+    if (!this.preview || this._pickerRealDataFired) return;
+    this._pickerRealDataFired = true;
+
+    const demoState = this._state;
+    if (
+      demoState.status !== "ready" ||
+      !demoState.resolvedWindows ||
+      !demoState.chartTime
+    ) {
+      return;
+    }
+
+    const entityId = this._config.entity;
+    if (!entityId) return; // no entity → the demo series stays
+
+    const gen = this._loadGeneration;
+    const windows = demoState.resolvedWindows;
+    const chartTime = demoState.chartTime;
+    const resolved = resolveLocale(this.hass, this._config);
+    const alignOffsetMs =
+      chartTime.alignStartsMs.length > 1
+        ? chartTime.alignStartsMs[0]! - chartTime.alignStartsMs[1]!
+        : undefined;
+
+    void queryRealDataWithLimit(
+      this.hass,
+      windows,
+      entityId,
+      resolved.timeZone
+    ).then((realSeries) => {
+      // Config changed while the query was in flight → discard the stale result.
+      if (gen !== this._loadGeneration) return;
+      // No usable real data → keep the deterministic demo series.
+      if (
+        !realSeries ||
+        !realSeries.current ||
+        realSeries.current.points.length === 0
+      ) {
+        return;
+      }
+
+      const entityUnit =
+        (this.hass.states?.[entityId]?.attributes as {
+          unit_of_measurement?: string;
+        })?.unit_of_measurement ?? "";
+      const scaledSeries = this._applyUnitScalingToSeries(
+        realSeries,
+        entityUnit || realSeries.current.unit
+      );
+      const summary = computeSummary(scaledSeries, alignOffsetMs);
+      const forecast = computeForecast(
+        scaledSeries,
+        chartTime.forecastPeriodBuckets,
+        alignOffsetMs
+      );
+      if (!summary.unit && entityUnit) {
+        summary.unit = entityUnit;
+      }
+      if (forecast && !forecast.unit && entityUnit) {
+        forecast.unit = entityUnit;
+      }
+      const textSummary = computeTextSummary(summary);
+
+      // Swap the demo series for the real one, keeping the demo state's windows,
+      // timeline, and period so the real series align to the same axis.
+      this._state = {
+        ...demoState,
+        comparisonSeries: scaledSeries,
+        summary,
+        forecast,
+        textSummary
+      };
+    });
   }
 
   public setConfig(config: CardConfigInput): void {
@@ -244,22 +487,54 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     this._mergedTimeWindow = buildMergedTimeWindowConfig(this._config);
     assertLtsHardLimits(this._mergedTimeWindow);
     assertMergedTimeWindowConfig(this._mergedTimeWindow);
-    this._state = { status: "loading" };
+    // A config change starts a full-card load — any in-flight preview load is
+    // superseded (the generation bump above discards its result), so clear the
+    // in-place preview flag. The transient preview shift is tied to the previous
+    // configuration's window, so it is reset to the default: the new config
+    // defines a new default, and a stale shift must not silently apply to it.
+    this.previewShift = 0;
+    this._previewLoading = false;
+    if (this.preview) {
+      // Picker mode (910, FR-014/FR-011): render the deterministic demo series
+      // immediately — no query on the critical path, no blank/loading/error
+      // state. The existing render pipeline consumes the ready state unchanged.
+      this._state = this._buildDemoState(new Date());
+      // After the demo render, upgrade to real data when a time-limited query
+      // succeeds in time; otherwise the demo series stays (FR-007/FR-014, R4).
+      this._firePickerRealDataQuery();
+    } else {
+      this._state = { status: "loading" };
+    }
   }
 
   public getCardSize(): number {
     return 4;
   }
 
+  /**
+   * Picker side-effect safety (910, FR-013): when the element is removed from
+   * the DOM (the picker tears down its preview), bump the load generation so any
+   * in-flight picker real-data query discards its result instead of writing to
+   * the detached element's state. The preview never writes to `_config` or any
+   * storage — the sample config is only the picker's starting point (FR-010).
+   */
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._loadGeneration++;
+  }
+
   protected updated(changedProps: Map<string, unknown>): void {
     if (
       changedProps.has("hass") ||
       changedProps.has("_config") ||
-      changedProps.has("_state")
+      changedProps.has("_state") ||
+      changedProps.has("_previewLoading")
     ) {
-      if (this._state.status === "loading") {
-        // Coalesce: only start a load if none is in flight for the current generation.
-        // `hass` updates (1–10×/s) during the load window must not re-trigger the load.
+      // A load is needed either for the initial/full-card load (`status === "loading"`)
+      // or for an in-place preview step (`_previewLoading`). Both coalesce via the
+      // generation mechanism: `hass` updates (1–10×/s) during the load window must not
+      // re-trigger the load, and rapid preview stepping discards stale in-flight loads.
+      if (this._state.status === "loading" || this._previewLoading) {
         if (this._inFlightGeneration !== this._loadGeneration) {
           void this._loadData();
         }
@@ -278,14 +553,91 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           }
         }
 
-        if (
+        const locResolved = resolveLocale(this.hass, this._config);
+        const localize = createLocalize(locResolved.language);
+
+        // Transient time-window preview (909 US3, T014): while `previewShift < 0` and the
+        // shifted series + timeline are available, draw the shifted series on the shifted
+        // timeline in preview mode (gray tones). The default pipeline is left untouched.
+        const previewActive =
+          this._state.previewShift != null &&
+          this._state.previewShift < 0 &&
+          this._state.previewChartTime != null;
+
+        if (this._chartRenderer && previewActive) {
+          const previewSeries = this._state.previewSeries;
+          const previewChartTime = this._state.previewChartTime!;
+          const previewWindows = this._state.previewWindows ?? [];
+          const { timeline } = previewChartTime;
+          const baseConfig = this._buildRendererConfig(timeline);
+          const cs = previewWindows[0]?.start;
+          const lux = cs
+            ? DateTime.fromJSDate(cs, { zone: locResolved.timeZone })
+            : null;
+          let previewPeriodLabel = "";
+          if (lux) {
+            if (lux.month === 1 && lux.day === 1) {
+              previewPeriodLabel = String(lux.year);
+            } else {
+              previewPeriodLabel = new Intl.DateTimeFormat(locResolved.language, {
+                month: "long",
+                year: "numeric"
+              }).format(cs!);
+            }
+          }
+          const axisHints =
+            previewWindows.length >= 2
+              ? resolveComparisonAxisLabelHints(
+                  previewWindows[0]!,
+                  previewWindows[1]!,
+                  locResolved.timeZone
+                )
+              : { omitYearOnAxis: false, dayOfMonthOnlyOnAxis: false };
+          // Preview no-data (FR-013, US6, T026): the shifted period has no data —
+          // keep the chart in place (stable card height, x-axis with the period's
+          // start/end labels, empty plot) by updating with an empty series; the
+          // standard no-data indication is overlaid centered on the chart by render().
+          const seriesForChart: ComparisonSeries = previewSeries ?? {
+            current: {
+              points: [],
+              unit: this._state.comparisonSeries?.current.unit ?? "",
+              periodLabel: this._localizeOrError(localize, "period.current"),
+              total: 0
+            },
+            aggregation: previewWindows[0]?.aggregation ?? "day",
+            time_zone:
+              this._state.comparisonSeries?.time_zone ?? locResolved.timeZone
+          };
+          const rendererConfig: ChartRendererConfig = {
+            ...baseConfig,
+            periodLabel: previewPeriodLabel,
+            windowAlignStartsMs: previewChartTime.alignStartsMs,
+            currentWindowStartMs: previewWindows[0]?.start.getTime(),
+            currentWindowEndMs: previewWindows[0]?.end.getTime(),
+            referencePeriodStart: previewWindows[1]?.start.getTime(),
+            singleWindowMode: previewWindows.length < 2,
+            showReferenceComparison:
+              previewWindows.length >= 2 && previewSeries?.reference != null,
+            showForecast: false,
+            unit: seriesForChart.current.unit,
+            primaryAggregation: previewWindows[0]?.aggregation,
+            tailLabelFromIndex: previewChartTime.tailLabelFromIndex,
+            fullTimeline: timeline,
+            comparisonAxisOmitYear: axisHints.omitYearOnAxis,
+            comparisonAxisDayOfMonthOnly: axisHints.dayOfMonthOnlyOnAxis,
+            previewMode: true,
+            previewSeries
+          };
+          this._chartRenderer.update(seriesForChart, timeline, rendererConfig, {
+            current: this._localizeOrError(localize, "period.current"),
+            reference: this._localizeOrError(localize, "period.reference")
+          });
+        } else if (
           this._chartRenderer &&
           this._state.period &&
           this._state.resolvedWindows &&
           this._state.chartTime
         ) {
-          const locResolved = resolveLocale(this.hass, this._config);
-          const localize = createLocalize(locResolved.language);
           const { timeline } = this._state.chartTime;
           const rendererConfig = this._buildRendererConfig(timeline);
           this._chartRenderer.update(this._state.comparisonSeries, timeline, rendererConfig, {
@@ -348,6 +700,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           );
         }
         if (gen !== this._loadGeneration) return;
+        this._previewLoading = false;
         this._state = {
           status: "error",
           errorMessage: "status.point_cap_exceeded",
@@ -404,6 +757,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           );
         }
         if (gen !== this._loadGeneration) return;
+        this._previewLoading = false;
         this._state = { status: "no-data" };
         return;
       }
@@ -463,7 +817,100 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
       const textSummary = computeTextSummary(summary);
 
+      // Preview branch (909, T008): when previewShift < 0, resolve the shifted windows via
+      // the T004 helper and query the shifted current period (shiftedWindows[0]) and, when a
+      // reference window exists, the shifted reference period (shiftedWindows[1]) via the
+      // existing LTS `statistics_during_period` path. The default analytical pipeline above
+      // (summary/forecast/interpretation/narrative) is left untouched (FR-021). A preview
+      // failure is isolated so it never clobbers the default pipeline's result.
+      let previewSeries: ComparisonSeries | undefined;
+      let previewWindows: ResolvedWindow[] | undefined;
+      let previewChartTime: ChartTimeContext | undefined;
+      if (this.previewShift < 0) {
+        try {
+          const shiftedWindows = resolvePreviewShiftedWindows(
+            merged,
+            now,
+            resolved.timeZone,
+            this.previewShift,
+            24,
+            merged.aggregation ?? "day"
+          );
+          const previewWindowCount = Math.min(2, shiftedWindows.length);
+          const previewWindowList = shiftedWindows.slice(0, previewWindowCount);
+          const previewQueries = buildLtsQueriesForWindows(
+            previewWindowList,
+            this._config.entity
+          );
+          const previewResponses = await Promise.all(
+            previewQueries.map((q) =>
+              this.hass.connection.sendMessagePromise(
+                q as unknown as Record<string, unknown>
+              )
+            )
+          );
+          // Build the preview chart timeline from the shifted windows so the
+          // preview series align to the shifted axis (909 US3, T014). This is
+          // done unconditionally (even when the shifted period has no data) so
+          // the preview period label, controls, and no-data indication can be
+          // rendered (FR-013, US6).
+          const previewTimelineRaw = buildChartTimeline(
+            previewWindowList,
+            merged,
+            resolved.timeZone
+          );
+          const previewTailLabelFromIndex =
+            previewWindowList.length >= 2
+              ? firstTailAxisLabelIndex(
+                  previewTimelineRaw.timeline,
+                  previewTimelineRaw.alignStartsMs[0]!,
+                  previewWindowList[0]!.end
+                )
+              : previewTimelineRaw.timeline.length;
+          previewWindows = previewWindowList;
+          previewChartTime = {
+            timeline: previewTimelineRaw.timeline,
+            alignStartsMs: previewTimelineRaw.alignStartsMs,
+            forecastPeriodBuckets: previewTimelineRaw.forecastPeriodBuckets,
+            tailLabelFromIndex: previewTailLabelFromIndex
+          };
+          const previewCurrent = mapLtsResponseToCumulativeSeries(
+            previewResponses[0] as any,
+            this._config.entity,
+            localize("period.current")
+          );
+          if (previewCurrent) {
+            const previewReference =
+              previewWindowCount > 1
+                ? mapLtsResponseToCumulativeSeries(
+                    previewResponses[1] as any,
+                    this._config.entity,
+                    localize("period.reference")
+                  )
+                : undefined;
+            const previewRaw: ComparisonSeries = {
+              current: previewCurrent,
+              reference: previewReference ?? undefined,
+              aggregation: period.aggregation,
+              time_zone: period.time_zone
+            };
+            previewSeries = this._applyUnitScalingToSeries(
+              previewRaw,
+              entityUnit
+            );
+          }
+        } catch (previewError) {
+          if (this._config.debug) {
+            console.warn(
+              "[Energy Horizon] Preview load failed; keeping the default pipeline.",
+              previewError
+            );
+          }
+        }
+      }
+
       if (gen !== this._loadGeneration) return;
+      this._previewLoading = false;
       this._state = {
         status: "ready",
         comparisonSeries: scaledSeries,
@@ -478,11 +925,16 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           alignStartsMs: chartTimeRaw.alignStartsMs,
           forecastPeriodBuckets: chartTimeRaw.forecastPeriodBuckets,
           tailLabelFromIndex
-        }
+        },
+        previewShift: this.previewShift,
+        previewSeries,
+        previewWindows,
+        previewChartTime
       };
     } catch (e) {
       console.error(e);
       if (gen !== this._loadGeneration) return;
+      this._previewLoading = false;
       this._state = {
         status: "error",
         errorMessage: "status.error_api"
@@ -641,6 +1093,10 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     const trendMuted = readVar("--disabled-text-color") || trendSimilar;
     const todayFullHeightLine = grid || "rgba(127, 127, 127, 0.35)";
     const referenceDotBorder = tooltipBackground || "#ffffff";
+    const previewCurrent =
+      readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
+    const previewReference =
+      readVar("--disabled-text-color") || "rgba(127, 127, 127, 0.55)";
 
     return {
       seriesCurrent,
@@ -656,7 +1112,9 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       trendLower,
       trendSimilar,
       trendUnknown,
-      trendMuted
+      trendMuted,
+      previewCurrent,
+      previewReference
     };
   }
 
@@ -1072,6 +1530,34 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? "--- %"
           : "";
 
+    // Transient time-window preview (909 US2, T011): a visible, screen-reader-announced
+    // indication of the shifted period, shown only while `previewShift < 0`. Reuses the
+    // card's period-label formatting (year for a Jan-1 start, else "Month YYYY") so the
+    // shifted period reads the same way the card already formats periods.
+    const previewActive =
+      this._state.status === "ready" &&
+      this._state.previewShift != null &&
+      this._state.previewShift < 0;
+    let previewIndicationText = "";
+    if (previewActive) {
+      const previewStart = this._state.previewWindows?.[0]?.start;
+      if (previewStart) {
+        const lux = DateTime.fromJSDate(previewStart, {
+          zone: resolved.timeZone
+        });
+        const previewPeriodLabel =
+          lux.month === 1 && lux.day === 1
+            ? String(lux.year)
+            : new Intl.DateTimeFormat(resolved.language, {
+                month: "long",
+                year: "numeric"
+              }).format(previewStart);
+        previewIndicationText = this._localizeOrError(localize, "preview.indication", {
+          period: previewPeriodLabel
+        });
+      }
+    }
+
     return html`<ha-card class="ebc-card">
       <div class="content ebc-content">
         ${shouldRenderHeader
@@ -1237,7 +1723,67 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           role="region"
           aria-label=${this._localizeOrError(localize, "section.chart")}
         >
-          <div class="chart-container ebc-chart"></div>
+          ${this.preview
+            ? null
+            : html`<div class="ebc-chart-controls">
+                ${previewActive
+                  ? html`<span class="ebc-preview-indication" role="status">
+                      ${previewIndicationText}
+                    </span>`
+                  : null}
+                ${previewActive
+                  ? html`<button
+                      class="ebc-chart-control ebc-chart-control--reset"
+                      type="button"
+                      ?disabled=${this._previewLoading}
+                      aria-label=${this._localizeOrError(localize, "preview.reset")}
+                      @click=${() => this._onPreviewStep("reset")}
+                    >
+                      <ha-icon icon="mdi:restart"></ha-icon>
+                    </button>`
+                  : null}
+                <button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.step_back")}
+                  @click=${() => this._onPreviewStep("back")}
+                >
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>
+                <button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.step_forward")}
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>
+              </div>`}
+          <div class="ebc-chart-wrap">
+            <div
+              class="chart-container ebc-chart ${this._previewLoading
+                ? "ebc-chart--loading"
+                : ""}"
+            ></div>
+            ${previewActive &&
+            !this._previewLoading &&
+            this._state.previewChartTime != null &&
+            this._state.previewSeries == null
+              ? html`<div class="ebc-chart-nodata-overlay" role="status">
+                  <ha-alert alert-type="info">
+                    ${this._localizeOrError(localize, "status.no_data")}
+                  </ha-alert>
+                </div>`
+              : null}
+            ${this._previewLoading
+              ? html`<div class="ebc-chart-loading-overlay" role="status">
+                  <ha-circular-progress active size="small"></ha-circular-progress>
+                  <span>${this._localizeOrError(localize, "preview.loading")}</span>
+                </div>`
+              : null}
+          </div>
         </div>
 
         ${narrativeBody && this._config.show_narrative_comment !== false
@@ -1281,13 +1827,22 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     return document.createElement("energy-horizon-card-editor");
   }
 
-  static getStubConfig(): Partial<CardConfig> {
-    return {
-      entity: "",
-      comparison_preset: "year_over_year",
-      interpretation: "consumption",
-      neutral_threshold: 2
-    };
+  /**
+   * "By card" gallery stub (910, FR-007/FR-008, research R2/R5). The picker
+   * calls this with the unused entities first and the used entities as
+   * fallback; the returned config is merged over the picker's own
+   * `{ type: "custom:energy-horizon-card" }`, so the sample config's own
+   * (prefixed) `type` is safe. When no entity has a supported unit the
+   * sample config carries `entity: ""` — the preview still renders the
+   * deterministic demo series (FR-009).
+   */
+  static getStubConfig(
+    hass: HomeAssistant,
+    entities: string[],
+    entitiesFallback: string[]
+  ): LovelaceCardConfig {
+    const entity = findSuitableEntity(hass, entities, entitiesFallback);
+    return buildSamplePreviewConfig(entity);
   }
 }
 

@@ -1,12 +1,46 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import "../helpers/setup-dom";
 import "../../src/index";
 import type { HomeAssistant } from "../../src/ha-types";
 import type {
   CardState,
   ComparisonPeriod,
-  ComparisonSeries
+  ComparisonSeries,
+  ResolvedWindow
 } from "../../src/card/types";
+
+// Mock ECharts init() so the ready-state renderer path can be exercised in jsdom
+// (no canvas) and the ECOption passed to setOption can be captured (909 US3, T012).
+const setOptionMock = vi.fn();
+const resizeMock = vi.fn();
+const disposeMock = vi.fn();
+const onMock = vi.fn();
+const offMock = vi.fn();
+const getModelMock = vi.fn(() => ({ getComponent: vi.fn(() => undefined) }));
+const getViewOfComponentModelMock = vi.fn(() => ({
+  group: { getBoundingRect: vi.fn(() => ({ height: 48 })) }
+}));
+
+vi.mock("echarts/core", () => ({
+  init: vi.fn(() => ({
+    setOption: setOptionMock,
+    resize: resizeMock,
+    dispose: disposeMock,
+    on: onMock,
+    off: offMock,
+    getModel: getModelMock,
+    getViewOfComponentModel: getViewOfComponentModelMock
+  })),
+  use: vi.fn()
+}));
+
+beforeEach(() => {
+  setOptionMock.mockClear();
+  resizeMock.mockClear();
+  disposeMock.mockClear();
+  onMock.mockClear();
+  offMock.mockClear();
+});
 
 type EnergyHorizonCardEl = import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & {
   setConfig: (c: unknown) => void;
@@ -214,6 +248,115 @@ describe("energy-horizon-card integration", () => {
     const alert = el.shadowRoot!.querySelector("ha-alert");
     expect(alert).not.toBeNull();
     expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
+  });
+
+  it("preview no-data: shifted period without data keeps the chart in place with a centered no-data overlay (FR-013, US6, T026)", async () => {
+    const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
+    document.body.appendChild(el);
+    if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
+    el.hass = {
+      language: "pl",
+      connection: {
+        sendMessagePromise: async () => ({} as unknown)
+      }
+    } as HomeAssistant;
+
+    // Ready state (the default pipeline has data) but the shifted preview period
+    // has no data: previewSeries is undefined while previewWindows/previewChartTime
+    // are set.
+    (el as any)._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2020, 0, 1)),
+          end: new Date(Date.UTC(2020, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    await el.updateComplete;
+
+    // The standard no-data indication is overlaid centered on the chart.
+    const overlay = el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay");
+    expect(overlay).not.toBeNull();
+    const alert = overlay!.querySelector("ha-alert");
+    expect(alert).not.toBeNull();
+    expect(alert!.textContent).toContain("Brak danych do wyświetlenia");
+    // The chart container stays in place (stable card height, empty plot).
+    expect(el.shadowRoot!.querySelector(".chart-container")).not.toBeNull();
+    // The preview controls (back/forward/reset) remain available.
+    const controls = el.shadowRoot!.querySelectorAll(".ebc-chart-control");
+    expect(controls.length).toBe(3);
+    // The preview indication remains visible.
+    const indication = el.shadowRoot!.querySelector(".ebc-preview-indication");
+    expect(indication).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("preview no-data: reset (previewShift 0) renders the default chart, not the no-data alert (FR-009)", async () => {
+    const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
+    document.body.appendChild(el);
+    if (typeof (el as { setConfig?: unknown }).setConfig !== "function") return;
+    el.setConfig({ type: "custom:energy-horizon-card", entity: "sensor.energy", comparison_preset: "year_over_year" });
+    el.hass = {
+      language: "pl",
+      connection: {
+        sendMessagePromise: async () => ({} as unknown)
+      }
+    } as HomeAssistant;
+
+    // Start in the preview no-data state.
+    (el as any)._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+
+    // Reset: previewShift 0, no preview fields → the default chart is shown.
+    (el as any)._state = baseYoYReadyState();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).toBeNull();
+    expect(el.shadowRoot!.querySelector("ha-alert")).toBeNull();
+    expect(el.shadowRoot!.querySelector(".chart-container")).not.toBeNull();
+    document.body.removeChild(el);
   });
 
   it("forecast section does not contain historical_value row", async () => {
@@ -768,6 +911,399 @@ describe("energy-horizon-card integration", () => {
     // baseYoYReadyState has a complete reference cumulative and an enabled
     // forecast, so no warning bar at all.
     expect(root.querySelector(".ebc-section--warning")).toBeNull();
+    document.body.removeChild(el);
+  });
+});
+
+describe("909 US2/US3: transient time-window preview", () => {
+  /**
+   * Ready state carrying the transient preview fields (909): `previewShift < 0`,
+   * the shifted series pair, the shifted window set, and the shifted chart
+   * timeline. `singleWindow` drops the reference window/series (US3 scenario 5).
+   */
+  function previewReadyState(opts: { singleWindow?: boolean } = {}): CardState {
+    const base = baseYoYReadyState();
+    const single = opts.singleWindow ?? false;
+    const previewWindows: ResolvedWindow[] = single
+      ? [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2023, 0, 1)),
+            end: new Date(Date.UTC(2023, 11, 31)),
+            aggregation: "day"
+          }
+        ]
+      : [
+          {
+            index: 0,
+            id: "p0",
+            role: "current",
+            start: new Date(Date.UTC(2023, 0, 1)),
+            end: new Date(Date.UTC(2023, 11, 31)),
+            aggregation: "day"
+          },
+          {
+            index: 1,
+            id: "p1",
+            role: "reference",
+            start: new Date(Date.UTC(2022, 0, 1)),
+            end: new Date(Date.UTC(2022, 11, 31)),
+            aggregation: "day"
+          }
+        ];
+    const previewSeries: ComparisonSeries = {
+      current: {
+        points: [
+          { timestamp: Date.UTC(2023, 0, 1), value: 10 },
+          { timestamp: Date.UTC(2023, 0, 2), value: 20 }
+        ],
+        unit: "kWh",
+        periodLabel: "2023",
+        total: 30
+      },
+      reference: single
+        ? undefined
+        : {
+            points: [
+              { timestamp: Date.UTC(2022, 0, 1), value: 8 },
+              { timestamp: Date.UTC(2022, 0, 2), value: 16 }
+            ],
+            unit: "kWh",
+            periodLabel: "2022",
+            total: 24
+          },
+      aggregation: "day",
+      time_zone: "UTC"
+    };
+    const timeline = [
+      Date.UTC(2023, 0, 1),
+      Date.UTC(2023, 0, 2),
+      Date.UTC(2023, 0, 3)
+    ];
+    return {
+      ...base,
+      previewShift: -1,
+      previewSeries,
+      previewWindows,
+      previewChartTime: {
+        timeline,
+        alignStartsMs: single
+          ? [Date.UTC(2023, 0, 1)]
+          : [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: timeline.length
+      }
+    };
+  }
+
+  function makeCard(config: Record<string, unknown> = {}): EnergyHorizonCardEl {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year",
+      primary_color: "#00ADEF",
+      ...config
+    });
+    el.hass = energyCardHass();
+    return el;
+  }
+
+  it("T010: preview indication is visible with the shifted period when previewShift < 0", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    await el.updateComplete;
+    const shadowText = el.shadowRoot!.textContent || "";
+    // The indication reuses the card's period formatting: the shifted current
+    // window starts 2023-01-01 → "2023" (US2 scenario 3).
+    expect(shadowText).toContain("Preview: 2023");
+    document.body.removeChild(el);
+  });
+
+  it("T010: preview indication is absent at the default (no preview)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    const shadowText = el.shadowRoot!.textContent || "";
+    expect(shadowText).not.toContain("Preview:");
+    document.body.removeChild(el);
+  });
+
+  it("T012: preview draws exactly two gray series (light + darker), not the current color", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    await el.updateComplete;
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    const series = option.series as any[];
+    // Exactly the shifted current (light gray) + shifted reference (darker gray).
+    expect(series.length).toBe(2);
+    const colors = series.map((s) => s.color).sort();
+    // jsdom has no HA theme CSS, so the card's theme resolves to its gray
+    // fallbacks: light gray current, darker gray reference.
+    expect(colors).toEqual(["rgba(127, 127, 127, 0.4)", "rgba(127, 127, 127, 0.55)"]);
+    // The shifted current must NOT reuse the current series' color (FR-018).
+    expect(colors).not.toContain("#00ADEF");
+    document.body.removeChild(el);
+  });
+
+  it("T012: single-window preview draws exactly one light-gray series", async () => {
+    const el = makeCard();
+    el._state = previewReadyState({ singleWindow: true });
+    await el.updateComplete;
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    const series = option.series as any[];
+    expect(series.length).toBe(1);
+    expect(series[0].color).toBe("rgba(127, 127, 127, 0.4)");
+    document.body.removeChild(el);
+  });
+
+  it("T015: a freshly instantiated card shows the configured default with no preview indication (FR-008)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    // No preview indication at the default.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    // No reset control at the default (FR-010).
+    expect(
+      el.shadowRoot!.querySelector(".ebc-chart-control--reset")
+    ).toBeNull();
+    // The two step controls are present (always visible in view mode).
+    const controls = el.shadowRoot!.querySelectorAll(".ebc-chart-control");
+    expect(controls.length).toBe(2);
+    document.body.removeChild(el);
+  });
+
+  it("T015: two card instances on the same dashboard keep independent preview state (FR-016)", async () => {
+    const el1 = makeCard();
+    const el2 = makeCard();
+    // Shift only the first card into preview.
+    el1._state = previewReadyState();
+    el2._state = baseYoYReadyState();
+    await el1.updateComplete;
+    await el2.updateComplete;
+    // Card 1 shows the preview indication; card 2 does not.
+    expect(el1.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    expect(el2.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    // Card 1 shows the reset control; card 2 does not.
+    expect(el1.shadowRoot!.querySelector(".ebc-chart-control--reset")).not.toBeNull();
+    expect(el2.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
+    document.body.removeChild(el1);
+    document.body.removeChild(el2);
+  });
+
+  it("T016: stepping the preview does not mutate the saved configuration (FR-007)", async () => {
+    const el = makeCard();
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    const configBefore = JSON.stringify(el._config);
+    // Step back (private method, accessed via bracket notation in the test).
+    (el as any)["_onPreviewStep"]("back");
+    await el.updateComplete;
+    const configAfter = JSON.stringify(el._config);
+    // The saved configuration is unchanged by the preview step.
+    expect(configAfter).toBe(configBefore);
+    document.body.removeChild(el);
+  });
+
+  it("T017: the reset control is present only while previewShift < 0 and absent at the default (FR-009, FR-010)", async () => {
+    const el = makeCard();
+    // At the default: no reset control.
+    el._state = baseYoYReadyState();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
+    // In preview: reset control present.
+    el._state = previewReadyState();
+    await el.updateComplete;
+    const resetBtn = el.shadowRoot!.querySelector(".ebc-chart-control--reset");
+    expect(resetBtn).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("T017: activating the reset control returns the chart to the configured default (US5)", async () => {
+    const el = makeCard();
+    el._state = previewReadyState();
+    // Keep the private runtime field in sync with the injected state (in the real
+    // flow `_loadData` writes `_state.previewShift` from `this.previewShift`).
+    (el as any).previewShift = -1;
+    await el.updateComplete;
+    // In preview: indication + reset control present.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    const resetBtn = el.shadowRoot!.querySelector(".ebc-chart-control--reset");
+    expect(resetBtn).not.toBeNull();
+    // Activate the reset control. This triggers an in-place preview load
+    // (fire-and-forget from `updated()`); the mock connection resolves in a
+    // microtask. Poll until the state settles (previewShift >= 0 or status
+    // changes away from "ready").
+    (resetBtn as HTMLButtonElement).click();
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 5));
+      await el.updateComplete;
+      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
+      if (st && (st.status !== "ready" || (st.previewShift ?? 0) >= 0)) break;
+    }
+    // The card returns to the configured default: no indication, no reset control.
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).toBeNull();
+    expect(el.shadowRoot!.querySelector(".ebc-chart-control--reset")).toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("T019: a shifted period with no data keeps the preview controls functional — stepping back again stays in the preview (FR-013, US6 scenario 1)", async () => {
+    const el = makeCard();
+    // The mock returns data only for the default (current-year) period; the
+    // shifted preview periods (2021/2020) have no data.
+    const currentYear = String(new Date().getFullYear());
+    el.hass = {
+      ...energyCardHass(),
+      connection: {
+        sendMessagePromise: async (msg: Record<string, unknown>) => {
+          if (
+            msg?.type === "recorder/statistics_during_period" &&
+            String(msg.start_time).startsWith(currentYear)
+          ) {
+            return {
+              results: {
+                "sensor.energy": [
+                  {
+                    start: `${currentYear}-01-01T00:00:00+00:00`,
+                    end: `${currentYear}-01-02T00:00:00+00:00`,
+                    change: 10,
+                    unit_of_measurement: "kWh"
+                  }
+                ]
+              }
+            };
+          }
+          return {};
+        }
+      }
+    } as HomeAssistant;
+
+    // Ready state (the default pipeline has data) but the shifted preview
+    // period has no data: previewSeries is undefined while
+    // previewWindows/previewChartTime are set.
+    el._state = {
+      ...baseYoYReadyState(),
+      previewShift: -3,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2021, 0, 1)),
+          end: new Date(Date.UTC(2021, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2020, 0, 1)),
+          end: new Date(Date.UTC(2020, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [Date.UTC(2021, 0, 1)],
+        alignStartsMs: [Date.UTC(2021, 0, 1), Date.UTC(2020, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 1
+      },
+      previewSeries: undefined
+    };
+    // Keep the private runtime field in sync with the injected state (in the
+    // real flow `_loadData` writes `_state.previewShift` from `this.previewShift`).
+    (el as any).previewShift = -3;
+    await el.updateComplete;
+
+    // The standard no-data indication is shown and the preview controls
+    // (back/forward/reset) + indication remain mounted.
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+
+    // Step back again (-3 → -4): the shifted period still has no data, but the
+    // preview stays active — the state settles back to "ready" with the new
+    // shift, the no-data overlay and the controls remain available.
+    const backBtn = el.shadowRoot!.querySelectorAll(".ebc-chart-control")[1] as HTMLButtonElement;
+    backBtn.click();
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 5));
+      await el.updateComplete;
+      const st = (el as any)._state as { status?: string; previewShift?: number } | undefined;
+      if (st && st.status === "ready" && (st.previewShift ?? 0) === -4) break;
+    }
+    const st = (el as any)._state as { status?: string; previewShift?: number };
+    expect(st.status).toBe("ready");
+    expect(st.previewShift).toBe(-4);
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).not.toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    document.body.removeChild(el);
+  });
+
+  it("T019: a shifted period with partial data is handled by the existing partial-data behavior (FR-014, US6 scenario 2)", async () => {
+    const el = makeCard();
+    // The shifted current period has only one data point (partial data) — the
+    // chart renders the partial series (no no-data overlay) and the preview
+    // controls + indication remain available.
+    el._state = {
+      ...baseYoYReadyState(),
+      previewShift: -1,
+      previewWindows: [
+        {
+          index: 0,
+          id: "p0",
+          role: "current",
+          start: new Date(Date.UTC(2023, 0, 1)),
+          end: new Date(Date.UTC(2023, 11, 31)),
+          aggregation: "day"
+        },
+        {
+          index: 1,
+          id: "p1",
+          role: "reference",
+          start: new Date(Date.UTC(2022, 0, 1)),
+          end: new Date(Date.UTC(2022, 11, 31)),
+          aggregation: "day"
+        }
+      ],
+      previewChartTime: {
+        timeline: [
+          Date.UTC(2023, 0, 1),
+          Date.UTC(2023, 0, 2),
+          Date.UTC(2023, 0, 3)
+        ],
+        alignStartsMs: [Date.UTC(2023, 0, 1), Date.UTC(2022, 0, 1)],
+        forecastPeriodBuckets: 0,
+        tailLabelFromIndex: 3
+      },
+      previewSeries: {
+        current: {
+          points: [{ timestamp: Date.UTC(2023, 0, 1), value: 5 }],
+          unit: "kWh",
+          periodLabel: "2023",
+          total: 5
+        },
+        reference: undefined,
+        aggregation: "day",
+        time_zone: "UTC"
+      }
+    };
+    await el.updateComplete;
+
+    // Partial data: no no-data overlay, the partial series is drawn (the
+    // shifted current only — no reference data), controls + indication present.
+    expect(el.shadowRoot!.querySelector(".ebc-chart-nodata-overlay")).toBeNull();
+    expect(el.shadowRoot!.querySelectorAll(".ebc-chart-control").length).toBe(3);
+    expect(el.shadowRoot!.querySelector(".ebc-preview-indication")).not.toBeNull();
+    expect(setOptionMock).toHaveBeenCalled();
+    const [option] = setOptionMock.mock.calls[0] as any[];
+    expect((option.series as any[]).length).toBe(1);
     document.body.removeChild(el);
   });
 });
