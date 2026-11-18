@@ -15,3 +15,8 @@ pnpm-debug.log*
 graphify-out/
 
 design/
+
+# Local tooling state (indexes, IDE / agent configs with local paths)
+.codegraph/
+.vscode/
+.cursor/mcp.json
