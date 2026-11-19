@@ -1,6 +1,6 @@
 # Energy Horizon 1.3.0
 
-![Release](https://img.shields.io/badge/version-1.3.0•beta-informational?style=for-the-badge&color=%2300c29e)&ensp;
+![Release](https://img.shields.io/badge/version-1.3.0&ensp;beta-informational?style=for-the-badge&color=%2300c29e)&ensp;
 [![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)](https://github.com/hello-sebastian/Energy-Horizon)
 
 ## What's new – Highlights
