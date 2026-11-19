@@ -6,10 +6,10 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 ![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Default-orange?style=for-the-badge)  
 ![Release](https://img.shields.io/badge/version-1.3.0•beta-informational?style=for-the-badge&color=%2300c29e)&ensp;
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=for-the-badge&color=%2300c29e)](https://www.gnu.org/licenses/gpl-3.0)&ensp;
-![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)
+[![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)](https://github.com/hello-sebastian/Energy-Horizon)
 
 
-**Energy Horizon Card** is a high-performance Lovelace dashboard card for Home Assistant. It enables period-over-period visualization and analytical comparison of cumulative energy consumption and solar generation. 
+**Energy Horizon Card** is a  Lovelace dashboard card for Home Assistant that enables period-over-period visualization and analytical comparison of cumulative energy consumption and generation. 
 
 By querying Home Assistant's **Long-Term Statistics (LTS)**, Energy Horizon overlays current progress against historical baselines (e.g., Year-over-Year, Month-over-Month) to immediately reveal whether your energy trajectory is ahead of or behind expected trends.
 

@@ -1,8 +1,11 @@
 # Energy Horizon 1.3.0
 
+![Release](https://img.shields.io/badge/version-1.3.0•beta-informational?style=for-the-badge&color=%2300c29e)&ensp;
+[![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)](https://github.com/hello-sebastian/Energy-Horizon)
+
 ## What's new – Highlights
 
-### 1\. Official Catalogs — Just Search, No Custom Repository
+### 1\. Official Marketplace Catalog 
 
 Energy Horizon Card is now listed in the built-in **Marketplace** catalog (Home Assistant 2026.11+) and in the **default HACS** catalog. Installing is a plain catalog search — no custom repository needs to be added. On HA 2026.11+ the built-in Marketplace replaces HACS and migrates existing HACS installations automatically, so existing users need do nothing.
 
@@ -12,28 +15,22 @@ The card now works in **both** picker entry points instead of failing at both:
 
 *   **"By entity" view:** the card is **suggested** whenever the selected entity's unit of measurement is one of the supported units (`kWh`, `Wh`, `MWh`, `m³`, `l` — exact, case-sensitive match), and **not** suggested for any other unit. The suggestion carries a sample configuration referencing the selected entity, so the preview renders the card in its standard appearance with *your* entity.
 
-*   **"By card" view (gallery):** the "There is no data to display for the selected period" message is gone. The card searches for a suitable user entity with a supported unit and uses it; when none exists it falls back to a **deterministic demo series** so the card always renders in its standard appearance (a chart with a current and a reference series plus the standard panels).
+*   **"By card" view (gallery):** the "There is no data to display for the selected period" message is gone. The card searches for a suitable user entity with a supported unit and uses it; when none exists it falls back to a **demo series** so the card always renders in its standard appearance (a chart with a current and a reference series plus the standard panels).
 
-The demo series renders **immediately** (no blocking, no loading or error state), and a short (~2.5 s) real-data query then upgrades the preview **in place** to the entity's real data when it succeeds in time. On failure, timeout, or empty result the demo series stays. The preview is strictly a preview: the sample configuration is **never persisted** as the card's configuration, it **never blocks** on data, and it does not interfere with other cards' previews or the picker. It respects the active theme (light/dark) and the card's localization.
+The demo series renders **immediately** (no blocking, no loading or error state), and a short real-data query then upgrades the preview in place to the entity's real data when it succeeds in time. On timeout, or empty result the demo series stays. The preview is strictly a preview: the sample configuration is **never persisted** as the card's configuration, it **never blocks** on data, and it does not interfere with other cards' previews or the picker. It respects the active theme (light/dark) and the card's localization.
 
 ### 3\. Browse Past Periods Without Touching Your Configuration
 
-A pair of arrow controls in the top-right of the chart area steps the displayed time window to an **earlier or a later period**, and a reset control returns to the current period — inspect past periods without changing a single line of configuration. The shifted series render in **gray** and the card shows a `Preview: <period>` indication. The preview is transient: it is never written to the configuration, and the summary panels and the narrative stay unchanged.
+A pair of buttons in the top-right of the chart area steps the displayed time window to an **earlier or a later period**, and a reset control returns to the current period — inspect past periods without changing a single line of configuration. The shifted series render in **gray** and the card shows a `Preview: <period>` indication. The preview is transient: it is never written to the configuration, and the summary panels and the narrative stay unchanged.
 
-The preview controls are **visible in every card context** — the "Add card" picker (both views), dashboard edit mode, and the card editor — where they keep their normal appearance but do not respond to any input; the preview period can only be changed in the dashboard view mode. The reset control remains contextual: it appears only while a preview shift is active.
 
 ### 4\. Editor & Preview Refinements
 
-*   **The card editor fills the editor dialog:** in the HA card editor dialog the editor's scrollable area (visual mode and YAML mode) now responsively fills the whole allocated editor pane regardless of the browser window size — scrolling happens only inside the editor, and the Config/Visibility tab bar and the dialog chrome stay visible. Previously the visual-mode scroll area was capped at a fixed `60vh` unrelated to the dialog geometry — a gap under the scroller on tall windows, a double scrollbar on short ones.
 
 ### 5\. A Cleaner, Lighter Codebase (Selected Under-the-Hood Changes)
 
-This release completes the tech-debt reduction program — visible behavior is unchanged, but the internals are measurably healthier:
+* **This release completes the tech-debt reduction program** — visible behavior is unchanged, but the internals are measurably healthier:
 
-*   **0× `any` and 0 non-null assertions** in the codebase. Strict lint rules now enforce both, and all 56 previously cataloged non-null assertions were eliminated behind explicit guards, captured references, and typed fallbacks — index accesses are now compiler-checked.
-*   **Compiler-enforced state model:** the card state is now a discriminated union (`Loading | Error | NoData | Ready`), and every value the card prints is computed by a pure, unit-tested view model that `render()` consumes as a thin template.
-*   **Ready-state pipeline:** the three ready-state code paths are now a single pure, unit-tested pipeline; the element's paths are thin orchestration ending in one pipeline call.
-*   **Dead code removed:** the long-dead Chart.js renderer module and its leftover `date-fns` dependency are gone — `luxon` remains the sole date library.
 *   **Lighter artifact:** the production build no longer emits a source map — the published artifact is just the single card bundle.
 
 ---
