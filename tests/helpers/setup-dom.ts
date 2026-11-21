@@ -40,6 +40,14 @@ g.InputEvent = win.InputEvent;
 g.KeyboardEvent = win.KeyboardEvent;
 g.MutationObserver = win.MutationObserver;
 g.getComputedStyle = win.getComputedStyle;
+// Alias the `Storage` class (not `localStorage`/`sessionStorage` — this JSDOM
+// instance has an opaque origin and THROWS `SecurityError` on either of those,
+// and no test touches them). Node versions differ in whether a global
+// `Storage` exists (Node 26 has the web-storage builtin; CI's Node 22 does
+// not), so tests that spy on `Storage.prototype` (picker-preview-render,
+// SC-006/FR-010) would otherwise pass locally and fail on CI. Aliasing the
+// jsdom class makes the spy deterministic on every Node version.
+g.Storage = win.Storage;
 
 // IMPORTANT: do NOT alias `ShadowRoot`, `Document`, or `CSSStyleSheet`. Lit's
 // `supportsAdoptingStyleSheets` gate (css-tag.js) is
