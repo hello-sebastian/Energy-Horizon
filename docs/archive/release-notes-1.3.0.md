@@ -80,11 +80,8 @@ A pair of buttons in the top-right of the chart area steps the displayed time wi
 ### Maintenance
 
 *   Lint: enabled strict typing rules — `@typescript-eslint/no-explicit-any` (error, with a temporary scoped exception in the ECharts renderer tracked to the Wave 3 typing work) and `@typescript-eslint/consistent-type-imports` (error); non-null assertions are now reported as warnings and cataloged for a later cleanup. No runtime change.
-*   Introduced `changelog.md` as the single canonical changelog; previous release notes (`release-notes-1.2.0.md`, `release-notes/`) moved to `docs/archive/`.
 *   The production build no longer emits a source map: `dist/energy-horizon-card.js.map` is no longer part of the committed/published artifact (the card bundle itself is unchanged).
-*   Repository hygiene: removed the working "SYNC IMPACT REPORT" comment block from the project constitution, removed the tracked `temp/` scratch directory, and dropped the unused `jsx: "react-jsx"` TypeScript compiler option.
-*   Constitution amended to **v1.3.0** (MINOR): full Polish-to-English translation under the new Language Policy (no provision dropped, weakened, or redefined — no MAJOR), a new core principle **VII. Pragmatic Architecture & Anti-Over-Engineering (AI Guardrails)** (pure functions, unidirectional dependencies, three-tier state allocation, styling discipline), a TDD rule for domain logic with the grandfathered baseline (2026-11-16: 62 test files / 678 tests), and new clauses for domain isolation from the HA API, strict lifecycle management, prohibition of dynamic code execution, GPL v3 dependency license compatibility, custom element name persistence, PR test requirements, task-execution logical atomicity, and a Governance versioning policy with a mandatory constitution compliance review before every production release. Documentation-only change — no code or build artifact impact. See `docs/constitution-amendment-1.3.0.md`.
-*   Constitution amended to **v1.4.0** (MINOR): the "Task Breakdown & Execution Rules (Logical Atomicity)" section gained two clauses — **No feature bundling** (a task covering several separate concerns MUST be split into separate tasks, one concern per task) and **Sequencing gate** (task N+1 MUST NOT start until task N is marked `[x]` in `tasks.md`) — and a mandatory `eh.task-protocol` hook was registered in `.specify/extensions.yml` (`before_implement`, `optional: false`) to inject the per-task protocol into every `/speckit-implement` run. Documentation-only change — no code or build artifact impact.
+
 
 ---
 
