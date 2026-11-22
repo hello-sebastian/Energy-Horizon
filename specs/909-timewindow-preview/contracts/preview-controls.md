@@ -12,7 +12,7 @@ focus-visible styling and localized `aria-label`s (Constitution Principle IV).
 | Control | Visible when | Action on activation | `aria-label` (key) |
 |---|---|---|---|
 | **Backward** (step earlier) | Always (view mode) | `previewShift -= 1` (no lower bound) | `preview.step_back` |
-| **Forward** (step later) | Always (view mode) | `previewShift += 1`, clamped at `0` (no-op at default) | `preview.step_forward` |
+| **Forward** (step later) | Always (view mode) — rendered in the disabled state (visible, dimmed) at the default and enabled while `previewShift < 0` (FR-026) | `previewShift += 1`, clamped at `0` (no-op at default) | `preview.step_forward` |
 | **Reset** (return to default) | Only while `previewShift < 0` | `previewShift = 0` | `preview.reset` |
 
 **Placement**: top-right corner of the chart (interim form; a refined visual design is expected
@@ -57,7 +57,7 @@ series. The preview shift does **not** recompute analytical data in this iterati
 1. The preview never modifies or persists the card's configuration (FR-007).
 2. The preview is discarded on any re-instantiation (FR-008).
 3. Each card instance keeps its own independent preview state (FR-016).
-4. The forward direction is bounded at the configured default (FR-003).
+4. The forward direction is bounded at the configured default (FR-003); in dashboard view mode the forward control is rendered in the disabled state (visible, dimmed) while the card is at the default and enabled while a preview shift is active (FR-026).
 5. A shifted period with no data shows the standard no-data indication (FR-013); while the preview
    is active the controls and indication remain available in that state, so the user can step
    through data-less periods (e.g., seasonal gaps) or reset. Partial data uses the existing

@@ -230,6 +230,24 @@ function readState(el: CardEl): CardState {
   return (el as unknown as { _state: CardState })._state;
 }
 
+/**
+ * The `labels` argument of the last mocked `EChartsRenderer.update` call —
+ * the row names the tooltip/legend are built from (FR-902-AE, issue #74).
+ */
+function lastUpdateLabels(el: CardEl): { current: string; reference: string } | undefined {
+  const update = (
+    el as unknown as {
+      _chartRenderer?: { update: { mock: { calls: unknown[][] } } };
+    }
+  )._chartRenderer?.update;
+  if (!update) return undefined;
+  const calls = update.mock.calls;
+  const last = calls[calls.length - 1] as
+    | [unknown, unknown, unknown, { current: string; reference: string }?]
+    | undefined;
+  return last?.[3];
+}
+
 // ---------------------------------------------------------------------------
 // Pinned baselines — captured 2026-11-16 from the pre-refactor code.
 // Shared fragments (identical across scenarios by construction of the fixture).
@@ -540,5 +558,56 @@ describe("pipeline characterization — TD-2 R1 baseline (FR-019: expected value
     );
     await settle();
     expect(pin(readState(el))).toEqual(F);
+  });
+
+  it("G: row labels — concrete period names where nameable, generic fallback elsewhere (FR-902-AE, issue #74)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+    const el = makeCard({ send: makeSend() });
+    await settle();
+    const state = readState(el);
+    expect(state.status).toBe("ready");
+    if (state.status !== "ready") {
+      return;
+    }
+    // Current window (2026-01-01 → now, role current, Jan 1 start) = the
+    // nominal year → the concrete name.
+    expect(state.comparisonSeries.current.periodLabel).toBe("2026");
+    // Reference window = the full calendar year 2025 (referenceFullPeriod)
+    // → the concrete name (full-unit windows are nameable for any role).
+    expect(state.comparisonSeries.reference?.periodLabel).toBe("2025");
+    // The labels handed to the renderer match the stored series labels —
+    // tooltip/legend rows carry the same names.
+    expect(lastUpdateLabels(el)).toEqual({
+      current: "2026",
+      reference: "2025"
+    });
+  });
+
+  it("H: preview row labels — the shifted current row carries its concrete name, never 'Current period' (909 FR-021, owner constraint)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+    const el = makeCard({ send: makeSend() });
+    await settle();
+    (el as unknown as { _onPreviewStep: (a: "back" | "forward" | "reset") => void })._onPreviewStep(
+      "back"
+    );
+    await settle();
+    const state = readState(el);
+    expect(state.status).toBe("ready");
+    if (state.status !== "ready") {
+      return;
+    }
+    // Shifted current (2025-01-01 → 2025-11-16, role current, Jan 1 start) →
+    // the shifted year's concrete name — never "Current period".
+    expect(state.preview?.series?.current.periodLabel).toBe("2025");
+    expect(state.preview?.series?.current.periodLabel).not.toBe("Current period");
+    // Shifted reference = the full calendar year 2024 → the concrete name.
+    expect(state.preview?.series?.reference?.periodLabel).toBe("2024");
+    // The preview update carries the same role-aware labels.
+    expect(lastUpdateLabels(el)).toEqual({
+      current: "2025",
+      reference: "2024"
+    });
   });
 });

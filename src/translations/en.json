@@ -1,6 +1,7 @@
 {
   "period.current": "Current period",
   "period.reference": "Reference period",
+  "period.generic": "Period",
   "preview.step_back": "Step to earlier period",
   "preview.step_forward": "Step to later period",
   "preview.reset": "Return to current period",

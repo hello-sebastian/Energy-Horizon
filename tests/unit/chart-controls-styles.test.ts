@@ -1,10 +1,11 @@
 /**
- * Preview step controls layout (909 T029).
- *
- * The step buttons (back/forward) must stay pinned to the right edge of the
- * controls bar with a fixed, small gap between them. The preview indication
- * (visible only while a preview is active) must not shift the buttons when it
- * appears or disappears — it is pushed to the left via `margin-right: auto`.
+ * Preview step controls styles (909): layout (T029) — the step buttons
+ * (back/forward) must stay pinned to the right edge of the controls bar with
+ * a fixed, small gap between them, and the preview indication (visible only
+ * while a preview is active) must not shift the buttons when it appears or
+ * disappears — it is pushed to the left via `margin-right: auto` — plus the
+ * disabled state (T036): dimmed, no hover, per the Home Assistant
+ * disabled-button standard.
  */
 import { describe, expect, it } from "vitest";
 import { energyHorizonCardStyles } from "../../src/card/energy-horizon-card-styles";
@@ -35,5 +36,17 @@ describe("chart controls styles (.ebc-chart-controls / .ebc-preview-indication)"
   it("pushes the preview indication to the left (margin-right: auto)", () => {
     const indication = rule(".ebc-preview-indication");
     expect(indication).toContain("margin-right: auto");
+  });
+});
+
+describe("chart controls disabled state (.ebc-chart-control:disabled)", () => {
+  it("keeps the dimmed look (opacity: 0.45) of the Home Assistant disabled-button standard", () => {
+    const disabled = rule(".ebc-chart-control:disabled");
+    expect(disabled).toContain("opacity: 0.45");
+  });
+
+  it("blocks pointer events so a disabled control shows no hover state (FR-026)", () => {
+    const disabled = rule(".ebc-chart-control:disabled");
+    expect(disabled).toContain("pointer-events: none");
   });
 });

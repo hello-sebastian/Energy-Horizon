@@ -52,8 +52,10 @@ has at least ~3 months of history.
 3. **All widths (US1 scenarios 6–8 / FR-006)**: Repeat step-back on cards configured with `45d`
    (exact 45-day shift), `1y` (previous calendar year), and a week/hour width — each shifts by one
    nominal width with the window's width unchanged.
-4. **Forward + bound (US1/FR-003)**: From a shifted position, activate forward → one width later;
-   at the default, forward is a no-op (never later than "now").
+4. **Forward + bound (US1/FR-003, FR-026)**: From a shifted position, activate forward → one width later
+   (the forward control is enabled while a shift is active); at the default the forward control is
+   shown in the disabled state (visible, dimmed) and its activation is a no-op (never later than
+   "now").
 5. **Reset (US5/FR-009)**: From any shifted position, activate reset → the chart immediately shows
    the configured default (current series back, normal two-series presentation); the indication and
    reset control disappear.

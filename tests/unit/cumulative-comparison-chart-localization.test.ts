@@ -149,6 +149,11 @@ describe("EnergyHorizonCard localization", () => {
     });
     expect(higher).toContain(refPhrase);
   });
+
+  it("period.generic row-label fallback resolves per locale (FR-905-P, issue #74)", () => {
+    expect(createLocalize("en")("period.generic")).toBe("Period");
+    expect(createLocalize("pl")("period.generic")).toBe("Okres");
+  });
 });
 
 

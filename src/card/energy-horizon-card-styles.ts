@@ -409,6 +409,9 @@ export const energyHorizonCardStyles = css`
   .ebc-chart-control:disabled {
     opacity: 0.45;
     cursor: default;
+    /* FR-026: a disabled control is inert — suppress the hover highlight so
+       the dimmed state is the only feedback (HA disabled-button pattern). */
+    pointer-events: none;
   }
 
   /* In-place preview load (909): the chart stays in the DOM, dimmed, with a

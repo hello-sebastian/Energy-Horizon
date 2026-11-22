@@ -5,6 +5,7 @@
 | Field | Type | Description |
 |---|---|---|
 | `previewShift` | `number` (signed int) | How many nominal window widths the display is shifted from the configured default. `0` = default (no preview); negative = earlier periods (e.g. `-1` = one width back). Never positive (forward is bounded at the default, FR-003). |
+| Forward control disabled state (derived) | `boolean` (derived, not stored) | The view-mode forward control's disabled state is derived from the existing state — no new field: rendered disabled (visible, dimmed, FR-026) in dashboard view mode while `previewShift = 0` or during an in-place preview load, and enabled while `previewShift < 0`; never applied in `preview = true` contexts (FR-023). |
 
 **Scope & lifetime**
 

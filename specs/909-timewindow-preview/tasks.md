@@ -214,6 +214,42 @@ and `npm run lint` are green.
 
 ---
 
+## Phase 11: Refinement — Forward control disabled at the default (2026-11-22)
+
+**Goal**: In dashboard view mode the forward (right) preview control is rendered in the
+disabled state — visible, dimmed, per the Home Assistant disabled-button standard —
+whenever the time window cannot be shifted forward, i.e. while the card is at the
+configured default; while a preview shift is active the forward control is rendered
+enabled. In `preview = true` contexts the controls keep their normal appearance per
+FR-023 (no `disabled` attribute) and the backward and reset controls are rendered
+disabled only during an in-place preview load (FR-003, FR-026, research R7).
+**Branch**: `1.3-dev` (user decision 2026-11-22).
+
+**Independent Test**: On a dashboard card at the default the forward arrow is visible
+but dimmed and inert; step back one period and confirm the forward arrow becomes
+enabled (and the reset control appears); step forward back to the default (or reset)
+and confirm the forward arrow is disabled again. In the picker, dashboard edit mode,
+and the editor dialog the forward control keeps its normal appearance with
+`aria-disabled="true"` (FR-023, unchanged).
+
+### Tests (write FIRST, ensure they FAIL before implementation) ⚠️
+
+- [x] T035 In `tests/integration/card-render.test.ts`: in view mode (`preview === false`) the forward control is rendered with the `disabled` attribute at the default (`previewShift = 0`) while the backward control is not disabled, the reset control is absent, and neither control carries an `aria-disabled`/`tabindex` override; with an active shift (`previewShift = -1`) the forward control is enabled (and the reset control present); and after a back → forward round trip returns the card to the default the forward control is disabled again (FR-026, FR-003 bound)
+
+- [x] T036 [P] In `tests/unit/chart-controls-styles.test.ts`: the `.ebc-chart-control:disabled` rule keeps `opacity: 0.45` and adds `pointer-events: none` so a disabled control shows no hover state and consumes no pointer events (FR-026)
+
+### Implementation
+
+- [x] T037 In `src/card/cumulative-comparison-chart.ts`: change the view-mode forward button binding from `?disabled=${this._previewLoading}` to `?disabled=${this._previewLoading || this.previewShift >= 0}` and extend the FR-023/FR-025 comment above the buttons with the FR-026 view-mode rule (the backward and reset controls keep `?disabled=${this._previewLoading}` only); in `src/card/energy-horizon-card-styles.ts`: add `pointer-events: none;` to the `.ebc-chart-control:disabled` rule
+
+- [x] T038 [P] Cross-domain documentation consistency (no code change): 909 `spec.md` (FR-026, Clarifications "Session 2026-11-22" entry, Edge Case "Shifting forward past the default", US1 acceptance scenario 4), 909 `contracts/preview-controls.md` (Forward row + new Invariant 4), 909 `plan.md` (one sentence in the Summary), 909 `data-model.md` (derived-state line), 909 `quickstart.md` (scenario), 909 `research.md` (R7), and `changelog.md` `[Unreleased]` entry (FR-026 wording). README.md and `wiki-publish/` are out of scope per the user decision 2026-11-22 (the interaction is self-evident)
+
+**Checkpoint**: In dashboard view mode the forward control is visible but disabled at the
+default and enabled while a preview shift is active; the preview contexts are unchanged
+(FR-023); `npm test`, `npm run typecheck`, and `npm run lint` are green.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

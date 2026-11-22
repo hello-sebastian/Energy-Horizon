@@ -12,6 +12,8 @@
  * half without a user-visible change decision.
  */
 import { DateTime } from "luxon";
+import type { LocalizeFunction } from "../localize";
+import type { ResolvedWindow, WindowRole } from "../types";
 
 /**
  * Formats the label for a comparison period starting at `instant`.
@@ -34,4 +36,76 @@ export function formatPeriodLabel(
     month: "long",
     year: "numeric"
   }).format(instant);
+}
+
+/**
+ * Whether a window is calendar-nameable — i.e. whether the row that
+ * represents it can be labeled with the concrete period name via
+ * `formatPeriodLabel` (FR-905-O, issue #74).
+ *
+ * Nameable geometries (all evaluated in `zone`):
+ * - a full calendar year: start Jan 1 00:00, end Jan 1 next year − 1 ms;
+ * - a full calendar month: start day 1 00:00, end next month day 1 − 1 ms;
+ * - the in-progress current window (role exception): unit-boundary start
+ *   (Jan 1 or day 1) with `end = now` — it represents its nominal unit,
+ *   consistent with `expandCurrentWindowForCaption`. Applies to
+ *   `role === "current"` only.
+ *
+ * Full units end at `unit − 1 ms` (the resolver's pinned geometry), so the
+ * check normalizes `end` with +1 ms before comparing against the unit
+ * boundary.
+ */
+export function isNameablePeriod(
+  start: Date,
+  end: Date,
+  role: WindowRole,
+  zone: string
+): boolean {
+  const s = DateTime.fromJSDate(start, { zone });
+  const e1 = DateTime.fromJSDate(end, { zone }).plus({ milliseconds: 1 });
+  const fullYear =
+    s.month === 1 &&
+    s.day === 1 &&
+    e1.equals(s.startOf("year").plus({ years: 1 }));
+  const fullMonth =
+    s.day === 1 && e1.equals(s.startOf("month").plus({ months: 1 }));
+  const inProgressCurrent = role === "current" && (s.month === 1 || s.day === 1);
+  return fullYear || fullMonth || inProgressCurrent;
+}
+
+/**
+ * The label for a chart tooltip/legend row (FR-905-P, FR-902-AE, issue #74).
+ *
+ * A calendar-nameable window is labeled with its concrete period name
+ * (`formatPeriodLabel`). Rows whose window is not nameable fall back to a
+ * role-aware generic label:
+ * - index 0, not preview → `period.current` ("Current period") — reserved
+ *   for the actual current (green) series;
+ * - index 0, preview → `period.generic` ("Period") — a rolled-back (preview)
+ *   window is never labeled "Current period" (owner constraint);
+ * - index 1 → `period.reference`;
+ * - index ≥ 2 → `period.reference (n)` (existing form kept).
+ *
+ * Row labels are pairwise distinct per chart (calendar-stepped windows +
+ * the index suffix), which protects the renderer's tooltip `seriesName`
+ * matching.
+ */
+export function rowPeriodLabel(
+  w: ResolvedWindow,
+  index: number,
+  isPreview: boolean,
+  locale: string,
+  zone: string,
+  localize: LocalizeFunction
+): string {
+  if (isNameablePeriod(w.start, w.end, w.role, zone)) {
+    return formatPeriodLabel(w.start, locale, zone);
+  }
+  if (index === 0) {
+    return isPreview ? localize("period.generic") : localize("period.current");
+  }
+  if (index === 1) {
+    return localize("period.reference");
+  }
+  return `${localize("period.reference")} (${index})`;
 }

@@ -1,6 +1,7 @@
 {
   "period.current": "Aktueller Zeitraum",
   "period.reference": "Referenzzeitraum",
+  "period.generic": "Zeitraum",
   "preview.step_back": "Zum früheren Zeitraum wechseln",
   "preview.step_forward": "Zum späteren Zeitraum wechseln",
   "preview.reset": "Zum aktuellen Zeitraum zurückkehren",

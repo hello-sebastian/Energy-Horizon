@@ -569,7 +569,7 @@ describe("preview controls in preview contexts (909 FR-022–FR-025, T032)", () 
     document.body.removeChild(el);
   });
 
-  it("preview=false (dashboard view mode): the controls stay interactive, with no inert overrides (FR-022, FR-025)", async () => {
+  it("preview=false (dashboard view mode): the controls stay interactive, with no inert overrides (FR-022, FR-025, FR-026)", async () => {
     // A valid LTS response so the view-mode card reaches the ready state and
     // renders the controls bar (same pattern as the US3 real-data upgrade).
     const ltsResponse = {
@@ -608,11 +608,15 @@ describe("preview controls in preview contexts (909 FR-022–FR-025, T032)", () 
     );
     expect(buttons.length).toBe(2); // back + forward; reset only while shifted
     for (const btn of buttons) {
-      // View mode is unchanged: no inert overrides, no disabled.
-      expect(btn.hasAttribute("disabled")).toBe(false);
+      // View mode: no inert overrides (FR-023 applies to preview contexts).
       expect(btn.hasAttribute("aria-disabled")).toBe(false);
       expect(btn.hasAttribute("tabindex")).toBe(false);
     }
+    // FR-026: at the default the forward control is in the disabled state
+    // (visible, dimmed — the HA disabled-button standard); the backward
+    // control stays enabled (no lower bound, FR-004).
+    expect(buttons[0]!.hasAttribute("disabled")).toBe(false); // back
+    expect(buttons[1]!.hasAttribute("disabled")).toBe(true); // forward
 
     const baseline = send.mock.calls.length;
     buttons[0]!.click(); // step back

@@ -5,6 +5,10 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Time-window preview: forward control state (909 refinement, FR-026):** in the dashboard view mode the forward (right) preview control is shown in the disabled state (visible, dimmed, per the Home Assistant standard) whenever the window cannot be shifted forward — while the card shows the current period — and becomes enabled while a preview shift is active. The backward and reset controls are unchanged (disabled only during an in-place preview load); in the preview contexts (picker, dashboard edit mode, card editor) the controls keep their normal appearance (FR-023).
+
 ## [1.3.0] - 2026-11-18
 
 ### Added

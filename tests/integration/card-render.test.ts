@@ -377,6 +377,84 @@ describe("energy-horizon-card integration", () => {
     document.body.removeChild(el);
   });
 
+  it("view mode: forward control disabled at the default, back enabled, reset absent (FR-026)", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year"
+    });
+    el.hass = energyCardHass();
+    el._state = baseYoYReadyState();
+    (el as any).previewShift = 0;
+    await el.updateComplete;
+
+    // At the default only the back/forward controls render (the reset control
+    // is contextual — FR-009/FR-010 — and appears only while a shift is
+    // active). Button order: back, forward.
+    const buttons = el.shadowRoot!.querySelectorAll("button.ebc-chart-control");
+    expect(buttons.length).toBe(2);
+    const back = buttons[0] as HTMLButtonElement;
+    const forward = buttons[1] as HTMLButtonElement;
+    // FR-026: the window cannot be shifted forward at the default, so the
+    // forward control is rendered in the disabled state (visible, dimmed via
+    // `.ebc-chart-control:disabled` — the Home Assistant disabled-button
+    // standard).
+    expect(forward.disabled).toBe(true);
+    // FR-004: stepping back has no lower bound — back stays enabled.
+    expect(back.disabled).toBe(false);
+    // View mode (`preview === false`): no preview-context overrides (FR-023
+    // applies to `preview === true` contexts only).
+    for (const b of Array.from(buttons) as HTMLButtonElement[]) {
+      expect(b.getAttribute("aria-disabled")).toBeNull();
+      expect(b.hasAttribute("tabindex")).toBe(false);
+    }
+    document.body.removeChild(el);
+  });
+
+  it("view mode: forward control enabled while a shift is active, disabled again after the round trip (FR-026)", async () => {
+    const el = document.createElement("energy-horizon-card") as EnergyHorizonCardEl;
+    document.body.appendChild(el);
+    if (typeof el.setConfig !== "function") return;
+    el.setConfig({
+      type: "custom:energy-horizon-card",
+      entity: "sensor.energy",
+      comparison_preset: "year_over_year"
+    });
+    el.hass = energyCardHass();
+    el._state = baseYoYReadyState();
+    (el as any).previewShift = 0;
+    await el.updateComplete;
+
+    // Step back one period: the forward control becomes enabled and the
+    // contextual reset control appears (button order: reset, back, forward).
+    // Reassigning `_state` (a fresh object) in the same tick as `previewShift`
+    // mirrors production, where `_onPreviewStep` flips the reactive
+    // `_previewLoading` state alongside the shift (911/TD-11).
+    (el as any)._state = baseYoYReadyState();
+    (el as any).previewShift = -1;
+    await el.updateComplete;
+    const shifted = el.shadowRoot!.querySelectorAll("button.ebc-chart-control");
+    expect(shifted.length).toBe(3);
+    expect(
+      el.shadowRoot!.querySelector("button.ebc-chart-control--reset")
+    ).not.toBeNull();
+    expect((shifted[2] as HTMLButtonElement).disabled).toBe(false);
+
+    // Round trip: stepping forward returns the card to the default — the
+    // forward control is disabled again and the reset control is gone.
+    (el as any)._state = baseYoYReadyState();
+    (el as any).previewShift = 0;
+    await el.updateComplete;
+    const again = el.shadowRoot!.querySelectorAll("button.ebc-chart-control");
+    expect(again.length).toBe(2);
+    expect(el.shadowRoot!.querySelector("button.ebc-chart-control--reset")).toBeNull();
+    expect((again[1] as HTMLButtonElement).disabled).toBe(true);
+    document.body.removeChild(el);
+  });
+
   it("forecast section does not contain historical_value row", async () => {
     const el = document.createElement("energy-horizon-card") as import("../../src/card/cumulative-comparison-chart").EnergyHorizonCard & { setConfig: (c: unknown) => void; hass: HomeAssistant; _state: unknown };
     document.body.appendChild(el);

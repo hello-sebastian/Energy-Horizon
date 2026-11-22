@@ -160,7 +160,12 @@ keyboard-operable by default (Enter/Space), focus-visible, with localized `aria-
 preview indication is a visible text element (the shifted period label) that is also announced to
 screen readers (it is real text in the DOM, not a visual-only overlay). The reset control is
 present in the DOM only while the preview is active (FR-009/FR-010), so it is not announced when
-absent. Contrast is inherited from the existing theme tokens (no new colors).
+absent. Contrast is inherited from the existing theme tokens (no new colors). In dashboard view
+mode the forward control is additionally rendered in the disabled state (HTML `disabled`
+attribute — visible, dimmed via the existing `.ebc-chart-control:disabled` style, in line with
+the Home Assistant disabled-button standard) at the configured default, where it cannot step
+forward (FR-003), and enabled while a preview shift is active (FR-026); in `preview = true`
+contexts the disabled state is never applied (FR-023).
 
 **Rationale**: Satisfies Principle IV ("Dostępność jest wymogiem, nie opcją") with the least
 possible new surface — native buttons + real text, no custom ARIA widgets.

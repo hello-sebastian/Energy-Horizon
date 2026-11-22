@@ -72,7 +72,7 @@ import { attachPicker, type PickerController } from "./picker/attach-picker";
 import { buildRendererConfig } from "./renderer-config";
 export { isForecastLineVisible } from "./renderer-config";
 import { resolveComparisonAxisLabelHints } from "./labels/comparison-label-hints";
-import { formatPeriodLabel } from "./labels/period-label";
+import { formatPeriodLabel, rowPeriodLabel } from "./labels/period-label";
 import "./energy-horizon-card-editor.js";
 
 export class EnergyHorizonCard extends LitElement implements LovelaceCard {
@@ -203,6 +203,44 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     }
 
     return translated;
+  }
+
+  /**
+   * The chart tooltip/legend row label for a window (FR-902-AE / FR-905-P):
+   * the concrete localized period name when the window is calendar-nameable,
+   * otherwise the role-aware generic fallback. An absent window (defensive —
+   * the ready state carries the same windows it was built from) falls back to
+   * the existing generic i18n form via `_localizeOrError` so a missing
+   * translation key is still surfaced. A preview current row never resolves
+   * to `period.current` (owner constraint; `rowPeriodLabel` pins it).
+   */
+  private _rowLabel(
+    window: ResolvedWindow | undefined,
+    index: number,
+    isPreview: boolean,
+    resolved: ResolvedLocale,
+    localize: LocalizeFunction
+  ): string {
+    if (window) {
+      return rowPeriodLabel(
+        window,
+        index,
+        isPreview,
+        resolved.language,
+        resolved.timeZone,
+        localize
+      );
+    }
+    if (index === 0) {
+      return this._localizeOrError(
+        localize,
+        isPreview ? "period.generic" : "period.current"
+      );
+    }
+    if (index === 1) {
+      return this._localizeOrError(localize, "period.reference");
+    }
+    return `${this._localizeOrError(localize, "period.reference")} (${index})`;
   }
 
   public setConfig(config: CardConfigInput): void {
@@ -427,7 +465,15 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             current: {
               points: [],
               unit: state.comparisonSeries.current.unit ?? "",
-              periodLabel: this._localizeOrError(localize, "period.current"),
+              // Same role-aware mapping as the preview labels above: a
+              // no-data preview never shows "Current period".
+              periodLabel: this._rowLabel(
+                previewWindows[0],
+                0,
+                true,
+                locResolved,
+                localize
+              ),
               total: 0
             },
             aggregation: previewWindows[0]?.aggregation ?? "day",
@@ -454,16 +500,42 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
             previewMode: true,
             previewSeries
           };
+          // Preview rows are never labeled "Current period" (owner constraint):
+          // the shifted current window gets its concrete name or `period.generic`.
           this._chartRenderer.update(seriesForChart, timeline, rendererConfig, {
-            current: this._localizeOrError(localize, "period.current"),
-            reference: this._localizeOrError(localize, "period.reference")
+            current: this._rowLabel(
+              previewWindows[0],
+              0,
+              true,
+              locResolved,
+              localize
+            ),
+            reference: this._rowLabel(
+              previewWindows[1],
+              1,
+              true,
+              locResolved,
+              localize
+            )
           });
         } else if (this._chartRenderer) {
           const { timeline } = state.chartTime;
           const rendererConfig = this._buildRendererConfig(timeline);
           this._chartRenderer.update(state.comparisonSeries, timeline, rendererConfig, {
-            current: this._localizeOrError(localize, "period.current"),
-            reference: this._localizeOrError(localize, "period.reference")
+            current: this._rowLabel(
+              state.resolvedWindows[0],
+              0,
+              false,
+              locResolved,
+              localize
+            ),
+            reference: this._rowLabel(
+              state.resolvedWindows[1],
+              1,
+              false,
+              locResolved,
+              localize
+            )
           });
         }
       }
@@ -486,7 +558,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
     if (this._pointCapExceeded(chartTime.timeline.length, gen)) return;
 
     try {
-      const seriesList = await this._fetchLtsSeries(windows, localize);
+      const seriesList = await this._fetchLtsSeries(windows, resolved, localize);
       const current = seriesList[0];
       if (!current) {
         this._setNoDataState(gen);
@@ -585,6 +657,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
    */
   private async _fetchLtsSeries(
     windows: ResolvedWindow[],
+    resolved: ResolvedLocale,
     localize: LocalizeFunction
   ): Promise<(CumulativeSeries | undefined)[]> {
     const queries = buildLtsQueriesForWindows(windows, this._config.entity);
@@ -605,7 +678,21 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       console.log("[Energy Horizon] API responses (per window):", responses);
     }
 
+    // FR-902-AE: a calendar-nameable window is labeled with its concrete
+    // period name; non-nameable windows keep the existing generic i18n form
+    // (which `rowPeriodLabel` reproduces for `isPreview = false`).
     const labelForIndex = (i: number): string => {
+      const w = windows[i];
+      if (w) {
+        return rowPeriodLabel(
+          w,
+          i,
+          false,
+          resolved.language,
+          resolved.timeZone,
+          localize
+        );
+      }
       if (i === 0) return localize("period.current");
       if (i === 1) return localize("period.reference");
       return `${localize("period.reference")} (${i})`;
@@ -684,11 +771,21 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
       // One response per window query; an absent response maps to `undefined`
       // exactly as before — `extractLtsResults` is total over nullish input (911/TD-6).
       const firstPreviewResponse = previewResponses[0];
+      // The preview current row carries its shifted window's concrete name
+      // or `period.generic` — never "Current period" (owner constraint; the
+      // same mapping as the `updated()` preview labels keeps the stored
+      // periodLabel consistent with the rendered row).
       const previewCurrent = firstPreviewResponse
         ? mapLtsResponseToCumulativeSeries(
             firstPreviewResponse,
             this._config.entity,
-            localize("period.current")
+            this._rowLabel(
+              previewWindowList[0],
+              0,
+              true,
+              resolved,
+              localize
+            )
           )
         : undefined;
       if (!previewCurrent) {
@@ -700,7 +797,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           ? mapLtsResponseToCumulativeSeries(
               secondPreviewResponse,
               this._config.entity,
-              localize("period.reference")
+              this._rowLabel(
+                previewWindowList[1],
+                1,
+                true,
+                resolved,
+                localize
+              )
             )
           : undefined;
       const previewRaw: ComparisonSeries = {
@@ -1046,7 +1149,13 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
              the ?disabled binding entirely — _previewLoading can never be
              true in a preview context (the _onPreviewStep guard blocks it).
              The reset button above is never rendered in a preview context
-             (FR-010: a shift cannot be activated there). -->
+             (FR-010: a shift cannot be activated there).
+             FR-026 (view mode only): the forward button is additionally
+             disabled at the configured default (previewShift >= 0) — the
+             window cannot be shifted further forward — rendered visible but
+             dimmed per .ebc-chart-control:disabled (HA disabled-button
+             standard); while a shift is active it is enabled. The back and
+             reset buttons are disabled only during an in-place preview load. -->
         ${this.preview
           ? html`<button
               class="ebc-chart-control"
@@ -1090,7 +1199,7 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
           : html`<button
               class="ebc-chart-control"
               type="button"
-              ?disabled=${this._previewLoading}
+              ?disabled=${this._previewLoading || this.previewShift >= 0}
               aria-label=${this._localizeOrError(
                 localize,
                 "preview.step_forward"

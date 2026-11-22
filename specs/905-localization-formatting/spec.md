@@ -4,7 +4,7 @@
 **Domain**: Localization & Formatting  
 **Replaces**: `002-i18n-localization`  
 **Primary code**: `src/card/localize.ts`, `src/translations/`  
-**Last updated**: 2026-11-16  
+**Last updated**: 2026-11-22  
 
 ---
 
@@ -36,6 +36,8 @@ The forecast panel displays the confidence level (`low` / `medium` / `high` from
 ### Period labels (period header, renderer config, preview indication)
 
 The card's period label — the current-period header, the `periodLabel` field of the renderer config, and the transient time-window preview indication — is produced by exactly one pure function: `formatPeriodLabel(instant, locale, zone)` in `src/card/labels/period-label.ts` (added 2026-11-16, 911/TD-10; FR-905-N). A period starting on **January 1** — evaluated in `zone`, the HA time zone — is labeled with the **year alone** (`"2025"`); any other start is labeled with the **localized long month name plus year** via `Intl.DateTimeFormat` (`"October 2024"`, `"październik 2024"` — Polish month names are lowercase in ICU). No other code path formats the period label.
+
+The chart's tooltip and legend row names (902 FR-902-AE) are produced by a second pure function in the same module: `rowPeriodLabel(window, index, isPreview, locale, zone, localize)`. It returns the concrete `formatPeriodLabel()` name when `isNameablePeriod()` says the window is calendar-nameable, and otherwise a role-aware generic form: `period.current` for the actual current row, `period.generic` for the rolled-back (preview) current row — never "Current period" — and `period.reference` (with a trailing index for context rows) for reference rows.
 
 > **Known quirk (preserved, 911 FR-019):** the January 1 edge check runs in the HA time zone, but the month name is formatted by `Intl.DateTimeFormat` **without** a `timeZone` option — i.e., in the host (browser) zone. This is pre-existing behavior, intentionally preserved for byte-for-byte parity; the two halves only diverge near month boundaries around zone offsets. Correcting it would be a user-visible change outside the scope of the tech-debt program.
 
@@ -214,6 +216,8 @@ As a community contributor, I need to add a new language by editing only the tra
 - **`ResolvedLocale`**: Internal object holding resolved `language`, `numberFormat`, and `timeZone` after applying the cascade. Consumed by all rendering and formatting logic.
 - **`localize(key, variables?, languageOverride?)`**: Function in `src/card/localize.ts` returning the translated string with optional variable interpolation and `en` fallback.
 - **`formatPeriodLabel()`**: Pure period-label function in `src/card/labels/period-label.ts` (911/TD-10, FR-905-N): Jan 1 (in the HA time zone) → year only; otherwise localized long month + year.
+- **`isNameablePeriod()`**: Pure calendar-nameability predicate in `src/card/labels/period-label.ts` (FR-905-O): full calendar year or full calendar month → nameable (any role); actual current series starting in January or on the first day of a month → nameable.
+- **`rowPeriodLabel()`**: Pure row-label function in `src/card/labels/period-label.ts` (FR-905-P): calendar-nameable windows → the concrete `formatPeriodLabel()` name; otherwise the role-aware generic i18n form (`period.current`, `period.generic` for the preview current row, `period.reference` / `period.reference (n)`).
 - **HA IANA time zone**: `hass.config.time_zone` — the canonical time zone used for all calendar and datetime operations across the card.
 
 ---
@@ -304,3 +308,7 @@ Keys removed: `text_summary.*_mom`, `text_summary.higher`, `text_summary.lower`,
 - **FR-905-M (Grammar context documentation)**: A `CONTEXT.md` file MUST exist in `src/translations/` (or equivalent inline JSON comments) documenting the positional context for `text_summary.period.*` phrases before any new language file is merged.
 
 - **FR-905-N (Single source for the period label)**: The period label MUST be produced by exactly one pure function — `formatPeriodLabel(instant: Date, locale: string, zone: string): string` in `src/card/labels/period-label.ts` — and no other code path may format it (satisfied 2026-11-16, 911/TD-10: the duplicated inline implementations in the card element were removed). The function MUST label a period starting on January 1 (evaluated in `zone`) with the year alone, and any other start with the localized long month name plus year. It MUST be unit-tested for the January 1 edge, December 31, non-UTC zones, and all five card languages (`en`, `pl`, `de`, `fr`, `nl`).
+
+- **FR-905-O (Calendar-nameability predicate)**: The decision of whether a comparison window is calendar-nameable MUST be made by exactly one pure function — `isNameablePeriod(start: Date, end: Date, role: WindowRole, zone: string): boolean` in `src/card/labels/period-label.ts`. A window is nameable when (evaluated in `zone`, the HA time zone, with the window end treated as an exclusive upper bound): it covers a full calendar year (starts January 1 and ends at the year's end), or it covers a full calendar month (starts on the 1st and ends at the month's end), or it is the actual current series and its start falls in January or on the first day of a month. The full-unit rules apply to any window role; the start-position rule applies only to the current role. The predicate MUST be unit-tested for full year, full month, partial window, window role, and non-UTC zones.
+
+- **FR-905-P (Role-aware row labels)**: The row names shown in the chart's tooltip and legend MUST be produced by exactly one pure function — `rowPeriodLabel(window, index, isPreview, locale, zone, localize)` in `src/card/labels/period-label.ts` — which returns the concrete `formatPeriodLabel()` name for calendar-nameable windows (FR-905-O) and otherwise the generic i18n form: `period.current` for the non-preview current row, `period.generic` for the preview (rolled-back) current row, `period.reference` for the reference row, and `period.reference` plus the row index for context rows. The key `period.generic` (en "Period", pl "Okres", de "Zeitraum", fr "Période", nl "Periode") MUST be present in every language JSON file, asserted at `npm test` time like the other mandatory keys. A rolled-back (preview) window MUST NEVER be labeled with the `period.current` string.

@@ -4,7 +4,7 @@
 **Domain**: Chart Rendering & Interaction  
 **Replaces**: `001-chart-updates`, `003-echarts-migration`, `001-aggregation-axis-labels`  
 **Primary code**: `src/card/echarts-renderer.ts`, `src/card/axis/`  
-**Last updated**: 2026-11-17  
+**Last updated**: 2026-11-22  
 
 ---
 
@@ -27,6 +27,7 @@ The card renders a line-based comparison chart using **Apache ECharts 5.x** (mod
 | Series draw order | Oldest (highest index) first; forecast on top |
 | Legend | Shown only when `show_legend: true`; height synced with `grid.top` after `finished` event |
 | Tooltip | Axis-pointer mode, appended to card container inside Shadow DOM |
+| Tooltip/legend row labels | Concrete period names for calendar-nameable windows; role-aware generic labels otherwise (FR-902-AE) |
 | HA theme tokens | Mapped from `getComputedStyle` on host element at update time |
 
 ### X-axis labeling
@@ -240,6 +241,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 11. **DST transition in timeline**: Timestamps remain correct in HA time zone; duplicate or missing civil-time hours on DST boundary are reflected in labels using HA time zone — never browser-local offset.
 12. **Safety limit exceeded**: If `aggregation` + window `duration` would produce more than 5000 points per series, the card must refuse to render and show a user-visible config error; no silent truncation.
 13. **Legend height larger than base budget**: After `finished` event, renderer measures legend height and adjusts `grid.top` and container `min-height` so the plot area is not compressed by an unexpectedly tall legend.
+14. **Non-nameable custom windows / preview rows**: A window that is not a full calendar unit and whose start is not in a nameable position keeps the generic role labels — "Current period" for the actual current series, "Reference period" for reference rows, and the neutral "Period" for the rolled-back (preview) current row, which is never labeled "Current period" (FR-902-AE, FR-905-P).
 
 ---
 
@@ -304,6 +306,8 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 - **FR-902-AC (Tooltip ↔ panel consistency at the today slot)**: At the today slot (the slot containing "now"), the tooltip's reference row and the delta segment's reference endpoint MUST use the panel's reference cumulative (`panelReferenceCumulative` in `ChartRendererConfig`, sourced from `summary.reference_cumulative`) instead of the raw reference series value at that slot — the raw value can differ because the current series may or may not include a point at the today slot depending on the comparison preset (open today bucket vs. closed bucket). When `panelReferenceCumulative` is absent or non-finite, the tooltip MUST fall back to the raw series value. The forecast row MUST be omitted from the tooltip at the today slot. This guarantees the tooltip, the delta segment, and the "TO THIS DAY" panel (see `903-card-ui-composition`) always agree regardless of preset (bug: tooltip-reference-mismatch).
 
 - **FR-902-AD (Typed ECharts option payloads)**: The series array passed to `setOption` MUST be typed with the official ECharts option types — line series entries as `LineSeriesOption` with their `markLine`/`markPoint` payloads as `MarkLineOption`/`MarkPointOption` — with all ECharts *type* imports taken from the single canonical `echarts/types/dist/shared` module so the whole option object is checked against `EChartsOption` at compile time. Local `any`-typed series arrays and `as any` mutations on series entries (e.g. assigning `markLine`/`markPoint` post-hoc) are forbidden. Config keys the line-series runtime never reads MUST NOT be emitted (verified inert: `showInLegend`, `emphasis.showSymbol`, `emphasis.symbolSize`). Satisfied as of 2026-11-17 (911/TD-5).
+
+- **FR-902-AE (Concrete period names in tooltip/legend rows)**: The row names of the tooltip and legend (the `labels` argument passed to the chart renderer) MUST use concrete localized period names wherever the window's calendar identity is nameable: a window covering a full calendar year is named by the year (`"2025"`); a window covering a full calendar month is named by the localized long month name plus year (`"October 2024"`); and the actual current (green) series is named by its start period when its window starts in January or on the first day of a month (e.g. `"2026"` for a year-to-date window). Nameability is decided by the single pure function `isNameablePeriod()` and the name is produced by `rowPeriodLabel()` in `src/card/labels/period-label.ts` (see `905-localization-formatting` FR-905-O/FR-905-P). Windows that are not calendar-nameable keep the generic role labels: `period.current` ("Current period") for the actual current series, `period.reference` ("Reference period") for reference rows, and the neutral `period.generic` ("Period") for the rolled-back (preview) current row — a rolled-back window MUST NOT be labeled "Current period". The option's series names, the legend entries, and the tooltip's series-name filter MUST all use the same names so that no row is silently dropped. Satisfied as of 2026-11-22 (issue #74).
 
 ---
 

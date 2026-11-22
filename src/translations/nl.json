@@ -1,6 +1,7 @@
 {
   "period.current": "Huidige periode",
   "period.reference": "Referentieperiode",
+  "period.generic": "Periode",
   "preview.step_back": "Stap naar eerdere periode",
   "preview.step_forward": "Stap naar latere periode",
   "preview.reset": "Terug naar huidige periode",
