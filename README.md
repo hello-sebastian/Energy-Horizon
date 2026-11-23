@@ -4,7 +4,7 @@ Elegant energy comparisons for Home Assistant dashboards — **cumulative usage*
 
 ![Home Assistant version](https://img.shields.io/badge/Home%20Assistant-2024.6%2B-blue?style=for-the-badge&color=%2300c29e&logo=homeassistant&logoColor=white)&ensp;
 ![Marketplace / HACS](https://img.shields.io/badge/Marketplace%20%2F%20HACS-Default-orange?style=for-the-badge)  
-![Release](https://img.shields.io/badge/version-1.3.0•beta-informational?style=for-the-badge&color=%2300c29e)&ensp;
+![Release](https://img.shields.io/badge/version-1.3.0-informational?style=for-the-badge&color=%2300c29e)&ensp;
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=for-the-badge&color=%2300c29e)](https://www.gnu.org/licenses/gpl-3.0)&ensp;
 [![GitHub Repo stars](https://img.shields.io/github/stars/hello-sebastian/Energy-Horizon?style=for-the-badge&logo=github&label=Star%20this%20repo&color=gold&link=https%3A%2F%2Fgithub.com%2Fhello-sebastian%2FEnergy-Horizon)](https://github.com/hello-sebastian/Energy-Horizon)
 
