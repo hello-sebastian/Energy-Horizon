@@ -81,9 +81,11 @@ Since **v1.2.0** the Lovelace **visual editor** covers the **full configuration 
 |-----|------|---------|--------------|-------------------------|---------|
 | `primary_color` | string | `#119894` (`--eh-series-current`) | Current series line, fill, caption swatch | `var(--accent-color)`, aliases `ha-accent` / `ha-primary-accent` / `ha-primary`; invalid/unresolved → token / `#119894` | [`README.advanced.md`](https://github.com/hello-sebastian/energy-horizon/blob/main/README.advanced.md) |
 | `fill_current` | boolean | `true` | Fill under current series | — | — |
+| `fill_current_gradient` | boolean | `true` | Vertical gradient fill — full opacity at top, 0 at bottom; `false` = solid fill (requires `fill_current: true`) | — | — |
 | `fill_reference` | boolean | `false` | Fill under reference series | — | — |
-| `fill_current_opacity` | number (0–100) | `30` | Percent opacity for current fill | Out of range resets to default | — |
-| `fill_reference_opacity` | number (0–100) | `30` | Percent opacity for reference fill | Out of range resets to default | — |
+| `fill_reference_gradient` | boolean | `true` | Vertical gradient fill for the reference series; `false` = solid fill (requires `fill_reference: true`) | — | — |
+| `fill_current_opacity` | number (0–100) | `40` | Percent opacity for current fill | Out of range resets to default | — |
+| `fill_reference_opacity` | number (0–100) | `40` | Percent opacity for reference fill | Out of range resets to default | — |
 | `connect_nulls` | boolean | `true` | Adds a **dashed overlay** bridging null gaps (solid line still breaks) | Visual interpolation only | [Aggregation and Axis Labels](Aggregation-and-Axis-Labels) |
 
 **Migration (default series color):** If you preferred the old look where the current series followed Home Assistant **`--primary-color`** without setting YAML, add e.g. `primary_color: ha-primary` or `primary_color: var(--primary-color)`.
@@ -164,7 +166,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
 | **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
-| **Style** | **two-column grid** — **Current series** subsection (first column): `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection (second column): `fill_reference`, `fill_reference_opacity`; components of the same feature sit in the same row |
+| **Style** | **two-column grid** — **Current series** subsection (first column): `primary_color`, `fill_current`, `fill_current_gradient`, `fill_current_opacity`; **Reference series** subsection (second column): `fill_reference`, `fill_reference_gradient`, `fill_reference_opacity`; components of the same feature sit in the same row |
 | **Diagnostics** | `debug` |
 
 **Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_threshold`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact.
@@ -222,8 +224,8 @@ Every editor control maps **1:1** to a YAML key — what you set in the form is 
 | Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
 | Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
 | Chart settings | Show forecast on chart / Connect nulls / Show legend / Preview controls | `show_forecast` / `connect_nulls` / `show_legend` / `show_preview_controls` |
-| Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
-| Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
+| Style → Current series | Color / Fill / Gradient fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_gradient` / `fill_current_opacity` |
+| Style → Reference series | Fill / Gradient fill / Fill opacity | `fill_reference` / `fill_reference_gradient` / `fill_reference_opacity` |
 | Diagnostics | Debug | `debug` |
 
 **Worked example.** Configuring the card entirely in the visual editor — preset **custom**, `anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 3`, `aggregation: month`, `primary_color: #119894`, `fill_reference: on` — produces exactly this YAML:

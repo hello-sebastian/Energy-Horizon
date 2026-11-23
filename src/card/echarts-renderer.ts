@@ -10,6 +10,7 @@ import type { ECharts } from 'echarts/core';
 import type {
   EChartsOption,
   LineSeriesOption,
+  LinearGradientObject,
   MarkLineOption,
   MarkPointOption
 } from 'echarts/types/dist/shared';
@@ -283,6 +284,41 @@ type EChartsLayoutSyncApi = {
 
 /** Internal type used for chart data points (currently unused, kept for reference) */
 type _ChartPoint = { x: number; y: number | null };
+
+/** Overlays an alpha value on a CSS color string (`#rgb`, `#rrggbb`, `rgb()`, `rgba()`); other strings pass through unchanged. */
+function withAlpha(color: string, alpha: number): string {
+  const hex = /^#([0-9a-f]{6})(?:[0-9a-f]{2})?$/i.exec(color);
+  if (hex) {
+    const alphaHex = Math.round(Math.min(1, Math.max(0, alpha)) * 255).toString(16).padStart(2, "0");
+    return `#${hex[1]}${alphaHex}`;
+  }
+  const rgba = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i.exec(color);
+  if (rgba) {
+    return `rgba(${rgba[1]}, ${rgba[2]}, ${rgba[3]}, ${alpha})`;
+  }
+  return color;
+}
+
+/**
+ * Vertical fill gradient for series area styles: full `topAlpha` at the top of the
+ * plot area, fading to 0 at the bottom (`global: false` — zrender applies the
+ * coordinates relative to the series bounding box, per
+ * `node_modules/zrender/lib/canvas/helper.js` `createLinearGradient`).
+ */
+function verticalFillGradient(color: string, topAlpha: number): LinearGradientObject {
+  return {
+    type: "linear",
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    global: false,
+    colorStops: [
+      { offset: 0, color: withAlpha(color, topAlpha) },
+      { offset: 1, color: withAlpha(color, 0) }
+    ]
+  };
+}
 
 /**
  * EChartsRenderer: High-fidelity chart visualization using Apache ECharts.
@@ -1043,8 +1079,15 @@ export class EChartsRenderer {
         data: referenceValues.map((y, i) => (y !== null ? [i, y] : null)),
         lineStyle: { color: theme.seriesReference, width: 1.5 },
         areaStyle: {
-          color: theme.seriesReference,
-          opacity: rendererConfig.fillReference ? fillReferenceOpacity : 0
+          color:
+            rendererConfig.fillReference && rendererConfig.fillReferenceGradient
+              ? verticalFillGradient(theme.seriesReference, fillReferenceOpacity)
+              : theme.seriesReference,
+          opacity: rendererConfig.fillReference
+            ? rendererConfig.fillReferenceGradient
+              ? 1
+              : fillReferenceOpacity
+            : 0
         },
         connectNulls: false,
         showSymbol: false,
@@ -1090,8 +1133,15 @@ export class EChartsRenderer {
       data: currentValues.map((y, i) => (y !== null ? [i, y] : null)),
       lineStyle: { color: primaryColor, width: 1.5 },
       areaStyle: {
-        color: primaryColor,
-        opacity: rendererConfig.fillCurrent ? fillCurrentOpacity : 0
+        color:
+          rendererConfig.fillCurrent && rendererConfig.fillCurrentGradient
+            ? verticalFillGradient(primaryColor, fillCurrentOpacity)
+            : primaryColor,
+        opacity: rendererConfig.fillCurrent
+          ? rendererConfig.fillCurrentGradient
+            ? 1
+            : fillCurrentOpacity
+          : 0
       },
       connectNulls: false,
       showSymbol: false,

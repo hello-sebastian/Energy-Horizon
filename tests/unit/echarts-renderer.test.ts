@@ -251,6 +251,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1061,6 +1063,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1150,6 +1154,208 @@ describe('EChartsRenderer', () => {
       expect(dashedDataMiddle[1]).toBeCloseTo(4, 6); // linear interpolation between 2 and 6
     });
 
+    it("renders a vertical gradient area style for the current series when fillCurrentGradient is true", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const rendererConfig = buildBaseRendererConfig({ fillCurrentGradient: true });
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0]! + 10, value: 2 },
+        { timestamp: fullTimeline[2]! + 10, value: 6 }
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(comparisonSeries, fullTimeline, rendererConfig, {
+        current: "Current",
+        reference: "Reference"
+      });
+
+      const option = captureOption();
+      const series = (option.series ?? []) as any[];
+      const solidCurrent = series.find((s) => s?.name === "Current");
+      expect(solidCurrent).toBeDefined();
+
+      const style = solidCurrent.areaStyle as any;
+      expect(style.color).toMatchObject({
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        global: false
+      });
+      expect(style.color.colorStops).toHaveLength(2);
+      expect(style.color.colorStops[0].offset).toBe(0);
+      expect(style.color.colorStops[1].offset).toBe(1);
+      expect(style.color.colorStops[0].color).not.toBe(style.color.colorStops[1].color);
+      // Bottom stop: same color, alpha 0.
+      expect(style.color.colorStops[1].color).toMatch(
+        /(?:^#[0-9a-fA-F]{6}00$)|(?:^rgba\([^)]*, 0\)$)/
+      );
+    });
+
+    it("renders a vertical gradient area style for the reference series when fillReferenceGradient is true", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const comparisonSeries: ComparisonSeries = {
+        ...buildSeries([{ timestamp: fullTimeline[0]! + 10, value: 2 }]),
+        reference: {
+          points: [
+            { timestamp: fullTimeline[0]!, value: 1 },
+            { timestamp: fullTimeline[1]!, value: 4 }
+          ],
+          unit: "kWh",
+          periodLabel: "",
+          total: 0
+        }
+      };
+
+      const rendererConfig = buildBaseRendererConfig({
+        fillReference: true,
+        fillReferenceGradient: true
+      });
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(comparisonSeries, fullTimeline, rendererConfig, {
+        current: "Current",
+        reference: "Reference"
+      });
+
+      const option = captureOption();
+      const series = (option.series ?? []) as any[];
+      const solidReference = series.find((s) => s?.name === "Reference");
+      expect(solidReference).toBeDefined();
+
+      const style = solidReference.areaStyle as any;
+      expect(style.color).toMatchObject({
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        global: false
+      });
+      expect(style.color.colorStops).toHaveLength(2);
+      expect(style.color.colorStops[0].offset).toBe(0);
+      expect(style.color.colorStops[1].offset).toBe(1);
+      expect(style.color.colorStops[0].color).not.toBe(style.color.colorStops[1].color);
+      // Bottom stop: same color, alpha 0.
+      expect(style.color.colorStops[1].color).toMatch(
+        /(?:^#[0-9a-fA-F]{6}00$)|(?:^rgba\([^)]*, 0\)$)/
+      );
+    });
+
+    it("does not render any fill for the current series when fillCurrent is false even if fillCurrentGradient is true", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const rendererConfig = buildBaseRendererConfig({
+        fillCurrent: false,
+        fillCurrentGradient: true
+      });
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0]! + 10, value: 2 },
+        { timestamp: fullTimeline[2]! + 10, value: 6 }
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(comparisonSeries, fullTimeline, rendererConfig, {
+        current: "Current",
+        reference: "Reference"
+      });
+
+      const option = captureOption();
+      const series = (option.series ?? []) as any[];
+      const solidCurrent = series.find((s) => s?.name === "Current");
+      expect(solidCurrent).toBeDefined();
+
+      const style = solidCurrent.areaStyle as any;
+      // The fill switch takes priority over the gradient: no gradient object, no visible fill.
+      expect(typeof style.color).toBe("string");
+      expect(style.opacity).toBe(0);
+    });
+
+    it("does not render any fill for the reference series when fillReference is false even if fillReferenceGradient is true", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const comparisonSeries: ComparisonSeries = {
+        ...buildSeries([{ timestamp: fullTimeline[0]! + 10, value: 2 }]),
+        reference: {
+          points: [
+            { timestamp: fullTimeline[0]!, value: 1 },
+            { timestamp: fullTimeline[1]!, value: 4 }
+          ],
+          unit: "kWh",
+          periodLabel: "",
+          total: 0
+        }
+      };
+
+      const rendererConfig = buildBaseRendererConfig({
+        fillReference: false,
+        fillReferenceGradient: true
+      });
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(comparisonSeries, fullTimeline, rendererConfig, {
+        current: "Current",
+        reference: "Reference"
+      });
+
+      const option = captureOption();
+      const series = (option.series ?? []) as any[];
+      const solidReference = series.find((s) => s?.name === "Reference");
+      expect(solidReference).toBeDefined();
+
+      const style = solidReference.areaStyle as any;
+      // The fill switch takes priority over the gradient: no gradient object, no visible fill.
+      expect(typeof style.color).toBe("string");
+      expect(style.opacity).toBe(0);
+    });
+
+    it("keeps the solid current fill when fillCurrentGradient is false (explicit opt-out)", async () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+
+      const day0 = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+      const fullTimeline = [day0, day0 + 86400000, day0 + 2 * 86400000]; // 3 slots: 0,1,2
+
+      const rendererConfig = buildBaseRendererConfig({ fillCurrentGradient: false });
+      const comparisonSeries = buildSeries([
+        { timestamp: fullTimeline[0]! + 10, value: 2 },
+        { timestamp: fullTimeline[2]! + 10, value: 6 }
+      ]);
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(comparisonSeries, fullTimeline, rendererConfig, {
+        current: "Current",
+        reference: "Reference"
+      });
+
+      const option = captureOption();
+      const series = (option.series ?? []) as any[];
+      const solidCurrent = series.find((s) => s?.name === "Current");
+      expect(solidCurrent).toBeDefined();
+
+      const style = solidCurrent.areaStyle as any;
+      expect(typeof style.color).toBe("string");
+      expect(style.opacity).toBeCloseTo(0.4); // base fillCurrentOpacity: 40 → 0.4
+    });
+
     it("does not add dashed null-gap series when connectNulls is disabled", async () => {
       const container = document.createElement("div");
       document.body.appendChild(container);
@@ -1205,6 +1411,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1328,6 +1536,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1397,6 +1607,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1513,6 +1725,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1694,6 +1908,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1793,6 +2009,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -1976,6 +2194,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: true,
         comparisonMode: "year_over_year",
         language: "pl",
@@ -2047,6 +2267,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: false,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -2219,6 +2441,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: false,
         comparisonMode: "year_over_year",
         language: "en-US",
@@ -2381,6 +2605,8 @@ describe('EChartsRenderer', () => {
           fillReference: false,
           fillCurrentOpacity: 40,
           fillReferenceOpacity: 40,
+          fillCurrentGradient: false,
+          fillReferenceGradient: false,
           connectNulls: false,
           comparisonMode: "year_over_year",
           language: "en-US",
@@ -2427,6 +2653,8 @@ describe('EChartsRenderer', () => {
         fillReference: false,
         fillCurrentOpacity: 40,
         fillReferenceOpacity: 40,
+        fillCurrentGradient: false,
+        fillReferenceGradient: false,
         connectNulls: false,
         comparisonMode: "year_over_year",
         language: "en-US",

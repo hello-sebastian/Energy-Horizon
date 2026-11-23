@@ -490,11 +490,20 @@ export const FIELD_REGISTRY: FieldRegistry = [
     column: 1
   },
   {
+    key: "fill_current_gradient",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_current_gradient",
+    default: true,
+    subsection: "editor.subsection.current_series",
+    column: 1
+  },
+  {
     key: "fill_current_opacity",
     section: "style",
     control: { kind: "slider", min: 0, max: 100, step: 1 },
     labelKey: "editor.fill_current_opacity",
-    default: 30,
+    default: 40,
     subsection: "editor.subsection.current_series",
     column: 1
   },
@@ -508,11 +517,20 @@ export const FIELD_REGISTRY: FieldRegistry = [
     column: 2
   },
   {
+    key: "fill_reference_gradient",
+    section: "style",
+    control: { kind: "boolean" },
+    labelKey: "editor.fill_reference_gradient",
+    default: true,
+    subsection: "editor.subsection.reference_series",
+    column: 2
+  },
+  {
     key: "fill_reference_opacity",
     section: "style",
     control: { kind: "slider", min: 0, max: 100, step: 1 },
     labelKey: "editor.fill_reference_opacity",
-    default: 30,
+    default: 40,
     subsection: "editor.subsection.reference_series",
     column: 2
   },

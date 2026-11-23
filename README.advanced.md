@@ -83,9 +83,11 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `neutral_threshold` | number (≥ 0) | `2` | Neutral styling when **|p| ≤ T** where **p** is the same signed % as the delta chip; invalid / negative → `2`. Large values (e.g. ≥ 100) effectively keep outcomes neutral. GUI-editable in v1.2.0 (General). Previously `neutral_interpretation` (deprecated alias; backward compatibility will be removed in a future release). |
 | `number_format` | `comma` \| `decimal` \| `language` \| `system` | from HA / `system` | Number formatting locale; invalid value → `system` (+ warning when `debug`). |
 | `fill_current` | boolean | `true` | Fill under the current series. |
+| `fill_current_gradient` | boolean | `true` | Current series fill is a vertical gradient — full `fill_current_opacity` at the top, 0% at the bottom; the line style is unchanged; `false` = solid fill. Applies only when `fill_current` is `true` — the fill switch governs visibility. |
 | `fill_reference` | boolean | `false` | Fill under the reference series. |
-| `fill_current_opacity` | number 0–100 | `30` | Invalid / out of range → `30`. |
-| `fill_reference_opacity` | number 0–100 | `30` | Same as above. |
+| `fill_reference_gradient` | boolean | `true` | Reference series fill is a vertical gradient — full `fill_reference_opacity` at the top, 0% at the bottom; the line style is unchanged; `false` = solid fill. Applies only when `fill_reference` is `true` — the fill switch governs visibility. |
+| `fill_current_opacity` | number 0–100 | `40` | Invalid / out of range → `40`. |
+| `fill_reference_opacity` | number 0–100 | `40` | Same as above. |
 | `primary_color` | string | empty → card token `#119894` | Current series line, fill, and caption swatch. Use `var(--accent-color)`, `ha-accent` / `ha-primary-accent`, or `ha-primary` to follow HA theme; override `--eh-series-current` with Card Mod if needed. |
 | `connect_nulls` | boolean | `true` | Dashed visual interpolation across `null` gaps; `false` = gaps on the chart. |
 | `show_legend` | boolean | `false` | Legend **only** with explicit `show_legend: true`. |
@@ -275,6 +277,7 @@ Full Luxon token table: [Luxon — formatting tokens](https://moment.github.io/l
 
 - **`primary_color`**: current series line, area fill, and the small caption swatch. When omitted, the card uses the Figma brand teal (`#119894`) from CSS `--eh-series-current` on `:host` (not Home Assistant `--primary-color`). To match the HA theme again, set e.g. `primary_color: ha-primary` or `primary_color: var(--primary-color)`, or `ha-accent` / `var(--accent-color)` for accent-first. Values are resolved on the card host so `var(--…)` works in YAML.
 - **`fill_*` / `fill_*_opacity`**: fills under lines; invalid opacity → 30%.
+- **`fill_current_gradient` / `fill_reference_gradient`**: when `true`, the series fill is a vertical gradient — the top of the area is at the series fill opacity (`fill_current_opacity` / `fill_reference_opacity`), fading to 0% at the bottom; the line style, symbols and tooltips are unchanged. Default `true`; `false` = solid fill. The fill switches (`fill_current` / `fill_reference`) govern visibility and take priority: when a fill switch is `false`, no fill is rendered regardless of the gradient setting.
 - **`connect_nulls`**: adds an auxiliary series with dashed interpolation across gaps; the solid line still breaks on `null`.
 - **`show_legend`**: no legend by default; explicit `true` shows it.
 - **`show_preview_controls`**: on by default; `false` removes the transient-preview controls bar (and its reserved space) from the card in every context.
@@ -314,7 +317,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
 | **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
-| **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
+| **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_gradient`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_gradient`, `fill_reference_opacity` |
 | **Diagnostics** | `debug` |
 
 **Inline rows:** in **General**, `show_title` renders in the same row as `title` (to its right), `show_icon` in the same row as `icon`, and `interpretation` in the same row as `neutral_threshold`; each keeps its label-above-control layout, the primary field takes the available width, and the paired control is compact. All other fields are standalone rows.
@@ -328,7 +331,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 - **Panels** — the panel visibility flags (`show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment`); `show_chart` is a disabled, always-on indicator (the chart is always shown).
 - **Formatting & Localization** — `language`; the **Unit** subsection (`force_prefix`, `number_format`, `precision`) and the **Dates** subsection (`x_axis_format`, `tooltip_format`).
 - **Chart settings** — `show_forecast` (the chart line only), `connect_nulls`, `show_legend`, `show_preview_controls`.
-- **Style** — the **Current series** and **Reference series** subsections in a two-column grid (`primary_color`, `fill_current`, `fill_current_opacity` / `fill_reference`, `fill_reference_opacity`).
+- **Style** — the **Current series** and **Reference series** subsections in a two-column grid (`primary_color`, `fill_current`, `fill_current_gradient`, `fill_current_opacity` / `fill_reference`, `fill_reference_gradient`, `fill_reference_opacity`).
 - **Diagnostics** — `debug`.
 
 **Per-section documentation links:** every section header carries a help-circle icon that opens the wiki chapter covering that section's keys (in a new tab; clicking it does not collapse the section). The mapping is the `SECTION_DOCS_URLS` constant in `src/card/editor/field-registry.ts`:
@@ -365,8 +368,8 @@ Every editor control maps **1:1** to a YAML key — what you set in the form is 
 | Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
 | Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
 | Chart settings | Show forecast on chart / Connect nulls / Show legend / Preview controls | `show_forecast` / `connect_nulls` / `show_legend` / `show_preview_controls` |
-| Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
-| Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
+| Style → Current series | Color / Fill / Gradient fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_gradient` / `fill_current_opacity` |
+| Style → Reference series | Fill / Gradient fill / Fill opacity | `fill_reference` / `fill_reference_gradient` / `fill_reference_opacity` |
 | Diagnostics | Debug | `debug` |
 
 **Worked example.** Configuring the card entirely in the visual editor — preset **custom**, `anchor: start_of_year`, `duration: 1y`, `step: 1y`, `count: 3`, `aggregation: month`, `primary_color: #119894`, `fill_reference: on` — produces exactly this YAML:

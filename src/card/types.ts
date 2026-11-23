@@ -85,6 +85,10 @@ export interface CardConfig {
   fill_reference?: boolean;
   fill_current_opacity?: number;
   fill_reference_opacity?: number;
+  /** Vertical gradient fill for the current series: full `fill_current_opacity` at the top, fading to 0 at the bottom. Default `true`; `false` = solid fill. */
+  fill_current_gradient?: boolean;
+  /** Vertical gradient fill for the reference series (same behavior as `fill_current_gradient`). */
+  fill_reference_gradient?: boolean;
   /**
    * Current-series paint color (line, fill, swatch). Hex/rgb/names; `var(--accent-color)` etc.
    * (resolved on the card host); aliases `ha-accent`, `ha-primary-accent`, `ha-primary`.
@@ -398,6 +402,10 @@ export interface ChartRendererConfig {
   fillReference: boolean;
   fillCurrentOpacity: number;
   fillReferenceOpacity: number;
+  /** Vertical gradient fill for the current series (top = `fillCurrentOpacity`, bottom = 0); when `false` the fill is solid per `fillCurrent`. */
+  fillCurrentGradient: boolean;
+  /** Vertical gradient fill for the reference series (top = `fillReferenceOpacity`, bottom = 0); when `false` the fill is solid per `fillReference`. */
+  fillReferenceGradient: boolean;
   /**
    * Controls whether we generate the dashed interpolation overlay across null gaps.
    * (Solid series always keeps null gaps as gaps.)

@@ -79,9 +79,11 @@ The chart draws a **delta segment** between the current and reference series at 
 # Card-level YAML (chart-rendering relevant fields)
 primary_color: "#119894"          # optional; default: --eh-series-current CSS token
 fill_current: true                # optional; default true
-fill_current_opacity: 30          # optional; 0–100; default 30
+fill_current_gradient: true       # optional; default true — vertical gradient fill for the current series when `fill_current` is enabled (top at `fill_current_opacity`, bottom at 0); `false` = solid fill
+fill_current_opacity: 40          # optional; 0–100; default 40
 fill_reference: false             # optional; default false
-fill_reference_opacity: 30        # optional; 0–100; default 30
+fill_reference_gradient: true     # optional; default true — vertical gradient fill for the reference series when `fill_reference` is enabled; `false` = solid fill
+fill_reference_opacity: 40        # optional; 0–100; default 40
 connect_nulls: false              # optional; default false
 show_forecast: true               # optional; default true (alias: forecast)
 show_legend: false                # optional; default false (strict ===true to enable)
@@ -168,14 +170,16 @@ As a user, I need control over area fill visibility and opacity for each series,
 
 **Acceptance Scenarios**:
 
-1. **Given** no fill configuration, **When** the chart renders, **Then** the current series has 30% opacity fill; the reference series has no fill.
+1. **Given** no fill configuration, **When** the chart renders, **Then** the current series has the default vertical gradient fill — 40% opacity at the top fading to 0% at the bottom; the reference series has no fill.
 2. **Given** `fill_reference: true` and `fill_reference_opacity: 60`, **When** the chart renders, **Then** the reference fill is visible at 60% opacity; line opacity is unaffected.
 3. **Given** `fill_current: false`, **When** the chart renders, **Then** no fill appears under the current series.
 4. **Given** `primary_color: "#E53935"`, **When** the chart renders, **Then** the current series line, fill, today dot, dashed vertical, and forecast line all use `#E53935`.
 5. **Given** `primary_color` is absent, **When** the chart renders, **Then** the current series uses the `--eh-series-current` CSS token value (or HA `--accent-color` fallback).
 6. **Given** `show_forecast: false`, **When** the chart renders, **Then** no forecast line is shown.
 7. **Given** `show_forecast: true` and today is within the window with data at the "now" slot, **When** the chart renders, **Then** a dashed line runs from the "now" slot to the last slot at the projected end value, in the current series' color.
-8. **Given** an invalid opacity value (e.g. -5 or 150), **When** the chart renders, **Then** the fallback 30% opacity is applied; no error breaks rendering.
+8. **Given** an invalid opacity value (e.g. -5 or 150), **When** the chart renders, **Then** the fallback 40% opacity is applied; no error breaks rendering.
+9. **Given** `fill_current: true` and `fill_current_gradient: true` (and `fill_current_opacity: 60`), **When** the chart renders, **Then** the current series fill is a vertical gradient — full `60%` opacity at the top, fading to `0%` at the bottom — and the line style, symbols, and tooltips are unchanged.
+10. **Given** `fill_reference: true` and `fill_reference_gradient: true` (and `fill_reference_opacity: 40`), **When** the chart renders, **Then** the reference series fill is a vertical gradient — full `40%` opacity at the top, fading to `0%` at the bottom — and the reference line style is unchanged.
 
 ---
 
@@ -242,6 +246,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 12. **Safety limit exceeded**: If `aggregation` + window `duration` would produce more than 5000 points per series, the card must refuse to render and show a user-visible config error; no silent truncation.
 13. **Legend height larger than base budget**: After `finished` event, renderer measures legend height and adjusts `grid.top` and container `min-height` so the plot area is not compressed by an unexpectedly tall legend.
 14. **Non-nameable custom windows / preview rows**: A window that is not a full calendar unit and whose start is not in a nameable position keeps the generic role labels — "Current period" for the actual current series, "Reference period" for reference rows, and the neutral "Period" for the rolled-back (preview) current row, which is never labeled "Current period" (FR-902-AE, FR-905-P).
+15. **`fill_*_gradient` set to `false`**: explicit opt-out — the fill renders as a solid fill at the series opacity. The gradient (the default style when the key is absent) uses the same clamped opacity as the solid style (edge case 5). The `fill_current` / `fill_reference` switches govern fill visibility and take priority over the gradient toggle: when a fill switch is `false`, no fill is rendered regardless of the gradient setting; the gradient only changes the fill style (solid → vertical gradient) while the fill switch is `true`.
 
 ---
 
@@ -257,7 +262,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 
 - **FR-902-E (Today marker — line height)**: The dashed vertical line MUST reach from y=0 to the higher of current and reference series values at the "now" slot. `null` is absent (not zero): if one series is null, the line reaches the non-null value; if both are null, the line reaches the top of the chart area.
 
-- **FR-902-F (Area fill)**: Area fill under each series MUST use `areaStyle` with an independently configurable opacity (0–100) that does not affect the series line opacity. Invalid opacity values MUST fall back to 30% and not break rendering.
+- **FR-902-F (Area fill)**: Area fill under each series MUST use `areaStyle` with an independently configurable opacity (0–100) that does not affect the series line opacity. Invalid opacity values MUST fall back to 40% and not break rendering.
 
 - **FR-902-G (Forecast series)**: The forecast line MUST be a separate ECharts line series with `lineStyle.type: 'dashed'`, no fill, starting at the "now" slot index (FR-902-D) and ending at the last `timeline[]` slot. It MUST be drawn on top of all data series. If no "now" data is available or `show_forecast: false`, it is not rendered.
 

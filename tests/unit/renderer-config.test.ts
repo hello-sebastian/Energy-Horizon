@@ -96,11 +96,11 @@ describe("clampOpacity", () => {
   });
 
   it("falls back to 30 for absent, non-numeric, or out-of-range values", () => {
-    expect(clampOpacity(150)).toBe(30);
-    expect(clampOpacity(-1)).toBe(30);
-    expect(clampOpacity("abc")).toBe(30);
-    expect(clampOpacity(undefined)).toBe(30);
-    expect(clampOpacity(Number.NaN)).toBe(30);
+    expect(clampOpacity(150)).toBe(40);
+    expect(clampOpacity(-1)).toBe(40);
+    expect(clampOpacity("abc")).toBe(40);
+    expect(clampOpacity(undefined)).toBe(40);
+    expect(clampOpacity(Number.NaN)).toBe(40);
     // Preserved original quirk: Number(null) === 0, an in-range value.
     expect(clampOpacity(null)).toBe(0);
   });
@@ -193,8 +193,24 @@ describe("buildRendererConfig", () => {
     });
     const host = makeHost(demoState(config), { cardConfig: config });
     const rc = buildRendererConfig(host);
-    expect(rc.fillCurrentOpacity).toBe(30);
+    expect(rc.fillCurrentOpacity).toBe(40);
     expect(rc.fillReferenceOpacity).toBe(40);
+  });
+
+  it("defaults gradient fills to true and honors explicit values", () => {
+    const host = makeHost(demoState());
+    const rc = buildRendererConfig(host);
+    expect(rc.fillCurrentGradient).toBe(true);
+    expect(rc.fillReferenceGradient).toBe(true);
+
+    const config = makeConfig({
+      fill_current_gradient: false,
+      fill_reference_gradient: false
+    });
+    const host2 = makeHost(demoState(config), { cardConfig: config });
+    const rc2 = buildRendererConfig(host2);
+    expect(rc2.fillCurrentGradient).toBe(false);
+    expect(rc2.fillReferenceGradient).toBe(false);
   });
 
   it("honors a forced x-axis format over the adaptive mode", () => {

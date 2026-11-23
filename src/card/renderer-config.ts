@@ -48,13 +48,13 @@ export function isForecastLineVisible(config: CardConfig): boolean {
 }
 
 /**
- * Clamps a YAML opacity (0–100) to the valid range, falling back to `30` for
+ * Clamps a YAML opacity (0–100) to the valid range, falling back to `40` for
  * absent/non-numeric/out-of-range values (the previous inline behavior).
  */
 export function clampOpacity(value: unknown): number {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0 || n > 100) {
-    return 30;
+    return 40;
   }
   return n;
 }
@@ -147,6 +147,8 @@ export function buildRendererConfig(
       fillReference: config.fill_reference ?? false,
       fillCurrentOpacity: clampOpacity(config.fill_current_opacity),
       fillReferenceOpacity: clampOpacity(config.fill_reference_opacity),
+      fillCurrentGradient: config.fill_current_gradient ?? true,
+      fillReferenceGradient: config.fill_reference_gradient ?? true,
       connectNulls: config.connect_nulls ?? true,
       showLegend: config.show_legend === true,
       showForecast: isForecastLineVisible(config),
@@ -205,6 +207,8 @@ export function buildRendererConfig(
     fillReference: config.fill_reference ?? false,
     fillCurrentOpacity: clampOpacity(config.fill_current_opacity),
     fillReferenceOpacity: clampOpacity(config.fill_reference_opacity),
+    fillCurrentGradient: config.fill_current_gradient ?? true,
+    fillReferenceGradient: config.fill_reference_gradient ?? true,
     connectNulls: config.connect_nulls ?? true,
     showLegend: config.show_legend === true,
     showForecast: isForecastLineVisible(config) && !singleWindow,

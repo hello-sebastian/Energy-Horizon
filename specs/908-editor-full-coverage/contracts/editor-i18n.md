@@ -59,8 +59,10 @@ Non-collapsible headers emitted within a section (see [field-registry.md](./fiel
 | `editor.show_forecast` | Show forecast on chart |
 | `editor.primary_color` | Color |
 | `editor.fill_current` | Fill series |
+| `editor.fill_current_gradient` | Gradient fill |
 | `editor.fill_current_opacity` | Fill opacity |
 | `editor.fill_reference` | Reference series |
+| `editor.fill_reference_gradient` | Gradient fill |
 | `editor.fill_reference_opacity` | Reference opacity |
 | `editor.connect_nulls` | Connect nulls |
 | `editor.show_legend` | Show legend |

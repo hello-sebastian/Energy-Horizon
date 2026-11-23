@@ -15,7 +15,7 @@ import {
 import type { CardConfig } from "../../src/card/types";
 
 /**
- * The FR-908-D YAML surface (33 user-configurable parameters). The registry
+ * The FR-908-D YAML surface (35 user-configurable parameters). The registry
  * additionally carries one UX-only dummy (`show_chart`) that has no config
  * representation and is excluded from this surface.
  */
@@ -55,8 +55,10 @@ const FR_908_D_KEYS = [
   // S6 style
   "primary_color",
   "fill_current",
+  "fill_current_gradient",
   "fill_current_opacity",
   "fill_reference",
+  "fill_reference_gradient",
   "fill_reference_opacity",
   // S7 diagnostics
   "debug"
@@ -100,8 +102,10 @@ const SECTION_MEMBERSHIP: Record<SectionId, string[]> = {
   style: [
     "primary_color",
     "fill_current",
+    "fill_current_gradient",
     "fill_current_opacity",
     "fill_reference",
+    "fill_reference_gradient",
     "fill_reference_opacity"
   ],
   diagnostics: ["debug"]
@@ -342,9 +346,11 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(byKey.get("show_forecast_total_panel")!.default).toBe(true);
     expect(byKey.get("show_narrative_comment")!.default).toBe(true);
     expect(byKey.get("fill_current")!.default).toBe(true);
-    expect(byKey.get("fill_current_opacity")!.default).toBe(30);
+    expect(byKey.get("fill_current_gradient")!.default).toBe(true);
+    expect(byKey.get("fill_current_opacity")!.default).toBe(40);
     expect(byKey.get("fill_reference")!.default).toBe(false);
-    expect(byKey.get("fill_reference_opacity")!.default).toBe(30);
+    expect(byKey.get("fill_reference_gradient")!.default).toBe(true);
+    expect(byKey.get("fill_reference_opacity")!.default).toBe(40);
     expect(byKey.get("connect_nulls")!.default).toBe(true);
     expect(byKey.get("show_legend")!.default).toBe(false);
     expect(byKey.get("show_preview_controls")!.default).toBe(true);

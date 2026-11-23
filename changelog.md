@@ -8,9 +8,11 @@ All notable changes to the Energy Horizon card are recorded in this file.
 ### Added
 
 - **Preview controls toggle (909 refinement, FR-027):** a new "Preview controls" switch in the visual editor's Chart settings section (config key `show_preview_controls`, default `true`) hides the time-window preview controls bar — back/forward/reset buttons and the `Preview: <period>` indication — when set to `false`. The bar is not rendered in any card context and no vertical space is reserved for it; the card renders exactly the same otherwise. Cards without the key are unaffected.
+- **Per-series gradient fill (902 refinement):** the `fill_current_gradient` / `fill_reference_gradient` keys (default `true`) and the "Gradient fill" switch in the visual editor's Style tab render each series fill as a vertical gradient — the top of the area at the series fill opacity (`fill_current_opacity` / `fill_reference_opacity`), fading to 0% at the bottom; the line, symbol and tooltip styles are unchanged. Set the key to `false` for the solid fill. The fill switches (`fill_current` / `fill_reference`) govern visibility and take priority: when a fill switch is off, no fill is rendered regardless of the gradient setting.
 
 ### Changed
 
+- **Default fill opacity is now 40% (902 refinement):** when `fill_current_opacity` / `fill_reference_opacity` are absent, invalid or out of range, the fallback opacity is `40` (previously `30`).
 - **Time-window preview: forward control state (909 refinement, FR-026):** in the dashboard view mode the forward (right) preview control is shown in the disabled state (visible, dimmed, per the Home Assistant standard) whenever the window cannot be shifted forward — while the card shows the current period — and becomes enabled while a preview shift is active. The backward and reset controls are unchanged (disabled only during an in-place preview load); in the preview contexts (picker, dashboard edit mode, card editor) the controls keep their normal appearance (FR-023).
 
 ## [1.3.0] - 2026-11-18

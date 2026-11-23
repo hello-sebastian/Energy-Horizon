@@ -120,9 +120,11 @@ A descriptor may override `emit` explicitly.
 | `show_preview_controls` | chart | — | boolean | `true` | no | — | — |
 | `primary_color` | style | Current series | color | — | no | — | column 1 |
 | `fill_current` | style | Current series | boolean | `true` | no | — | column 1 |
-| `fill_current_opacity` | style | Current series | slider(0–100) | `30` | no | — | column 1 |
+| `fill_current_gradient` | style | Current series | boolean | `true` | no | — | column 1 |
+| `fill_current_opacity` | style | Current series | slider(0–100) | `40` | no | — | column 1 |
 | `fill_reference` | style | Reference series | boolean | `false` | no | — | column 2 |
-| `fill_reference_opacity` | style | Reference series | slider(0–100) | `30` | no | — | column 2 |
+| `fill_reference_gradient` | style | Reference series | boolean | `true` | no | — | column 2 |
+| `fill_reference_opacity` | style | Reference series | slider(0–100) | `40` | no | — | column 2 |
 | `debug` | diagnostics | — | boolean | `false` | no | — | — |
 
 **Excluded from the registry** (not standalone fields):

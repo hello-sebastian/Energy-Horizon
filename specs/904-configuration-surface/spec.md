@@ -25,7 +25,7 @@ The visual editor provides **full coverage** of the card's YAML configuration, o
 | 3 | Panels | collapsed | `show_comparison_summary`, `show_chart` (UX-only dummy, always ON + disabled), `show_forecast_total_panel`, `show_narrative_comment` |
 | 4 | Formatting & Localization | collapsed | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
 | 5 | Chart settings | collapsed | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
-| 6 | Style | collapsed | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
+| 6 | Style | collapsed | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_gradient`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_gradient`, `fill_reference_opacity` |
 | 7 | Diagnostics | collapsed | `debug` |
 
 `period_offset` is a **YAML-only** (legacy) value: it is managed at the config level by the preset switch but is not a registry field and is never rendered as a control. Deprecated `comparison_mode` is still accepted by the card for backward compatibility but the editor always uses `comparison_preset`.

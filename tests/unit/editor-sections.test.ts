@@ -448,8 +448,10 @@ describe("editor sections (T018, US4)", () => {
     // Current series fields sit in column 1, reference fields in column 2.
     expect(columnOf("primary_color")).toBe(1);
     expect(columnOf("fill_current")).toBe(1);
+    expect(columnOf("fill_current_gradient")).toBe(1);
     expect(columnOf("fill_current_opacity")).toBe(1);
     expect(columnOf("fill_reference")).toBe(2);
+    expect(columnOf("fill_reference_gradient")).toBe(2);
     expect(columnOf("fill_reference_opacity")).toBe(2);
 
     // Same-feature fields share a row; primary_color (no counterpart) sits
@@ -458,6 +460,8 @@ describe("editor sections (T018, US4)", () => {
     expect(rowOf("fill_current_opacity")).toBe(rowOf("fill_reference_opacity"));
     expect(rowOf("primary_color")).toBeLessThan(rowOf("fill_current"));
     expect(rowOf("fill_current")).toBeLessThan(rowOf("fill_current_opacity"));
+    expect(rowOf("fill_current_gradient")).toBe(rowOf("fill_reference_gradient"));
+    expect(rowOf("fill_current")).toBeLessThan(rowOf("fill_current_gradient"));
 
     // Subsection headers occupy row 1 of their column.
     const headerColumn = (text: string): number => {
