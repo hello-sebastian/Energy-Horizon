@@ -1146,7 +1146,7 @@ describe("909 US2/US3: transient time-window preview", () => {
     document.body.removeChild(el);
   });
 
-  it("T012: preview draws exactly two gray series (light + darker), not the current color", async () => {
+  it("T012: preview draws exactly two theme-toned series (primary + disabled), not the current color", async () => {
     const el = makeCard();
     el._state = previewReadyState();
     (el as any).previewShift = -1;
@@ -1154,18 +1154,25 @@ describe("909 US2/US3: transient time-window preview", () => {
     expect(setOptionMock).toHaveBeenCalled();
     const [option] = setOptionMock.mock.calls[0] as any[];
     const series = option.series as any[];
-    // Exactly the shifted current (light gray) + shifted reference (darker gray).
+    // Exactly the shifted current (primary-text tone, dominant) + the shifted
+    // reference (disabled-text tone, de-emphasized via line opacity).
     expect(series.length).toBe(2);
     const colors = series.map((s) => s.color).sort();
-    // jsdom has no HA theme CSS, so the card's theme resolves to its gray
-    // fallbacks: light gray current, darker gray reference.
-    expect(colors).toEqual(["rgba(127, 127, 127, 0.4)", "rgba(127, 127, 127, 0.55)"]);
+    // jsdom has no HA theme CSS, so the card's theme resolves to its neutral
+    // fallbacks: primary-text tone current, disabled-text tone reference.
+    expect(colors).toEqual(["rgba(0, 0, 0, 0.87)", "rgba(127, 127, 127, 0.55)"]);
     // The shifted current must NOT reuse the current series' color (FR-018).
     expect(colors).not.toContain("#00ADEF");
+    // Tone scale (FR-018): the reference line is de-emphasized at reduced
+    // line opacity, while the leading line keeps full strength.
+    const referenceSeries = series.find((s) => s.color === "rgba(127, 127, 127, 0.55)");
+    const currentSeries = series.find((s) => s.color === "rgba(0, 0, 0, 0.87)");
+    expect(referenceSeries?.lineStyle?.opacity).toBe(0.85);
+    expect(currentSeries?.lineStyle?.opacity).toBeUndefined();
     document.body.removeChild(el);
   });
 
-  it("T012: single-window preview draws exactly one light-gray series", async () => {
+  it("T012: single-window preview draws exactly one primary-tone series", async () => {
     const el = makeCard();
     el._state = previewReadyState({ singleWindow: true });
     (el as any).previewShift = -1;
@@ -1174,7 +1181,7 @@ describe("909 US2/US3: transient time-window preview", () => {
     const [option] = setOptionMock.mock.calls[0] as any[];
     const series = option.series as any[];
     expect(series.length).toBe(1);
-    expect(series[0].color).toBe("rgba(127, 127, 127, 0.4)");
+    expect(series[0].color).toBe("rgba(0, 0, 0, 0.87)");
     document.body.removeChild(el);
   });
 

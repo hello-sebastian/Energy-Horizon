@@ -46,7 +46,7 @@ to follow and is out of scope — see spec Assumptions).
 
 | Aspect | Behavior |
 |---|---|
-| **Series drawn** | The shifted current period (light gray) and, when the card has a reference window, the shifted reference period (darker gray) — exactly two series on a card with a reference window, a single light-gray series (the shifted current) when it has none — using the card's existing color tokens (FR-018). The shifted current series does not use the current series' color. |
+| **Series drawn** | The shifted current period (the theme's strongest text tone, the dominant preview line) and, when the card has a reference window, the shifted reference period (the theme's disabled-text tone at a fixed, reduced line opacity) — exactly two series on a card with a reference window, a single dominant-tone series (the shifted current) when it has none — using the card's existing color tokens (FR-018). The two lines are clearly distinguishable from each other and the reference line remains clearly readable above the chart's grid lines (`--divider-color`) in both the dark and the light HA scheme. The shifted current series does not use the current series' color. |
 | **Live series** | Not drawn (FR-019). |
 | **X-axis / period label** | Reflect the **shifted** period (so the axis matches the displayed series; see research R5). Label formatting/style unchanged. |
 | **Return to default** | The current series is shown again and the chart returns to its normal two-series presentation (FR-020). |

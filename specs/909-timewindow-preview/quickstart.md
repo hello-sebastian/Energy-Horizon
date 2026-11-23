@@ -27,7 +27,8 @@ npx vitest run tests/integration/card-render.test.ts
 - **Preview state + shift handlers + shifted-period load**: `src/card/cumulative-comparison-chart.ts`
   (element field `previewShift`, step/reset handlers, `_loadData` preview branch).
 - **Two-series preview render**: `src/card/echarts-renderer.ts` (preview mode: draw the shifted
-  current in light gray and the shifted reference in a darker gray, hide the live series).
+  current in the theme's strongest text tone and the shifted reference in the disabled-text tone
+  at reduced line opacity, hide the live series).
 - **Types**: `src/card/types.ts` — `CardState` and `ChartRendererConfig` preview fields.
 - **Window arithmetic**: reused, not modified — `src/card/time-windows/resolve-windows.ts`
   (shifted `now` input) and `duration-parse.ts` (nominal width).
@@ -43,8 +44,9 @@ These map to the spec's acceptance scenarios; run them against a dev HA dashboar
 has at least ~3 months of history.
 
 1. **Step back (US1)**: On a card with a one-month window, activate the backward control once →
-   the chart shows the previous calendar month as two gray-toned series (shifted current in light
-   gray, shifted reference in a darker gray); the live series are hidden; a preview indication
+   the chart shows the previous calendar month as two neutral-toned series (shifted current in
+   the theme's strongest text tone, shifted reference in the disabled-text tone at reduced line
+   opacity); the live series are hidden; a preview indication
    shows the shifted period; the reset control appears.
    Activate again → the month before that.
 2. **Config untouched (US1/FR-007)**: After stepping, open the card editor → the saved

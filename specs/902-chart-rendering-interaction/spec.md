@@ -4,7 +4,7 @@
 **Domain**: Chart Rendering & Interaction  
 **Replaces**: `001-chart-updates`, `003-echarts-migration`, `001-aggregation-axis-labels`  
 **Primary code**: `src/card/echarts-renderer.ts`, `src/card/axis/`  
-**Last updated**: 2026-11-22  
+**Last updated**: 2026-11-23  
 
 ---
 
@@ -276,7 +276,7 @@ As a developer reviewing the renderer, I need all chart elements to be expressed
 
 - **FR-902-L (Legend)**: Legend is enabled only when `show_legend === true` (strict equality). After the `finished` event, the renderer measures the legend's rendered height and sets `grid.top` and container `min-height` accordingly, then calls `resize()`, so the plot area is not compressed by a tall legend.
 
-- **FR-902-M (HA theme tokens)**: The renderer MUST read HA CSS tokens from the host element (`getComputedStyle`) and map them to ECharts: `--secondary-text-color` → reference series / grid lines, `--divider-color` → Y-grid / tooltip border / axisPointer shadow, `--primary-text-color` → axis labels / legend / tooltip text, `--ha-card-background` or `--card-background-color` → tooltip background. A theme change that triggers `update()` MUST refresh these token snapshots.
+- **FR-902-M (HA theme tokens)**: The renderer MUST read HA CSS tokens from the host element (`getComputedStyle`) and map them to ECharts: `--secondary-text-color` → reference series / grid lines, `--divider-color` → Y-grid / tooltip border / axisPointer shadow, `--primary-text-color` → axis labels / legend / tooltip text / preview shifted-current series (909 FR-018), `--disabled-text-color` → preview shifted-reference series at a fixed, reduced line opacity (909 FR-018), `--ha-card-background` or `--card-background-color` → tooltip background. A theme change that triggers `update()` MUST refresh these token snapshots.
 
 - **FR-902-N (Modular ECharts import)**: ECharts MUST be imported modularly. Forbidden: `import * as echarts from 'echarts'`. Required: imports from `echarts/core`, `echarts/charts` (`LineChart` only), `echarts/components` (only `GridComponent`, `TooltipComponent`, `LegendComponent`, `MarkLineComponent`, `MarkPointComponent`), `echarts/renderers` (`CanvasRenderer` only). Target version: `^5.6.0`.
 

@@ -12,6 +12,7 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ### Changed
 
+- **Time-window preview: series contrast (909 refinement, FR-018):** the two shifted preview series now form a consistent lightness ramp from the theme's neutral text tones — the shifted current renders in the theme's strongest text tone (`--primary-text-color`) as the dominant preview line, and the shifted reference in the theme's disabled-text tone (`--disabled-text-color`) at a fixed, reduced line opacity — de-emphasized but clearly readable above the chart's grid lines, in both the dark and the light HA theme. No new YAML keys; the preview state and all other card behavior are unchanged.
 - **Default fill opacity is now 40% (902 refinement):** when `fill_current_opacity` / `fill_reference_opacity` are absent, invalid or out of range, the fallback opacity is `40` (previously `30`).
 - **Time-window preview: forward control state (909 refinement, FR-026):** in the dashboard view mode the forward (right) preview control is shown in the disabled state (visible, dimmed, per the Home Assistant standard) whenever the window cannot be shifted forward — while the card shows the current period — and becomes enabled while a preview shift is active. The backward and reset controls are unchanged (disabled only during an in-place preview load); in the preview contexts (picker, dashboard edit mode, card editor) the controls keep their normal appearance (FR-023).
 

@@ -50,27 +50,34 @@ runtime field, not part of `_config`, and not written to any storage.
   re-instantiation, directly violating FR-008/US4, and adds a shared-state surface (violates
   FR-016 and Principle V simplicity).
 
-## R3. What the chart shows in preview (two gray-toned historical series)
+## R3. What the chart shows in preview (two neutral-toned historical series)
 
 **Decision**: In preview mode the card **additionally queries the shifted current period**
 (`shiftedWindows[0]`) **and the shifted reference period** (`shiftedWindows[1]`) and renders them
-as **two series in gray tones**: the shifted current in **light gray** and the shifted reference in
-a **darker gray**. The shifted current series **MUST NOT** use the current series' color (to avoid
-association with the live period). Colors use the card's existing color tokens (HA theme tokens)
-for consistency with the card's styling and HA color standards. The live current and reference
-series are **not drawn** (FR-018/FR-019). Returning to the default restores the normal
+as **two series in the theme's neutral text tones**, forming a consistent lightness ramp: the
+shifted current in the theme's **strongest text tone** (`--primary-text-color` — the brightest
+gray in the dark scheme, the strongest dark tone in the light scheme) at full line strength, and
+the shifted reference in the theme's **disabled-text tone** (`--disabled-text-color`) at a fixed,
+reduced line opacity. The shifted current series **MUST NOT** use the current series' color (to
+avoid association with the live period). Colors use the card's existing color tokens (HA theme
+tokens) for consistency with the card's styling and HA color standards. The live current and
+reference series are **not drawn** (FR-018/FR-019). Returning to the default restores the normal
 presentation (FR-020).
 
 **Rationale**:
 - The shifted periods are different time ranges than the default windows, so they require their
   own LTS `statistics_during_period` queries (one extra call per series). They cannot be derived
   from the default series.
-- Drawing both shifted series in gray tones (light gray for the shifted current, darker gray for
-  the shifted reference) reuses the card's existing color tokens (HA theme tokens) and avoids any
-  association with the live current series' color (FR-018). The gray tones make it unmistakable
-  that the user is viewing historical data.
-- Hiding the live series and drawing the shifted series in gray tones is the clearest "this is
-  historical data" signal (US3, SC-007).
+- The tone scale (strongest text tone for the shifted current, disabled-text tone at reduced
+  line opacity for the shifted reference) reuses the card's existing color tokens (HA theme
+  tokens) and avoids any association with the live current series' color (FR-018). The reduced
+  line opacity de-emphasizes the reference line toward the theme background in both the dark and
+  the light scheme — the same "theme token + fixed `lineStyle.opacity`" de-emphasis pattern the
+  card already uses for context series (no hardcoded colors) — while keeping the two preview
+  lines clearly distinguishable from each other and the reference line clearly readable above
+  the grid lines (`--divider-color`).
+- Hiding the live series and drawing the shifted series in neutral text tones is the clearest
+  "this is historical data" signal (US3, SC-007).
 
 **Alternatives considered**:
 - *Show the shifted series alongside the live series*: rejected — the spec explicitly requires

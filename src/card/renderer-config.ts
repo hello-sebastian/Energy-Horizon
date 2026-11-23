@@ -90,8 +90,11 @@ export function resolveChartTheme(
   const trendMuted = readVar("--disabled-text-color") || trendSimilar;
   const todayFullHeightLine = grid || "rgba(127, 127, 127, 0.35)";
   const referenceDotBorder = tooltipBackground || "#ffffff";
-  const previewCurrent =
-    readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
+  // FR-018 tone scale: the shifted current takes the theme's strongest text
+  // tone (dominant preview line; bright in dark, dark in light), the shifted
+  // reference keeps the disabled-text tone (its fixed lineStyle.opacity
+  // de-emphasis lives in the renderer).
+  const previewCurrent = primaryText;
   const previewReference =
     readVar("--disabled-text-color") || "rgba(127, 127, 127, 0.55)";
 

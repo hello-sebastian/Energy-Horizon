@@ -287,6 +287,40 @@ the key in YAML; absent-key behavior is byte-identical to the pre-refinement beh
 
 ---
 
+## Phase 13: Refinement — Preview series contrast (FR-018, 2026-11-23)
+
+**Goal**: The two shifted preview series form a consistent lightness ramp from the
+theme's neutral text tones: the shifted current in the theme's strongest text tone
+(`--primary-text-color`) at full line strength (the dominant preview line — the brightest
+gray in the dark scheme, the strongest dark tone in the light scheme), and the shifted
+reference in the theme's disabled-text tone (`--disabled-text-color`) at a fixed, reduced
+line opacity (de-emphasized toward the theme background in both schemes, clearly readable
+above the grid lines (`--divider-color`)) (FR-018). The window/LTS arithmetic is untouched.
+**Branch**: `main`.
+
+**Independent Test**: With a preview active (a card with a reference window), the chart
+shows the shifted current as the dominant (brightest) neutral line and the shifted
+reference as a de-emphasized but clearly readable line — the two lines are clearly
+distinguishable from each other, and the reference line stays clearly above the grid
+lines; in the light HA theme the tones are the mirror image. No new YAML keys; the
+preview state and all other card behavior are unchanged.
+
+### Tests (write FIRST, ensure they FAIL before implementation) ⚠️
+
+- [x] T043 (a) `tests/unit/renderer-config.test.ts` — `resolveChartTheme`: `previewCurrent` takes the `--primary-text-color` token value and `previewReference` the `--disabled-text-color` token value (mocked `getComputedStyle`), plus the documented fallbacks (`rgba(0, 0, 0, 0.87)` / `rgba(127, 127, 127, 0.55)`); (b) `tests/unit/echarts-renderer.test.ts` — in `previewMode` the leading series uses the `--primary-text-color` token with no line-opacity reduction and the reference series the `--disabled-text-color` token with `lineStyle.opacity === 0.85`; neither uses the config accent color (FR-018); (c) `tests/integration/card-render.test.ts` (T012) — the two-series preview draws the neutral fallbacks (`rgba(0, 0, 0, 0.87)` + `rgba(127, 127, 127, 0.55)`) with the reference series at `lineStyle.opacity === 0.85` and the leading series at full strength; the single-window preview draws a single dominant-tone series (FR-018)
+
+### Implementation
+
+- [x] T044 (a) `src/card/renderer-config.ts` — `resolveChartTheme()`: `previewCurrent` = the already-computed `primaryText` (the `--primary-text-color` token, fallback `rgba(0, 0, 0, 0.87)`); `previewReference` unchanged; (b) `src/card/echarts-renderer.ts` — the same change in the private `resolveChartTheme()`; the new constant `PREVIEW_REFERENCE_LINE_OPACITY = 0.85` (comment: FR-018 lightness ramp, kept clearly above the grid lines, no hardcoded colors); the preview reference series `lineStyle` gains `opacity: PREVIEW_REFERENCE_LINE_OPACITY`; the preview series comment block updated (FR-018); (c) `src/card/types.ts` — doc comments for `ChartThemeResolved.previewCurrent`/`previewReference` and `ChartRendererConfig.previewMode`/`previewSeries` (tone-scale wording)
+
+- [x] T045 [P] Cross-domain documentation consistency (no code change): 909 `spec.md` (FR-018 rewritten to the tone scale; Clarifications Session 2026-11-23; US3 wording + distinguishability scenario; SC-007; Assumptions; edge cases), 909 `plan.md` (Summary / Technical approach / source-tree wording + the new "Refinement 2026-11-23 — Preview series contrast (FR-018)" section), 909 `research.md` (R3), 909 `data-model.md`, 909 `contracts/preview-controls.md`, 909 `checklists/requirements.md`, 909 `quickstart.md`, 902 `spec.md` (FR-902-M token mapping: `--primary-text-color` → preview shifted current; new `--disabled-text-color` row → preview shifted reference at reduced line opacity), `changelog.md` `[Unreleased]` Changed entry. (Owner decision 2026-11-23: the visual refinement is self-evident — no user-facing documentation (README/wiki) changes.)
+
+**Checkpoint**: with a preview active, the chart shows the dominant shifted-current line
+and the de-emphasized (but clearly readable above the grid) shifted-reference line in
+both HA schemes; `npm test`, `npm run typecheck`, and `npm run lint` are green.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -297,6 +331,7 @@ the key in YAML; absent-key behavior is byte-identical to the pre-refinement beh
 - **Polish (Phase 9)**: Depends on all desired user stories being complete.
 - **Refinement (Phase 10)**: Depends on a green baseline on `1.3-dev`. T032 (tests, TDD) before T033 (implementation); T034 (docs) is parallel to T033 (different files).
 - **Refinement (Phase 12)**: Depends on a green baseline. T039 (tests, TDD) before T040 (implementation); T041 (editor/translations) and T042 (docs) are parallel — different files; T043-equivalent final gate is the checkpoint itself.
+- **Refinement (Phase 13)**: Depends on a green baseline. T043 (tests, TDD) before T044 (implementation); T045 (docs) is parallel — different files; the full-gate checkpoint is the final verification.
 
 ### User Story Dependencies
 

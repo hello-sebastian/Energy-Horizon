@@ -1846,6 +1846,94 @@ describe('EChartsRenderer', () => {
       document.body.removeChild(host);
     });
 
+    it("preview mode: the shifted current uses the primary text tone and the shifted reference the disabled tone at reduced line opacity (FR-018)", () => {
+      const host = document.createElement("div");
+      host.className = "ha-card";
+      const container = document.createElement("div");
+      host.appendChild(container);
+      document.body.appendChild(host);
+
+      const tokenMap: Record<string, string> = {
+        "--primary-text-color": "#aabbcc",
+        "--secondary-text-color": "#ddeeff",
+        "--disabled-text-color": "#556677",
+        "--divider-color": "#334455",
+        "--ha-card-background": "#010203"
+      };
+
+      const origGetComputedStyle = globalThis.getComputedStyle.bind(globalThis);
+      const gcsSpy = vi.spyOn(globalThis, "getComputedStyle").mockImplementation((el: Element) => {
+        const style = origGetComputedStyle(el);
+        return {
+          ...style,
+          getPropertyValue: (prop: string) =>
+            prop in tokenMap ? tokenMap[prop] : style.getPropertyValue(prop)
+        } as CSSStyleDeclaration;
+      });
+
+      const day0 = Date.UTC(2026, 0, 1);
+      const fullTimeline = [day0, day0 + 86400000];
+      const previewSeries: ComparisonSeries = {
+        current: {
+          points: [
+            { timestamp: fullTimeline[0]! + 10, value: 1 },
+            { timestamp: fullTimeline[1]! + 10, value: 2 }
+          ],
+          unit: "kWh",
+          periodLabel: "",
+          total: 0
+        },
+        reference: {
+          points: [
+            { timestamp: fullTimeline[0]! + 10, value: 3 },
+            { timestamp: fullTimeline[1]! + 10, value: 4 }
+          ],
+          unit: "kWh",
+          periodLabel: "",
+          total: 0
+        },
+        aggregation: "day",
+        time_zone: "UTC"
+      };
+
+      const renderer = new EChartsRenderer(container);
+      renderer.update(
+        previewSeries,
+        fullTimeline,
+        buildBaseRendererConfig({ previewMode: true }),
+        { current: "Current", reference: "Reference" }
+      );
+
+      expect(setOptionMock).toHaveBeenCalled();
+      const [option] = setOptionMock.mock.calls[0] as [Record<string, unknown>];
+      const series = option.series as Array<{
+        name: string;
+        color: string;
+        lineStyle: { color?: string; opacity?: number };
+      }>;
+      // FR-018: only the two shifted series, no accent color association.
+      expect(series.length).toBe(2);
+      for (const s of series) {
+        expect(s.color).not.toBe("#00ADEF");
+      }
+
+      const previewCurrent = series.find((s) => s.name === "Current")!;
+      const previewReference = series.find((s) => s.name === "Reference")!;
+      // The leading line takes the theme's strongest text tone at full strength.
+      expect(previewCurrent.color).toBe("#aabbcc");
+      expect(previewCurrent.lineStyle.color).toBe("#aabbcc");
+      expect(previewCurrent.lineStyle.opacity).toBeUndefined();
+      // The reference line keeps the disabled-text tone, de-emphasized at a
+      // fixed line opacity so it stays readable above the grid lines.
+      expect(previewReference.color).toBe("#556677");
+      expect(previewReference.lineStyle.color).toBe("#556677");
+      expect(previewReference.lineStyle.opacity).toBe(0.85);
+
+      gcsSpy.mockRestore();
+      renderer.destroy();
+      document.body.removeChild(host);
+    });
+
     it("sets legend.show from ChartRendererConfig.showLegend (only strict boolean true)", () => {
       const container = document.createElement("div");
       document.body.appendChild(container);

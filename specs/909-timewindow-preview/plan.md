@@ -8,9 +8,9 @@
 
 ## Summary
 
-Add a **transient time-window preview** to the Energy Horizon card: in-card controls (backward/forward arrows + a reset control) that step the displayed time window by one nominal window width at a time, so the user can inspect past periods without touching the persisted configuration. The shift is purely temporary — it never modifies the saved config and is discarded whenever the card is re-instantiated (dashboard switch, view switch, page reload). While a preview is active, the chart shows only the shifted historical series — the shifted current period (light gray) and the shifted reference period (darker gray) — and hides the live current and reference series; all other panels (summary, delta/interpretation, narrative) remain visible and unchanged, reflecting the default configuration and the current data series. In dashboard view mode the forward control is rendered in the disabled state (visible, dimmed) at the configured default and enabled while a preview shift is active (FR-026, 2026-11-22 refinement).
+Add a **transient time-window preview** to the Energy Horizon card: in-card controls (backward/forward arrows + a reset control) that step the displayed time window by one nominal window width at a time, so the user can inspect past periods without touching the persisted configuration. The shift is purely temporary — it never modifies the saved config and is discarded whenever the card is re-instantiated (dashboard switch, view switch, page reload). While a preview is active, the chart shows only the shifted historical series — the shifted current period (the theme's strongest text tone, the dominant preview line) and the shifted reference period (the disabled-text tone at reduced line opacity) — and hides the live current and reference series; all other panels (summary, delta/interpretation, narrative) remain visible and unchanged, reflecting the default configuration and the current data series. In dashboard view mode the forward control is rendered in the disabled state (visible, dimmed) at the configured default and enabled while a preview shift is active (FR-026, 2026-11-22 refinement).
 
-**Technical approach**: The preview shift is implemented by re-running the existing pure window resolver `resolveTimeWindows(merged, now, timeZone, …)` with a **shifted `now`** — `now` moved backward by the window's nominal `duration`, applied once per step via the same `DateTime.minus(Duration)` algebra the card already uses (`minusStepRepeated`). This reuses the card's existing window arithmetic (calendar-aware for year/month/week, exact for day/hour/minute/second) with no width-specific special-casing. The preview state is a plain, non-persisted field on the card element (discarded on re-instantiation). In preview mode the card additionally queries the shifted current and reference periods and renders them as two gray-toned series (shifted current in light gray, shifted reference in a darker gray); the default analytical pipeline (summary, forecast, interpretation, narrative) is left untouched.
+**Technical approach**: The preview shift is implemented by re-running the existing pure window resolver `resolveTimeWindows(merged, now, timeZone, …)` with a **shifted `now`** — `now` moved backward by the window's nominal `duration`, applied once per step via the same `DateTime.minus(Duration)` algebra the card already uses (`minusStepRepeated`). This reuses the card's existing window arithmetic (calendar-aware for year/month/week, exact for day/hour/minute/second) with no width-specific special-casing. The preview state is a plain, non-persisted field on the card element (discarded on re-instantiation). In preview mode the card additionally queries the shifted current and reference periods and renders them as two neutral-toned series forming a consistent lightness ramp (the shifted current in the theme's strongest text tone, the shifted reference in the disabled-text tone at reduced line opacity); the default analytical pipeline (summary, forecast, interpretation, narrative) is left untouched.
 
 ## Technical Context
 
@@ -80,7 +80,7 @@ src/
 ├── index.ts                            # Card registration (unchanged)
 └── card/
     ├── cumulative-comparison-chart.ts  # EnergyHorizonCard: preview state field, shift/reset handlers, shifted-period load, render of controls + indication
-    ├── echarts-renderer.ts             # Preview render path: two gray-toned shifted series (current light gray, reference darker gray), live series hidden
+    ├── echarts-renderer.ts             # Preview render path: two neutral-toned shifted series (current in the strongest text tone, reference in the disabled-text tone at reduced line opacity), live series hidden
     ├── types.ts                        # CardState extension (preview fields), ChartRendererConfig extension (preview mode + shifted series pair)
     ├── time-windows/
     │   ├── resolve-windows.ts          # Existing pure resolver (reused; shifted `now` input)
@@ -151,3 +151,30 @@ FR-908-A/B — one registry descriptor, no new control kind).
 **Constitution notes**: I — optional, backward-compatible config key (absent key = unchanged
 behavior); III — tests first; V — one render gate + one registry descriptor, no new state,
 no queries, no renderer change; VI — one new user-facing label per locale.
+
+## Refinement 2026-11-23 — Preview series contrast (FR-018)
+
+The two shifted preview series form a consistent lightness ramp from the theme's neutral text
+tones: the shifted current is drawn in the theme's strongest text tone (`--primary-text-color`)
+at full line strength (the dominant preview line — the brightest gray in the dark scheme, the
+strongest dark tone in the light scheme), and the shifted reference is drawn in the theme's
+disabled-text tone (`--disabled-text-color`) at a fixed, reduced line opacity (de-emphasized
+toward the theme background in both schemes, clearly readable above the grid lines
+(`--divider-color`)). This follows the card's existing de-emphasis pattern — theme token for
+color plus a fixed numeric `lineStyle.opacity` (no hardcoded colors) — already used for the
+context series. The window/LTS arithmetic is untouched.
+
+**Change surface** (minimally invasive; no new state, no new config keys, no new queries):
+
+| # | Change | File |
+|---|--------|------|
+| 1 | `resolveChartTheme`: `previewCurrent` resolves the `--primary-text-color` token (previously `--secondary-text-color`) — in the exported and the private renderer copies | `src/card/renderer-config.ts`, `src/card/echarts-renderer.ts` |
+| 2 | New `PREVIEW_REFERENCE_LINE_OPACITY = 0.85` constant; the preview reference series `lineStyle` gains the fixed `opacity` (the context-series pattern) | `src/card/echarts-renderer.ts` |
+| 3 | Doc-comment update (the preview tone scale) | `src/card/types.ts` |
+| 4 | TDD tests: token mapping + fallbacks, preview series tones + line opacity, integration fallbacks + opacity | `tests/unit/renderer-config.test.ts`, `tests/unit/echarts-renderer.test.ts`, `tests/integration/card-render.test.ts` |
+| 5 | Cross-domain doc consistency: 909 spec (FR-018, US3, Clarifications, SC-007, Assumptions, edge cases), plan, tasks, research R3, data-model, contracts, checklists, quickstart, 902 FR-902-M token mapping, `changelog.md` `[Unreleased]` | `specs/909-timewindow-preview/`, `specs/902-chart-rendering-interaction/`, `changelog.md` |
+
+**Constitution notes**: I — pure HA theme tokens + one fixed opacity constant, no hardcoded
+colors; III — tests first (TDD); V — two token/opacity changes, no new state, no new config
+keys, no new queries; VI — no new user-facing strings. (Owner decision 2026-11-23: the visual
+refinement is self-evident — user-facing documentation (README/wiki) is not updated.)

@@ -133,6 +133,44 @@ describe("resolveChartTheme", () => {
     expect(theme.referenceDotBorder).toBe("#ffffff");
     expect(theme.trendHigher).toBe("#f44336");
     expect(theme.trendLower).toBe("#4caf50");
+    // FR-018 tone scale: the shifted current takes the primary-text fallback,
+    // the shifted reference stays at the disabled-text fallback (its opacity
+    // de-emphasis lives in the renderer's lineStyle, not here).
+    expect(theme.previewCurrent).toBe("rgba(0, 0, 0, 0.87)");
+    expect(theme.previewReference).toBe("rgba(127, 127, 127, 0.55)");
+  });
+
+  it("maps the preview series to the theme's text tokens (FR-018: dominant primary tone + disabled tone)", () => {
+    const tokenMap: Record<string, string> = {
+      "--primary-text-color": "#aabbcc",
+      "--disabled-text-color": "#556677"
+    };
+    const fakeGetComputedStyle: typeof globalThis.getComputedStyle = (
+      host
+    ) =>
+      ({
+        getPropertyValue: (prop: string) => tokenMap[prop] ?? ""
+      }) as unknown as CSSStyleDeclaration;
+
+    const prevGetComputedStyle = globalThis.getComputedStyle;
+    (globalThis as Record<string, unknown>).getComputedStyle =
+      fakeGetComputedStyle;
+    try {
+      const theme = resolveChartTheme(makeFakeNode(), "#ff0000");
+      // The leading preview line (shifted current) takes the theme's strongest
+      // text tone so it dominates the preview.
+      expect(theme.previewCurrent).toBe("#aabbcc");
+      // The reference preview line keeps the disabled-text tone; the
+      // de-emphasis is a fixed lineStyle.opacity in the renderer.
+      expect(theme.previewReference).toBe("#556677");
+    } finally {
+      if (prevGetComputedStyle === undefined) {
+        delete (globalThis as Record<string, unknown>).getComputedStyle;
+      } else {
+        (globalThis as Record<string, unknown>).getComputedStyle =
+          prevGetComputedStyle;
+      }
+    }
   });
 });
 

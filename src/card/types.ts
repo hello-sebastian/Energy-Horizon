@@ -390,9 +390,9 @@ export interface ChartThemeResolved {
   trendUnknown: string;
   /** Non-judgment / insufficient comparison delta color (903). */
   trendMuted: string;
-  /** Preview shifted-current series color (light gray; 909 US3). */
+  /** Preview shifted-current series color — the theme's primary text tone, the dominant preview line (909 US3, FR-018). */
   previewCurrent: string;
-  /** Preview shifted-reference series color (darker gray; 909 US3). */
+  /** Preview shifted-reference series color — the theme's disabled text tone, rendered at a reduced line opacity (909 US3, FR-018). */
   previewReference: string;
 }
 
@@ -486,13 +486,14 @@ export interface ChartRendererConfig {
   comparisonAxisDayOfMonthOnly?: boolean;
   /**
    * Transient time-window preview (909): `true` while `previewShift < 0`. Tells the renderer
-   * to draw the shifted preview series (light gray current + darker gray reference) and hide
-   * the live series (FR-018/FR-019).
+   * to draw the shifted preview series (primary text tone current + disabled text tone
+   * reference at reduced line opacity) and hide the live series (FR-018/FR-019).
    */
   previewMode?: boolean;
   /**
-   * Transient time-window preview (909): the shifted series pair to draw — current in light
-   * gray, reference in a darker gray (FR-018). Present only while `previewMode` is true.
+   * Transient time-window preview (909): the shifted series pair to draw — current in the
+   * theme's primary text tone, reference in the disabled text tone at reduced line opacity
+   * (FR-018). Present only while `previewMode` is true.
    */
   previewSeries?: ComparisonSeries;
 }

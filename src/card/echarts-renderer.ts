@@ -106,6 +106,17 @@ export const Y_AXIS_UNIT_WRAP_NUMBER_CHARS = 3;
 const Y_AXIS_LABEL_FONT_SIZE_PX = 12;
 const Y_AXIS_LABEL_FONT = `${Y_AXIS_LABEL_FONT_SIZE_PX}px sans-serif`;
 
+/**
+ * FR-018 tone scale: fixed line-opacity de-emphasis for the preview
+ * shifted-reference series. Its color stays the theme's disabled-text token;
+ * the multiplier shifts the line toward the theme background — in both the
+ * dark and the light scheme — keeping it clearly readable above the grid
+ * lines (`--divider-color`). The leading shifted-current series keeps full
+ * strength (no opacity), so the two preview lines form a consistent
+ * lightness ramp: dominant → de-emphasized → grid.
+ */
+const PREVIEW_REFERENCE_LINE_OPACITY = 0.85;
+
 let yAxisMeasureCtx: CanvasRenderingContext2D | null | undefined;
 
 function getYAxisMeasureContext(): CanvasRenderingContext2D | null {
@@ -540,8 +551,11 @@ export class EChartsRenderer {
 
     const todayFullHeightLine = grid || 'rgba(127, 127, 127, 0.35)';
     const referenceDotBorder = tooltipBackground || '#ffffff';
-    const previewCurrent =
-      styles.getPropertyValue('--secondary-text-color').trim() || 'rgba(127, 127, 127, 0.4)';
+    // FR-018 tone scale: the shifted current takes the theme's strongest text
+    // tone (dominant preview line; bright in dark, dark in light), the shifted
+    // reference keeps the disabled-text tone (its fixed lineStyle.opacity
+    // de-emphasis is applied in buildOption).
+    const previewCurrent = primaryText;
     const previewReference =
       styles.getPropertyValue('--disabled-text-color').trim() || 'rgba(127, 127, 127, 0.55)';
 
@@ -871,9 +885,11 @@ export class EChartsRenderer {
     const series: LineSeriesOption[] = [];
 
     // Transient time-window preview (909 US3, T013): draw ONLY the shifted current
-    // (light gray) and, when present, the shifted reference (darker gray). The live
-    // current/reference series, forecast, and today marker are not drawn, and the
-    // shifted current must NOT reuse the current series' color (FR-018/FR-019).
+    // (primary text tone — the dominant preview line) and, when present, the
+    // shifted reference (disabled text tone at reduced line opacity — de-emphasized
+    // but clearly readable above the grid lines). The live current/reference
+    // series, forecast, and today marker are not drawn, and the shifted current
+    // must NOT reuse the current series' color (FR-018/FR-019).
     if (rendererConfig.previewMode === true) {
       series.push({
         name: labels.current,
@@ -901,7 +917,11 @@ export class EChartsRenderer {
           type: 'line',
           color: theme.previewReference,
           data: referenceValues.map((y, i) => (y !== null ? [i, y] : null)),
-          lineStyle: { color: theme.previewReference, width: 1.5 },
+          lineStyle: {
+            color: theme.previewReference,
+            width: 1.5,
+            opacity: PREVIEW_REFERENCE_LINE_OPACITY
+          },
           areaStyle: { color: theme.previewReference, opacity: 0 },
           connectNulls: false,
           showSymbol: false,
