@@ -53,7 +53,7 @@ Key automated checks:
 
 Prereq: a dev HA instance with the card deployed (`npm run build` → copy `dist/` to `www/community/Energy-Horizon/`), and a sensor entity with statistics.
 
-1. **Full coverage** (SC-908-1): open the editor on a card whose YAML sets *every* parameter (`primary_color`, `fill_*_opacity`, `x_axis_format`, `tooltip_format`, `aggregation`, `precision`, `number_format`, `language`, `force_prefix`, `connect_nulls`, `show_legend`, `debug`, `time_window.*`). Every value is pre-filled in the matching control/section.
+1. **Full coverage** (SC-908-1): open the editor on a card whose YAML sets *every* parameter (`primary_color`, `fill_*_opacity`, `x_axis_format`, `tooltip_format`, `aggregation`, `precision`, `number_format`, `language`, `force_prefix`, `connect_nulls`, `show_legend`, `show_preview_controls`, `debug`, `time_window.*`). Every value is pre-filled in the matching control/section.
 2. **Live preview** (SC-908-4): change a select/switch/slider → card updates within 500 ms; type in a text field → preview updates after the debounce and on blur.
 3. **Stability** (SC-908-2): expand two sections, type in a text field, toggle a switch → panels stay expanded, the text field keeps focus + caret, no scroll jump, no flash.
 4. **No churn** (SC-908-3): with the editor open, trigger a passive re-render (e.g. HA re-sends the same config) → no `config-changed` (check via a console listener / no redundant card re-query).

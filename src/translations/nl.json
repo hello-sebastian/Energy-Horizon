@@ -111,6 +111,7 @@
   "editor.fill_reference_opacity": "Dekking van referentiereeks",
   "editor.connect_nulls": "Ontbrekende waarden overbruggen",
   "editor.show_legend": "Legenda tonen",
+  "editor.show_preview_controls": "Voorbeeldbesturing",
   "editor.precision": "Precisie (decimalen)",
   "editor.number_format": "Getalnotatie",
   "editor.language": "Taal",

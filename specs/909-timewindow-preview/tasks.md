@@ -250,6 +250,43 @@ default and enabled while a preview shift is active; the preview contexts are un
 
 ---
 
+## Phase 12: Refinement — Preview controls visibility toggle (`show_preview_controls`, 2026-11-23)
+
+**Goal**: A "Preview controls" switch in the visual editor's **Chart settings** section
+controls the visibility of the time-window preview controls bar (backward/forward/reset
+plus the preview indication). The optional config key `show_preview_controls` (boolean,
+default `true`) preserves the current behavior when absent; when `false` the bar is not
+rendered in any card context — dashboard view mode and every `preview = true` context —
+and no vertical space is reserved for it (FR-027). The toggle never affects the preview
+state itself; it only controls whether the controls bar is mounted.
+**Branch**: `main`.
+
+**Independent Test**: Open the visual editor, switch "Preview controls" (Chart settings)
+off → the saved YAML gains `show_preview_controls: false` and the card's chart section
+renders without the controls bar (no buttons, no reserved space — the card is shorter
+vertically). Switch it back on → the YAML gains `show_preview_controls: true` and the
+bar reappears exactly as before. A card whose YAML omits the key behaves exactly as it
+did before this refinement.
+
+### Tests (write FIRST, ensure they FAIL before implementation) ⚠️
+
+- [x] T039 In `tests/integration/preview-controls-visibility.test.ts` (new file): (a) view mode (`preview === false`) with `show_preview_controls: false` — the `.ebc-chart-controls` bar is absent from the shadow DOM (no `.ebc-preview-indication`, no back/forward/reset buttons) while the chart section still renders `.ebc-chart-wrap`; (b) view mode with the key absent and with `show_preview_controls: true` — the bar IS present (default-true regression); (c) `preview === true` (picker context) with `show_preview_controls: false` — the bar is absent in preview contexts too (FR-027 takes precedence over FR-022); (d) `setConfig` with `show_preview_controls: false` — the key is preserved in the element's config and a subsequent unrelated config change (e.g. `primary_color`) does not drop it (FR-027)
+
+### Implementation
+
+- [x] T040 In `src/card/types.ts`: add the optional `show_preview_controls?: boolean` key to `CardConfig` (next to `show_legend`, documented as on unless explicitly `false`, 909 FR-027); in `src/card/cumulative-comparison-chart.ts` `_renderChartSection`: compute `const showPreviewControls = this._config.show_preview_controls !== false;` and render the whole `<div class="ebc-chart-controls">` block only when true (back/forward/reset and the preview indication disappear together with the bar; no placeholder, no reserved space) in every context — update the method header comment with the FR-027 gate (FR-027; `setConfig` needs no special handling — the key passes through the `...rest` spread)
+
+- [x] T041 [P] In `src/card/editor/field-registry.ts`: add the registry descriptor `{ key: "show_preview_controls", section: "chart", control: { kind: "boolean" }, labelKey: "editor.show_preview_controls", default: true }` after `show_legend` and bump the registry header comment (32 → 33 config-backed fields); add `editor.show_preview_controls` to all five translation files (`src/translations/en.json` "Preview controls", `pl.json` "Sterowanie podglądem", `de.json` "Vorschau-Steuerung", `fr.json` "Contrôles d'aperçu", `nl.json` "Voorbeeldbesturing"); in `tests/unit/editor-field-registry.test.ts`: add the key to the S5 chart key list, to the section-membership map (`chart`), add the default assertion (`toBe(true)`), and bump the config-backed field count (32 → 33)
+
+- [x] T042 [P] Cross-domain documentation consistency (no code change): 909 `spec.md` (new FR-027; FR-022 "unless hidden by `show_preview_controls: false` (FR-027)" exception; Assumptions "no gating or opt-in" bullet reworded — controls are visible by default in every context and can be hidden per card), 909 `plan.md` (new "Refinement — Preview controls visibility toggle (FR-027)" section with the touch-point; Scale/Scope line and constitution check item I updated), 909 `contracts/preview-controls.md` (header "no new configuration keys" wording + a bar-level visibility rule), 904 `spec.md` (editor section table row 5), 908 `spec.md` (FR-908-D key list, S5 list, Defaults paragraph, Cross-domain Contracts "Publishes to" 909 entry), 908 `data-model.md` (§4 count + S5 row), 908 `contracts/field-registry.md` (inventory row), 908 `contracts/editor-i18n.md` (label row), 908 `quickstart.md` (full-coverage parameter list), and user docs: `README.md` (Transient Time-Window Preview section note), `README.advanced.md` (feature table, advanced chart-key table, section tables, editor field table), `wiki-publish/Configuration-and-Customization.md` (key table, section table, editor field table), `wiki-publish/How-To-Time-Windows.md` (transient preview note), and `changelog.md` `[Unreleased]` Added entry
+
+**Checkpoint**: with `show_preview_controls: false` the card renders without the
+controls bar in every context and reserves no space for it; the editor switch persists
+the key in YAML; absent-key behavior is byte-identical to the pre-refinement behavior;
+`npm test`, `npm run typecheck`, and `npm run lint` are green.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -259,6 +296,7 @@ default and enabled while a preview shift is active; the preview contexts are un
 - **User Stories (Phases 3–8)**: All depend on Foundational (Phase 2) completion.
 - **Polish (Phase 9)**: Depends on all desired user stories being complete.
 - **Refinement (Phase 10)**: Depends on a green baseline on `1.3-dev`. T032 (tests, TDD) before T033 (implementation); T034 (docs) is parallel to T033 (different files).
+- **Refinement (Phase 12)**: Depends on a green baseline. T039 (tests, TDD) before T040 (implementation); T041 (editor/translations) and T042 (docs) are parallel — different files; T043-equivalent final gate is the checkpoint itself.
 
 ### User Story Dependencies
 

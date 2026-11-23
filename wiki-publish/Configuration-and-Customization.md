@@ -57,6 +57,7 @@ If you came here from the project README:
 | `icon` | string | from entity | Header icon only | Invalid MDI name just shows default |
 | `show_icon` | boolean | `true` | Toggle header icon | — |
 | `show_legend` | boolean | `false` | Legend is opt-in | Don’t expect legend unless explicitly enabled |
+| `show_preview_controls` | boolean | `true` | Hides the transient preview controls bar (back/forward/reset + indication) when `false` | No space is reserved for the hidden bar; the preview state itself is unaffected | [How-To: Time Windows](How-To-Time-Windows) |
 
 ---
 
@@ -162,7 +163,7 @@ Since **v1.2.0** the Lovelace visual editor covers the **full configuration surf
 | **Time windows** | `comparison_preset`; **Custom settings** subsection: `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset only) |
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
-| **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend` |
+| **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
 | **Style** | **two-column grid** — **Current series** subsection (first column): `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection (second column): `fill_reference`, `fill_reference_opacity`; components of the same feature sit in the same row |
 | **Diagnostics** | `debug` |
 
@@ -220,7 +221,7 @@ Every editor control maps **1:1** to a YAML key — what you set in the form is 
 | Formatting & Localization | Language | `language` |
 | Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
 | Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
-| Chart settings | Show forecast on chart / Connect nulls / Show legend | `show_forecast` / `connect_nulls` / `show_legend` |
+| Chart settings | Show forecast on chart / Connect nulls / Show legend / Preview controls | `show_forecast` / `connect_nulls` / `show_legend` / `show_preview_controls` |
 | Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
 | Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
 | Diagnostics | Debug | `debug` |

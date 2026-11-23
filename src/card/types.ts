@@ -99,6 +99,13 @@ export interface CardConfig {
   /** When omitted or false, the chart legend is hidden. Set to true to show it. */
   show_legend?: boolean;
   /**
+   * Time-window preview controls bar (back/forward/reset + the preview
+   * indication): shown in every context unless explicitly `false`. When
+   * `false` the bar is not rendered at all — no buttons, no reserved space
+   * (909 FR-027).
+   */
+  show_preview_controls?: boolean;
+  /**
    * Figma **Data series info** — current vs reference “to today” panel (`.ebc-section--comparison`).
    * Omitted or not `false` → shown when summary data exists.
    */

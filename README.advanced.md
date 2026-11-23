@@ -53,7 +53,7 @@ comparison_preset: year_over_year
 | **Trend text** | Narrative + chart delta use **`interpretation`** (`consumption` vs `production`), optional **`neutral_threshold`** band on the chip percent **p**, and dedicated copy when comparison data is insufficient; delta chip **signs** stay pure arithmetic. |
 | **Forecast** | End-of-period estimate from elapsed fraction and reference profile; disabled in single-window mode. The chart **line** is hidden with `show_forecast: false`; the **Forecast \| Total** panel is controlled separately by `show_forecast_total_panel`. |
 | **SI scaling** | Optional `force_prefix` (auto / none / forced prefix) on cumulative values. |
-| **Transient preview** | Top-right chart controls step the displayed window to earlier/later periods for a quick look-back — transient state, never written to the config; the shifted series render in gray; the controls are visible but non-interactive in preview contexts (picker, dashboard edit mode, editor). |
+| **Transient preview** | Top-right chart controls step the displayed window to earlier/later periods for a quick look-back — transient state, never written to the config; the shifted series render in gray; the controls are visible but non-interactive in preview contexts (picker, dashboard edit mode, editor). The controls bar can be hidden per card (`show_preview_controls: false`) — no space is reserved for it. |
 
 ---
 
@@ -89,6 +89,7 @@ Target types: `CardConfig` / `CardConfigInput` in [`src/card/types.ts`](src/card
 | `primary_color` | string | empty → card token `#119894` | Current series line, fill, and caption swatch. Use `var(--accent-color)`, `ha-accent` / `ha-primary-accent`, or `ha-primary` to follow HA theme; override `--eh-series-current` with Card Mod if needed. |
 | `connect_nulls` | boolean | `true` | Dashed visual interpolation across `null` gaps; `false` = gaps on the chart. |
 | `show_legend` | boolean | `false` | Legend **only** with explicit `show_legend: true`. |
+| `show_preview_controls` | boolean | `true` (visible when not `false`) | Hides the preview controls bar (back/forward/reset + indication) when `false`; no space is reserved for it. |
 | `show_comparison_summary` | boolean | `true` (visible when not `false`) | Hides the **comparison** panel (current vs reference “to this day” + delta chip) when `false`. |
 | `show_forecast_total_panel` | boolean | `true` | Hides the **Forecast \| Total** panel when `false`. Independent of `show_forecast` (which controls only the forecast line on the chart); the panel still requires forecast data to be available and not single-window mode. |
 | `show_narrative_comment` | boolean | `true` | Hides the **narrative comment** block (trend icon + text) when `false`. |
@@ -276,6 +277,7 @@ Full Luxon token table: [Luxon — formatting tokens](https://moment.github.io/l
 - **`fill_*` / `fill_*_opacity`**: fills under lines; invalid opacity → 30%.
 - **`connect_nulls`**: adds an auxiliary series with dashed interpolation across gaps; the solid line still breaks on `null`.
 - **`show_legend`**: no legend by default; explicit `true` shows it.
+- **`show_preview_controls`**: on by default; `false` removes the transient-preview controls bar (and its reserved space) from the card in every context.
 
 ---
 
@@ -311,7 +313,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 | **Time windows** | `comparison_preset`; **Custom settings** subsection: `time_window.anchor` / `duration` / `step` / `count` / `offset` (custom preset only) |
 | **Panels** | `show_comparison_summary`, `show_chart` (always-on, disabled — the chart is always shown), `show_forecast_total_panel`, `show_narrative_comment` |
 | **Formatting & Localization** | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
-| **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend` |
+| **Chart settings** | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
 | **Style** | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
 | **Diagnostics** | `debug` |
 
@@ -325,7 +327,7 @@ Since **v1.2.0** the visual editor covers the **full configuration surface** —
 - **Time windows** — `comparison_preset`; when the preset is **custom**, the **Custom settings** subsection exposes the `time_window` block (`anchor`, `duration`, `step`, `count`, `offset`).
 - **Panels** — the panel visibility flags (`show_comparison_summary`, `show_forecast_total_panel`, `show_narrative_comment`); `show_chart` is a disabled, always-on indicator (the chart is always shown).
 - **Formatting & Localization** — `language`; the **Unit** subsection (`force_prefix`, `number_format`, `precision`) and the **Dates** subsection (`x_axis_format`, `tooltip_format`).
-- **Chart settings** — `show_forecast` (the chart line only), `connect_nulls`, `show_legend`.
+- **Chart settings** — `show_forecast` (the chart line only), `connect_nulls`, `show_legend`, `show_preview_controls`.
 - **Style** — the **Current series** and **Reference series** subsections in a two-column grid (`primary_color`, `fill_current`, `fill_current_opacity` / `fill_reference`, `fill_reference_opacity`).
 - **Diagnostics** — `debug`.
 
@@ -362,7 +364,7 @@ Every editor control maps **1:1** to a YAML key — what you set in the form is 
 | Formatting & Localization | Language | `language` |
 | Formatting & Localization → Unit | Unit prefix / Number format / Precision | `force_prefix` / `number_format` / `precision` |
 | Formatting & Localization → Dates | X-axis format / Tooltip format | `x_axis_format` / `tooltip_format` |
-| Chart settings | Show forecast on chart / Connect nulls / Show legend | `show_forecast` / `connect_nulls` / `show_legend` |
+| Chart settings | Show forecast on chart / Connect nulls / Show legend / Preview controls | `show_forecast` / `connect_nulls` / `show_legend` / `show_preview_controls` |
 | Style → Current series | Color / Fill / Fill opacity | `primary_color` / `fill_current` / `fill_current_opacity` |
 | Style → Reference series | Fill / Fill opacity | `fill_reference` / `fill_reference_opacity` |
 | Diagnostics | Debug | `debug` |

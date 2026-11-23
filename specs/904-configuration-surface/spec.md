@@ -24,7 +24,7 @@ The visual editor provides **full coverage** of the card's YAML configuration, o
 | 2 | Time windows | expanded | `comparison_preset`; **Custom settings** subsection: `time_window.{anchor,duration,step,count,offset}` (custom mode only) |
 | 3 | Panels | collapsed | `show_comparison_summary`, `show_chart` (UX-only dummy, always ON + disabled), `show_forecast_total_panel`, `show_narrative_comment` |
 | 4 | Formatting & Localization | collapsed | `language`; **Unit** subsection: `force_prefix`, `number_format`, `precision`; **Dates** subsection: `x_axis_format`, `tooltip_format` |
-| 5 | Chart settings | collapsed | `show_forecast`, `connect_nulls`, `show_legend` |
+| 5 | Chart settings | collapsed | `show_forecast`, `connect_nulls`, `show_legend`, `show_preview_controls` |
 | 6 | Style | collapsed | **Current series** subsection: `primary_color`, `fill_current`, `fill_current_opacity`; **Reference series** subsection: `fill_reference`, `fill_reference_opacity` |
 | 7 | Diagnostics | collapsed | `debug` |
 

@@ -91,7 +91,7 @@ function sectionOf(el: EditorEl, key: string): string | null {
 }
 
 /**
- * A config exercising **every** FR-908-D parameter (all 32 config-backed
+ * A config exercising **every** FR-908-D parameter (all 33 config-backed
  * registry fields), in `custom` mode so the `time_window.*` sub-fields are
  * visible, plus an unknown key (`custom_extra`) that must survive the
  * round-trip. The `show_chart` dummy has no config representation and is
@@ -132,6 +132,7 @@ const FULL_CONFIG: CardConfigInput = {
   show_forecast: false,
   connect_nulls: true,
   show_legend: true,
+  show_preview_controls: false,
   // S6 — Style
   primary_color: "#ff0000",
   fill_current: true,

@@ -1,8 +1,9 @@
 # Contract — Preview controls & indication (view-mode UI)
 
-The preview is a **view-mode-only** capability of the `EnergyHorizonCard` element. It exposes no
-new configuration keys and no new HA APIs. This contract defines the user-facing behavior the
-implementation must honor (the "public interface" of the feature).
+The preview is a **view-mode-only** capability of the `EnergyHorizonCard` element. Its only
+configuration key is the optional `show_preview_controls` visibility toggle (FR-027); it exposes
+no new HA APIs. This contract defines the user-facing behavior the implementation must honor (the
+"public interface" of the feature).
 
 ## Controls
 
@@ -20,7 +21,12 @@ to follow and is out of scope — see spec Assumptions).
 
 **Visibility rules**
 
-- Backward and forward are always present in view mode.
+- Bar level (FR-027): the whole `.ebc-chart-controls` bar (all controls + the preview
+  indication) is rendered only when `show_preview_controls !== false` (default `true`). When
+  `show_preview_controls: false`, the bar is absent in **every** card context — dashboard view
+  mode and all `preview = true` contexts — and no vertical space is reserved for it. The key
+  never affects the preview state itself.
+- Backward and forward are always present in view mode (while the bar is rendered).
 - Reset is present in the DOM **only** while the preview is active (`previewShift < 0`); it is
   removed as soon as the card is at the default — by stepping forward, by reset, or by
   re-instantiation (FR-009/FR-010, "Reset control visibility" edge case).

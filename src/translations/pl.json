@@ -111,6 +111,7 @@
   "editor.fill_reference_opacity": "Przezroczystość referencyjna",
   "editor.connect_nulls": "Łącz wartości null",
   "editor.show_legend": "Pokaż legendę",
+  "editor.show_preview_controls": "Sterowanie podglądem",
   "editor.precision": "Dokładność (dziesiętne)",
   "editor.number_format": "Format liczby",
   "editor.language": "Język",

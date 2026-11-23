@@ -224,7 +224,7 @@ const IS_CUSTOM = (cfg: CardConfig): boolean =>
   cfg.comparison_preset === "custom";
 
 // ---------------------------------------------------------------------------
-// The full field registry (contracts/field-registry.md inventory): 32
+// The full field registry (contracts/field-registry.md inventory): 33
 // config-backed fields + 1 UX-only dummy (`show_chart`).
 // ---------------------------------------------------------------------------
 
@@ -462,6 +462,13 @@ export const FIELD_REGISTRY: FieldRegistry = [
     control: { kind: "boolean" },
     labelKey: "editor.show_legend",
     default: false
+  },
+  {
+    key: "show_preview_controls",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_preview_controls",
+    default: true
   },
 
   // S6 — Style

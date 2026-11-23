@@ -1111,104 +1111,114 @@ export class EnergyHorizonCard extends LitElement implements LovelaceCard {
 
   /**
    * Chart region with the 909 preview controls. Element-only concerns live here
-   * (FR-903-AA): `preview` (preview contexts render the controls visible but
-   * non-interactive, FR-022–FR-025), `previewShift < 0` (the display gate,
-   * FR-903-Y) and `_previewLoading` (disabled controls + dimmed chart overlay)
-   * — none of them are part of the view model.
+   * (FR-903-AA): `show_preview_controls` (the bar-level visibility gate,
+   * FR-027 — when `false` the whole bar is not rendered in any context and no
+   * space is reserved for it), `preview` (preview contexts render the controls
+   * visible but non-interactive, FR-022–FR-025), `previewShift < 0` (the
+   * display gate, FR-903-Y) and `_previewLoading` (disabled controls + dimmed
+   * chart overlay) — none of them are part of the view model.
    */
   private _renderChartSection(
     vm: ReadyCardViewModel,
     localize: LocalizeFunction
   ): TemplateResult {
     const previewActive = this.previewShift < 0;
+    // FR-027: on unless explicitly `show_preview_controls: false`. When false
+    // the entire `.ebc-chart-controls` bar (back/forward/reset + the preview
+    // indication) is omitted from the DOM — nothing is rendered in its place,
+    // so the card reserves no vertical space for it. Applies in every context
+    // (view mode and `preview === true`).
+    const showPreviewControls = this._config.show_preview_controls !== false;
     return html`<div
       class="ebc-section ebc-section--chart"
       role="region"
       aria-label=${this._localizeOrError(localize, "section.chart")}
     >
-      <div class="ebc-chart-controls">
-        ${previewActive
-          ? html`<span class="ebc-preview-indication" role="status">
-              ${vm.previewIndicationText}
-            </span>`
-          : null}
-        ${previewActive
-          ? html`<button
-              class="ebc-chart-control ebc-chart-control--reset"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(localize, "preview.reset")}
-              @click=${() => this._onPreviewStep("reset")}
-            >
-              <ha-icon icon="mdi:restart"></ha-icon>
-            </button>`
-          : null}
-        <!-- 909 FR-023/FR-025: in preview contexts the buttons keep their
-             normal appearance (no "disabled" attribute) but carry
-             aria-disabled="true" and tabindex="-1". The inert variant omits
-             the ?disabled binding entirely — _previewLoading can never be
-             true in a preview context (the _onPreviewStep guard blocks it).
-             The reset button above is never rendered in a preview context
-             (FR-010: a shift cannot be activated there).
-             FR-026 (view mode only): the forward button is additionally
-             disabled at the configured default (previewShift >= 0) — the
-             window cannot be shifted further forward — rendered visible but
-             dimmed per .ebc-chart-control:disabled (HA disabled-button
-             standard); while a shift is active it is enabled. The back and
-             reset buttons are disabled only during an in-place preview load. -->
-        ${this.preview
-          ? html`<button
-              class="ebc-chart-control"
-              type="button"
-              aria-disabled="true"
-              tabindex="-1"
-              aria-label=${this._localizeOrError(
-                localize,
-                "preview.step_back"
-              )}
-              @click=${() => this._onPreviewStep("back")}
-            >
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>`
-          : html`<button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(
-                localize,
-                "preview.step_back"
-              )}
-              @click=${() => this._onPreviewStep("back")}
-            >
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>`}
-        ${this.preview
-          ? html`<button
-              class="ebc-chart-control"
-              type="button"
-              aria-disabled="true"
-              tabindex="-1"
-              aria-label=${this._localizeOrError(
-                localize,
-                "preview.step_forward"
-              )}
-              @click=${() => this._onPreviewStep("forward")}
-            >
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>`
-          : html`<button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading || this.previewShift >= 0}
-              aria-label=${this._localizeOrError(
-                localize,
-                "preview.step_forward"
-              )}
-              @click=${() => this._onPreviewStep("forward")}
-            >
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>`}
-      </div>
+      ${showPreviewControls
+        ? html`<div class="ebc-chart-controls">
+            ${previewActive
+              ? html`<span class="ebc-preview-indication" role="status">
+                  ${vm.previewIndicationText}
+                </span>`
+              : null}
+            ${previewActive
+              ? html`<button
+                  class="ebc-chart-control ebc-chart-control--reset"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(localize, "preview.reset")}
+                  @click=${() => this._onPreviewStep("reset")}
+                >
+                  <ha-icon icon="mdi:restart"></ha-icon>
+                </button>`
+              : null}
+            <!-- 909 FR-023/FR-025: in preview contexts the buttons keep their
+                 normal appearance (no "disabled" attribute) but carry
+                 aria-disabled="true" and tabindex="-1". The inert variant omits
+                 the ?disabled binding entirely — _previewLoading can never be
+                 true in a preview context (the _onPreviewStep guard blocks it).
+                 The reset button above is never rendered in a preview context
+                 (FR-010: a shift cannot be activated there).
+                 FR-026 (view mode only): the forward button is additionally
+                 disabled at the configured default (previewShift >= 0) — the
+                 window cannot be shifted further forward — rendered visible but
+                 dimmed per .ebc-chart-control:disabled (HA disabled-button
+                 standard); while a shift is active it is enabled. The back and
+                 reset buttons are disabled only during an in-place preview load. -->
+            ${this.preview
+              ? html`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  aria-disabled="true"
+                  tabindex="-1"
+                  aria-label=${this._localizeOrError(
+                    localize,
+                    "preview.step_back"
+                  )}
+                  @click=${() => this._onPreviewStep("back")}
+                >
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>`
+              : html`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(
+                    localize,
+                    "preview.step_back"
+                  )}
+                  @click=${() => this._onPreviewStep("back")}
+                >
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>`}
+            ${this.preview
+              ? html`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  aria-disabled="true"
+                  tabindex="-1"
+                  aria-label=${this._localizeOrError(
+                    localize,
+                    "preview.step_forward"
+                  )}
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>`
+              : html`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading || this.previewShift >= 0}
+                  aria-label=${this._localizeOrError(
+                    localize,
+                    "preview.step_forward"
+                  )}
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>`}
+          </div>`
+        : null}
       <div class="ebc-chart-wrap">
         <div
           class="chart-container ebc-chart ${this._previewLoading

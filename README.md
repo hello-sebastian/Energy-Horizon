@@ -114,7 +114,7 @@ Dynamically selects the optimal temporal resolution (hourly, daily, weekly, or m
 
 *New in 1.3.0.*
 
-Step the displayed time window to earlier or later periods with the controls in the top-right of the chart area — see what a previous month or year looked like without changing or saving your card's configuration. The shifted series render in gray; a reset control returns to the current period.
+Step the displayed time window to earlier or later periods with the controls in the top-right of the chart area — see what a previous month or year looked like without changing or saving your card's configuration. The shifted series render in gray; a reset control returns to the current period. The **Preview controls** switch in the editor's Chart settings section (or `show_preview_controls: false` in YAML) hides the controls bar for a cleaner look — when hidden, no space is reserved for it.
 - Learn more: [How-To: Time Windows](https://github.com/hello-sebastian/energy-horizon/wiki/How-To-Time-Windows)
 
 ### Zero-Backend Overhead

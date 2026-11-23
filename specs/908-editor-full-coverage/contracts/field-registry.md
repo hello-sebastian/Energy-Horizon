@@ -117,6 +117,7 @@ A descriptor may override `emit` explicitly.
 | `show_forecast` | chart | — | boolean | `true` | no | — | — |
 | `connect_nulls` | chart | — | boolean | `true` | no | — | — |
 | `show_legend` | chart | — | boolean | `false` | no | — | — |
+| `show_preview_controls` | chart | — | boolean | `true` | no | — | — |
 | `primary_color` | style | Current series | color | — | no | — | column 1 |
 | `fill_current` | style | Current series | boolean | `true` | no | — | column 1 |
 | `fill_current_opacity` | style | Current series | slider(0–100) | `30` | no | — | column 1 |

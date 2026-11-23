@@ -161,6 +161,8 @@ aggregation: month
 
 **Expected outcome:** the chart shows the selected period with the same layout as the configured window — the shifted series render in **gray** and the card shows a `Preview: <period>` indication. The summary panels and the narrative text stay unchanged. The preview is transient: it is never written to the card's configuration and is lost on any reload; in preview contexts such as the HA card picker, dashboard edit mode, and the card editor the controls stay visible but do not respond to input (the preview period can only be changed in the dashboard view mode).
 
+**Hiding the controls bar.** If you prefer a cleaner card, switch off **Preview controls** in the editor's Chart settings section (or set `show_preview_controls: false` in YAML). The whole bar — buttons and indication — disappears and no space is reserved for it; the card renders exactly the same otherwise.
+
 **When it fails:**
 
 - If a stepped-back period is empty, that period has no long-term statistics yet — see [Troubleshooting and FAQ](Troubleshooting-and-FAQ).

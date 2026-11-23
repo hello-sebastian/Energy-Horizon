@@ -286,7 +286,7 @@ Mi.elementStyles = [], Mi.shadowRootOptions = { mode: "open" }, Mi[ja("elementPr
  */
 const Ka = globalThis, $v = (r) => r, cl = Ka.trustedTypes, Bv = cl ? cl.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, T_ = "$lit$", Yr = `lit$${Math.random().toFixed(9).slice(2)}$`, M_ = "?" + Yr, ZS = `<${M_}>`, Gn = document, po = () => Gn.createComment(""), mo = (r) => r === null || typeof r != "object" && typeof r != "function", Qh = Array.isArray, qS = (r) => Qh(r) || typeof (r == null ? void 0 : r[Symbol.iterator]) == "function", Nu = `[ 	
 \f\r]`, va = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Vv = /-->/g, Hv = />/g, ln = RegExp(`>|${Nu}(?:([^\\s"'>=/]+)(${Nu}*=${Nu}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Wv = /'/g, Gv = /"/g, k_ = /^(?:script|style|textarea|title)$/i, jS = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), z = jS(1), Ui = Symbol.for("lit-noChange"), xe = Symbol.for("lit-nothing"), Uv = /* @__PURE__ */ new WeakMap(), On = Gn.createTreeWalker(Gn, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Wv = /'/g, Gv = /"/g, k_ = /^(?:script|style|textarea|title)$/i, jS = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), F = jS(1), Ui = Symbol.for("lit-noChange"), xe = Symbol.for("lit-nothing"), Uv = /* @__PURE__ */ new WeakMap(), On = Gn.createTreeWalker(Gn, 129);
 function C_(r, e) {
   if (!Qh(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Bv !== void 0 ? Bv.createHTML(e) : e;
@@ -6908,7 +6908,7 @@ var $f = function(r, e) {
     for (var i in n) Object.prototype.hasOwnProperty.call(n, i) && (t[i] = n[i]);
   }, $f(r, e);
 };
-function F(r, e) {
+function z(r, e) {
   if (typeof e != "function" && e !== null)
     throw new TypeError("Class extends value " + String(e) + " is not a constructor or null");
   $f(r, e);
@@ -7864,7 +7864,7 @@ function Ik() {
   U0(this.event);
 }
 var Ek = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     var t = r !== null && r.apply(this, arguments) || this;
     return t.handler = null, t;
@@ -7887,7 +7887,7 @@ var Ek = (function(r) {
   "mousemove",
   "contextmenu"
 ], Ju = new ve(0, 0, 0, 0), Z0 = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t, n, i, a, o) {
     var s = r.call(this) || this;
     return s._hovered = new ya(0, 0), s.storage = t, s.painter = n, s.painterRoot = a, s._pointerSize = o, i = i || new Ek(), s.proxy = null, s.setHandlerProxy(i), s._draggingMgr = new pk(s), s;
@@ -9366,7 +9366,7 @@ function Li() {
   return (/* @__PURE__ */ new Date()).getTime();
 }
 var rC = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     var n = r.call(this) || this;
     return n._running = !1, n._time = 0, n._pausedTime = 0, n._pauseStart = 0, n._paused = !1, t = t || {}, n.stage = t.stage || {}, n;
@@ -9582,7 +9582,7 @@ var jp = /* @__PURE__ */ (function() {
   }
   return r;
 })(), uC = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t, n) {
     var i = r.call(this) || this;
     return i.__pointerCapturing = !1, i.dom = t, i.painterRoot = n, i._localHandlerScope = new jp(t, Bt), ac && (i._globalHandlerScope = new jp(document, Qf)), sC(i, i._localHandlerScope), i;
@@ -10202,7 +10202,7 @@ function sw(r, e, t, n, i, a, o, s) {
   }
 }
 var Fe = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     var n = r.call(this) || this;
     return n.isGroup = !0, n._children = [], n.attr(t), n;
@@ -10814,7 +10814,7 @@ function Ad(r, e) {
     var n = this, i;
     return ZC(n) ? i = /** @class */
     (function(a) {
-      F(o, a);
+      z(o, a);
       function o() {
         return a.apply(this, arguments) || this;
       }
@@ -11174,7 +11174,7 @@ var ah = "__zr_style_" + Math.round(Math.random() * 10), Vn = {
 };
 Vn[ah] = !0;
 var lm = ["z", "z2", "invisible"], fD = ["invisible"], Wo = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -11850,7 +11850,7 @@ var Tw = me({
   "zlevel",
   "parent"
 ]), ge = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -12002,7 +12002,7 @@ var Tw = me({
     return !1;
   }, e.extend = function(t) {
     var n = (function(a) {
-      F(o, a);
+      z(o, a);
       function o(s) {
         var l = a.call(this, s) || this;
         return t.init && t.init.call(l, s), l;
@@ -12029,7 +12029,7 @@ var Tw = me({
   textBaseline: "top",
   miterLimit: 2
 }, Tw), kl = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     return r !== null && r.apply(this, arguments) || this;
   }
@@ -12081,7 +12081,7 @@ function ID(r) {
   return !!(r && typeof r != "string" && r.width && r.height);
 }
 var on = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     return r !== null && r.apply(this, arguments) || this;
   }
@@ -12143,7 +12143,7 @@ var OD = /* @__PURE__ */ (function() {
   }
   return r;
 })(), RD = {}, Be = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -12186,7 +12186,7 @@ var dm = {
     borderRadius: !0
   }, ou.style)
 }, ct = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     var n = r.call(this) || this;
     return n.type = "text", n._children = [], n._defaultStyle = dm, n.attr(t), n;
@@ -12834,7 +12834,7 @@ function dA(r) {
   return e.toStatic(), e;
 }
 var Fw = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     return r !== null && r.apply(this, arguments) || this;
   }
@@ -12864,7 +12864,7 @@ function vA(r, e) {
 }
 function pA(r, e) {
   var t = $w(r, e), n = (function(i) {
-    F(a, i);
+    z(a, i);
     function a(o) {
       var s = i.call(this, o) || this;
       return s.applyTransform = t.applyTransform, s.buildPath = t.buildPath, s;
@@ -12893,7 +12893,7 @@ var gA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), cu = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -12910,7 +12910,7 @@ var yA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), Rd = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13003,7 +13003,7 @@ var xA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), fu = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13022,7 +13022,7 @@ var TA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), Nd = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13083,7 +13083,7 @@ var kA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), Fd = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13100,7 +13100,7 @@ var CA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), zd = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13122,7 +13122,7 @@ var DA = {}, AA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), Mr = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13168,7 +13168,7 @@ function zm(r, e, t) {
   ];
 }
 var hu = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13196,7 +13196,7 @@ var LA = /* @__PURE__ */ (function() {
   }
   return r;
 })(), du = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t) {
     return r.call(this, t) || this;
   }
@@ -13214,7 +13214,7 @@ var LA = /* @__PURE__ */ (function() {
 })(ge);
 du.prototype.type = "arc";
 var IA = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     var t = r !== null && r.apply(this, arguments) || this;
     return t.type = "compound", t;
@@ -13247,14 +13247,14 @@ var IA = (function(r) {
     });
   }, r;
 })(), Ww = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t, n, i, a, o, s) {
     var l = r.call(this, o) || this;
     return l.x = t ?? 0, l.y = n ?? 0, l.x2 = i ?? 1, l.y2 = a ?? 0, l.type = "linear", l.global = s || !1, l;
   }
   return e;
 })(Hw), EA = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t, n, i, a, o) {
     var s = r.call(this, a) || this;
     return s.x = t ?? 0.5, s.y = n ?? 0.5, s.r = i ?? 0.5, s.type = "radial", s.global = o || !1, s;
@@ -13302,7 +13302,7 @@ var IA = (function(r) {
     n[0] = s, n[1] = l;
   }, r;
 })(), OA = [], RA = (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     var t = r !== null && r.apply(this, arguments) || this;
     return t.notClear = !0, t.incremental = !0, t._displayables = [], t._temporaryDisplayables = [], t._cursor = 0, t;
@@ -14636,7 +14636,7 @@ function kP(r, e) {
 var CP = Ae(), pe = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t, n, i) {
       var a = r.call(this, t, n, i) || this;
       return a.uid = yu("ec_cpt_model"), a;
@@ -14956,7 +14956,7 @@ function zP(r, e) {
 var ws, Ta, Qm, eg = "\0_ec_inner", $P = 1, Kd = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -16979,7 +16979,7 @@ function Ss(r, e) {
 var zL = "__universalTransitionEnabled", nn = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t._selectedDataIndicesMap = {}, t;
@@ -18664,7 +18664,7 @@ function o1(r, e, t) {
 var s1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -18676,7 +18676,7 @@ l1.off = a1("off");
 var _i, Uc, Cs, Nr, Yc, Zc, qc, Ca, Da, Zg, qg, jc, jg, Ds, Kg, u1, wt, Xg, c1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t, n, i) {
       var a = r.call(this, new uI()) || this;
       a._chartsViews = [], a._chartsMap = {}, a._componentsViews = [], a._componentsMap = {}, a._pendingActions = [], i = i || {}, U(n) && (n = f1[n]), a._dom = t;
@@ -19402,7 +19402,7 @@ var _i, Uc, Cs, Nr, Yc, Zc, qc, Ca, Da, Zg, qg, jc, jg, Ds, Kg, u1, wt, Xg, c1 =
       Kg = function(f) {
         return new /** @class */
         ((function(d) {
-          F(h, d);
+          z(h, d);
           function h() {
             return d !== null && d.apply(this, arguments) || this;
           }
@@ -20453,7 +20453,7 @@ function Iu(r, e) {
 var uv = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t) {
       var n = r.call(this, t) || this;
       n.type = "ordinal";
@@ -20521,7 +20521,7 @@ hr.registerClass(uv);
 var Ln = Le, ca = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = "interval", t._interval = 0, t._intervalPrecision = 2, t;
@@ -20764,7 +20764,7 @@ var J2 = function(r, e, t, n) {
 }, M1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t) {
       var n = r.call(this, t) || this;
       return n.type = "time", n;
@@ -21005,7 +21005,7 @@ hr.registerClass(M1);
 var ay = hr.prototype, vo = ca.prototype, oE = Le, sE = Math.floor, lE = Math.ceil, Ls = Math.pow, zt = Math.log, cv = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = "log", t.base = 10, t._originalScale = new ca(), t._interval = 0, t;
@@ -21644,7 +21644,7 @@ function IE(r) {
 var EE = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.hasSymbolVisual = !0, t;
@@ -21743,7 +21743,7 @@ function OE(r, e) {
 var dv = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t, n, i, a) {
       var o = r.call(this) || this;
       return o.updateData(t, n, i, a), o;
@@ -22135,7 +22135,7 @@ var B1 = (
 ), $E = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t) {
       var n = r.call(this, t) || this;
       return n.type = "ec-polyline", n;
@@ -22192,7 +22192,7 @@ var B1 = (
 ), BE = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -22201,7 +22201,7 @@ var B1 = (
 ), VE = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t) {
       var n = r.call(this, t) || this;
       return n.type = "ec-polygon", n;
@@ -22488,7 +22488,7 @@ function JE(r, e) {
 var QE = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -22866,7 +22866,7 @@ function iO(r) {
 var aO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -22890,7 +22890,7 @@ var aO = (
 ), Ih = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -23067,7 +23067,7 @@ function gy(r, e, t, n) {
     var o = le(le({}, uO[a], !0), n, !0), s = (
       /** @class */
       (function(l) {
-        F(u, l);
+        z(u, l);
         function u() {
           var c = l !== null && l.apply(this, arguments) || this;
           return c.type = e + "Axis." + a, c;
@@ -23121,7 +23121,7 @@ function _y(r) {
 var hO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = "cartesian2d", t.dimensions = Eh, t;
@@ -23173,7 +23173,7 @@ var hO = (
 ), dO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t, n, i, a, o) {
       var s = r.call(this, t, n, i) || this;
       return s.index = 0, s.type = a || "value", s.position = o || "bottom", s;
@@ -23884,7 +23884,7 @@ function Io(r) {
 var Cy = {}, U1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -23961,7 +23961,7 @@ function PO(r) {
 var LO = ["axisLine", "axisTickLabel", "axisName"], IO = ["splitArea", "splitLine", "minorSplitLine"], Y1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.axisPointerClass = "CartesianAxisPointer", t;
@@ -24048,7 +24048,7 @@ var LO = ["axisLine", "axisTickLabel", "axisName"], IO = ["splitArea", "splitLin
 }, Z1 = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -24058,7 +24058,7 @@ var LO = ["axisLine", "axisTickLabel", "axisName"], IO = ["splitArea", "splitLin
 ), OO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = Z1.type, t;
@@ -24068,7 +24068,7 @@ var LO = ["axisLine", "axisTickLabel", "axisName"], IO = ["splitArea", "splitLin
 ), RO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = "grid", t;
@@ -24104,7 +24104,7 @@ var Ay = Mr.prototype, of = hu.prototype, q1 = (
   })()
 );
 (function(r) {
-  F(e, r);
+  z(e, r);
   function e() {
     return r !== null && r.apply(this, arguments) || this;
   }
@@ -24116,7 +24116,7 @@ function sf(r) {
 var FO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t) {
       var n = r.call(this, t) || this;
       return n.type = "ec-line", n;
@@ -24170,7 +24170,7 @@ function Fh(r, e) {
 var $O = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e(t, n, i) {
       var a = r.call(this) || this;
       return a._createLine(t, n, i), a;
@@ -24671,7 +24671,7 @@ function qO(r, e, t) {
 var jO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       return r !== null && r.apply(this, arguments) || this;
     }
@@ -24749,7 +24749,7 @@ function By(r) {
 var XO = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -24865,7 +24865,7 @@ function zh(r, e) {
 var nR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -25149,7 +25149,7 @@ function dR(r, e) {
 var vR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -25479,7 +25479,7 @@ var kR = new Be({
 }), CR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -25878,7 +25878,7 @@ function Os(r) {
 var Rs = Ae(), ei = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.createdBySelf = !1, t;
@@ -25937,7 +25937,7 @@ qt(ei, ev.prototype);
 var ER = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26040,7 +26040,7 @@ function gv(r, e, t) {
 var df = Ae(), lS = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26091,7 +26091,7 @@ function Xy(r, e, t) {
 var FR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26152,7 +26152,7 @@ function $R(r) {
 var BR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26259,7 +26259,7 @@ function vf(r, e, t, n, i) {
 var WR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26370,7 +26370,7 @@ var YR = function(r, e) {
 }, Vh = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.layoutMode = {
@@ -26546,7 +26546,7 @@ var YR = function(r, e) {
 ), bi = be, Hh = D, zs = Fe, uS = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.newlineDisabled = !1, t;
@@ -26823,7 +26823,7 @@ function fS(r) {
 var XR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t;
@@ -26865,7 +26865,7 @@ function t_(r, e, t) {
 var r_ = Fe, pf = ["width", "height"], mf = ["x", "y"], JR = (
   /** @class */
   (function(r) {
-    F(e, r);
+    z(e, r);
     function e() {
       var t = r !== null && r.apply(this, arguments) || this;
       return t.type = e.type, t.newlineDisabled = !0, t._currentIndex = 0, t;
@@ -27057,7 +27057,7 @@ function n_(r, e, t) {
   return o && (o.position = "absolute", o.left = "0", o.top = "0", o.width = i + "px", o.height = a + "px", n.setAttribute("data-zr-dom-id", r)), n.width = i * t, n.height = a * t, n;
 }
 var gf = (function(r) {
-  F(e, r);
+  z(e, r);
   function e(t, n, i) {
     var a = r.call(this) || this;
     a.motionBlur = !1, a.lastFrameAlpha = 0.7, a.dpr = 1, a.virtual = !1, a.config = {}, a.incremental = !1, a.zlevel = 0, a.maxRepaintRectCount = 5, a.__dirty = !0, a.__firstTimePaint = !0, a.__used = !1, a.__drawIndex = 0, a.__startIndex = 0, a.__endIndex = 0, a.__prevStartIndex = null, a.__prevEndIndex = null;
@@ -28895,6 +28895,7 @@ const CN = {
   "editor.fill_reference_opacity": "Referenz-Deckkraft",
   "editor.connect_nulls": "Nullwerte verbinden",
   "editor.show_legend": "Legende anzeigen",
+  "editor.show_preview_controls": "Vorschau-Steuerung",
   "editor.precision": "Präzision (Dezimalstellen)",
   "editor.number_format": "Zahlenformat",
   "editor.language": "Sprache",
@@ -29056,6 +29057,7 @@ const CN = {
   "editor.fill_reference_opacity": "Reference opacity",
   "editor.connect_nulls": "Connect nulls",
   "editor.show_legend": "Show legend",
+  "editor.show_preview_controls": "Preview controls",
   "editor.precision": "Precision (decimals)",
   "editor.number_format": "Number format",
   "editor.language": "Language",
@@ -29217,6 +29219,7 @@ const CN = {
   "editor.fill_reference_opacity": "Opacité de référence",
   "editor.connect_nulls": "Relier les valeurs nulles",
   "editor.show_legend": "Afficher la légende",
+  "editor.show_preview_controls": "Contrôles d'aperçu",
   "editor.precision": "Précision (décimales)",
   "editor.number_format": "Format numérique",
   "editor.language": "Langue",
@@ -29378,6 +29381,7 @@ const CN = {
   "editor.fill_reference_opacity": "Dekking van referentiereeks",
   "editor.connect_nulls": "Ontbrekende waarden overbruggen",
   "editor.show_legend": "Legenda tonen",
+  "editor.show_preview_controls": "Voorbeeldbesturing",
   "editor.precision": "Precisie (decimalen)",
   "editor.number_format": "Getalnotatie",
   "editor.language": "Taal",
@@ -29539,6 +29543,7 @@ const CN = {
   "editor.fill_reference_opacity": "Przezroczystość referencyjna",
   "editor.connect_nulls": "Łącz wartości null",
   "editor.show_legend": "Pokaż legendę",
+  "editor.show_preview_controls": "Sterowanie podglądem",
   "editor.precision": "Dokładność (dziesiętne)",
   "editor.number_format": "Format liczby",
   "editor.language": "Język",
@@ -29866,9 +29871,9 @@ function tF(r, e) {
   for (; (a = i.exec(r)) !== null; ) {
     a.index > n && t.push(r.slice(n, a.index));
     const o = a[1] ?? a[0], s = e[o] ?? a[0];
-    t.push(z`<span class="ebc-comment-emphasis">${s}</span>`), n = a.index + a[0].length;
+    t.push(F`<span class="ebc-comment-emphasis">${s}</span>`), n = a.index + a[0].length;
   }
-  return t.push(r.slice(n)), z`<div class="ebc-comment-text">${t}</div>`;
+  return t.push(r.slice(n)), F`<div class="ebc-comment-text">${t}</div>`;
 }
 function rF(r, e, t, n) {
   return r.status === "loading" ? { status: "loading" } : r.status === "error" ? {
@@ -29926,7 +29931,7 @@ function nF(r, e, t, n) {
         referencePeriod: ze
       }
     });
-    Kt = ni.template !== void 0 ? tF(ni.template, ni.vars) : z`<div class="ebc-comment-text${ni.muted ? " ebc-comment-text--muted" : ""}">
+    Kt = ni.template !== void 0 ? tF(ni.template, ni.vars) : F`<div class="ebc-comment-text${ni.muted ? " ebc-comment-text--muted" : ""}">
           ${n(ni.key, ni.vars)}
         </div>`;
   }
@@ -31476,6 +31481,13 @@ const bF = [
     labelKey: "editor.show_legend",
     default: !1
   },
+  {
+    key: "show_preview_controls",
+    section: "chart",
+    control: { kind: "boolean" },
+    labelKey: "editor.show_preview_controls",
+    default: !0
+  },
   // S6 — Style
   {
     key: "primary_color",
@@ -31870,7 +31882,7 @@ function rz(r, e, t, n, i) {
   const a = Ul(e.key), o = e.control, s = (l) => l == null ? "" : String(l);
   switch (o.kind) {
     case "entity":
-      return Ht("ha-entity-picker") ? z`
+      return Ht("ha-entity-picker") ? F`
             <ha-entity-picker
               id=${a}
               .hass=${r.hass}
@@ -31880,7 +31892,7 @@ function rz(r, e, t, n, i) {
               ?disabled=${n}
               @change=${(l) => r.onFieldChange(e, l)}
             ></ha-entity-picker>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="text"
@@ -31890,7 +31902,7 @@ function rz(r, e, t, n, i) {
             />
           `;
     case "icon":
-      return Ht("ha-icon-picker") ? z`
+      return Ht("ha-icon-picker") ? F`
             <ha-icon-picker
               id=${a}
               .hass=${r.hass}
@@ -31899,7 +31911,7 @@ function rz(r, e, t, n, i) {
               ?disabled=${n}
               @value-changed=${(l) => r.onFieldValueChanged(e, l)}
             ></ha-icon-picker>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="text"
@@ -31909,7 +31921,7 @@ function rz(r, e, t, n, i) {
             />
           `;
     case "text":
-      return Ht("ha-input") ? z`
+      return Ht("ha-input") ? F`
             <ha-input
               id=${a}
               .label=${i(e.labelKey)}
@@ -31919,7 +31931,7 @@ function rz(r, e, t, n, i) {
               @focusin=${(l) => r.onFieldFocus(e, l)}
               @focusout=${() => r.onFieldBlur(e)}
             ></ha-input>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="text"
@@ -31931,7 +31943,7 @@ function rz(r, e, t, n, i) {
             />
           `;
     case "number":
-      return Ht("ha-input") ? z`
+      return Ht("ha-input") ? F`
           <ha-input
             id=${a}
             type="number"
@@ -31944,9 +31956,9 @@ function rz(r, e, t, n, i) {
             @focusin=${(l) => r.onFieldFocus(e, l)}
             @focusout=${() => r.onFieldBlur(e)}
           >
-            ${o.suffix ? z`<span slot="end" class="field-suffix">${o.suffix}</span>` : xe}
+            ${o.suffix ? F`<span slot="end" class="field-suffix">${o.suffix}</span>` : xe}
           </ha-input>
-        ` : z`
+        ` : F`
         <div class="field-number-box">
           <input
             id=${a}
@@ -31959,18 +31971,18 @@ function rz(r, e, t, n, i) {
             @focusin=${(l) => r.onFieldFocus(e, l)}
             @focusout=${() => r.onFieldBlur(e)}
           />
-          ${o.suffix ? z`<span class="field-suffix">${o.suffix}</span>` : xe}
+          ${o.suffix ? F`<span class="field-suffix">${o.suffix}</span>` : xe}
         </div>
       `;
     case "select": {
       const l = o.options.map(
-        (u) => z`
+        (u) => F`
           <option value=${u.value} ?selected=${s(t) === u.value}>
             ${i(u.labelKey)}
           </option>
         `
       );
-      return Ht("ha-select") ? z`
+      return Ht("ha-select") ? F`
             <ha-select
               id=${a}
               .label=${i(e.labelKey)}
@@ -31982,7 +31994,7 @@ function rz(r, e, t, n, i) {
               ?disabled=${n}
               @selected=${(u) => r.onFieldSelect(e, u)}
             ></ha-select>
-          ` : z`
+          ` : F`
             <select
               id=${a}
               .value=${s(t)}
@@ -31994,27 +32006,27 @@ function rz(r, e, t, n, i) {
           `;
     }
     case "boolean":
-      return e.dummy ? Ht("ha-switch") ? z`
+      return e.dummy ? Ht("ha-switch") ? F`
               <ha-switch
                 id=${a}
                 .checked=${!0}
                 ?disabled=${!0}
               ></ha-switch>
-            ` : z`
+            ` : F`
               <input
                 id=${a}
                 type="checkbox"
                 .checked=${!0}
                 ?disabled=${!0}
               />
-            ` : Ht("ha-switch") ? z`
+            ` : Ht("ha-switch") ? F`
             <ha-switch
               id=${a}
               .checked=${!!t}
               ?disabled=${n}
               @change=${(l) => r.onFieldChange(e, l)}
             ></ha-switch>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="checkbox"
@@ -32024,7 +32036,7 @@ function rz(r, e, t, n, i) {
             />
           `;
     case "slider":
-      return Ht("ha-slider") ? z`
+      return Ht("ha-slider") ? F`
             <ha-slider
               id=${a}
               .value=${Number(t ?? o.min ?? 0)}
@@ -32034,7 +32046,7 @@ function rz(r, e, t, n, i) {
               ?disabled=${n}
               @change=${(l) => r.onFieldChange(e, l)}
             ></ha-slider>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="range"
@@ -32047,7 +32059,7 @@ function rz(r, e, t, n, i) {
             />
           `;
     case "color":
-      return Ht("ha-color-picker") ? z`
+      return Ht("ha-color-picker") ? F`
             <ha-color-picker
               id=${a}
               .label=${i(e.labelKey)}
@@ -32055,7 +32067,7 @@ function rz(r, e, t, n, i) {
               ?disabled=${n}
               @value-changed=${(l) => r.onFieldValueChanged(e, l)}
             ></ha-color-picker>
-          ` : z`
+          ` : F`
             <input
               id=${a}
               type="text"
@@ -32076,10 +32088,10 @@ function rz(r, e, t, n, i) {
 }
 function nz(r, e) {
   const t = r.control.kind, n = AS(t);
-  return n !== null && Ht(n) && tz(t) ? xe : z`
+  return n !== null && Ht(n) && tz(t) ? xe : F`
     <label class="field-label" for=${Ul(r.key)}>
       ${e(r.labelKey)}
-      ${r.required ? z`<span class="req">*</span>` : ""}
+      ${r.required ? F`<span class="req">*</span>` : ""}
     </label>
   `;
 }
@@ -32339,7 +32351,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
     const d = (y, _ = "") => {
       var S;
       const w = l ? y.column ? `grid-column: ${y.column}; grid-row: ${u.get(y.key)}` : "grid-column: 1 / -1" : "";
-      return z`
+      return F`
       <div
         class=${_ ? `field ${_}` : "field"}
         data-field=${y.key}
@@ -32354,7 +32366,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
         ((S = y.disabledWhen) == null ? void 0 : S.call(y, t)) ?? !1,
         n
       )}
-        ${y.helperKey ? z`<p class="field-helper">${n(y.helperKey)}</p>` : xe}
+        ${y.helperKey ? F`<p class="field-helper">${n(y.helperKey)}</p>` : xe}
       </div>
     `;
     }, h = [];
@@ -32363,7 +32375,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
       if (y.subsection !== v && (v = y.subsection, y.subsection)) {
         const w = c.get(y.subsection), S = l && w !== void 0 ? `grid-column: ${w}; grid-row: 1` : "";
         h.push(
-          z`<div
+          F`<div
               class="subsection-header"
               style=${S || xe}
             >${n(y.subsection)}</div>`
@@ -32373,7 +32385,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
         continue;
       const _ = f.get(y.key) ?? [];
       _.length === 0 ? h.push(d(y)) : h.push(
-        z`
+        F`
             <div class="field-row">
               ${d(y, "field-main")}
               ${_.map(
@@ -32389,7 +32401,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
           `
       );
     }
-    const m = l ? z`<div class="section-columns">${h}</div>` : z`${h}`, p = z`
+    const m = l ? F`<div class="section-columns">${h}</div>` : F`${h}`, p = F`
       <a
         class="section-docs-link"
         href=${SF[e]}
@@ -32402,7 +32414,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
         <ha-icon icon="mdi:help-circle-outline"></ha-icon>
       </a>
     `;
-    return Ht("ha-expansion-panel") ? z`
+    return Ht("ha-expansion-panel") ? F`
           <ha-expansion-panel
             class="editor-section"
             data-section=${e}
@@ -32419,7 +32431,7 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
             <div slot="icons" class="section-header-actions">${p}</div>
             ${m}
           </ha-expansion-panel>
-        ` : z`
+        ` : F`
           <div
             class="editor-section"
             data-section=${e}
@@ -32446,11 +32458,11 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
   }
   render() {
     if (!this._config)
-      return z``;
+      return F``;
     const e = this._config, t = $n(this._labelLanguage()), n = t("editor.visual_mode"), i = t("editor.yaml_mode"), a = this._controlCtx(e);
-    return z`
+    return F`
       <div class="editor">
-        ${this._yaml.supported() ? z`
+        ${this._yaml.supported() ? F`
               <div class="toggle-row">
                 <button
                   type="button"
@@ -32468,20 +32480,20 @@ class ha extends (qh = Oi, NS = [CS({ attribute: !1 })], RS = [y_()], OS = [y_()
                 </button>
               </div>
             ` : ""}
-        ${this._editorMode === "visual" ? z`
+        ${this._editorMode === "visual" ? F`
               <div class="sections" @scroll=${this._onScroll}>
                 ${bF.map(
       (o) => this._renderSection(o, e, t, a)
     )}
               </div>
-            ` : z`
+            ` : F`
               <textarea
                 class="yaml-editor"
                 .value=${this._yaml.text}
                 @input=${this._onYamlInput}
                 @blur=${() => this._yaml.flush()}
               ></textarea>
-              ${this._yaml.parseError ? z`<p class="error">${t("editor.yaml_error")}: ${this._yaml.parseError}</p>` : ""}
+              ${this._yaml.parseError ? F`<p class="error">${t("editor.yaml_error")}: ${this._yaml.parseError}</p>` : ""}
             `}
       </div>
     `;
@@ -33175,19 +33187,19 @@ const Yl = class Yl extends Oi {
   }
   render() {
     if (!this._config || !this.hass)
-      return z``;
+      return F``;
     const e = nr(this.hass, this._config), t = $n(e.language), n = rF(
       this._state,
       this._config,
       this.hass,
       (i, a) => this._localizeOrError(t, i, a)
     );
-    return n.status === "loading" ? z`<ha-card class="ebc-card">
+    return n.status === "loading" ? F`<ha-card class="ebc-card">
         <div class="loading">
           <ha-circular-progress active size="small"></ha-circular-progress>
           <span>${this._localizeOrError(t, "status.loading")}</span>
         </div>
-      </ha-card>` : n.status === "error" ? z`<ha-card class="ebc-card">
+      </ha-card>` : n.status === "error" ? F`<ha-card class="ebc-card">
         <ha-alert alert-type="error">
           ${this._localizeOrError(
       t,
@@ -33195,11 +33207,11 @@ const Yl = class Yl extends Oi {
       n.errorParams
     )}
         </ha-alert>
-      </ha-card>` : n.status === "no-data" ? z`<ha-card class="ebc-card">
+      </ha-card>` : n.status === "no-data" ? F`<ha-card class="ebc-card">
         <ha-alert alert-type="info">
           ${this._localizeOrError(t, "status.no_data")}
         </ha-alert>
-      </ha-card>` : z`<ha-card class="ebc-card">
+      </ha-card>` : F`<ha-card class="ebc-card">
       <div class="content ebc-content">
         ${this._renderHeader(n, t)}
         ${this._renderComparisonSection(n, t)}
@@ -33212,24 +33224,24 @@ const Yl = class Yl extends Oi {
   }
   /** Header region (icon + title + entity id) — markup 1:1 with the old render(). */
   _renderHeader(e, t) {
-    return e.shouldRenderHeader ? z`<div
+    return e.shouldRenderHeader ? F`<div
       class="ebc-section ebc-section--header"
       role="region"
       aria-label=${this._localizeOrError(t, "section.header")}
     >
       <div class="ebc-header-row">
-        ${e.showIcon ? z`<div class="ebc-header-icon-wrap">
-              ${e.effectiveIcon ? z`<ha-icon
+        ${e.showIcon ? F`<div class="ebc-header-icon-wrap">
+              ${e.effectiveIcon ? F`<ha-icon
                     class="ebc-icon"
                     .icon=${e.effectiveIcon}
-                  ></ha-icon>` : e.entityState ? z`<ha-state-icon
+                  ></ha-icon>` : e.entityState ? F`<ha-state-icon
                       class="ebc-icon"
                       .hass=${this.hass}
                       .stateObj=${e.entityState}
                     ></ha-state-icon>` : null}
             </div>` : null}
         <div class="ebc-header-text">
-          ${e.showTitle && e.effectiveTitle ? z`<div class="ebc-header-title">${e.effectiveTitle}</div>` : null}
+          ${e.showTitle && e.effectiveTitle ? F`<div class="ebc-header-title">${e.effectiveTitle}</div>` : null}
           <div class="ebc-header-entity">${this._config.entity}</div>
         </div>
       </div>
@@ -33237,7 +33249,7 @@ const Yl = class Yl extends Oi {
   }
   /** Figma "Data series info" panel — current vs reference "to today" values + delta chip. */
   _renderComparisonSection(e, t) {
-    return e.showComparisonSection ? z`<div
+    return e.showComparisonSection ? F`<div
       class="ebc-section ebc-section--comparison"
       role="region"
       aria-label=${this._localizeOrError(t, "section.comparison")}
@@ -33261,7 +33273,7 @@ const Yl = class Yl extends Oi {
             <span class="ebc-value-num--current">${e.currentSummaryNumber}</span>
             <span class="ebc-value-unit">${e.displayUnit}</span>
           </div>
-          ${e.singleWindow ? null : z`<div
+          ${e.singleWindow ? null : F`<div
                 class="ebc-delta-chip ${e.semTone}"
                 aria-label=${this._localizeOrError(
       t,
@@ -33289,10 +33301,10 @@ const Yl = class Yl extends Oi {
             ${this._localizeOrError(t, "summary.to_this_day")}
           </div>
           <div class="ebc-value-row">
-            ${e.referenceSummaryNumber != null ? z`<span class="ebc-value-num--reference"
+            ${e.referenceSummaryNumber != null ? F`<span class="ebc-value-num--reference"
                     >${e.referenceSummaryNumber}</span
                   >
-                  <span class="ebc-value-unit">${e.displayUnit}</span>` : z`<span class="ebc-value-num--reference">—</span>
+                  <span class="ebc-value-unit">${e.displayUnit}</span>` : F`<span class="ebc-value-num--reference">—</span>
                   <span class="ebc-value-unit">${e.displayUnit}</span>`}
           </div>
         </div>
@@ -33307,7 +33319,7 @@ const Yl = class Yl extends Oi {
    * single-window mode, where no reference window exists).
    */
   _renderForecastTotalSection(e, t) {
-    return e.showForecastTotalPanel ? z`<div
+    return e.showForecastTotalPanel ? F`<div
       class="ebc-section ebc-section--forecast-total"
       role="region"
       aria-label=${this._localizeOrError(
@@ -33321,10 +33333,10 @@ const Yl = class Yl extends Oi {
             ${this._localizeOrError(t, "forecast.panel_forecast")}
           </div>
           <div class="ebc-surface-value-row">
-            ${e.forecastValueText != null ? z`<span class="ebc-surface-value-num"
+            ${e.forecastValueText != null ? F`<span class="ebc-surface-value-num"
                     >${e.forecastValueText}</span
                   >
-                  <span class="ebc-surface-value-unit">${e.forecastUnit}</span>` : z`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                  <span class="ebc-surface-value-unit">${e.forecastUnit}</span>` : F`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
                     >---</span
                   >
                   <span class="ebc-surface-value-unit">${e.forecastUnit}</span>`}
@@ -33337,10 +33349,10 @@ const Yl = class Yl extends Oi {
             ${this._localizeOrError(t, "forecast.panel_total")}
           </div>
           <div class="ebc-surface-value-row">
-            ${e.panelTotalText != null ? z`<span class="ebc-surface-value-num"
+            ${e.panelTotalText != null ? F`<span class="ebc-surface-value-num"
                     >${e.panelTotalText}</span
                   >
-                  <span class="ebc-surface-value-unit">${e.forecastUnit}</span>` : z`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
+                  <span class="ebc-surface-value-unit">${e.forecastUnit}</span>` : F`<span class="ebc-surface-value-num ebc-surface-value-num--muted"
                     >---</span
                   >
                   <span class="ebc-surface-value-unit">${e.forecastUnit}</span>`}
@@ -33351,103 +33363,105 @@ const Yl = class Yl extends Oi {
   }
   /**
    * Chart region with the 909 preview controls. Element-only concerns live here
-   * (FR-903-AA): `preview` (preview contexts render the controls visible but
-   * non-interactive, FR-022–FR-025), `previewShift < 0` (the display gate,
-   * FR-903-Y) and `_previewLoading` (disabled controls + dimmed chart overlay)
-   * — none of them are part of the view model.
+   * (FR-903-AA): `show_preview_controls` (the bar-level visibility gate,
+   * FR-027 — when `false` the whole bar is not rendered in any context and no
+   * space is reserved for it), `preview` (preview contexts render the controls
+   * visible but non-interactive, FR-022–FR-025), `previewShift < 0` (the
+   * display gate, FR-903-Y) and `_previewLoading` (disabled controls + dimmed
+   * chart overlay) — none of them are part of the view model.
    */
   _renderChartSection(e, t) {
-    const n = this.previewShift < 0;
-    return z`<div
+    const n = this.previewShift < 0, i = this._config.show_preview_controls !== !1;
+    return F`<div
       class="ebc-section ebc-section--chart"
       role="region"
       aria-label=${this._localizeOrError(t, "section.chart")}
     >
-      <div class="ebc-chart-controls">
-        ${n ? z`<span class="ebc-preview-indication" role="status">
-              ${e.previewIndicationText}
-            </span>` : null}
-        ${n ? z`<button
-              class="ebc-chart-control ebc-chart-control--reset"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(t, "preview.reset")}
-              @click=${() => this._onPreviewStep("reset")}
-            >
-              <ha-icon icon="mdi:restart"></ha-icon>
-            </button>` : null}
-        <!-- 909 FR-023/FR-025: in preview contexts the buttons keep their
-             normal appearance (no "disabled" attribute) but carry
-             aria-disabled="true" and tabindex="-1". The inert variant omits
-             the ?disabled binding entirely — _previewLoading can never be
-             true in a preview context (the _onPreviewStep guard blocks it).
-             The reset button above is never rendered in a preview context
-             (FR-010: a shift cannot be activated there).
-             FR-026 (view mode only): the forward button is additionally
-             disabled at the configured default (previewShift >= 0) — the
-             window cannot be shifted further forward — rendered visible but
-             dimmed per .ebc-chart-control:disabled (HA disabled-button
-             standard); while a shift is active it is enabled. The back and
-             reset buttons are disabled only during an in-place preview load. -->
-        ${this.preview ? z`<button
-              class="ebc-chart-control"
-              type="button"
-              aria-disabled="true"
-              tabindex="-1"
-              aria-label=${this._localizeOrError(
+      ${i ? F`<div class="ebc-chart-controls">
+            ${n ? F`<span class="ebc-preview-indication" role="status">
+                  ${e.previewIndicationText}
+                </span>` : null}
+            ${n ? F`<button
+                  class="ebc-chart-control ebc-chart-control--reset"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(t, "preview.reset")}
+                  @click=${() => this._onPreviewStep("reset")}
+                >
+                  <ha-icon icon="mdi:restart"></ha-icon>
+                </button>` : null}
+            <!-- 909 FR-023/FR-025: in preview contexts the buttons keep their
+                 normal appearance (no "disabled" attribute) but carry
+                 aria-disabled="true" and tabindex="-1". The inert variant omits
+                 the ?disabled binding entirely — _previewLoading can never be
+                 true in a preview context (the _onPreviewStep guard blocks it).
+                 The reset button above is never rendered in a preview context
+                 (FR-010: a shift cannot be activated there).
+                 FR-026 (view mode only): the forward button is additionally
+                 disabled at the configured default (previewShift >= 0) — the
+                 window cannot be shifted further forward — rendered visible but
+                 dimmed per .ebc-chart-control:disabled (HA disabled-button
+                 standard); while a shift is active it is enabled. The back and
+                 reset buttons are disabled only during an in-place preview load. -->
+            ${this.preview ? F`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  aria-disabled="true"
+                  tabindex="-1"
+                  aria-label=${this._localizeOrError(
       t,
       "preview.step_back"
     )}
-              @click=${() => this._onPreviewStep("back")}
-            >
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>` : z`<button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading}
-              aria-label=${this._localizeOrError(
+                  @click=${() => this._onPreviewStep("back")}
+                >
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>` : F`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading}
+                  aria-label=${this._localizeOrError(
       t,
       "preview.step_back"
     )}
-              @click=${() => this._onPreviewStep("back")}
-            >
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>`}
-        ${this.preview ? z`<button
-              class="ebc-chart-control"
-              type="button"
-              aria-disabled="true"
-              tabindex="-1"
-              aria-label=${this._localizeOrError(
+                  @click=${() => this._onPreviewStep("back")}
+                >
+                  <ha-icon icon="mdi:chevron-left"></ha-icon>
+                </button>`}
+            ${this.preview ? F`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  aria-disabled="true"
+                  tabindex="-1"
+                  aria-label=${this._localizeOrError(
       t,
       "preview.step_forward"
     )}
-              @click=${() => this._onPreviewStep("forward")}
-            >
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>` : z`<button
-              class="ebc-chart-control"
-              type="button"
-              ?disabled=${this._previewLoading || this.previewShift >= 0}
-              aria-label=${this._localizeOrError(
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>` : F`<button
+                  class="ebc-chart-control"
+                  type="button"
+                  ?disabled=${this._previewLoading || this.previewShift >= 0}
+                  aria-label=${this._localizeOrError(
       t,
       "preview.step_forward"
     )}
-              @click=${() => this._onPreviewStep("forward")}
-            >
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>`}
-      </div>
+                  @click=${() => this._onPreviewStep("forward")}
+                >
+                  <ha-icon icon="mdi:chevron-right"></ha-icon>
+                </button>`}
+          </div>` : null}
       <div class="ebc-chart-wrap">
         <div
           class="chart-container ebc-chart ${this._previewLoading ? "ebc-chart--loading" : ""}"
         ></div>
-        ${n && !this._previewLoading && e.previewChartNoData ? z`<div class="ebc-chart-nodata-overlay" role="status">
+        ${n && !this._previewLoading && e.previewChartNoData ? F`<div class="ebc-chart-nodata-overlay" role="status">
               <ha-alert alert-type="info">
                 ${this._localizeOrError(t, "status.no_data")}
               </ha-alert>
             </div>` : null}
-        ${this._previewLoading ? z`<div class="ebc-chart-loading-overlay" role="status">
+        ${this._previewLoading ? F`<div class="ebc-chart-loading-overlay" role="status">
               <ha-circular-progress active size="small"></ha-circular-progress>
               <span>${this._localizeOrError(t, "preview.loading")}</span>
             </div>` : null}
@@ -33456,7 +33470,7 @@ const Yl = class Yl extends Oi {
   }
   /** Narrative comment section (icon + rendered narrative sentence). */
   _renderNarrativeSection(e, t) {
-    return !e.showNarrativeSection || e.narrativeBody == null ? null : z`<div
+    return !e.showNarrativeSection || e.narrativeBody == null ? null : F`<div
       class="ebc-section ebc-section--comment"
       role="region"
       aria-label=${this._localizeOrError(t, "section.comment")}
@@ -33472,7 +33486,7 @@ const Yl = class Yl extends Oi {
   }
   /** Data-quality warning strip (one line per issue). */
   _renderWarningSection(e, t) {
-    return e.showWarningStrip ? z`<div
+    return e.showWarningStrip ? F`<div
       class="ebc-section ebc-section--warning"
       role="region"
       aria-label=${this._localizeOrError(t, "section.warning")}
@@ -33483,7 +33497,7 @@ const Yl = class Yl extends Oi {
       ></ha-icon>
       <div class="ebc-warning-lines">
         ${e.warningMessages.map(
-      (n) => z`<div class="ebc-warning-line">${n}</div>`
+      (n) => F`<div class="ebc-warning-line">${n}</div>`
     )}
       </div>
     </div>` : null;

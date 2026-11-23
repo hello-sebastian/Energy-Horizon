@@ -64,6 +64,7 @@ Non-collapsible headers emitted within a section (see [field-registry.md](./fiel
 | `editor.fill_reference_opacity` | Reference opacity |
 | `editor.connect_nulls` | Connect nulls |
 | `editor.show_legend` | Show legend |
+| `editor.show_preview_controls` | Preview controls |
 | `editor.precision` | Precision (decimals) |
 | `editor.number_format` | Number format |
 | `editor.language` | Language |

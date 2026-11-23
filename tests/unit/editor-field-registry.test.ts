@@ -15,7 +15,7 @@ import {
 import type { CardConfig } from "../../src/card/types";
 
 /**
- * The FR-908-D YAML surface (32 user-configurable parameters). The registry
+ * The FR-908-D YAML surface (33 user-configurable parameters). The registry
  * additionally carries one UX-only dummy (`show_chart`) that has no config
  * representation and is excluded from this surface.
  */
@@ -51,6 +51,7 @@ const FR_908_D_KEYS = [
   "show_forecast",
   "connect_nulls",
   "show_legend",
+  "show_preview_controls",
   // S6 style
   "primary_color",
   "fill_current",
@@ -95,7 +96,7 @@ const SECTION_MEMBERSHIP: Record<SectionId, string[]> = {
     "x_axis_format",
     "tooltip_format"
   ],
-  chart: ["show_forecast", "connect_nulls", "show_legend"],
+  chart: ["show_forecast", "connect_nulls", "show_legend", "show_preview_controls"],
   style: [
     "primary_color",
     "fill_current",
@@ -346,6 +347,7 @@ describe("editor field registry (SC-908-1, FR-908-D/F/B)", () => {
     expect(byKey.get("fill_reference_opacity")!.default).toBe(30);
     expect(byKey.get("connect_nulls")!.default).toBe(true);
     expect(byKey.get("show_legend")!.default).toBe(false);
+    expect(byKey.get("show_preview_controls")!.default).toBe(true);
     expect(byKey.get("precision")!.default).toBe(2);
     expect(byKey.get("force_prefix")!.default).toBe("auto");
     expect(byKey.get("number_format")!.default).toBe("system");

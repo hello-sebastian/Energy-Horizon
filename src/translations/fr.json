@@ -110,6 +110,7 @@
   "editor.fill_reference_opacity": "Opacité de référence",
   "editor.connect_nulls": "Relier les valeurs nulles",
   "editor.show_legend": "Afficher la légende",
+  "editor.show_preview_controls": "Contrôles d'aperçu",
   "editor.precision": "Précision (décimales)",
   "editor.number_format": "Format numérique",
   "editor.language": "Langue",

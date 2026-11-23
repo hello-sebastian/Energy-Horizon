@@ -36,7 +36,7 @@ Add a **transient time-window preview** to the Energy Horizon card: in-card cont
 
 **Constraints**: No new npm dependencies; no new HA APIs; no persisted state; must not re-render the whole card on every `hass` update (existing coalescing preserved); TypeScript strict (no `any`)
 
-**Scale/Scope**: Single card component; ~3 new controls + 1 preview indication + 1 two-series preview render path; touches `cumulative-comparison-chart.ts`, `echarts-renderer.ts`, `types.ts`, `time-windows/`, and the four translation files
+**Scale/Scope**: Single card component; ~3 new controls + 1 preview indication + 1 two-series preview render path; optional `show_preview_controls` visibility key (FR-027); touches `cumulative-comparison-chart.ts`, `echarts-renderer.ts`, `types.ts`, `time-windows/`, the card editor's field registry, and the five translation files
 
 ## Constitution Check
 
@@ -44,7 +44,7 @@ Add a **transient time-window preview** to the Energy Horizon card: in-card cont
 
 | # | Principle | Status | Notes |
 |---|-----------|--------|-------|
-| I | HA/HACS ecosystem compliance | ✅ Pass | No new HA APIs; reuses existing LTS `statistics_during_period`; respects edit/view modes; no config-schema change (preview is view-mode only) |
+| I | HA/HACS ecosystem compliance | ✅ Pass | No new HA APIs; reuses existing LTS `statistics_during_period`; respects edit/view modes; config surface extended only by the optional, backward-compatible `show_preview_controls` key (default preserves behavior, FR-027) |
 | II | Security & fault tolerance | ✅ Pass | No new untrusted input surface (controls are internal); shifted-period no-data handled gracefully; defensive reuse of the existing window resolver |
 | III | Code quality & tests | ✅ Pass | TypeScript strict; the shift algebra and preview state transitions are unit-testable pure logic; key functions covered by tests |
 | IV | UX/UI, accessibility | ✅ Pass (design) | Three controls are keyboard-operable `<button>`s with ARIA labels; preview indication is visible + announced; contrast via existing theme tokens — detailed in research.md |
@@ -129,3 +129,25 @@ no CSS change, no new strings):
 forwarded by `hui-card`, already accepted in 910 R2); III — tests first (TDD mandate); IV —
 honest accessibility (`aria-disabled` + tab-order exclusion, no misleading disabled look); V —
 two-line guard + one render change, no new state or queries; VI — no new user-facing strings.
+
+## Refinement 2026-11-23 — Preview controls visibility toggle (FR-027)
+
+The preview controls bar (backward/forward/reset + the preview indication) becomes toggleable
+per card via the optional config key `show_preview_controls` (boolean, default `true`).
+When `false`, the bar is not rendered in any context and no space is reserved for it. A
+"Preview controls" switch is added to the visual editor's Chart settings section (908
+FR-908-A/B — one registry descriptor, no new control kind).
+
+**Change surface** (minimally invasive; no renderer changes, no new state, no new queries):
+
+| # | Change | File |
+|---|--------|------|
+| 1 | `show_preview_controls?: boolean` on `CardConfig` (on unless explicitly `false`) | `src/card/types.ts` |
+| 2 | `_renderChartSection` renders the `.ebc-chart-controls` block only when `show_preview_controls !== false` (element-level gate, FR-903-AA pattern) | `src/card/cumulative-comparison-chart.ts` |
+| 3 | Editor registry descriptor (`chart` section, boolean, default `true`) + `editor.show_preview_controls` in all five locales | `src/card/editor/field-registry.ts`, `src/translations/{en,pl,de,fr,nl}.json` |
+| 4 | New visibility tests (bar absent in view + preview contexts, default-true regression, config preservation); registry test updates | `tests/integration/preview-controls-visibility.test.ts`, `tests/unit/editor-field-registry.test.ts` |
+| 5 | Cross-domain doc consistency: 909 spec/contracts, 904 section table, 908 coverage lists, README/wiki, `changelog.md` `[Unreleased]` | `specs/909-timewindow-preview/`, `specs/904-configuration-surface/`, `specs/908-editor-full-coverage/`, `README*.md`, `wiki-publish/`, `changelog.md` |
+
+**Constitution notes**: I — optional, backward-compatible config key (absent key = unchanged
+behavior); III — tests first; V — one render gate + one registry descriptor, no new state,
+no queries, no renderer change; VI — one new user-facing label per locale.

@@ -88,7 +88,7 @@ The single source of truth for what the editor renders and where. The render loo
 
 ### Field → Section map (FR-908-D coverage, FR-908-F membership)
 
-32 config-backed fields + 1 UX-only dummy (`show_chart`). Subsections are marked with `▸`.
+33 config-backed fields + 1 UX-only dummy (`show_chart`). Subsections are marked with `▸`.
 
 | Section | Fields (YAML key → control) |
 |---|---|
@@ -96,7 +96,7 @@ The single source of truth for what the editor renders and where. The render loo
 | **S2 Time windows** (expanded) | `comparison_preset`→select(4) · ▸ *Custom settings*: `time_window.anchor`→select(6) · `time_window.duration`→text · `time_window.step`→text · `time_window.count`→number · `time_window.offset`→text (all `time_window.*` visibleWhen: preset=custom) |
 | **S3 Panels** | `show_comparison_summary`→boolean · `show_chart`→boolean (**dummy**, always ON + disabled) · `show_forecast_total_panel`→boolean · `show_narrative_comment`→boolean |
 | **S4 Formatting & Localization** | `language`→select(5) · ▸ *Unit*: `force_prefix`→select(8) · `number_format`→select(4) · `precision`→number · ▸ *Dates*: `x_axis_format`→text · `tooltip_format`→text |
-| **S5 Chart settings** | `show_forecast`→boolean · `connect_nulls`→boolean · `show_legend`→boolean |
+| **S5 Chart settings** | `show_forecast`→boolean · `connect_nulls`→boolean · `show_legend`→boolean · `show_preview_controls`→boolean |
 | **S6 Style** (two-column grid) | ▸ *Current series* (column 1): `primary_color`→color · `fill_current`→boolean · `fill_current_opacity`→slider(0–100) · ▸ *Reference series* (column 2): `fill_reference`→boolean · `fill_reference_opacity`→slider(0–100) |
 | **S7 Diagnostics** | `debug`→boolean |
 
