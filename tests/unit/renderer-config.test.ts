@@ -164,15 +164,44 @@ describe("resolveChartTheme", () => {
       // de-emphasis is a fixed lineStyle.opacity in the renderer.
       expect(theme.previewReference).toBe("#556677");
     } finally {
-      if (prevGetComputedStyle === undefined) {
-        delete (globalThis as Record<string, unknown>).getComputedStyle;
-      } else {
-        (globalThis as Record<string, unknown>).getComputedStyle =
-          prevGetComputedStyle;
-      }
+      restoreGetComputedStyle(prevGetComputedStyle);
+    }
+  });
+
+  it("sanitizes an unparseable --secondary-text-color (broken theme) to the reference fallback", () => {
+    const tokenMap: Record<string, string> = {
+      "--secondary-text-color": "primary"
+    };
+    const fakeGetComputedStyle: typeof globalThis.getComputedStyle = (
+      host
+    ) =>
+      ({
+        getPropertyValue: (prop: string) => tokenMap[prop] ?? ""
+      }) as unknown as CSSStyleDeclaration;
+
+    const prevGetComputedStyle = globalThis.getComputedStyle;
+    (globalThis as Record<string, unknown>).getComputedStyle =
+      fakeGetComputedStyle;
+    try {
+      const theme = resolveChartTheme(makeFakeNode(), "#ff0000");
+      // The value feeds addColorStop via the fill gradient — it must never
+      // reach the canvas unparseable.
+      expect(theme.seriesReference).toBe("rgba(127, 127, 127, 0.4)");
+    } finally {
+      restoreGetComputedStyle(prevGetComputedStyle);
     }
   });
 });
+
+function restoreGetComputedStyle(
+  prev: typeof globalThis.getComputedStyle | undefined
+) {
+  if (prev === undefined) {
+    delete (globalThis as Record<string, unknown>).getComputedStyle;
+  } else {
+    (globalThis as Record<string, unknown>).getComputedStyle = prev;
+  }
+}
 
 describe("buildRendererConfig", () => {
   it("returns a placeholder config for a non-ready state", () => {

@@ -19,7 +19,10 @@ import type {
 } from "./types";
 import { numberFormatToLocale, resolveLocale } from "./localize";
 import { resolveLabelLocale } from "./axis";
-import { resolveSeriesCurrentColor } from "./series-color";
+import {
+  isPaintableColor,
+  resolveSeriesCurrentColor
+} from "./series-color";
 import { hour12FromHaTimeFormat } from "./labels/compact-period-caption";
 import { resolveComparisonAxisLabelHints } from "./labels/comparison-label-hints";
 import { formatPeriodLabel } from "./labels/period-label";
@@ -73,8 +76,13 @@ export function resolveChartTheme(
       ? globalThis.getComputedStyle(node).getPropertyValue(prop).trim()
       : "";
   const seriesCurrent = resolveSeriesCurrentColor(node, primaryColor);
-  const seriesReference =
-    readVar("--secondary-text-color") || "rgba(127, 127, 127, 0.4)";
+  // The reference color reaches `addColorStop` via the fill gradient — a
+  // broken theme mapping `--secondary-text-color` to a non-color must not
+  // crash the paint.
+  const seriesReferenceRaw = readVar("--secondary-text-color");
+  const seriesReference = isPaintableColor(seriesReferenceRaw)
+    ? seriesReferenceRaw
+    : "rgba(127, 127, 127, 0.4)";
   const grid = readVar("--divider-color") || "rgba(127, 127, 127, 0.3)";
   const primaryText = readVar("--primary-text-color") || "rgba(0, 0, 0, 0.87)";
   const secondaryText = readVar("--secondary-text-color") || primaryText;

@@ -46,7 +46,7 @@ import {
   X_AXIS_RICH_EDGE_METRICS,
   X_AXIS_RICH_TODAY_METRICS
 } from './axis/x-axis-rich-styles';
-import { resolveSeriesCurrentColor } from './series-color';
+import { isPaintableColor, resolveSeriesCurrentColor } from './series-color';
 
 // Register modular ECharts components at module level (FR-016)
 echartsUse([
@@ -522,8 +522,13 @@ export class EChartsRenderer {
 
     const styles = getComputedStyle(this.getThemeHost());
     const seriesCurrent = this.resolveColor(rendererConfig.primaryColor);
-    const seriesReference =
-      styles.getPropertyValue('--secondary-text-color').trim() || 'rgba(127, 127, 127, 0.4)';
+    // Same invariant as renderer-config: the reference color feeds
+    // addColorStop via the fill gradient, so an unparseable theme value
+    // takes the fallback instead of crashing the paint.
+    const seriesReferenceRaw = styles.getPropertyValue('--secondary-text-color').trim();
+    const seriesReference = isPaintableColor(seriesReferenceRaw)
+      ? seriesReferenceRaw
+      : 'rgba(127, 127, 127, 0.4)';
     const grid =
       styles.getPropertyValue('--divider-color').trim() || 'rgba(127, 127, 127, 0.3)';
     const primaryText =

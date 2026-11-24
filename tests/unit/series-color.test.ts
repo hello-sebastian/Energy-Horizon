@@ -2,6 +2,7 @@ import "../helpers/setup-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   EH_SERIES_DEFAULT_FALLBACK,
+  isPaintableColor,
   resolveSeriesCurrentColor
 } from "../../src/card/series-color";
 
@@ -115,5 +116,104 @@ describe("resolveSeriesCurrentColor", () => {
   it("plain hex passes through resolution", () => {
     host = makeHost();
     expect(resolveSeriesCurrentColor(host, "#e53935")).toBe("#e53935");
+  });
+
+  // Mirrors HA frontend `compute-color.ts`: the 25 picker THEME_COLORS plus
+  // the 3 YAML-only names. A missing entry here would render presets in the
+  // default color instead of the theme palette.
+  const HA_THEME_TOKENS = [
+    "primary",
+    "accent",
+    "red",
+    "pink",
+    "purple",
+    "deep-purple",
+    "indigo",
+    "blue",
+    "light-blue",
+    "cyan",
+    "teal",
+    "green",
+    "light-green",
+    "lime",
+    "yellow",
+    "amber",
+    "orange",
+    "deep-orange",
+    "brown",
+    "light-grey",
+    "grey",
+    "dark-grey",
+    "blue-grey",
+    "black",
+    "white",
+    "primary-text",
+    "secondary-text",
+    "disabled"
+  ];
+
+  it.each(HA_THEME_TOKENS)(
+    "resolves the color-picker preset %s to its --<name>-color theme variable",
+    (token) => {
+      host = makeHost();
+      host.style.setProperty(`--${token}-color`, "#03a9f4");
+      expect(resolveSeriesCurrentColor(host, token)).toBe("#03a9f4");
+    }
+  );
+
+  it("resolves the disabled preset to --disabled-text-color when --disabled-color is unset", () => {
+    host = makeHost();
+    host.style.setProperty("--disabled-text-color", "#666677");
+    expect(resolveSeriesCurrentColor(host, "disabled")).toBe("#666677");
+  });
+
+  it("falls back to --eh-series-current then default when a preset's variable is unset", () => {
+    host = makeHost();
+    host.style.setProperty("--eh-series-current", "#999999");
+    expect(resolveSeriesCurrentColor(host, "primary")).toBe("#999999");
+    host.style.removeProperty("--eh-series-current");
+    expect(resolveSeriesCurrentColor(host, "primary")).toBe(
+      EH_SERIES_DEFAULT_FALLBACK
+    );
+  });
+
+  it("free-text picker values (hex, rgb/rgba) pass through unchanged", () => {
+    host = makeHost();
+    expect(resolveSeriesCurrentColor(host, "#aabbcc")).toBe("#aabbcc");
+    expect(resolveSeriesCurrentColor(host, "#abc")).toBe("#abc");
+    expect(resolveSeriesCurrentColor(host, "rgb(1, 2, 3)")).toBe("rgb(1, 2, 3)");
+    expect(resolveSeriesCurrentColor(host, "rgba(1, 2, 3, 0.4)")).toBe(
+      "rgba(1, 2, 3, 0.4)"
+    );
+  });
+
+  it("falls back to the brand default for values unparseable as CSS", () => {
+    host = makeHost();
+    expect(resolveSeriesCurrentColor(host, "primry")).toBe(
+      EH_SERIES_DEFAULT_FALLBACK
+    );
+    expect(resolveSeriesCurrentColor(host, "light-bluee")).toBe(
+      EH_SERIES_DEFAULT_FALLBACK
+    );
+    expect(resolveSeriesCurrentColor(host, "not-a-color")).toBe(
+      EH_SERIES_DEFAULT_FALLBACK
+    );
+  });
+});
+
+describe("isPaintableColor", () => {
+  it("rejects theme token names and unparseable strings", () => {
+    expect(isPaintableColor("primary")).toBe(false);
+    expect(isPaintableColor("light-blue")).toBe(false);
+    expect(isPaintableColor("not-a-color")).toBe(false);
+    expect(isPaintableColor("")).toBe(false);
+  });
+
+  it("accepts the shapes the card produces (hex, rgb/rgba)", () => {
+    expect(isPaintableColor("#aabbcc")).toBe(true);
+    expect(isPaintableColor("#abc")).toBe(true);
+    expect(isPaintableColor("#aabbccdd")).toBe(true);
+    expect(isPaintableColor("rgb(1, 2, 3)")).toBe(true);
+    expect(isPaintableColor("rgba(1, 2, 3, 0.4)")).toBe(true);
   });
 });
