@@ -5,11 +5,13 @@ All notable changes to the Energy Horizon card are recorded in this file.
 
 ## [Unreleased]
 
-### Added
+## [1.3.1] - 2026-11-24
 
-### Changed
+### Fixed
 
-## [1.3.0] - 2026-11-18
+- **Chart no longer displayed when a color-picker theme preset was selected (1.3.0 regression):** the card editor's color picker (HA `ha-color-picker`) emits Home Assistant theme-color token names as its presets (`primary`, `light-blue`, `accent`, …), which the card passed to the canvas verbatim; with the 1.3.0 default gradient fill on, the renderer rejected them (`SyntaxError: Failed to execute 'addColorStop'` repeated in the HA log) and the whole chart rendered blank. The presets are now resolved to the theme's palette colors (the `--<name>-color` CSS variables) and render in exactly the color the picker swatch shows, following the active HA theme. Any color that cannot be parsed as a CSS color (typos, unknown names, a broken theme mapping a color variable to a name) falls back to the card's brand default (`#119894`) instead of crashing the paint. Manually entered values — hex (`#aabbcc`), `rgb()`/`rgba()`, `var(--…)`, and the `ha-primary`/`ha-accent` aliases — behave exactly as before. See [#78](https://github.com/hello-sebastian/Energy-Horizon/issues/78).
+
+## [1.3.0] - 2026-11-23
 
 ### Added
 
